@@ -18,7 +18,7 @@ export async function GET(request: Request) {
     });
 
     return NextResponse.json(response.data);
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'Erro ao buscar filmes' },
       { status: 500 }
