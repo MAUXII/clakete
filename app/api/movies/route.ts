@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import axios from 'axios';
 
-const TMDB_API_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY; 
-const TMDB_BASE_URL = process.env.NEXT_PUBLIC_TMDB_BASE_URL;
+const TMDB_API_KEY = process.env.NEXT_TMDB_API_KEY; 
+const TMDB_BASE_URL = process.env.NEXT_TMDB_BASE_URL;
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
