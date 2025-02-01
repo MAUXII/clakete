@@ -77,7 +77,7 @@ export default function Home() {
       <p className='dark:text-gray-300 text-gray-600'>Aventure-se em uma vasta coleção de filmes de diversos gêneros.</p>
       </div>
       
-      <div className='grid grid-cols-3 lg:grid-cols-5 gap-3'>
+      <div className='grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3'>
         {movies.map((movie) => (
           <div key={movie.id} className='w-full border-[1px] border-white/15 h-full relative shadow-sm shadow-white/5 shadow-lg shadow-white/5 aspect-[2/3] rounded-[5px] overflow-hidden '>
             <div className='border-[2.5px] border-black/10 absolute w-full h-full hover:border-black/40 transition-all duration-700 '></div>
