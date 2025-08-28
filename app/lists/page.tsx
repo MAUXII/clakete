@@ -26,11 +26,11 @@ export default function ListsPage() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Lists</h1>
         <p className="text-muted-foreground">
-          Descubra listas de filmes criadas pela comunidade e organize suas próprias coleções.
+          Discover movie lists created by the community and organize your own collections.
         </p>
       </div>
 
-      {/* Seção das listas do usuário usando o componente UserLists */}
+      {/* User lists section using UserLists component */}
       {currentUser && (
         <UserLists 
           userId={currentUser.id} 
@@ -39,9 +39,9 @@ export default function ListsPage() {
         />
       )}
 
-      {/* Seção de listas públicas */}
+      {/* Public lists section */}
       <div className="mt-12">
-        <h2 className="text-xl font-semibold mb-6">Listas Públicas</h2>
+        <h2 className="text-xl font-semibold mb-1ue">Public Lists</h2>
         
         {publicLoading ? (
           <div className="animate-pulse space-y-4">
@@ -57,11 +57,11 @@ export default function ListsPage() {
           </div>
         ) : publicError ? (
           <div className="text-center text-muted-foreground py-8">
-            <p>Erro ao carregar listas: {publicError}</p>
+            <p>Error loading lists: {publicError}</p>
           </div>
         ) : publicLists.length === 0 ? (
           <div className="text-center text-muted-foreground py-8">
-            <p>Nenhuma lista pública encontrada.</p>
+            <p>No public lists found.</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -72,7 +72,7 @@ export default function ListsPage() {
         )}
       </div>
 
-      {/* Diálogo de criação */}
+      {/* Create dialog */}
       <CreateListDialog
         open={showCreateDialog}
         onOpenChange={setShowCreateDialog}
