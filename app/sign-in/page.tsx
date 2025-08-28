@@ -1,13 +1,7 @@
 'use client'
 
 import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+
 import {
   Form,
   FormControl,
@@ -42,7 +36,7 @@ export default function SignIn() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [imageLoading, setImageLoading] = useState(true)
-  const [avatarUrl, setAvatarUrl] = useState<string>('')
+
   const [showProfileDialog, setShowProfileDialog] = useState(false)
   const supabase = createClient()
   useEffect(() => {
@@ -74,7 +68,7 @@ export default function SignIn() {
   })
 
   // Função para atualizar o estado quando a senha é digitada
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePasswordChange = () => {
     if (rive) {
       const stateMachine = rive.stateMachineInputs('PasswordStates')
       if (stateMachine) {
@@ -179,7 +173,7 @@ export default function SignIn() {
 async function handleGoogleLogin() {
   try {
     setLoading(true)
-    const { data, error } = await supabase.auth.signInWithOAuth({
+    const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
         redirectTo: `${siteUrl}/auth/callback`,
@@ -241,13 +235,13 @@ async function handleGoogleLogin() {
   }, [router, supabase])
 
   const [currentTestimonial, setCurrentTestimonial] = useState(testimonials[0]);
-  const [isLoading, setIsLoading] = useState(true);
+
 
   useEffect(() => {
     // Pick a random testimonial
     const randomIndex = Math.floor(Math.random() * testimonials.length);
     setCurrentTestimonial(testimonials[randomIndex]);
-    setIsLoading(false);
+
   }, []);
 
   useEffect(() => {
@@ -257,7 +251,6 @@ async function handleGoogleLogin() {
       try {
         const url = await generateAvatar(currentTestimonial.avatarSeed);
         if (mounted) {
-          setAvatarUrl(url);
           // For DiceBear SVGs, we can hide the skeleton immediately
           if (url.includes('dicebear')) {
             setImageLoading(false);
@@ -267,8 +260,6 @@ async function handleGoogleLogin() {
         console.error('Failed to load avatar:', error);
         // Fallback to DiceBear on error
         if (mounted) {
-          const fallbackUrl = await generateAvatar(currentTestimonial.avatarSeed);
-          setAvatarUrl(fallbackUrl);
           setImageLoading(false);
         }
       }
@@ -366,7 +357,7 @@ async function handleGoogleLogin() {
                         {...field} 
                         onChange={(e) => {
                           field.onChange(e)
-                          handlePasswordChange(e)
+                          handlePasswordChange()
                         }}
                       />
                     </FormControl>
@@ -381,7 +372,7 @@ async function handleGoogleLogin() {
           </Form>      
 
           <div className="mt-4 text-muted-foreground text-center text-sm">
-            Don't have an account?{' '}
+            Don&apos;t have an account?{' '}
             <Link href="/sign-up" className="text-[#FF0048] hover:underline">
               Sign up
             </Link>

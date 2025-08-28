@@ -15,7 +15,6 @@ interface FilmReviewProps {
 }
 
 export function FilmReview({
-  filmId,
   initialReview = "",
   onReviewSubmit,
   existingReview,

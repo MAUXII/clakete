@@ -41,7 +41,7 @@ export default function ListsPage() {
 
       {/* Public lists section */}
       <div className="mt-12">
-        <h2 className="text-xl font-semibold mb-6">Public Lists</h2>
+        <h2 className="text-xl font-semibold mb-6">dasdPublic Lists</h2>
         
         {publicLoading ? (
           <div className="animate-pulse space-y-4">

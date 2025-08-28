@@ -1,6 +1,4 @@
 import { Movie } from '@/app/film/[id]/page';
-import Link from 'next/link';
-import { useState } from 'react';
 import { MovieCard } from './movie-card';
 
 interface SimilarMovie {

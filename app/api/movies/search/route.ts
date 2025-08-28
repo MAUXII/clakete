@@ -1,5 +1,15 @@
 import { NextResponse } from 'next/server'
 
+interface TMDBMovie {
+  id: number
+  title: string
+  backdrop_path: string | null
+  poster_path: string | null
+  release_date: string
+  overview: string
+  vote_average: number
+}
+
 const TMDB_API_KEY = process.env.NEXT_TMDB_API_KEY
 const TMDB_BASE_URL = process.env.NEXT_PUBLIC_TMDB_BASE_URL
 
@@ -30,8 +40,8 @@ export async function GET(request: Request) {
 
     // Formata os resultados para retornar apenas os dados necessários
     const formattedResults = data.results
-      .filter((movie: any) => movie.title || movie.backdrop_path || movie.poster_path)
-      .map((movie: any) => ({
+      .filter((movie: TMDBMovie) => movie.title || movie.backdrop_path || movie.poster_path)
+      .map((movie: TMDBMovie) => ({
         id: movie.id,
         title: movie.title,
         backdrop_path: movie.backdrop_path,
@@ -40,7 +50,7 @@ export async function GET(request: Request) {
         overview: movie.overview,
         vote_average: movie.vote_average,
       }))
-      .sort((a: any, b: any) => b.vote_average - a.vote_average)
+      .sort((a: TMDBMovie, b: TMDBMovie) => b.vote_average - a.vote_average)
 
     return NextResponse.json({ results: formattedResults })
   } catch (error) {

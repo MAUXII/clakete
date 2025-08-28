@@ -1,21 +1,21 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
 import { useSupabaseClient, useUser } from "@supabase/auth-helpers-react"
 import { Database } from "@/lib/supabase/database.types"
 import { List, ListFilm } from "@/types/list"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
-import { Plus, Eye, EyeOff, Calendar, Film, ArrowLeft, Trash2, Image } from "lucide-react"
+import { Plus, Eye, EyeOff, Calendar, Film, ArrowLeft, Image } from "lucide-react"
 import Link from "next/link"
 import { useLists } from "@/hooks/use-lists"
 import { CommandDialog, CommandInput, CommandEmpty, CommandGroup, CommandItem, CommandList } from "@/components/ui/command"
-import { Input } from "@/components/ui/input"
+
 import { useDebounce } from "@/hooks/use-debounce"
 import { ImageEditDialog } from "@/components/profile/avatar-edit-dialog"
 import { MovieCard } from "@/components/movies/movie-card"
-import { IoEyeOutline, IoTrashOutline } from "react-icons/io5";
+import { IoTrashOutline } from "react-icons/io5";
 
 interface SearchResult {
   id: number
@@ -30,7 +30,7 @@ export default function ListDetailPage() {
   const listId = params.id as string
   const supabase = useSupabaseClient<Database>()
   const currentUser = useUser()
-  const { fetchListFilms, addFilmToList, removeFilmFromList, updateList } = useLists()
+  const { addFilmToList, removeFilmFromList, updateList } = useLists()
   
   const [list, setList] = useState<List | null>(null)
   const [films, setFilms] = useState<ListFilm[]>([])
@@ -194,32 +194,7 @@ export default function ListDetailPage() {
     }
   }
 
-  // Atualizar banner da lista
-  const handleBannerUpdate = async (bannerUrl: string) => {
-    if (!canEdit || !listId) {
-      console.error('Não pode editar ou listId não encontrado');
-      return;
-    }
-    
-    try {
-      console.log('🔄 Atualizando banner da lista:', listId, 'com URL:', bannerUrl);
-      
-      const success = await updateList(listId, { backdrop_path: bannerUrl });
-      
-      if (success) {
-        console.log('✅ Banner atualizado com sucesso no banco de dados');
-        setList(prev => prev ? { ...prev, backdrop_path: bannerUrl } : null);
-      } else {
-        console.error('❌ Falha ao atualizar banner no banco de dados');
-        throw new Error('Falha ao atualizar banner no banco de dados');
-      }
-    } catch (error) {
-      console.error('❌ Erro ao atualizar banner:', error);
-      console.error('❌ Tipo do erro:', typeof error);
-      console.error('❌ Mensagem do erro:', error instanceof Error ? error.message : 'Erro desconhecido');
-      throw error; // Re-throw para o ImageEditDialog capturar
-    }
-  }
+
 
   if (loading) {
     return (
@@ -280,7 +255,7 @@ export default function ListDetailPage() {
                  className="backdrop-blur-[1.2px] rounded-lg cursor-pointer flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity px-4 py-2"
                >
                  <span className="text-white flex items-center gap-2">
-                   <Image className="h-4 w-4" />
+                   <Image className="h-4 w-4" alt="" />
                    {list.backdrop_path ? 'Atualizar Banner' : 'Adicionar Banner'}
                  </span>
                </button>
@@ -374,7 +349,7 @@ export default function ListDetailPage() {
          
           <div className="grid grid-cols-5 gap-4 w-full">
             
-          {films.map((film, index) => (
+          {films.map((film) => (
             
               
               

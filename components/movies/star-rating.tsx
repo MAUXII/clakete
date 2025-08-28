@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { FaStar } from "react-icons/fa";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Tooltip, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface StarRatingProps {
   filmId: number;
@@ -12,17 +12,9 @@ interface StarRatingProps {
   size?: "sm" | "md";
 }
 
-const ratingDescriptions = [
-  "No rating",
-  "★ Terrible",
-  "★★ Poor",
-  "★★★ Fair",
-  "★★★★ Good",
-  "★★★★★ Excellent",
-];
+
 
 export function StarRating({
-  filmId,
   initialRating = 0,
   onRate,
   readonly = false,

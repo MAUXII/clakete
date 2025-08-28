@@ -3,7 +3,7 @@
 import { UserLists } from '@/components/profile/user-lists'
 import { use } from 'react'
 import { useState, useEffect } from 'react'
-import { useSupabaseClient, useUser } from '@supabase/auth-helpers-react'
+import { useSupabaseClient } from '@supabase/auth-helpers-react'
 import { notFound } from 'next/navigation'
 
 interface UserData {
@@ -27,7 +27,6 @@ export default function ListsPage({ params }: ListsPageProps) {
   const [isOwnProfile, setIsOwnProfile] = useState(false)
   const [loading, setLoading] = useState(true)
   const supabase = useSupabaseClient()
-  const currentUser = useUser()
 
   const fetchProfile = async () => {
     try {

@@ -1,17 +1,16 @@
 "use client"
 
 import { List } from "@/types/list"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Plus, Eye, EyeOff, Calendar, Film } from "lucide-react"
+
+import { Eye, EyeOff, Film } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 
 interface ListCardProps {
   list: List
-  showActions?: boolean
 }
 
-export function UserListCard({ list, showActions = false }: ListCardProps) {
+export function UserListCard({ list }: ListCardProps) {
   return (
     <div className="flex flex-col gap-2 w-full h-full">
       <div className="group flex flex-col gap-4 w-full h-full">

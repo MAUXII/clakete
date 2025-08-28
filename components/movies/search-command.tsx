@@ -14,12 +14,7 @@ import {
 } from "@/components/ui/command"
 import { Search } from "lucide-react"
 import { Button } from "../ui/button"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
+
 import { DialogTitle } from "../ui/dialog"
 
 export function SearchCommand() {

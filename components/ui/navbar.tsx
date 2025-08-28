@@ -23,7 +23,7 @@ import { List } from "lucide-react"
 import { MovieCard } from "../movies/movie-card"
 import { useMovies } from "@/hooks/use-movies"
 import { Skeleton } from "./skeleton"
-import { useUser } from '@supabase/auth-helpers-react'
+
 import { SearchCommand } from "../movies/search-command"
 import { useSupabaseClient } from '@supabase/auth-helpers-react'
 import { useRouter } from 'next/navigation'

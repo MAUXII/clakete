@@ -5,7 +5,7 @@ import { useSupabaseClient, useUser } from "@supabase/auth-helpers-react"
 import { Database } from "@/lib/supabase/database.types"
 import { List } from "@/types/list"
 import { Button } from "@/components/ui/button"
-import { Plus, Edit, Trash2, MoreVertical } from "lucide-react"
+import { Plus, Trash2, MoreVertical } from "lucide-react"
 import { useLists } from "@/hooks/use-lists"
 import { CreateListDialog } from "./create-list-dialog"
 import { EditListDialog } from "./edit-list-dialog"
@@ -26,7 +26,7 @@ interface UserListsProps {
 }
 
 export function UserLists({ userId, limit = 6, onLandingPage, alwaysShowThree = false, gridCols = 3 }: UserListsProps) {
-  const supabase = useSupabaseClient<Database>()
+
   const loggedInUser = useUser()
   const { lists, loading, error, fetchUserLists, deleteList } = useLists()
   const [showCreateDialog, setShowCreateDialog] = useState(false)
@@ -96,7 +96,7 @@ export function UserLists({ userId, limit = 6, onLandingPage, alwaysShowThree = 
               // Se existe uma lista, mostrar o card da lista
               return (
                 <div key={list.id} className="group relative">
-                  <UserListCard list={list} showActions={false} />
+                  <UserListCard list={list} />
                   
                   {/* Menu de 3 pontinhos */}
                   {canEdit && (
@@ -225,7 +225,7 @@ export function UserLists({ userId, limit = 6, onLandingPage, alwaysShowThree = 
         <div className="grid grid-cols-2 gap-4">
           {displayLists.map((list) => (
             <div key={list.id} className="group relative flex">
-              <UserListCard list={list} showActions={false} />
+              <UserListCard list={list} />
               
               {/* Menu de 3 pontinhos */}
               {canEdit && (

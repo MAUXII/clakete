@@ -8,11 +8,8 @@ import { use } from 'react'
 import { useSupabaseClient, useUser } from '@supabase/auth-helpers-react'
 import { useProfile } from "@/components/providers/profile-provider"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { UserFavoriteFilms } from "@/components/profile/favorite-films"
-import { UserRecentActivity } from "@/components/profile/recent-activity"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { toast } from "sonner"
-import { UserRecentReviews } from "@/components/profile/recent-reviews"
 import Link from "next/link"
 import { Skeleton } from "@/components/ui/skeleton"
 
@@ -25,11 +22,7 @@ interface UserData {
   banner_url?: string;
 }
 
-interface ProfilePageProps {
-  params: Promise<{
-    username: string
-  }>
-}
+
 
 
 interface ProfileLayoutProps {
@@ -181,14 +174,9 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
       }
     }
   
-    // Função para atualizar o contador de filmes
-    const handleFilmAdded = () => {
-      if (userData) {
-        fetchUserStats(userData.id)
-      }
-    }
+
   
-    const updateProfile = async (updates: any) => {
+    const updateProfile = async (updates: Partial<UserData>) => {
       if (!userData) return
       
       try {
@@ -227,7 +215,7 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
       const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
         fetchProfile()
       })
-  
+
       return () => subscription.unsubscribe()
     }, [])
   
@@ -257,7 +245,7 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
         // Se houver erro, a tabela provavelmente não existe, então vamos criá-la
         if (tableCheckError) {
           // Tentar criar a tabela usando a função RPC
-          const { data: createResult, error: createError } = await supabase
+          const { error: createError } = await supabase
             .rpc('create_followers_table')
           
           if (createError) {
@@ -327,9 +315,10 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
           toast.success("Você começou a seguir este usuário")
           
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('Erro ao alternar seguidor:', error)
-        toast.error(`Erro ao seguir/deixar de seguir: ${error.message || 'Desconhecido'}`)
+        const errorMessage = error instanceof Error ? error.message : 'Desconhecido'
+        toast.error(`Erro ao seguir/deixar de seguir: ${errorMessage}`)
       }
     }
   
@@ -527,7 +516,7 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
         <ImageEditDialog
         isOpen={showAvatarEdit}
           onClose={() => setShowAvatarEdit(false)}
-        onSave={async (image: any) => {
+        onSave={async (image: string) => {
           await updateProfile({ avatar_url: image });
             setShowAvatarEdit(false);
           }}
@@ -538,7 +527,7 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
         <ImageEditDialog
         isOpen={showBannerEdit}
           onClose={() => setShowBannerEdit(false)}
-        onSave={async (image: any) => {
+        onSave={async (image: string) => {
           await updateProfile({ banner_url: image });
             setShowBannerEdit(false);
           }}

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+
 import { Movie } from '@/app/film/[id]/page';
 
 export default function CrewList({ movie }: { movie: Movie }) {
@@ -21,8 +21,9 @@ export default function CrewList({ movie }: { movie: Movie }) {
             <div  style={{ direction: 'ltr' }} key={department} className="flex justify-between w-full ">
               <h2 className="text-muted-foreground/50 text-sm font-medium">{department}.....</h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 items-center gap-2" style={{ direction: 'rtl' }}>
-            {crew.map((person, index) => (
+            {crew.map((person) => (
               <div
+                key={person.id || person.name}
                 className="flex flex-col py-2 px-3 w-full h-auto rounded-md border dark:border-white/20 border-black/20 overflow-clip items-center bg-[#FF0048]/10"
                 style={{ direction: 'ltr' }} // Reset text direction to left-to-right
               >

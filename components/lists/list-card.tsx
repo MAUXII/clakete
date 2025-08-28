@@ -2,16 +2,15 @@
 
 import { List } from "@/types/list"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Plus, Eye, EyeOff, Calendar, Film } from "lucide-react"
+import { Calendar, Film } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 
 interface ListCardProps {
   list: List
-  showActions?: boolean
 }
 
-export function ListCard({ list, showActions = false }: ListCardProps) {
+export function ListCard({ list }: ListCardProps) {
   return (
     <div className="flex flex-col gap-2">
       <div className="bg-muted-foreground/10 w-full h-[0.3px] mb-4"></div>
