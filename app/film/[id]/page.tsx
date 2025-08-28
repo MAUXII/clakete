@@ -237,7 +237,6 @@ export default function FilmPage({ params }: { params: Promise<{ id: string }> }
                   </div>
                 )}
                  <StarRating
-                  filmId={movie.id}
                   initialRating={rating}
                   onRate={setRating}
                   readonly={loading || interactionsLoading || updating}
