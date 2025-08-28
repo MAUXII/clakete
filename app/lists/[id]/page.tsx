@@ -255,7 +255,7 @@ export default function ListDetailPage() {
                  className="backdrop-blur-[1.2px] rounded-lg cursor-pointer flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity px-4 py-2"
                >
                  <span className="text-white flex items-center gap-2">
-                   <Image className="h-4 w-4" alt="" />
+                   <Image className="h-4 w-4" />
                    {list.backdrop_path ? 'Atualizar Banner' : 'Adicionar Banner'}
                  </span>
                </button>
