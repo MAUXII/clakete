@@ -1,0 +1,429 @@
+'use client'
+
+import { Button } from '@/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form'
+import { Input } from '@/components/ui/input'
+import { createClient } from '@/lib/supabase/auth-config'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useForm } from 'react-hook-form'
+import { z } from 'zod'
+import Link from 'next/link'
+import { useRive } from '@rive-app/react-canvas'
+import { toast } from 'sonner'
+import { testimonials } from '../data/testimonial'
+import { generateAvatar } from '@/app/utils/avatar-generator'
+import { ProfileDialog } from '@/components/auth/profile-dialog'
+
+import Image from 'next/image'
+import { Skeleton } from '@/components/ui/skeleton'
+
+const formSchema = z.object({
+  email: z.string().email('Email inválido'),
+  password: z.string().min(6, 'A senha deve ter no mínimo 6 caracteres'),
+})
+
+export default function SignIn() {
+  const router = useRouter()
+  const [loading, setLoading] = useState(false)
+  const [imageLoading, setImageLoading] = useState(true)
+  const [avatarUrl, setAvatarUrl] = useState<string>('')
+  const [showProfileDialog, setShowProfileDialog] = useState(false)
+  const supabase = createClient()
+  useEffect(() => {
+    async function fetchUser() {
+      const supabase = createClient();
+      
+      // Obter o usuário logado
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      if (error) {
+        console.error('Erro ao obter usuário:', error);
+        return;
+      }
+      
+      if (session) {
+        console.log('Usuário logado:', session);
+      } else {
+        console.log('Nenhum usuário logado');
+      }
+    }
+    
+    fetchUser();
+  }, []);
+  const { rive, RiveComponent } = useRive({
+    src: '/cat_password.riv',
+    artboard: 'Main',
+    stateMachines: ['PasswordStates'],
+    autoplay: true
+  })
+
+  // Função para atualizar o estado quando a senha é digitada
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (rive) {
+      const stateMachine = rive.stateMachineInputs('PasswordStates')
+      if (stateMachine) {
+        // Trigger para quando está digitando
+        const input = stateMachine.find(i => i.name === 'passwordTyping')
+        if (input) {
+          input.fire()
+          console.log('Fired passwordTyping trigger')
+        }
+      }
+    }
+  }
+
+  // Função para lidar com o sucesso/falha do login
+  const handleLoginResult = (success: boolean) => {
+    if (!rive) return
+
+    // Atraso para mostrar o toast e a animação
+    setTimeout(() => {
+      const stateMachine = rive.stateMachineInputs('PasswordStates')
+      if (stateMachine) {
+        if (success) {
+          const input = stateMachine.find(i => i.name === 'formValid')
+          if (input) {
+            input.fire()
+            toast.success('Login bem sucedido!', {
+              description: 'Redirecionando para a página inicial...'
+            })
+          }
+        } else {
+          const input = stateMachine.find(i => i.name === 'formInvalid')
+          if (input) {
+            input.fire()
+            toast.error('Erro no login', {
+              description: 'Email ou senha incorretos'
+            })
+          }
+        }
+      }
+    }, 500) // Meio segundo de atraso
+  }
+
+
+  
+  useEffect(() => {
+    if (rive) {
+      console.log('Rive instance:', rive)
+
+      // Listar todas as state machines disponíveis
+      const machines = rive.stateMachineNames
+      console.log('Available State Machines:', machines)
+
+      // Para cada state machine, listar seus inputs
+      machines.forEach(machine => {
+        console.log(`\nState Machine: ${machine}`)
+        const inputs = rive.stateMachineInputs(machine)
+        console.log('Available Inputs:', inputs?.map(input => ({
+          name: input.name,
+          type: input.type
+        })))
+      })
+    }
+  }, [rive])
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+  })
+
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    try {
+      setLoading(true)
+      const { error } = await supabase.auth.signInWithPassword({
+        email: values.email,
+        password: values.password,
+      })
+
+      if (error) {
+        handleLoginResult(false)
+        throw error
+      }
+
+      handleLoginResult(true)
+      // Atraso para redirecionar após mostrar a animação e o toast
+      setTimeout(() => {
+        router.push('/')
+        router.refresh()
+      }, 2000) // 2 segundos de atraso
+    } catch (error) {
+      console.error('Erro ao fazer login:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+
+
+async function handleGoogleLogin() {
+  try {
+    setLoading(true)
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${siteUrl}/auth/callback`,
+        skipBrowserRedirect: false,
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent',
+          }
+        }
+      })
+
+      if (error) {
+        console.error('Erro no login com Google:', error)
+        handleLoginResult(false)
+        toast.error('Erro ao fazer login com Google', {
+          description: error.message
+        })
+      }
+    } catch (error) {
+      console.error('Erro ao fazer login com Google:', error)
+      handleLoginResult(false)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Verifica se o usuário está autenticado e tem perfil
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        
+        if (session?.user) {
+          console.log('Usuário autenticado:', session.user.email)
+          
+          // Verifica se tem perfil
+          const { data: profile } = await supabase
+            .from('users')
+            .select('username')
+            .eq('id', session.user.id)
+            .single()
+
+          if (!profile) {
+            console.log('Usuário sem perfil, mostrando dialog')
+            setShowProfileDialog(true)
+          } else {
+            console.log('Usuário com perfil, redirecionando para:', profile.username)
+            router.push(`/`)
+          }
+        } else {
+          console.log('Usuário não autenticado')
+        }
+      } catch (error) {
+        console.error('Erro ao verificar autenticação:', error)
+      }
+    }
+
+    checkAuth()
+  }, [router, supabase])
+
+  const [currentTestimonial, setCurrentTestimonial] = useState(testimonials[0]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Pick a random testimonial
+    const randomIndex = Math.floor(Math.random() * testimonials.length);
+    setCurrentTestimonial(testimonials[randomIndex]);
+    setIsLoading(false);
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadAvatar = async () => {
+      try {
+        const url = await generateAvatar(currentTestimonial.avatarSeed);
+        if (mounted) {
+          setAvatarUrl(url);
+          // For DiceBear SVGs, we can hide the skeleton immediately
+          if (url.includes('dicebear')) {
+            setImageLoading(false);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load avatar:', error);
+        // Fallback to DiceBear on error
+        if (mounted) {
+          const fallbackUrl = await generateAvatar(currentTestimonial.avatarSeed);
+          setAvatarUrl(fallbackUrl);
+          setImageLoading(false);
+        }
+      }
+    };
+
+    loadAvatar();
+    return () => { mounted = false; };
+  }, [currentTestimonial]);
+
+  return (
+    <div className="flex min-h-screen h-screen w-screen items-center justify-center py-4 px-4">
+      <section className='w-[50%] flex flex-col items-center justify-center h-full'>
+          
+          <div className='flex flex-col w-full gap-5 max-w-[400px]'>
+            <div className='flex flex-col '>
+              <h1 className='text-[#FF0048] text-4xl font-bold'>Welcome back</h1>
+              <span className='text-muted-foreground text-sm'>Sign in to your account</span>
+
+              <svg className='absolute top-12 left-12' width="76" height="25" viewBox="0 0 76 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M18.5128 18.4695C18.5128 19.2991 19.1928 19.9744 20.0285 19.9744H29.7945C30.6308 19.9744 31.3108 19.2994 31.3108 18.4695V14.1503C31.3108 13.3207 30.6305 12.6457 29.7945 12.6457H20.0288C19.1928 12.6457 18.5131 13.3207 18.5131 14.1503L18.5128 18.4695ZM22.1925 14.856V13.2732H26.548V14.856H22.1925ZM30.6833 15.3469V17.0717C30.6691 17.0702 30.6567 17.0653 30.6419 17.0653H19.2137C19.1874 17.0653 19.1641 17.072 19.1399 17.0771V15.3469H30.6833ZM29.7945 19.3466H20.0285C19.5384 19.3466 19.1399 18.9529 19.1399 18.4695V17.5445C19.1641 17.5496 19.1874 17.5563 19.2137 17.5563H30.6422C30.657 17.5563 30.6694 17.5511 30.6836 17.5499V18.4698C30.6833 18.9529 30.2845 19.3466 29.7945 19.3466ZM30.6833 14.1503V14.856H26.8501V13.2732H29.7945C30.2845 13.2729 30.6833 13.6666 30.6833 14.1503ZM20.0285 13.2729H21.8904V14.8557H19.1396V14.1499C19.1396 13.6666 19.5384 13.2729 20.0285 13.2729ZM18.6883 6.95848C18.588 7.09775 18.5478 7.26724 18.5753 7.43642L18.9019 9.44818V11.3729C18.9019 11.727 19.1898 12.0149 19.5439 12.0149H30.8978C31.2519 12.0149 31.5398 11.727 31.5398 11.3729V9.25634H20.5719L31.3516 7.50651L31.3888 7.50047L31.0498 5.41107C30.999 5.09868 30.7326 4.8718 30.4163 4.8718C30.3821 4.8718 30.3471 4.87482 30.3129 4.88025L19.1058 6.69987C18.9372 6.72737 18.7886 6.81921 18.6883 6.95848ZM30.8598 9.9364V11.3355H29.9655L29.2423 9.9364H30.8598ZM27.6622 9.9364L28.3217 11.3355H26.3148L25.5912 9.9364H27.6622ZM24.0115 9.9364L24.671 11.3355H22.765L22.0414 9.9364H24.0115ZM19.5816 11.3352V9.93609H20.4617L21.1212 11.3352H19.5816ZM29.2776 5.73735L30.3845 5.55759L30.6087 6.93824L28.9123 7.21346L29.2776 5.73735ZM25.8332 6.29655L27.738 5.98749L27.3121 7.47388L25.468 7.77297L25.8332 6.29655ZM22.5444 6.83039L24.2985 6.5458L23.8725 8.03219L22.1795 8.30711L22.5444 6.83039ZM21.0218 7.07751L20.5958 8.56421L19.4765 8.74608L19.2523 7.36512L21.0218 7.07751Z" fill="url(#paint0_linear_2_127)"/>
+<path d="M6.24051 20.2187C5.12266 20.2187 4.16277 19.9733 3.36083 19.4824C2.56376 18.9915 1.94894 18.3135 1.51638 17.4484C1.08869 16.5784 0.874837 15.5772 0.874837 14.4448C0.874837 13.3075 1.09355 12.3039 1.53097 11.4339C1.96838 10.559 2.58563 9.87862 3.3827 9.3926C4.18464 8.90172 5.13238 8.65627 6.22593 8.65627C7.13479 8.65627 7.93915 8.82395 8.63902 9.15931C9.34375 9.4898 9.9051 9.95881 10.3231 10.5663C10.7411 11.169 10.9792 11.8737 11.0375 12.6805H8.51508C8.41302 12.141 8.17001 11.6915 7.78605 11.3318C7.40696 10.9673 6.89907 10.785 6.26238 10.785C5.72289 10.785 5.24902 10.9309 4.84077 11.2225C4.43251 11.5092 4.11417 11.9223 3.88574 12.4618C3.66217 13.0013 3.55038 13.6477 3.55038 14.401C3.55038 15.1641 3.66217 15.8202 3.88574 16.3694C4.10931 16.9138 4.42279 17.3342 4.82619 17.6306C5.23444 17.9223 5.71317 18.0681 6.26238 18.0681C6.65119 18.0681 6.9987 17.9952 7.30489 17.8494C7.61595 17.6987 7.87597 17.4824 8.08496 17.2005C8.29395 16.9186 8.43732 16.576 8.51508 16.1726H11.0375C10.9743 16.9648 10.7411 17.6671 10.3377 18.2795C9.93427 18.887 9.38506 19.3633 8.69005 19.7084C7.99504 20.0486 7.17853 20.2187 6.24051 20.2187ZM15.8437 5.06944V20H13.2046V5.06944H15.8437ZM36.2401 16.4861L36.2329 13.3002H36.6557L40.6799 8.80208H43.7637L38.8136 14.3136H38.2668L36.2401 16.4861ZM33.8343 20V5.06944H36.4734V20H33.8343ZM40.8622 20L37.217 14.9041L38.9959 13.045L44.0189 20H40.8622ZM50.0188 20.2187C48.8961 20.2187 47.9265 19.9854 47.11 19.5188C46.2983 19.0474 45.6738 18.3816 45.2364 17.5213C44.799 16.6562 44.5803 15.638 44.5803 14.4667C44.5803 13.3148 44.799 12.3039 45.2364 11.4339C45.6787 10.559 46.2959 9.87862 47.0881 9.3926C47.8803 8.90172 48.8111 8.65627 49.8803 8.65627C50.5705 8.65627 51.2217 8.76806 51.8341 8.99163C52.4514 9.21034 52.9957 9.55055 53.4671 10.0123C53.9434 10.474 54.3177 11.0621 54.5899 11.7765C54.862 12.4861 54.9981 13.3318 54.9981 14.3136V15.1228H45.8196V13.3439H52.4684C52.4635 12.8385 52.3542 12.3889 52.1403 11.9952C51.9265 11.5967 51.6276 11.2832 51.2436 11.0548C50.8645 10.8264 50.4222 10.7121 49.9168 10.7121C49.3773 10.7121 48.9034 10.8434 48.4952 11.1058C48.0869 11.3634 47.7686 11.7036 47.5401 12.1265C47.3166 12.5444 47.2023 13.0037 47.1975 13.5043V15.0572C47.1975 15.7084 47.3166 16.2674 47.5547 16.7339C47.7929 17.1957 48.1258 17.5505 48.5535 17.7983C48.9812 18.0413 49.4818 18.1628 50.0553 18.1628C50.4392 18.1628 50.7867 18.1094 51.0978 18.0025C51.4089 17.8907 51.6786 17.7279 51.907 17.514C52.1355 17.3002 52.308 17.0353 52.4246 16.7194L54.8888 16.9964C54.7332 17.6477 54.4368 18.2163 53.9993 18.7023C53.5668 19.1835 53.0127 19.5577 52.3372 19.825C51.6616 20.0875 50.8888 20.2187 50.0188 20.2187ZM62.8224 8.80208V10.8434H56.3851V8.80208H62.8224ZM57.9744 6.11925H60.6135V16.6319C60.6135 16.9867 60.6669 17.2588 60.7739 17.4484C60.8856 17.6331 61.0315 17.7594 61.2113 17.8275C61.3911 17.8955 61.5904 17.9296 61.8091 17.9296C61.9743 17.9296 62.125 17.9174 62.2611 17.8931C62.402 17.8688 62.509 17.8469 62.5819 17.8275L63.0266 19.8906C62.8856 19.9392 62.6839 19.9927 62.4215 20.051C62.1639 20.1094 61.848 20.1434 61.4737 20.1531C60.8127 20.1725 60.2174 20.0729 59.6876 19.8542C59.1578 19.6306 58.7374 19.2855 58.4264 18.819C58.1202 18.3524 57.9695 17.7692 57.9744 17.0693V6.11925ZM69.8667 20.2187C68.744 20.2187 67.7744 19.9854 66.9579 19.5188C66.1462 19.0474 65.5217 18.3816 65.0843 17.5213C64.6468 16.6562 64.4281 15.638 64.4281 14.4667C64.4281 13.3148 64.6468 12.3039 65.0843 11.4339C65.5265 10.559 66.1438 9.87862 66.936 9.3926C67.7282 8.90172 68.6589 8.65627 69.7282 8.65627C70.4183 8.65627 71.0696 8.76806 71.682 8.99163C72.2992 9.21034 72.8436 9.55055 73.315 10.0123C73.7913 10.474 74.1656 11.0621 74.4377 11.7765C74.7099 12.4861 74.846 13.3318 74.846 14.3136V15.1228H65.6675V13.3439H72.3163C72.3114 12.8385 72.202 12.3889 71.9882 11.9952C71.7743 11.5967 71.4754 11.2832 71.0915 11.0548C70.7124 10.8264 70.2701 10.7121 69.7646 10.7121C69.2252 10.7121 68.7513 10.8434 68.343 11.1058C67.9348 11.3634 67.6164 11.7036 67.388 12.1265C67.1644 12.5444 67.0502 13.0037 67.0454 13.5043V15.0572C67.0454 15.7084 67.1644 16.2674 67.4026 16.7339C67.6407 17.1957 67.9737 17.5505 68.4014 17.7983C68.8291 18.0413 69.3297 18.1628 69.9032 18.1628C70.2871 18.1628 70.6346 18.1094 70.9457 18.0025C71.2567 17.8907 71.5265 17.7279 71.7549 17.514C71.9833 17.3002 72.1559 17.0353 72.2725 16.7194L74.7366 16.9964C74.5811 17.6477 74.2846 18.2163 73.8472 18.7023C73.4147 19.1835 72.8606 19.5577 72.185 19.825C71.5095 20.0875 70.7367 20.2187 69.8667 20.2187Z" fill="url(#paint1_linear_2_127)"/>
+<path d="M6.24051 20.2187C5.12266 20.2187 4.16277 19.9733 3.36083 19.4824C2.56376 18.9915 1.94894 18.3135 1.51638 17.4484C1.08869 16.5784 0.874837 15.5772 0.874837 14.4448C0.874837 13.3075 1.09355 12.3039 1.53097 11.4339C1.96838 10.559 2.58563 9.87862 3.3827 9.3926C4.18464 8.90172 5.13238 8.65627 6.22593 8.65627C7.13479 8.65627 7.93915 8.82395 8.63902 9.15931C9.34375 9.4898 9.9051 9.95881 10.3231 10.5663C10.7411 11.169 10.9792 11.8737 11.0375 12.6805H8.51508C8.41302 12.141 8.17001 11.6915 7.78605 11.3318C7.40696 10.9673 6.89907 10.785 6.26238 10.785C5.72289 10.785 5.24902 10.9309 4.84077 11.2225C4.43251 11.5092 4.11417 11.9223 3.88574 12.4618C3.66217 13.0013 3.55038 13.6477 3.55038 14.401C3.55038 15.1641 3.66217 15.8202 3.88574 16.3694C4.10931 16.9138 4.42279 17.3342 4.82619 17.6306C5.23444 17.9223 5.71317 18.0681 6.26238 18.0681C6.65119 18.0681 6.9987 17.9952 7.30489 17.8494C7.61595 17.6987 7.87597 17.4824 8.08496 17.2005C8.29395 16.9186 8.43732 16.576 8.51508 16.1726H11.0375C10.9743 16.9648 10.7411 17.6671 10.3377 18.2795C9.93427 18.887 9.38506 19.3633 8.69005 19.7084C7.99504 20.0486 7.17853 20.2187 6.24051 20.2187ZM15.8437 5.06944V20H13.2046V5.06944H15.8437ZM36.2401 16.4861L36.2329 13.3002H36.6557L40.6799 8.80208H43.7637L38.8136 14.3136H38.2668L36.2401 16.4861ZM33.8343 20V5.06944H36.4734V20H33.8343ZM40.8622 20L37.217 14.9041L38.9959 13.045L44.0189 20H40.8622ZM50.0188 20.2187C48.8961 20.2187 47.9265 19.9854 47.11 19.5188C46.2983 19.0474 45.6738 18.3816 45.2364 17.5213C44.799 16.6562 44.5803 15.638 44.5803 14.4667C44.5803 13.3148 44.799 12.3039 45.2364 11.4339C45.6787 10.559 46.2959 9.87862 47.0881 9.3926C47.8803 8.90172 48.8111 8.65627 49.8803 8.65627C50.5705 8.65627 51.2217 8.76806 51.8341 8.99163C52.4514 9.21034 52.9957 9.55055 53.4671 10.0123C53.9434 10.474 54.3177 11.0621 54.5899 11.7765C54.862 12.4861 54.9981 13.3318 54.9981 14.3136V15.1228H45.8196V13.3439H52.4684C52.4635 12.8385 52.3542 12.3889 52.1403 11.9952C51.9265 11.5967 51.6276 11.2832 51.2436 11.0548C50.8645 10.8264 50.4222 10.7121 49.9168 10.7121C49.3773 10.7121 48.9034 10.8434 48.4952 11.1058C48.0869 11.3634 47.7686 11.7036 47.5401 12.1265C47.3166 12.5444 47.2023 13.0037 47.1975 13.5043V15.0572C47.1975 15.7084 47.3166 16.2674 47.5547 16.7339C47.7929 17.1957 48.1258 17.5505 48.5535 17.7983C48.9812 18.0413 49.4818 18.1628 50.0553 18.1628C50.4392 18.1628 50.7867 18.1094 51.0978 18.0025C51.4089 17.8907 51.6786 17.7279 51.907 17.514C52.1355 17.3002 52.308 17.0353 52.4246 16.7194L54.8888 16.9964C54.7332 17.6477 54.4368 18.2163 53.9993 18.7023C53.5668 19.1835 53.0127 19.5577 52.3372 19.825C51.6616 20.0875 50.8888 20.2187 50.0188 20.2187ZM62.8224 8.80208V10.8434H56.3851V8.80208H62.8224ZM57.9744 6.11925H60.6135V16.6319C60.6135 16.9867 60.6669 17.2588 60.7739 17.4484C60.8856 17.6331 61.0315 17.7594 61.2113 17.8275C61.3911 17.8955 61.5904 17.9296 61.8091 17.9296C61.9743 17.9296 62.125 17.9174 62.2611 17.8931C62.402 17.8688 62.509 17.8469 62.5819 17.8275L63.0266 19.8906C62.8856 19.9392 62.6839 19.9927 62.4215 20.051C62.1639 20.1094 61.848 20.1434 61.4737 20.1531C60.8127 20.1725 60.2174 20.0729 59.6876 19.8542C59.1578 19.6306 58.7374 19.2855 58.4264 18.819C58.1202 18.3524 57.9695 17.7692 57.9744 17.0693V6.11925ZM69.8667 20.2187C68.744 20.2187 67.7744 19.9854 66.9579 19.5188C66.1462 19.0474 65.5217 18.3816 65.0843 17.5213C64.6468 16.6562 64.4281 15.638 64.4281 14.4667C64.4281 13.3148 64.6468 12.3039 65.0843 11.4339C65.5265 10.559 66.1438 9.87862 66.936 9.3926C67.7282 8.90172 68.6589 8.65627 69.7282 8.65627C70.4183 8.65627 71.0696 8.76806 71.682 8.99163C72.2992 9.21034 72.8436 9.55055 73.315 10.0123C73.7913 10.474 74.1656 11.0621 74.4377 11.7765C74.7099 12.4861 74.846 13.3318 74.846 14.3136V15.1228H65.6675V13.3439H72.3163C72.3114 12.8385 72.202 12.3889 71.9882 11.9952C71.7743 11.5967 71.4754 11.2832 71.0915 11.0548C70.7124 10.8264 70.2701 10.7121 69.7646 10.7121C69.2252 10.7121 68.7513 10.8434 68.343 11.1058C67.9348 11.3634 67.6164 11.7036 67.388 12.1265C67.1644 12.5444 67.0502 13.0037 67.0454 13.5043V15.0572C67.0454 15.7084 67.1644 16.2674 67.4026 16.7339C67.6407 17.1957 67.9737 17.5505 68.4014 17.7983C68.8291 18.0413 69.3297 18.1628 69.9032 18.1628C70.2871 18.1628 70.6346 18.1094 70.9457 18.0025C71.2567 17.8907 71.5265 17.7279 71.7549 17.514C71.9833 17.3002 72.1559 17.0353 72.2725 16.7194L74.7366 16.9964C74.5811 17.6477 74.2846 18.2163 73.8472 18.7023C73.4147 19.1835 72.8606 19.5577 72.185 19.825C71.5095 20.0875 70.7367 20.2187 69.8667 20.2187Z" fill="url(#paint1_linear_2_127)"/>
+<defs>
+<linearGradient id="paint0_linear_2_127" x1="19.3698" y1="3.96564" x2="33.0084" y2="6.46769" gradientUnits="userSpaceOnUse">
+<stop stop-color="#FF5269"/>
+<stop offset="0.467544" stop-color="#D53021"/>
+<stop offset="1" stop-color="#AB2325"/>
+</linearGradient>
+<linearGradient id="paint1_linear_2_127" x1="2.5" y1="1.5" x2="82" y2="26.5" gradientUnits="userSpaceOnUse">
+<stop stop-color="#FC3751"/>
+<stop offset="0.42169" stop-color="#F04636"/>
+<stop offset="0.560395" stop-color="#C7284A"/>
+<stop offset="0.995354" stop-color="#AB2325"/>
+</linearGradient>
+</defs>
+</svg>
+
+
+            <Button
+            onClick={handleGoogleLogin}
+            disabled={loading}
+            className="mt-4 w-full p-[22px] bg-transparent border dark:border-white/10 border-black/10 text-black dark:text-white font-semibold hover:bg-[#FF0048]/10 dark:hover:text-[#FF0048] hover:text-[#FF0048]"
+          >
+            <svg
+              className="mr-2 h-4 w-4"
+              aria-hidden="true"
+              focusable="false"
+              data-prefix="fab"
+              data-icon="google"
+              role="img"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 488 512"
+            >
+              <path
+                fill="currentColor"
+                d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"
+              ></path>
+            </svg>
+            Google
+          </Button>
+          </div>
+
+          <div className='flex items-center justify-center w-full'>
+            <div className='w-full h-[1px] bg-black/10 dark:bg-white/10'/>
+            <span className='text-muted-foreground text-sm px-4'>or</span>
+            <div className='w-full h-[1px] bg-black/10 dark:bg-white/10'/>
+          </div>
+        
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className='text-muted-foreground text-sm'>Email</FormLabel>
+                    <FormControl>
+                      <Input className='py-[22px] border dark:border-white/10 border-black/10' placeholder="your@email.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className='text-muted-foreground text-sm'>Password</FormLabel>
+                    <FormControl>
+                      <Input 
+                        className='py-[22px] border dark:border-white/10 border-black/10' 
+                        type="password" 
+                        placeholder="•••••••••••••" 
+                        {...field} 
+                        onChange={(e) => {
+                          field.onChange(e)
+                          handlePasswordChange(e)
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button type="submit" className="w-full p-[22px] bg-[#FF0048] hover:bg-[#FF0048]/80 border dark:border-white/10 border-black/10 text-white font-semibold " disabled={loading}>
+                {loading ? 'Signing In...' : 'Sign In'}
+              </Button>
+            </form>
+          </Form>      
+
+          <div className="mt-4 text-muted-foreground text-center text-sm">
+            Don't have an account?{' '}
+            <Link href="/sign-up" className="text-[#FF0048] hover:underline">
+              Sign up
+            </Link>
+          </div>
+          </div>
+      </section>
+      <section className='w-[50%] rounded-3xl border border-muted/80 overflow-clip relative flex items-center justify-center h-full' style={{backgroundImage: 'url(/wavebg.png)', backgroundSize: 'cover'}}>
+      <div className='absolute top-16 left-16 z-30 w-full max-w-[620px]'>
+        
+      <svg width="74" height="64" viewBox="0 0 74 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M58.3154 0.782651H73.3025L58.1087 32.4106H73.3025V63.3151H42.398V32.4106L58.3154 0.782651ZM16.7649 0.782651H31.8554L16.5582 32.4106H31.8554V63.3151H0.950938V32.4106L16.7649 0.782651Z" fill="#FF0048" fill-opacity="0.1"/>
+          </svg>
+
+        <p className='text-white text-2xl lg:text-4xl w-full max-w-[400px] xl:max-w-[500px] -mt-6 ml-6 font-medium'>{currentTestimonial.text}</p>
+
+        <div className='mt-6 ml-6 flex items-center gap-2'>
+          <div className="relative">
+            {imageLoading ? (
+              <Skeleton className="h-[48px] w-[48px] rounded-full" />
+            ) : (
+              <Image
+                src={generateAvatar(currentTestimonial.avatarSeed)}
+                alt={`${currentTestimonial.author}'s avatar`}
+                className="w-[48px] h-[48px] rounded-full object-cover"
+                width={48}
+                height={48}
+                priority
+              />
+            )}
+          </div>
+          <p className='text-muted-foreground text-md'>{currentTestimonial.author}</p>
+        </div>
+      </div>
+      <div className='absolute  inset-0 bg-white/20 dark:bg-[#090909]/60'></div>
+        <div className=' w-full relative h-full flex items-end justify-end'>
+          <RiveComponent className='absolute -bottom-28 -right-28 w-[600px] md:w-[800px] lg:w-[900px] aspect-square z-30' />
+        </div>
+      </section>
+      <ProfileDialog 
+        isOpen={showProfileDialog} 
+        onClose={() => setShowProfileDialog(false)}
+      />
+    </div>
+  )
+} 

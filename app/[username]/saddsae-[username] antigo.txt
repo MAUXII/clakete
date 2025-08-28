@@ -1,0 +1,177 @@
+"use client"
+
+import { createClient } from '@/lib/supabase/auth-config'
+import { notFound } from 'next/navigation'
+import { EditProfileDialog } from "@/components/profile/edit-profile-dialog"
+import { useState, useEffect } from 'react'
+import { ImageEditDialog } from "@/components/profile/avatar-edit-dialog"
+import { use } from 'react'
+import { MdEdit } from "react-icons/md";
+
+interface ProfilePageProps {
+  params: Promise<{
+    username: string
+  }>
+}
+
+export default function ProfilePage({ params }: ProfilePageProps) {
+  const { username } = use(params)
+  const [userData, setUserData] = useState<any>(null)
+  const [isOwnProfile, setIsOwnProfile] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [showAvatarEdit, setShowAvatarEdit] = useState(false)
+  const [showBannerEdit, setShowBannerEdit] = useState(false)
+  const supabase = createClient()
+
+  const fetchProfile = async () => {
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('username', username.toLowerCase())
+      .single()
+
+    if (error || !data) {
+      notFound()
+    }
+
+    setUserData(data)
+    
+    const { data: { user } } = await supabase.auth.getUser()
+    setIsOwnProfile(user?.id === data.id)
+    setLoading(false)
+  }
+
+  const updateProfile = async (updates: any) => {
+    if (!userData) return
+    
+    try {
+      const { error } = await supabase
+        .from('users')
+        .update(updates)
+        .eq('id', userData.id)
+      
+      if (error) {
+        console.error('Erro ao atualizar:', error.message)
+        throw error
+      }
+      
+      await fetchProfile()
+    } catch (error) {
+      console.error('Erro completo:', error)
+      throw error
+    }
+  }
+
+  useEffect(() => {
+    fetchProfile()
+  }, [username])
+
+  if (loading) return <div>Loading...</div>
+  if (!userData) return null
+
+  return (
+    <div className="min-h-screen">
+      {/* Banner */}
+      <div 
+        className="w-full h-[350px] border dark:border-white/20  border-black/20 rounded-lg bg-cover bg-center relative group"
+        style={{ 
+          backgroundImage: `url(${userData.banner_url || '/default-banner.jpg'})`,
+          backgroundPosition: 'center 20%'
+        }}
+        onClick={() => isOwnProfile && setShowBannerEdit(true)}
+      >
+        {isOwnProfile && (
+          <button 
+            onClick={() => setShowBannerEdit(true)}
+            className="absolute w-full backdrop-blur-[1.2px] h-full rounded-lg inset-0 cursor-pointer flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity"
+          >
+            <span className="text-white">Edit Banner</span>
+          </button>
+        )}
+        <div className="absolute cursor-pointer inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+      </div>
+      
+      {/* Profile info */}
+      <div className="px-8 w-fit">
+        <div className="relative -mt-24 z-10">
+          <div className="flex flex-col  gap-6">
+            {/* Avatar */}
+            <div className="relative group max-w-36">
+              <img
+                src={userData.avatar_url || '/default-avatar.png'}
+                alt={userData.username}
+                className="aspect-square h-36 rounded-2xl ring-2 dark:ring-white/20 ring-black/20 object-cover"
+              />
+              {isOwnProfile && (
+                <button 
+                  onClick={() => setShowAvatarEdit(true)}
+                  className="absolute inset-0 rounded-2xl backdrop-blur-[1.2px] flex items-center justify-center bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <span className="text-white"><MdEdit className='h-6 w-auto' /></span>
+                </button>
+              )}
+            </div>
+
+            {/* Info */}
+            <div className="flex-1 ">
+              <h1 className="text-3xl font-bold dark:text-white">
+                {userData.display_name || userData.username}
+              </h1>
+              <h2 className="text-lg -mt-1 text-muted-foreground">
+                @{userData.username}
+              </h2>
+              <div className='flex'>
+                
+              <div className='flex items-center mt-2 gap-4'> 
+                  <div className="flex flex-col">
+                    <span className="dark:text-white text-xl font-semibold text-black">982</span>
+                    <span className="text-muted-foreground text-sm">Films</span>
+                  </div>
+                  
+                  <div className="text-muted-foreground text-sm w-[1px] h-[61%] bg-muted-foreground/40"/>
+
+                  <div className="flex flex-col">
+                    <span className="dark:text-white text-xl font-semibold text-black">20</span>
+                    <span className="text-muted-foreground text-sm">Followers</span>
+                  </div>
+
+                  <div className="text-muted-foreground text-sm w-[1px] h-[61%] bg-muted-foreground/40"/>
+
+                  <div className="flex flex-col">
+                    <span className="dark:text-white text-xl font-semibold text-black">12</span>
+                    <span className="text-muted-foreground text-sm">Following</span>
+                  </div>
+                </div>
+                
+              
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Modais de edição */}
+      <ImageEditDialog
+        isOpen={showAvatarEdit}
+        onClose={() => setShowAvatarEdit(false)}
+        onSave={async (image) => {
+          await updateProfile({ avatar_url: image });
+          setShowAvatarEdit(false);
+        }}
+        onSelect={() => {}}
+        type="avatar"
+      />
+
+      <ImageEditDialog
+        isOpen={showBannerEdit}
+        onClose={() => setShowBannerEdit(false)}
+        onSave={async (image) => {
+          await updateProfile({ banner_url: image });
+          setShowBannerEdit(false);
+        }}
+        onSelect={() => {}}
+        type="banner"
+      />
+    </div>
+  )
+} 
