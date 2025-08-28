@@ -3,7 +3,7 @@ import { FaGithubSquare, FaInstagram, FaLinkedin, FaTwitter } from "react-icons/
 import { useRive } from "@rive-app/react-canvas";
 
 export default function Footer() {
-    const { rive, RiveComponent } = useRive({
+    const { RiveComponent } = useRive({
         src: '/cat1.riv',
         artboard: 'Artboard',
         stateMachines: ['State Machine 1'],

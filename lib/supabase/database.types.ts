@@ -11,7 +11,7 @@ export interface Database {
     Tables: {
       film_interactions: {
         Row: {
-          release_date: any
+          release_date: string | null
           movie_title: string | undefined
           poster_path: string | undefined
           id: number

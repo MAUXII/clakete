@@ -16,8 +16,9 @@ import { ToggleGroup, ToggleGroupItem } from "./toggle-group"
 import { Moon, Sun } from "lucide-react"
 import { BiHomeAlt } from "react-icons/bi"
 import Link from "next/link"
+import Image from "next/image"
 import { useTheme } from "next-themes"
-import { LuClapperboard, LuSearch, LuTrendingUp, LuStar, LuCalendar } from "react-icons/lu"
+import { LuClapperboard } from "react-icons/lu"
 import { List } from "lucide-react"
 import { MovieCard } from "../movies/movie-card"
 import { useMovies } from "@/hooks/use-movies"
@@ -35,7 +36,6 @@ export function Navbar() {
   const { movies, loading: moviesLoading } = useMovies()
   const featuredMovie = movies?.[0]
   const { profile, loading } = useProfile()
-  const user = useUser()
   const supabase = useSupabaseClient()
   const router = useRouter()
 
@@ -49,11 +49,12 @@ export function Navbar() {
   return (
     <div className="flex px-4 z-[50] w-full max-w-[1152px] items-center gap-4 absolute  top-7 self-center  justify-center ">
      <Link href="/" className="h-12 aspect-square border-[1px] border-black/20 rounded-md dark:border-white/20 flex items-center justify-center" style={{background: "linear-gradient(154deg, rgba(241, 94, 116, 0.10) 4.04%, rgba(255, 23, 52, 0.10) 97.21%)"}}>
-  <img 
+  <Image 
     src="/logopage.svg"
     alt="Logo"
+    width={48}
+    height={48}
     className="w-full"
-    style={{ display: 'block', verticalAlign: 'middle' }}
   />
 </Link>
     <nav className=' w-full dark:bg-[#444444]/10 flex items-center justify-between px-2 bg-[#F5F5F5]/40 backdrop-blur-lg border-[1px] h-12 border-black/15 rounded-md dark:border-white/15 '>
@@ -156,9 +157,11 @@ export function Navbar() {
       {!loading && (
           <>
             {profile?.avatar_url ? (
-              <img 
+              <Image 
                 src={profile.avatar_url}
                 alt={profile.username}
+                width={48}
+                height={48}
                 className="w-full h-full object-cover"
               />
             ) : (

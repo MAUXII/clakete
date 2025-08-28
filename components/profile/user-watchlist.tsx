@@ -23,7 +23,7 @@ export function UserWatchlist({ userId }: UserWatchlistProps) {
   const [loading, setLoading] = useState(true)
   const supabase = useSupabaseClient()
   
-  const { rive, RiveComponent } = useRive({
+  const { RiveComponent } = useRive({
     src: '/cat1.riv',
     artboard: 'Artboard',
     stateMachines: ['State Machine 1'],

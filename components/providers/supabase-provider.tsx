@@ -2,7 +2,6 @@
 
 import { createClient } from '@/lib/supabase/auth-config'
 import { SessionContextProvider } from '@supabase/auth-helpers-react'
-import { useEffect } from 'react'
 
 export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   const supabase = createClient()
