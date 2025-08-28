@@ -22,7 +22,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { useState } from "react"
-import { createClient } from "@/lib/supabase/auth-config"
+import { useSupabaseClient } from "@supabase/auth-helpers-react"
 import { useRouter } from "next/navigation"
 
 const editProfileSchema = z.object({
@@ -44,7 +44,7 @@ export function EditProfileButton({ initialData, userId }: EditProfileButtonProp
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
-  const supabase = createClient()
+  const supabase = useSupabaseClient()
 
   const form = useForm<EditProfileValues>({
     resolver: zodResolver(editProfileSchema),

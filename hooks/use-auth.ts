@@ -1,5 +1,5 @@
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/auth-config'
+import { useSupabaseClient } from '@supabase/auth-helpers-react'
 import { useEffect, useState } from 'react'
 import { User } from '@supabase/supabase-js'
 import { Database } from '@/lib/supabase/database.types'
@@ -20,7 +20,7 @@ export function useAuth() {
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
-  const supabase = createClient()
+  const supabase = useSupabaseClient()
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
