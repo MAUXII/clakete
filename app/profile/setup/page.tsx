@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { createClient } from '@/lib/supabase/auth-config'
+import { useSupabaseClient } from '@supabase/auth-helpers-react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
@@ -38,7 +38,7 @@ const formSchema = z.object({
 export default function ProfileSetup() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
-  const supabase = createClient()
+  const supabase = useSupabaseClient()
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
