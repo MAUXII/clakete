@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MovieCard } from "@/components/movies/movie-card";
 import { useGenres } from "@/hooks/use-genres";
@@ -31,7 +31,7 @@ interface MoviesResponse {
   total_results: number;
 }
 
-export default function FilmsDiscoverPage() {
+function FilmsDiscoverContent() {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -286,5 +286,13 @@ export default function FilmsDiscoverPage() {
         </>
       )}
     </div>
+  );
+}
+
+export default function FilmsDiscoverPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <FilmsDiscoverContent />
+    </Suspense>
   );
 } 

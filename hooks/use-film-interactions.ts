@@ -14,7 +14,7 @@ interface FilmInteractions {
   isInWatchlist: boolean;
   poster_path?: string;
   movie_title?: string;
-  release_date?: string;
+  release_date?: string | null;
 }
 
 type FilmInteractionRow = Database['public']['Tables']['film_interactions']['Row'];
