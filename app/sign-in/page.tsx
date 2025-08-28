@@ -11,7 +11,7 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { createClient } from '@/lib/supabase/auth-config'
+import { useSupabaseClient } from '@supabase/auth-helpers-react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
@@ -38,11 +38,9 @@ export default function SignIn() {
   const [imageLoading, setImageLoading] = useState(true)
 
   const [showProfileDialog, setShowProfileDialog] = useState(false)
-  const supabase = createClient()
+  const supabase = useSupabaseClient()
   useEffect(() => {
     async function fetchUser() {
-      const supabase = createClient();
-      
       // Obter o usuário logado
       const { data: { session }, error } = await supabase.auth.getSession();
       
@@ -59,7 +57,7 @@ export default function SignIn() {
     }
     
     fetchUser();
-  }, []);
+  }, [supabase]);
   const { rive, RiveComponent } = useRive({
     src: '/cat_password.riv',
     artboard: 'Main',

@@ -17,7 +17,7 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { createClient } from '@/lib/supabase/auth-config'
+import { useSupabaseClient } from '@supabase/auth-helpers-react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
@@ -35,7 +35,7 @@ export default function SignUp() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [showProfileDialog, setShowProfileDialog] = useState(false)
-  const supabase = createClient()
+  const supabase = useSupabaseClient()
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
