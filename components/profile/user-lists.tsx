@@ -1,8 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useSupabaseClient, useUser } from "@supabase/auth-helpers-react"
-import { Database } from "@/lib/supabase/database.types"
+import { useUser } from "@supabase/auth-helpers-react"
 import { List } from "@/types/list"
 import { Button } from "@/components/ui/button"
 import { Plus, Trash2, MoreVertical } from "lucide-react"

@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/command"
 import { Search } from "lucide-react"
 import { Button } from "../ui/button"
+import Image from "next/image"
 
 import { DialogTitle } from "../ui/dialog"
 
@@ -114,15 +115,19 @@ export function SearchCommand() {
                        
                        <div className="flex flex-col w-full items-center relative">
                   {movie.backdrop_path ? (
-                    <img
+                    <Image
                       src={`https://image.tmdb.org/t/p/w500/${movie.backdrop_path}`}
                       alt={movie.title || ""}
+                      width={500}
+                      height={192}
                       className="h-48 w-full object-cover rounded"
                     />
                   ) : movie.poster_path ? (
-                    <img
+                    <Image
                       src={`https://image.tmdb.org/t/p/w342/${movie.poster_path}`}
                       alt={movie.title || ""}
+                      width={342}
+                      height={192}
                       className="h-48 w-full object-cover rounded"
                     />
                   ) : (

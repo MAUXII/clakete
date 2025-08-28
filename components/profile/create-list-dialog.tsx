@@ -61,7 +61,7 @@ export function CreateListDialog({ open, onOpenChange, onListCreated }: CreateLi
       } else {
         alert("Erro ao criar lista. Verifique se você está logado.")
       }
-    } catch (error) {
+    } catch {
       alert("Erro ao criar lista. Tente novamente.")
     } finally {
       setLoading(false)

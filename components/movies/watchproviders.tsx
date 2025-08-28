@@ -2,15 +2,13 @@ import { useState } from "react";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
 import Image from "next/image";
 import Link from "next/link";
-import Trailer, { Video } from "./trailer";
+import Trailer from "./trailer";
 import { Movie } from "@/app/film/[id]/page";
 import { FaPlay } from "react-icons/fa6";
 
@@ -20,19 +18,7 @@ interface WatchProvider {
   provider_id: number;
 }
 
-interface CountryData {
-  link: string;
-  flatrate?: WatchProvider[];
-  rent?: WatchProvider[];
-  buy?: WatchProvider[];
-}
 
-interface MovieTrailer {
-  key: string;
-  site: string;
-  type: string;
-  name: string;
-}
 
 
 

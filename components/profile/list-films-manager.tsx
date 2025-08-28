@@ -1,10 +1,10 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useSupabaseClient, useUser } from "@supabase/auth-helpers-react"
-import { Database } from "@/lib/supabase/database.types"
+import { useUser } from "@supabase/auth-helpers-react"
 import { ListFilm } from "@/types/list"
 import { MovieCard } from "../movies/movie-card"
+import Image from "next/image"
 import { Plus } from "lucide-react"
 import { CommandDialog, CommandInput, CommandEmpty, CommandGroup, CommandItem, CommandList } from "@/components/ui/command"
 import { useDebounce } from "@/hooks/use-debounce"
@@ -84,9 +84,11 @@ function SortableFilm({
         >
           {film ? (
             <>
-              <img 
+              <Image 
                 src={film.poster_path ? `https://image.tmdb.org/t/p/w300${film.poster_path}` : '/placeholder.png'}
                 alt={film.title}
+                width={300}
+                height={450}
                 className="h-full w-full object-cover"
               />
               {canEdit && (
@@ -128,7 +130,7 @@ function SortableFilm({
 
 export function ListFilmsManager({ listId, isEditable = false, onFilmAdded }: ListFilmsManagerProps) {
   const [listFilms, setListFilms] = useState<ListFilm[]>([])
-  const [selectedPosition, setSelectedPosition] = useState<number>(-1)
+
   const [showSearchCommand, setShowSearchCommand] = useState(false)
   const [query, setQuery] = useState("")
   const [results, setResults] = useState<SearchResult[]>([])
@@ -313,7 +315,7 @@ export function ListFilmsManager({ listId, isEditable = false, onFilmAdded }: Li
         onFilmAdded?.()
       }
 
-      setSelectedPosition(-1)
+      
       setShowSearchCommand(false)
     } catch (error) {
       console.error('Error selecting film:', error)
@@ -338,7 +340,7 @@ export function ListFilmsManager({ listId, isEditable = false, onFilmAdded }: Li
   // Abrir diálogo de pesquisa para adicionar filme
   const handleSlotClick = (position: number) => {
     if (!canEdit) return
-    setSelectedPosition(position)
+    
     setQuery('')
     setShowSearchCommand(true)
   }
@@ -394,9 +396,11 @@ export function ListFilmsManager({ listId, isEditable = false, onFilmAdded }: Li
                 onSelect={() => handleFilmSelect(movie.id)}
                 className="flex items-center gap-2"
               >
-                <img 
+                <Image 
                   src={movie.poster_path ? `https://image.tmdb.org/t/p/w92${movie.poster_path}` : '/placeholder.png'}
                   alt={movie.title}
+                  width={32}
+                  height={48}
                   className="w-8 h-12 object-cover rounded"
                 />
                 <div>

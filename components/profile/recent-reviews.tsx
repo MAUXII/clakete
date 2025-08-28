@@ -4,9 +4,10 @@ import { useEffect, useState } from "react"
 import { useSupabaseClient, useUser } from "@supabase/auth-helpers-react"
 import { Database } from "@/lib/supabase/database.types"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Skeleton } from "@/components/ui/skeleton"
+
 import { FaStar } from "react-icons/fa"
 import Link from "next/link"
+import Image from "next/image"
 
 interface FilmReview {
   id: number
@@ -99,7 +100,7 @@ export function UserRecentReviews({ userId, limit = 6, onLandingPage }: RecentRe
     }
 
     fetchReviews()
-  }, [supabase, targetUserId, limit])
+  }, [supabase, targetUserId, limit, fetchUserData])
 
   if (loading) {
     return (
@@ -137,9 +138,11 @@ export function UserRecentReviews({ userId, limit = 6, onLandingPage }: RecentRe
               
                 <Link href={`/film/${review.film_id}`}>
                   <div className="aspect-[2/3] w-32 rounded-md border dark:border-white/20 border-black/20 overflow-hidden">
-                    <img 
+                    <Image 
                       src={review.poster_path ? `https://image.tmdb.org/t/p/w200${review.poster_path}` : '/placeholder.png'}
                       alt="Poster do filme"
+                      width={128}
+                      height={192}
                       className="h-full w-full object-cover"
                     />
                   </div>
@@ -169,7 +172,7 @@ export function UserRecentReviews({ userId, limit = 6, onLandingPage }: RecentRe
               {/* Foto de perfil com link para o perfil do usuário */}
               <Link href={`/${review.userData?.username}`}>
                 <Avatar className="h-8 w-8 rounded-md border dark:border-white/20 border-black/20">
-                  <AvatarImage src={review.userData?.avatar_url || undefined} alt={review.userData?.display_name || review.userData?.username || ''} />
+                  <AvatarImage src={review.userData?.avatar_url || ''} alt={review.userData?.display_name || review.userData?.username || ''} />
                   <AvatarFallback className="rounded-md text-base font-semibold w-full flex">{(review.userData?.display_name?.[0] || review.userData?.username?.[0] || 'U').toUpperCase()}</AvatarFallback>
                 </Avatar>
               </Link>

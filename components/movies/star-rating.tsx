@@ -19,7 +19,7 @@ export function StarRating({
   onRate,
   readonly = false,
   size = "md",
-}: StarRatingProps) {
+}: Omit<StarRatingProps, 'filmId'>) {
   const [rating, setRating] = useState(initialRating);
   const [hoverRating, setHoverRating] = useState(0);
 
