@@ -4,6 +4,15 @@ import axios from 'axios';
 const TMDB_API_KEY = process.env.NEXT_TMDB_API_KEY;
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 
+/** Parâmetros que o cliente não pode sobrescrever (segurança / defaults). */
+const LOCKED_PARAM_KEYS = new Set([
+  'api_key',
+  'language',
+  'include_adult',
+  'include_video',
+  'type',
+])
+
 export async function GET(req: NextRequest) {
   try {
     // Parse query params
@@ -37,6 +46,23 @@ export async function GET(req: NextRequest) {
 
     if (with_genres) params.with_genres = with_genres;
     if (vote_average_lte) params['vote_average.lte'] = vote_average_lte;
+
+    // Repassa outros filtros do Discover (vote_count.gte, without_genres, etc.)
+    searchParams.forEach((value, key) => {
+      if (LOCKED_PARAM_KEYS.has(key) || value === '') return
+      if (key === 'page') {
+        params.page = value
+        return
+      }
+      if (key === 'sort_by') {
+        params.sort_by = value
+        return
+      }
+      params[key] = value
+    })
+
+    params.include_adult = false
+    params.include_video = false
 
     // Faz a requisição para o TMDB
     const response = await axios.get(`${TMDB_BASE_URL}/discover/movie`, {

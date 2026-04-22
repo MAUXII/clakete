@@ -9,17 +9,20 @@ import {
   NavigationMenuTrigger,
   navigationMenuTriggerStyle,
   } from "@/components/ui/navigation-menu"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuPortal, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger, DropdownMenuSeparator } from "./dropdown-menu"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./dropdown-menu"
 import { FiUser } from "react-icons/fi"
 import { RiLoginBoxLine } from "react-icons/ri"
-import { ToggleGroup, ToggleGroupItem } from "./toggle-group"
-import { Moon, Sun } from "lucide-react"
+import {
+  List,
+  Compass,
+  TrendingUp,
+  Star,
+  CalendarClock,
+} from "lucide-react"
 import { BiHomeAlt } from "react-icons/bi"
 import Link from "next/link"
 import Image from "next/image"
-import { useTheme } from "next-themes"
 import { LuClapperboard } from "react-icons/lu"
-import { List } from "lucide-react"
 import { MovieCard } from "../movies/movie-card"
 import { useMovies } from "@/hooks/use-movies"
 import { Skeleton } from "./skeleton"
@@ -32,7 +35,6 @@ import React from "react"
 import { cn } from "@/lib/utils"
 
 export function Navbar() {
-  const { theme, setTheme } = useTheme()
   const { movies, loading: moviesLoading } = useMovies()
   const featuredMovie = movies?.[0]
   const { profile, loading } = useProfile()
@@ -46,18 +48,61 @@ export function Navbar() {
     router.refresh()
   }
 
+  const movieNavLinks = [
+    {
+      href: "/films/discover",
+      title: "Discover",
+      description: "Genres & filters",
+      Icon: Compass,
+    },
+    {
+      href: "/films/popular",
+      title: "Popular",
+      description: "Trending worldwide",
+      Icon: TrendingUp,
+    },
+    {
+      href: "/films/top-rated",
+      title: "Top rated",
+      description: "Critically acclaimed",
+      Icon: Star,
+    },
+    {
+      href: "/films/upcoming",
+      title: "Upcoming",
+      description: "Coming soon",
+      Icon: CalendarClock,
+    },
+  ] as const
+
   return (
-    <div className="flex px-4 z-[50] w-full max-w-[1152px] items-center gap-4 absolute  top-7 self-center  justify-center ">
-     <Link href="/" className="h-12 aspect-square border-[1px] border-black/20 rounded-md dark:border-white/20 flex items-center justify-center" style={{background: "linear-gradient(154deg, rgba(241, 94, 116, 0.10) 4.04%, rgba(255, 23, 52, 0.10) 97.21%)"}}>
-  <Image 
-    src="/logopage.svg"
-    alt="Logo"
-    width={48}
-    height={48}
-    className="w-full"
-  />
-</Link>
-    <nav className=' w-full dark:bg-[#444444]/10 flex items-center justify-between px-2 bg-[#F5F5F5]/40 backdrop-blur-lg border-[1px] h-12 border-black/15 rounded-md dark:border-white/15 '>
+    <header className="pointer-events-none w-full absolute max-w-[1152px] self-center left-1/2 -translate-x-1/2 inset-x-0 top-0 z-[50] flex justify-center pt-3 px-4 sm:pt-4">
+      <div
+        className={cn(
+          "pointer-events-auto flex w-full  items-center gap-3 sm:gap-4",
+          "rounded-2xl border border-white/[0.08]",
+          "bg-zinc-950/45 shadow-[0_8px_32px_-8px_rgba(0,0,0,0.55)]",
+          "backdrop-blur-2xl backdrop-saturate-150",
+          "supports-[backdrop-filter]:bg-zinc-950/30",
+          "px-3 py-2.5 sm:px-4 sm:py-3  ",
+        )}
+      >
+        <Link
+          href="/"
+          className={cn(
+            "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl sm:h-12 sm:w-12",
+            "border border-white/[0.08] bg-white/[0.04]",
+            "ring-1 ring-inset ring-white/[0.04]",
+            "transition hover:border-white/[0.12] hover:bg-white/[0.07]",
+          )}
+          style={{
+            backgroundImage:
+              "linear-gradient(145deg, rgba(255,255,255,0.06) 0%, rgba(255,0,72,0.06) 100%)",
+          }}
+        >
+          <Image src="/logopage.svg" alt="Clakete" width={44} height={44} className="h-9 w-9 sm:h-10 sm:w-10" />
+        </Link>
+        <nav className="flex h-11 min-w-0 flex-1 items-center justify-between gap-2 sm:h-12 sm:gap-3 sm:px-1">
       <NavigationMenu>
         <NavigationMenuList>
           <NavigationMenuItem>
@@ -83,67 +128,55 @@ export function Navbar() {
             <LuClapperboard />
             Movies
             </NavigationMenuTrigger >
-            <NavigationMenuContent className="dark:bg-[#09090B]/70 bg-white/50 p-6 md:w-[400px] lg:w-[700px] flex gap-3">
-            <NavigationMenuLink asChild>
-                    <div
-                      className="flex h-full w-1/3 select-none flex-col justify-end rounded-md   no-underline outline-none focus:shadow-md"
+            <NavigationMenuContent className="rounded-2xl p-4 text-zinc-50 backdrop-blur-xl md:w-[420px] lg:w-[620px]">
+              <div className="grid min-h-[min(320px,42vh)] grid-cols-[minmax(9rem,12.5rem)_1fr] grid-rows-1 items-stretch gap-4">
+                <NavigationMenuLink asChild>
+                  <div className="flex h-full min-h-0 w-full select-none flex-col rounded-xl no-underline outline-none focus-visible:ring-2 focus-visible:ring-white/25">
+                    {moviesLoading ? (
+                      <Skeleton className="h-full min-h-[200px] w-full shrink-0 rounded-xl bg-zinc-900" />
+                    ) : featuredMovie ? (
+                      <MovieCard key={featuredMovie.id} movie={featuredMovie} variant="nav-fill" />
+                    ) : null}
+                  </div>
+                </NavigationMenuLink>
+                <ul
+                  className={cn(
+                    "flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-xl",
+                    "border border-white/[0.06] bg-zinc-900/40",
+                  )}
+                >
+                  {movieNavLinks.map(({ href, title, description, Icon }, index) => (
+                    <li
+                      key={href}
+                      className={cn(
+                        "flex min-h-0 flex-1 border-b border-white/[0.05] last:border-b-0",
+                        index % 2 === 0 ? "bg-white/[0.02]" : "bg-transparent",
+                      )}
                     >
-                      {moviesLoading ? (
-                        <Skeleton className="w-full h-full" />
-                      ) : featuredMovie ? (
-                        <MovieCard key={featuredMovie.id} movie={featuredMovie} />
-                      ) : null}
-                    </div>
-                  </NavigationMenuLink>
-                            <ul className="grid w-2/3 gap-3 lg:grid-cols-2">
-                <li className="group">
-                  <Link href="/films/discover" className="block h-full">
-                    <div className="h-full bg-gradient-to-br from-purple-500/5 via-purple-500/10 to-pink-500/5 border border-purple-500/20 rounded-xl p-6 hover:from-purple-500/10 hover:via-purple-500/15 hover:to-pink-500/10 hover:border-purple-500/30 transition-all duration-300 flex flex-col items-center justify-center text-center relative overflow-hidden">
-                      <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                      <div className="relative z-10">
-                        <h3 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">Discover</h3>
-                        <p className="text-sm text-muted-foreground font-medium">Filter by genre & filters</p>
-                      </div>
-                    </div>
-                  </Link>
-                </li>
-                
-                <li className="group">
-                  <Link href="/films/popular" className="block h-full">
-                    <div className="h-full bg-gradient-to-br from-orange-500/5 via-orange-500/10 to-red-500/5 border border-orange-500/20 rounded-xl p-6 hover:from-orange-500/10 hover:via-orange-500/15 hover:to-red-500/10 hover:border-orange-500/30 transition-all duration-300 flex flex-col items-center justify-center text-center relative overflow-hidden">
-                      <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                      <div className="relative z-10">
-                        <h3 className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent mb-2">Popular</h3>
-                        <p className="text-sm text-muted-foreground font-medium">Trending worldwide</p>
-                      </div>
-                    </div>
-                  </Link>
-                </li>
-                
-                <li className="group">
-                  <Link href="/films/top-rated" className="block h-full">
-                    <div className="h-full bg-gradient-to-br from-yellow-500/5 via-yellow-500/10 to-amber-500/5 border border-yellow-500/20 rounded-xl p-6 hover:from-yellow-500/10 hover:via-yellow-500/15 hover:to-amber-500/10 hover:border-yellow-500/30 transition-all duration-300 flex flex-col items-center justify-center text-center relative overflow-hidden">
-                      <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                      <div className="relative z-10">
-                        <h3 className="text-2xl font-bold bg-gradient-to-r from-yellow-600 to-amber-600 bg-clip-text text-transparent mb-2">Top Rated</h3>
-                        <p className="text-sm text-muted-foreground font-medium">Critically acclaimed</p>
-                      </div>
-                    </div>
-                  </Link>
-                </li>
-                
-                <li className="group">
-                  <Link href="/films/upcoming" className="block h-full">
-                    <div className="h-full bg-gradient-to-br from-blue-500/5 via-blue-500/10 to-cyan-500/5 border border-blue-500/20 rounded-xl p-6 hover:from-blue-500/10 hover:via-blue-500/15 hover:to-cyan-500/10 hover:border-blue-500/30 transition-all duration-300 flex flex-col items-center justify-center text-center relative overflow-hidden">
-                      <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                      <div className="relative z-10">
-                        <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent mb-2">Upcoming</h3>
-                        <p className="text-sm text-muted-foreground font-medium">Coming soon</p>
-                      </div>
-                    </div>
-                  </Link>
-                </li>
-              </ul>
+                      <Link
+                        href={href}
+                        className={cn(
+                          "group flex h-full w-full min-h-0 items-center gap-3 px-3 py-2 sm:px-4",
+                          "transition-[background-color,color,transform] duration-200 hover:bg-white/[0.06] active:scale-[0.99]",
+                          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/20",
+                        )}
+                      >
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-zinc-800/70 text-zinc-400 transition-colors group-hover:bg-zinc-800 group-hover:text-[#FF335F]">
+                          <Icon className="h-4 w-4" aria-hidden />
+                        </span>
+                        <span className="min-w-0 flex-1 leading-snug">
+                          <span className="block text-sm font-semibold tracking-tight text-zinc-100 transition-colors group-hover:text-white">
+                            {title}
+                          </span>
+                          <span className="mt-0.5 block text-[11px] text-zinc-500 transition-colors group-hover:text-zinc-400 sm:text-xs">
+                            {description}
+                          </span>
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </NavigationMenuContent>
           </NavigationMenuItem>
         </NavigationMenuList>
@@ -152,8 +185,16 @@ export function Navbar() {
       <SearchCommand />
     </nav>
  
-    <DropdownMenu>
-      <DropdownMenuTrigger className='h-12 ring-1 dark:ring-white/20 ring-black/20 overflow-clip focus:outline-none aspect-square dark:bg-gray-400/10 flex items-center justify-center bg-gray-300/20 rounded-md'>
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            className={cn(
+              "flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-xl sm:size-12",
+              "border border-white/[0.08] bg-white/[0.04] text-zinc-200",
+              "ring-1 ring-inset ring-white/[0.04]",
+              "transition hover:border-white/[0.12] hover:bg-white/[0.07] hover:text-white",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0048]/50",
+            )}
+          >
       {!loading && (
           <>
             {profile?.avatar_url ? (
@@ -169,8 +210,12 @@ export function Navbar() {
             )}
           </>
         )}
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end"  className='dark:bg-[#09090B]  mt-1 bg-white'>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align="end"
+            sideOffset={8}
+            className="min-w-[10.5rem] rounded-xl border border-white/[0.08] bg-zinc-950/95 p-1 text-zinc-100 shadow-2xl shadow-black/50 backdrop-blur-xl"
+          >
       {profile ? (
         <>
         <DropdownMenuItem asChild>
@@ -193,62 +238,12 @@ export function Navbar() {
             Lists
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuSub>
-          <DropdownMenuSubTrigger>Theme</DropdownMenuSubTrigger>
-          <DropdownMenuPortal>
-            <DropdownMenuSubContent className='dark:bg-[#09090B] bg-white'>
-              <ToggleGroup
-                type="single"
-                className='flex flex-col w-full dark:text-white text-black'
-                value={theme}
-                onValueChange={(value) => {
-                  if (value === 'light' || value === 'dark') {
-                    setTheme(value);
-                  }
-                }}
-              >
-                <ToggleGroupItem className='w-full' value="light" aria-label="Toggle Light">
-                  <p className='font-medium'>Light</p><Sun className="h-[1.2rem] w-[1.2rem] " />
-                </ToggleGroupItem>
-                <ToggleGroupItem className='w-full' value="dark" aria-label="Toggle Dark">
-                  <p className='font-medium'>Dark</p><Moon className="h-[1.2rem] w-[1.2rem]" />
-                </ToggleGroupItem>
-              </ToggleGroup>
-            </DropdownMenuSubContent>
-          </DropdownMenuPortal>
-        </DropdownMenuSub>
-        <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleSignOut}>
           Sign Out
         </DropdownMenuItem>
       </>
         ) : (
           <>
-          <DropdownMenuSub>
-          <DropdownMenuSubTrigger>Theme</DropdownMenuSubTrigger>
-          <DropdownMenuPortal>
-            <DropdownMenuSubContent className='dark:bg-[#09090B] bg-white'>
-              <ToggleGroup
-                type="single"
-                className='flex flex-col w-full dark:text-white text-black'
-                value={theme}
-                onValueChange={(value) => {
-                  if (value === 'light' || value === 'dark') {
-                    setTheme(value);
-                  }
-                }}
-              >
-                <ToggleGroupItem className='w-full' value="light" aria-label="Toggle Light">
-                  <p className='font-medium'>Light</p><Sun className="h-[1.2rem] w-[1.2rem] " />
-                </ToggleGroupItem>
-                <ToggleGroupItem className='w-full' value="dark" aria-label="Toggle Dark">
-                  <p className='font-medium'>Dark</p><Moon className="h-[1.2rem] w-[1.2rem]" />
-                </ToggleGroupItem>
-              </ToggleGroup>
-            </DropdownMenuSubContent>
-          </DropdownMenuPortal>
-        </DropdownMenuSub>
-        <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <Link href="/sign-in">
             <RiLoginBoxLine className="mr-2 h-4 w-4" />
@@ -257,9 +252,10 @@ export function Navbar() {
         </DropdownMenuItem>
           </>
         )}
-      </DropdownMenuContent>
-    </DropdownMenu>
-  </div>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    </header>
   )
 }
 

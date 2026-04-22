@@ -10,6 +10,26 @@ export async function GET(request: Request) {
   const type = searchParams.get('type') || 'popular'; // default to popular
 
   try {
+    /** Em alta no TMDB (não usa o prefixo /movie/). */
+    if (type === 'trending_day' || type === 'trending_week') {
+      const timeWindow = type === 'trending_day' ? 'day' : 'week';
+      const params: Record<string, string | number | boolean | undefined> = {
+        api_key: TMDB_API_KEY,
+        language: 'en-US',
+        page,
+      };
+      searchParams.forEach((value, key) => {
+        if (!['type', 'page'].includes(key) && value !== null && value !== '') {
+          params[key] = value;
+        }
+      });
+      const response = await axios.get(
+        `${TMDB_BASE_URL}/trending/movie/${timeWindow}`,
+        { params },
+      );
+      return NextResponse.json(response.data);
+    }
+
     const endpoint = type;
     // Monta os parâmetros para o TMDB
     const params: Record<string, string | number | boolean | undefined> = {

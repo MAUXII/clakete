@@ -24,7 +24,7 @@ export default function RootLayout({
       <head>
         <title>Clakete</title>
       </head>
-      <body className={`bg-background font-sans antialiased flex flex-col items-center justify-center ${fontSans.variable}`}>
+      <body className={`bg-background font-sans antialiased flex flex-col items-center justify-center overflow-x-hidden ${fontSans.variable}`}>
         <RootLayoutClient>
           {children}
         </RootLayoutClient>

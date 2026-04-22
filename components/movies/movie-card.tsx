@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { cn } from '@/lib/utils'
 import { Movie } from '@/types/movie'
 import { Badge } from "@/components/ui/badge"
 import { useFilmInteractions } from '@/hooks/use-film-interactions'
@@ -14,10 +15,12 @@ interface MovieCardProps {
     poster_path: string | null;
     vote_average?: number;
   }
-  externalid?: number;
+  externalid?: number
+ 
+  variant?: 'default' | 'nav-fill'
 }
 
-export function MovieCard({ movie, externalid }: MovieCardProps) {
+export function MovieCard({ movie, externalid, variant = 'default' }: MovieCardProps) {
   const filmId = externalid || movie?.id
   const { isWatched, isLiked, toggleWatched, toggleLiked, updating } = useFilmInteractions(filmId || 0, movie?.poster_path || undefined)
   const [localWatched, setLocalWatched] = useState(isWatched)
@@ -46,12 +49,24 @@ export function MovieCard({ movie, externalid }: MovieCardProps) {
     }
   }
 
+  const isNavFill = variant === 'nav-fill'
+
   const renderCard = (id: number) => (
     <Link
       href={`/film/${id}`}
-      className="group flex flex-col gap-2 transition-transform duration-300"
+      className={cn(
+        'group flex flex-col gap-2 transition-transform duration-300',
+        isNavFill && 'h-full min-h-0',
+      )}
     >
-      <div className="w-full border-[1px] border-black/15 shadow-black/5 dark:border-white/15 h-full relative shadow-sm dark:shadow-white/5 aspect-[2/3] rounded-[5px] overflow-hidden">
+      <div
+        className={cn(
+          'relative w-full overflow-hidden border-[1px] border-black/15 shadow-black/5 dark:border-white/15 dark:shadow-white/5 shadow-sm',
+          isNavFill
+            ? 'h-full min-h-0 flex-1 rounded-xl aspect-auto'
+            : 'h-full rounded-[5px] aspect-[2/3]',
+        )}
+      >
         <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         {movie?.poster_path? (
         <img
