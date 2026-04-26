@@ -24,7 +24,7 @@ export function LandingPlansCta() {
         "px-4 py-20 sm:px-6 sm:py-24 lg:px-8 lg:py-28",
       )}
     >
-      <div className="mx-auto max-w-[1152px]">
+      <div className="mx-auto max-w-[1280px]">
         <div className="text-center">
           <p className="text-[10px] font-medium uppercase tracking-[0.32em] text-white/75">
             Plans

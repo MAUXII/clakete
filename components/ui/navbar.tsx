@@ -22,9 +22,11 @@ import {
 import { BiHomeAlt } from "react-icons/bi"
 import Link from "next/link"
 import Image from "next/image"
-import { LuClapperboard } from "react-icons/lu"
+import { LuClapperboard, LuTv } from "react-icons/lu"
 import { MovieCard } from "../movies/movie-card"
+import { SeriesCard } from "../series/series-card"
 import { useMovies } from "@/hooks/use-movies"
+import { useSeries } from "@/hooks/use-series"
 import { Skeleton } from "./skeleton"
 
 import { SearchCommand } from "../movies/search-command"
@@ -37,6 +39,8 @@ import { cn } from "@/lib/utils"
 export function Navbar() {
   const { movies, loading: moviesLoading } = useMovies()
   const featuredMovie = movies?.[0]
+  const { series, loading: seriesLoading } = useSeries()
+  const featuredSeries = series?.[0]
   const { profile, loading } = useProfile()
   const supabase = useSupabaseClient()
   const router = useRouter()
@@ -75,8 +79,35 @@ export function Navbar() {
     },
   ] as const
 
+  const seriesNavLinks = [
+    {
+      href: "/series/discover",
+      title: "Discover",
+      description: "Genres & filters",
+      Icon: Compass,
+    },
+    {
+      href: "/series/popular",
+      title: "Popular",
+      description: "Trending worldwide",
+      Icon: TrendingUp,
+    },
+    {
+      href: "/series/top-rated",
+      title: "Top rated",
+      description: "Critically acclaimed",
+      Icon: Star,
+    },
+    {
+      href: "/series/upcoming",
+      title: "Upcoming",
+      description: "On the air",
+      Icon: CalendarClock,
+    },
+  ] as const
+
   return (
-    <header className="pointer-events-none w-full absolute max-w-[1152px] self-center left-1/2 -translate-x-1/2 inset-x-0 top-0 z-[50] flex justify-center pt-3 px-4 sm:pt-4">
+    <header className="pointer-events-none w-full absolute max-w-[1280px] self-center left-1/2 -translate-x-1/2 inset-x-0 top-0 z-[50] flex justify-center pt-3 px-4 sm:pt-4">
       <div
         className={cn(
           "pointer-events-auto flex w-full  items-center gap-3 sm:gap-4",
@@ -146,6 +177,63 @@ export function Navbar() {
                   )}
                 >
                   {movieNavLinks.map(({ href, title, description, Icon }, index) => (
+                    <li
+                      key={href}
+                      className={cn(
+                        "flex min-h-0 flex-1 border-b border-white/[0.05] last:border-b-0",
+                        index % 2 === 0 ? "bg-white/[0.02]" : "bg-transparent",
+                      )}
+                    >
+                      <Link
+                        href={href}
+                        className={cn(
+                          "group flex h-full w-full min-h-0 items-center gap-3 px-3 py-2 sm:px-4",
+                          "transition-[background-color,color,transform] duration-200 hover:bg-white/[0.06] active:scale-[0.99]",
+                          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/20",
+                        )}
+                      >
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-zinc-800/70 text-zinc-400 transition-colors group-hover:bg-zinc-800 group-hover:text-[#FF335F]">
+                          <Icon className="h-4 w-4" aria-hidden />
+                        </span>
+                        <span className="min-w-0 flex-1 leading-snug">
+                          <span className="block text-sm font-semibold tracking-tight text-zinc-100 transition-colors group-hover:text-white">
+                            {title}
+                          </span>
+                          <span className="mt-0.5 block text-[11px] text-zinc-500 transition-colors group-hover:text-zinc-400 sm:text-xs">
+                            {description}
+                          </span>
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </NavigationMenuContent>
+          </NavigationMenuItem>
+
+          <NavigationMenuItem className="py-2  ">
+            <NavigationMenuTrigger>
+            <LuTv />
+            Series
+            </NavigationMenuTrigger >
+            <NavigationMenuContent className="rounded-2xl p-4 text-zinc-50 backdrop-blur-xl md:w-[420px] lg:w-[620px]">
+              <div className="grid min-h-[min(320px,42vh)] grid-cols-[minmax(9rem,12.5rem)_1fr] grid-rows-1 items-stretch gap-4">
+                <NavigationMenuLink asChild>
+                  <div className="flex h-full min-h-0 w-full select-none flex-col rounded-xl no-underline outline-none focus-visible:ring-2 focus-visible:ring-white/25">
+                    {seriesLoading ? (
+                      <Skeleton className="h-full min-h-[200px] w-full shrink-0 rounded-xl bg-zinc-900" />
+                    ) : featuredSeries ? (
+                      <SeriesCard key={featuredSeries.id} series={featuredSeries} variant="nav-fill" />
+                    ) : null}
+                  </div>
+                </NavigationMenuLink>
+                <ul
+                  className={cn(
+                    "flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-xl",
+                    "border border-white/[0.06] bg-zinc-900/40",
+                  )}
+                >
+                  {seriesNavLinks.map(({ href, title, description, Icon }, index) => (
                     <li
                       key={href}
                       className={cn(

@@ -10,10 +10,9 @@ import { FilmReview } from "@/components/movies/film-review";
 import { FilmReviewsList } from "@/components/movies/film-reviews-list";
 import { useFilmInteractions } from "@/hooks/use-film-interactions";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import CastList from "@/components/movies/castlist";
 import WatchProviders from "@/components/movies/watchproviders";
 import { Video } from "@/components/movies/trailer";
-import CrewList from "@/components/movies/crewlist";
+import CreditsList from "@/components/movies/credits";
 import SimilarList from "@/components/movies/similar";
 import RecommendationsList from "@/components/movies/recommendations";
 import ImagesList from "@/components/movies/imagesList";
@@ -140,7 +139,7 @@ export default function FilmPage({ params }: { params: Promise<{ id: string }> }
 
   if (loading) {
     return (
-      <div className="py-8 mt-20 px-4 w-full max-w-[1152px]">
+      <div className="py-8 mt-20 px-4 w-full max-w-[1280px]">
         <Skeleton className="w-full h-[550px] rounded-lg" />
         <div className="px-8">
           <Skeleton className="aspect-[2/3] -mt-48  w-56 rounded-2xl object-cover" />
@@ -156,7 +155,7 @@ export default function FilmPage({ params }: { params: Promise<{ id: string }> }
 
   if (!movie) {
     return (
-      <div className="py-8 mt-20 px-4 w-full max-w-[1152px]">
+      <div className="py-8 mt-20 px-4 w-full max-w-[1280px]">
         <h1 className="text-2xl font-bold">Filme não encontrado</h1>
         <Link href="/films" className="text-blue-500 hover:underline flex items-center gap-2 mt-4">
           <ArrowLeft size={20} />
@@ -169,7 +168,7 @@ export default function FilmPage({ params }: { params: Promise<{ id: string }> }
   
 
   return (
-    <div className="py-8 mt-20 px-4 w-full max-w-[1152px]">
+    <div className="py-8 mt-20 px-4 w-full max-w-[1280px]">
       {/* Banner (Backdrop) */}
       <div 
         className="w-full h-[500px] border  dark:border-white/20 border-black/20 rounded-lg bg-cover bg-center relative"
@@ -277,30 +276,16 @@ export default function FilmPage({ params }: { params: Promise<{ id: string }> }
                 
              
 
-  <Tabs defaultValue="cast" className="w-full mt-4">
-  <TabsList className="bg-[#111111] h-12">
-    <TabsTrigger className="px-12 py-2 font-medium data-[state=active]:bg-[#FF0048]/10 data-[state=active]:text-[#FF0048] " value="cast">Cast</TabsTrigger>
-    <TabsTrigger className="px-12 py-2 font-medium data-[state=active]:bg-[#FF0048]/10 data-[state=active]:text-[#FF0048] " value="crew">Crew</TabsTrigger>
-    <TabsTrigger className="px-12 py-2 font-medium data-[state=active]:bg-[#FF0048]/10 data-[state=active]:text-[#FF0048] " value="similar">Similar</TabsTrigger>
-    <TabsTrigger className="px-12 py-2 font-medium data-[state=active]:bg-[#FF0048]/10 data-[state=active]:text-[#FF0048] " value="recommended">Recommended</TabsTrigger>
-    <TabsTrigger className="px-12 py-2 font-medium data-[state=active]:bg-[#FF0048]/10 data-[state=active]:text-[#FF0048] " value="images">Images</TabsTrigger>  
+  <Tabs defaultValue="credits" className="w-full mt-4">
+  <TabsList className="bg-[#111111] h-12 w-full grid grid-cols-4">
+    <TabsTrigger className="w-full min-w-0 px-2 py-2 font-medium data-[state=active]:bg-[#FF0048]/10 data-[state=active]:text-[#FF0048] " value="credits">Credits</TabsTrigger>
+    <TabsTrigger className="w-full min-w-0 px-2 py-2 font-medium data-[state=active]:bg-[#FF0048]/10 data-[state=active]:text-[#FF0048] " value="similar">Similar</TabsTrigger>
+    <TabsTrigger className="w-full min-w-0 px-2 py-2 font-medium data-[state=active]:bg-[#FF0048]/10 data-[state=active]:text-[#FF0048] " value="recommended">Recommended</TabsTrigger>
+    <TabsTrigger className="w-full min-w-0 px-2 py-2 font-medium data-[state=active]:bg-[#FF0048]/10 data-[state=active]:text-[#FF0048] " value="images">Images</TabsTrigger>  
   </TabsList>
-  <TabsContent className="w-full" value="cast">
-    <div className="">
-    <h2 className="font-medium text-muted-foreground/50 text-sm uppercase ">Cast</h2>
-    <div className="bg-muted-foreground/10 w-full h-[0.3px] mt-1 mb-4"></div>
-    <CastList movie={movie} />
-    </div>
-
-
+  <TabsContent className="w-full" value="credits">
+    <CreditsList cast={movie.cast || []} crew={movie.crew || []} />
   </TabsContent>
-  <TabsContent value="crew">
-  <div className="">
-    <h2 className="font-medium text-muted-foreground/50 text-sm uppercase ">Crew</h2>
-    <div className="bg-muted-foreground/10 w-full h-[0.3px] mt-1 mb-4"></div>
-    <CrewList movie={movie} />
-    </div>
-    </TabsContent>
   <TabsContent value="similar">
   <div className="">
   <h2 className="font-medium text-muted-foreground/50 text-sm uppercase ">Similar</h2>
@@ -334,16 +319,6 @@ export default function FilmPage({ params }: { params: Promise<{ id: string }> }
         </div>
       </div>
 
-      {/* Back button */}
-      <div className="fixed top-4 left-4">
-        <Link
-          href="/films"
-          className="bg-background/80 backdrop-blur-sm text-foreground hover:bg-background/90 px-4 py-2 rounded-full flex items-center gap-2 transition-colors"
-        >
-          <ArrowLeft size={20} />
-          Voltar
-        </Link>
-      </div>
     </div>
   );
 }

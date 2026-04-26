@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Movie } from '@/app/film/[id]/page';
+import Image from 'next/image';
 
 export default function CastList({ movie }: { movie: Movie }) {
-    const [visibleCount, setVisibleCount] = useState(12); // Default to showing 6 cast members
+    const [visibleCount, setVisibleCount] = useState(12);
   
     const handleSeeMore = () => {
       setVisibleCount(movie.cast.length); // Show all cast members
@@ -10,30 +11,32 @@ export default function CastList({ movie }: { movie: Movie }) {
   
     return (
       <>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
         {movie.cast.slice(0, visibleCount).map((actor, index) => (
-      <div key={index} className=" flex flex-col w-full h-auto rounded-md border dark:border-white/20  border-black/20 overflow-clip items-center gap-1 bg-muted-foreground/10">
-          <h3
-              className="text-muted-foreground/50 truncate p-2 w-full text-center"
-              title={actor.name} 
-            >
+      <div
+        key={index}
+        className="group flex flex-col w-full rounded-md border dark:border-white/20 border-black/20 overflow-hidden bg-muted-foreground/10 transition-all hover:border-[#FF0048]/35 hover:bg-[#FF0048]/5"
+      >
+          <div className="relative w-full aspect-square">
+            {actor.profile_path ? (
+              <Image
+                src={`https://image.tmdb.org/t/p/w500${actor.profile_path}`}
+                alt={actor.name}
+                fill
+                className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center font-medium text-2xl bg-muted-foreground/10">?</div>
+            )}
+          </div>
+          <div className="p-2.5">
+            <h3 className="font-medium truncate" title={actor.name}>
               {actor.name}
             </h3>
-         {actor.profile_path? (
-        <img
-          src={`https://image.tmdb.org/t/p/w500${actor.profile_path}`}
-          alt={actor.name}
-          className="w-full aspect-square rounded-md object-cover"
-        />
-        ):(
-          <div className="w-full aspect-square rounded-md flex items-center justify-center font-medium text-2xl bg-muted-foreground/10">?</div>
-         )
-         }
-         
-          <p title={actor.character} className="font-medium text-center p-2 truncate w-full">
-            {actor.character}
-          </p>
-         
+            <p className="text-sm text-muted-foreground truncate mt-1" title={actor.character}>
+              {actor.character}
+            </p>
+          </div>
       </div>
     ))}
         </div>

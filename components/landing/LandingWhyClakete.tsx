@@ -32,7 +32,7 @@ export function LandingWhyClakete() {
         "py-20 sm:py-24 lg:py-28",
       )}
     >
-      <div className="mx-auto max-w-[1152px] px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-8">
         <div className="max-w-2xl">
           <p className="text-[10px] font-medium uppercase tracking-[0.35em] text-[#FF0048]/90">
             Why

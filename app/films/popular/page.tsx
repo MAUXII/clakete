@@ -98,7 +98,7 @@ export default function FilmsPopularPage() {
   }
 
   return (
-    <div className="py-8 mt-20 px-4 w-full max-w-[1152px]">
+    <div className="py-8 mt-20 px-4 w-full max-w-[1280px]">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
         <div>
           <h1 className="text-3xl font-semibold ">Popular</h1>

@@ -57,7 +57,7 @@ export function LandingSpotlight({ movie }: Props) {
           aria-hidden
         />
 
-        <div className="relative z-10 mx-auto flex min-h-[620px] w-full max-w-[1152px] flex-col justify-end px-4 pb-16 pt-28 sm:px-6 sm:pb-20 sm:pt-32 md:min-h-[80svh] md:pb-24 lg:px-8">
+        <div className="relative z-10 mx-auto flex min-h-[620px] w-full max-w-[1280px] flex-col justify-end px-4 pb-16 pt-28 sm:px-6 sm:pb-20 sm:pt-32 md:min-h-[80svh] md:pb-24 lg:px-8">
           <div className="max-w-2xl">
             <p className="text-[10px] font-medium uppercase tracking-[0.35em] text-neutral-500">
               Trending

@@ -12,7 +12,7 @@ export default function Footer() {
 
     return (
         <footer className="py-8 px-4 w-full bg-background">
-            <div className="max-w-[1152px] mx-auto">
+            <div className="max-w-[1280px] mx-auto">
                 <div className="flex w-full items-end justify-end">
                 <RiveComponent width={400} className="flex items-end justify-start self-end max-w-[222px] pl-9 h-20 translate-y-[36px]" />
                 </div>            
