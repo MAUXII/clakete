@@ -231,7 +231,7 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ id: str
                   <div>
                     <h2 className="font-medium text-muted-foreground/50 text-sm uppercase">Seasons</h2>
                     <div className="bg-muted-foreground/10 w-full h-[0.3px] mt-1 mb-4"></div>
-                    <SeasonsList seasons={series.seasons || []} />
+                    <SeasonsList seriesId={series.id} seasons={series.seasons || []} />
                   </div>
                 </TabsContent>
                 <TabsContent value="similar">

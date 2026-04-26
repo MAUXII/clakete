@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 
 interface Season {
   id: number;
@@ -10,9 +11,15 @@ interface Season {
   overview?: string;
 }
 
-export default function SeasonsList({ seasons }: { seasons: Season[] }) {
+export default function SeasonsList({
+  seriesId,
+  seasons,
+}: {
+  seriesId: number;
+  seasons: Season[];
+}) {
   if (!seasons || seasons.length === 0) {
-    return <div className="text-muted-foreground">No seasons found.</div>;
+    return <div className="text-muted-foreground">Nenhuma temporada encontrada.</div>;
   }
 
   const today = new Date().toISOString().slice(0, 10);
@@ -21,15 +28,16 @@ export default function SeasonsList({ seasons }: { seasons: Season[] }) {
   );
 
   if (filteredSeasons.length === 0) {
-    return <div className="text-muted-foreground">No seasons found.</div>;
+    return <div className="text-muted-foreground">Nenhuma temporada encontrada.</div>;
   }
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
       {filteredSeasons.map((season) => (
-        <div
+        <Link
           key={season.id}
-          className="rounded-md border dark:border-white/20 border-black/20 bg-muted-foreground/10 overflow-hidden"
+          href={`/series/${seriesId}/season/${season.season_number}`}
+          className="group block rounded-md border border-black/20 bg-muted-foreground/10 overflow-hidden transition-opacity hover:opacity-90 dark:border-white/20"
         >
           <div className="relative w-full aspect-[2/3]">
             {season.poster_path ? (
@@ -37,7 +45,7 @@ export default function SeasonsList({ seasons }: { seasons: Season[] }) {
                 src={`https://image.tmdb.org/t/p/w500${season.poster_path}`}
                 alt={season.name}
                 fill
-                className="object-cover"
+                className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center font-medium text-2xl bg-muted-foreground/10">
@@ -45,7 +53,7 @@ export default function SeasonsList({ seasons }: { seasons: Season[] }) {
               </div>
             )}
           </div>
-        </div>
+        </Link>
       ))}
     </div>
   );
