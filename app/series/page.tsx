@@ -110,7 +110,7 @@ export default function SeriesPage() {
   }, [])
 
   return (
-    <div className="py-8 mt-20 px-4 w-full max-w-[1280px]">
+    <div className="py-8 mt-20 w-full max-w-6xl">
       <div className="mb-10 sm:mb-12">
         <h1 className="text-3xl font-semibold sm:text-4xl">Series</h1>
         <p className="mt-2 max-w-2xl text-muted-foreground">

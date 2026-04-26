@@ -139,7 +139,7 @@ export default function FilmPage({ params }: { params: Promise<{ id: string }> }
 
   if (loading) {
     return (
-      <div className="py-8 mt-20 px-4 w-full max-w-[1280px]">
+      <div className="py-8 mt-20 w-full max-w-6xl">
         <Skeleton className="w-full h-[550px] rounded-lg" />
         <div className="px-8">
           <Skeleton className="aspect-[2/3] -mt-48  w-56 rounded-2xl object-cover" />
@@ -155,7 +155,7 @@ export default function FilmPage({ params }: { params: Promise<{ id: string }> }
 
   if (!movie) {
     return (
-      <div className="py-8 mt-20 px-4 w-full max-w-[1280px]">
+      <div className="py-8 mt-20 w-full max-w-6xl">
         <h1 className="text-2xl font-bold">Filme não encontrado</h1>
         <Link href="/films" className="text-blue-500 hover:underline flex items-center gap-2 mt-4">
           <ArrowLeft size={20} />
@@ -168,7 +168,7 @@ export default function FilmPage({ params }: { params: Promise<{ id: string }> }
   
 
   return (
-    <div className="py-8 mt-20 px-4 w-full max-w-[1280px]">
+    <div className="py-8 mt-20 w-full max-w-6xl">
       {/* Banner (Backdrop) */}
       <div 
         className="w-full h-[500px] border  dark:border-white/20 border-black/20 rounded-lg bg-cover bg-center relative"

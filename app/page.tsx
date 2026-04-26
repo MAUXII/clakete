@@ -228,7 +228,7 @@ export default function HomePage() {
             <CinematicBackground />
             <div className="pointer-events-none absolute inset-0 z-[3] bg-gradient-to-t from-black via-black/50 to-black/20" />
             <div className="pointer-events-auto  items-center absolute inset-x-0 bottom-0 z-10 flex flex-col items-end gap-5 px-4 pb-14 pt-24 text-end md:pb-20 w-full ">
-              <h1 className="max-w-[1280px] w-full text-3xl font-medium text-white ">
+              <h1 className="max-w-6xl w-full text-3xl font-medium text-white ">
                 <p className="sombra-contorno">Track films you&apos;ve watched.</p>
                 <p className="sombra-contorno">Save those you want to see.</p>
                 <p className="sombra-contorno">Tell your friends what&apos;s good.</p>
@@ -241,7 +241,7 @@ export default function HomePage() {
         <LandingSpotlight movie={spotlightMovie} />
 
         <section className="relative left-1/2 w-screen max-w-[100vw] -translate-x-1/2  bg-black py-16 sm:py-20">
-          <div className="mx-auto w-full max-w-[1280px] px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto w-full max-w-6xl sm:px-6 lg:px-8">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-zinc-500">
@@ -298,7 +298,7 @@ export default function HomePage() {
 
         {/*
         <section className="relative left-1/2 w-screen max-w-[100vw] -translate-x-1/2 bg-zinc-950 py-16 sm:py-24">
-          <div className="mx-auto w-full max-w-[1280px] px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto w-full max-w-6xl sm:px-6 lg:px-8">
             <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-zinc-500">
               Clakete deixa você…
             </p>
@@ -363,7 +363,7 @@ export default function HomePage() {
               <CtaCatalogGridBg className="min-h-[min(100%,520px)] w-full opacity-[0.55] sm:opacity-[0.65]" />
             </div>
           </div>
-          <div className="relative z-10 mx-auto flex max-w-[1280px] flex-col items-center text-center">
+          <div className="relative z-10 mx-auto flex max-w-6xl flex-col items-center text-center">
             <p className="text-[10px] font-medium uppercase tracking-[0.3em] text-white/70">
             TMDB Catalog
             </p>
@@ -431,7 +431,7 @@ export default function HomePage() {
               aria-hidden
             />
 
-            <div className="relative z-10 mx-auto flex min-h-[620px] w-full max-w-[1280px] flex-col justify-end px-4 pb-16 pt-28 sm:px-6 sm:pb-20 sm:pt-32 md:min-h-[80svh] md:pb-24 lg:px-8">
+            <div className="relative z-10 mx-auto flex min-h-[620px] w-full max-w-6xl flex-col justify-end pb-16 pt-28 sm:px-6 sm:pb-20 sm:pt-32 md:min-h-[80svh] md:pb-24 lg:px-8">
               <div className="max-w-2xl">
                 <p className="text-[10px] font-medium uppercase tracking-[0.35em] text-neutral-500">
                   Profile
@@ -476,7 +476,7 @@ export default function HomePage() {
 
   // Se houver usuário logado, mostra a página de boas-vindas
   return (
-    <section className="min-h-[100vh] py-8 mt-20 px-4 w-full max-w-[1280px] flex flex-col justify-start ">
+    <section className="min-h-[100vh] py-8 mt-20 w-full max-w-6xl flex flex-col justify-start ">
       
       <div className="flex flex-col mb-10 animate-fade-in">
         {userProfile && (

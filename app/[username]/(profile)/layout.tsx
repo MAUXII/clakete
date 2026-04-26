@@ -323,7 +323,7 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
     }
   
     if (loading) return (
-      <section className="py-8 mt-20 px-4 w-full max-w-[1280px]">
+      <section className="py-8 mt-20 w-full max-w-6xl">
        <Skeleton 
         className="w-full h-[450px] border dark:border-white/20  border-black/20 rounded-lg bg-cover bg-center relative"
 
@@ -369,7 +369,7 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
     if (!userData) return null
   
   return (
-    <section className="py-8 mt-20 px-4 w-full max-w-[1280px]">
+    <section className="py-8 mt-20 w-full max-w-6xl">
         {/* Banner */}
         <div 
         className="w-full h-[450px] border dark:border-white/20  border-black/20 rounded-lg bg-cover bg-center relative group"

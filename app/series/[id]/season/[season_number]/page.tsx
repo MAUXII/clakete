@@ -44,7 +44,7 @@ export default function SeriesSeasonPage({
 
   if (loading) {
     return (
-      <div className="py-8 mt-20 px-4 w-full max-w-[1280px]">
+      <div className="py-8 mt-20 w-full max-w-6xl">
         <Skeleton className="h-[550px] w-full rounded-lg" />
         <div className="px-8">
           <Skeleton className="-mt-48 aspect-[2/3] w-56 rounded-2xl object-cover" />
@@ -60,7 +60,7 @@ export default function SeriesSeasonPage({
 
   if (!season) {
     return (
-      <div className="py-8 mt-20 px-4 w-full max-w-[1280px]">
+      <div className="py-8 mt-20 w-full max-w-6xl">
         <h1 className="text-2xl font-bold">Temporada não encontrada</h1>
         <Link href={`/series/${id}`} className="mt-4 inline-block text-sm text-muted-foreground underline hover:text-foreground">
           Voltar para a série
@@ -75,7 +75,7 @@ export default function SeriesSeasonPage({
   const year = season.air_date?.split("-")[0] ?? "—";
 
   return (
-    <div className="py-8 mt-20 px-4 w-full max-w-[1280px]">
+    <div className="py-8 mt-20 w-full max-w-6xl">
       <div
         className="relative h-[500px] w-full rounded-lg border border-black/20 bg-muted bg-cover bg-center dark:border-white/20"
         style={

@@ -107,7 +107,7 @@ export function Navbar() {
   ] as const
 
   return (
-    <header className="pointer-events-none w-full absolute max-w-[1280px] self-center left-1/2 -translate-x-1/2 inset-x-0 top-0 z-[50] flex justify-center pt-3 px-4 sm:pt-4">
+    <header className="pointer-events-none w-full absolute max-w-6xl self-center left-1/2 -translate-x-1/2 inset-x-0 top-0 z-[50] flex justify-center pt-3 sm:pt-4">
       <div
         className={cn(
           "pointer-events-auto flex w-full  items-center gap-3 sm:gap-4",

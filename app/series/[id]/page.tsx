@@ -99,7 +99,7 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ id: str
 
   if (loading) {
     return (
-      <div className="py-8 mt-20 px-4 w-full max-w-[1280px]">
+      <div className="py-8 mt-20 w-full max-w-6xl">
         <Skeleton className="w-full h-[550px] rounded-lg" />
         <div className="px-8">
           <Skeleton className="aspect-[2/3] -mt-48  w-56 rounded-2xl object-cover" />
@@ -115,14 +115,14 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ id: str
 
   if (!series) {
     return (
-      <div className="py-8 mt-20 px-4 w-full max-w-[1280px]">
+      <div className="py-8 mt-20 w-full max-w-6xl">
         <h1 className="text-2xl font-bold">Série não encontrada</h1>
       </div>
     );
   }
 
   return (
-    <div className="py-8 mt-20 px-4 w-full max-w-[1280px]">
+    <div className="py-8 mt-20 w-full max-w-6xl">
       <div
         className="w-full h-[500px] border dark:border-white/20 border-black/20 rounded-lg bg-cover bg-center relative"
         style={{
