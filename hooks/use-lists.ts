@@ -1,7 +1,28 @@
 import { useState, useCallback } from 'react'
 import { useSupabaseClient, useUser } from '@supabase/auth-helpers-react'
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { Database } from '@/lib/supabase/database.types'
 import { List, ListFilm, CreateListData, UpdateListData, AddFilmToListData } from '@/types/list'
+import { slugify } from '@/lib/list-slug'
+
+async function uniqueSlugForListOwner(
+  supabase: SupabaseClient<Database>,
+  userId: string,
+  title: string,
+  excludeListId?: string,
+): Promise<string> {
+  const base = slugify(title)
+  for (let n = 0; n < 100; n++) {
+    const candidate = n === 0 ? base : `${base}-${n}`
+    let q = supabase.from('lists').select('id').eq('user_id', userId).eq('slug', candidate)
+    if (excludeListId) {
+      q = q.neq('id', Number(excludeListId))
+    }
+    const { data } = await q.maybeSingle()
+    if (!data) return candidate
+  }
+  return `${base}-${Date.now()}`
+}
 
 export function useLists() {
   const supabase = useSupabaseClient<Database>()
@@ -41,17 +62,27 @@ export function useLists() {
       if (error) throw error
 
       if (data) {
-        // Buscar contagem de filmes para cada lista
+        const ownerProfile = await fetchUserData(userId)
         const listsWithCounts = await Promise.all(
           data.map(async (list) => {
-            const { count: filmsCount } = await supabase
-              .from('list_films')
-              .select('*', { count: 'exact', head: true })
-              .eq('list_id', list.id)
+            const [countRes, rowsRes] = await Promise.all([
+              supabase
+                .from('list_films')
+                .select('*', { count: 'exact', head: true })
+                .eq('list_id', list.id),
+              supabase
+                .from('list_films')
+                .select('poster_path')
+                .eq('list_id', list.id)
+                .order('position', { ascending: true })
+                .limit(5),
+            ])
 
             return {
               ...list,
-              films_count: filmsCount || 0
+              userData: ownerProfile || undefined,
+              films_count: countRes.count || 0,
+              preview_posters: (rowsRes.data || []).map((r) => r.poster_path),
             }
           })
         )
@@ -84,18 +115,25 @@ export function useLists() {
         // Buscar dados do usuário e contagem de filmes
         const listsWithData = await Promise.all(
           data.map(async (list) => {
-            const [userData, { count: filmsCount }] = await Promise.all([
+            const [userData, countRes, rowsRes] = await Promise.all([
               fetchUserData(list.user_id),
               supabase
                 .from('list_films')
                 .select('*', { count: 'exact', head: true })
+                .eq('list_id', list.id),
+              supabase
+                .from('list_films')
+                .select('poster_path')
                 .eq('list_id', list.id)
+                .order('position', { ascending: true })
+                .limit(5),
             ])
 
             return {
               ...list,
               userData: userData || undefined,
-              films_count: filmsCount || 0
+              films_count: countRes.count || 0,
+              preview_posters: (rowsRes.data || []).map((r) => r.poster_path),
             }
           })
         )
@@ -114,13 +152,15 @@ export function useLists() {
     if (!user) return null
 
     try {
+      const slug = await uniqueSlugForListOwner(supabase, user.id, listData.title)
       const { data, error } = await supabase
         .from('lists')
         .insert({
           user_id: user.id,
           title: listData.title,
           bio: listData.bio || null,
-          is_public: listData.is_public !== false
+          is_public: listData.is_public !== false,
+          slug,
         })
         .select()
         .single()
@@ -130,7 +170,8 @@ export function useLists() {
       if (data) {
         const newList: List = {
           ...data,
-          films_count: 0
+          films_count: 0,
+          preview_posters: [],
         }
 
         setLists(prev => [newList, ...prev])
@@ -147,24 +188,24 @@ export function useLists() {
   // Atualizar lista
   const updateList = useCallback(async (listId: string, data: UpdateListData): Promise<boolean> => {
     try {
-      console.log('🔄 Atualizando lista no banco:', listId, 'com dados:', data);
-      
-      const { error } = await supabase
-        .from('lists')
-        .update(data)
-        .eq('id', listId)
-
-      if (error) {
-        console.error('❌ Erro do Supabase ao atualizar lista:', error);
-        throw error;
+      const payload: Record<string, unknown> = { ...data }
+      if (data.title !== undefined && data.slug === undefined) {
+        const { data: row, error: rowErr } = await supabase
+          .from('lists')
+          .select('user_id')
+          .eq('id', listId)
+          .single()
+        if (!rowErr && row?.user_id) {
+          payload.slug = await uniqueSlugForListOwner(supabase, row.user_id, data.title, listId)
+        }
       }
-      
-      console.log('✅ Lista atualizada com sucesso no banco');
+
+      const { error } = await supabase.from('lists').update(payload).eq('id', listId)
+
+      if (error) throw error
       return true
     } catch (error) {
-      console.error('❌ Erro ao atualizar lista:', error);
-      console.error('❌ Tipo do erro:', typeof error);
-      console.error('❌ Mensagem do erro:', error instanceof Error ? error.message : 'Erro desconhecido');
+      console.error('Erro ao atualizar lista:', error)
       return false
     }
   }, [supabase])

@@ -3,6 +3,7 @@ export interface List {
   user_id: string
   title: string
   bio?: string
+  slug?: string | null
   backdrop_path?: string
   is_public: boolean
   created_at: string
@@ -13,6 +14,8 @@ export interface List {
     avatar_url?: string
   }
   films_count?: number
+  /** Primeiros 5 itens da lista (ordem), paths TMDB; null se não houver poster. */
+  preview_posters?: (string | null)[]
 }
 
 export interface ListFilm {
@@ -38,6 +41,7 @@ export interface UpdateListData {
   bio?: string
   backdrop_path?: string
   is_public?: boolean
+  slug?: string
 }
 
 export interface AddFilmToListData {
