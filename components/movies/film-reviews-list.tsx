@@ -28,26 +28,6 @@ export function FilmReviewsList({ filmId }: FilmReviewsListProps) {
   const [loading, setLoading] = useState(true);
   const supabase = useSupabaseClient();
 
-  const fetchUserData = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('username, display_name, avatar_url')
-        .eq('id', userId)
-        .single();
-
-      if (error) {
-        console.error("Error fetching user data:", error);
-        return null;
-      }
-
-      return data;
-    } catch (error) {
-      console.error("Exception while fetching user data:", error);
-      return null;
-    }
-  };
-
   useEffect(() => {
     async function fetchReviews() {
       try {
@@ -66,20 +46,34 @@ export function FilmReviewsList({ filmId }: FilmReviewsListProps) {
         }
 
         if (data) {
-          // Fetch user data for each review
-          const reviewsWithUserData = await Promise.all(
-            data.map(async (review) => {
-              const userData = await fetchUserData(review.user_id);
-              return {
-                id: review.id,
-                rating: review.rating || 0,
-                review: review.review || '',
-                createdAt: review.created_at,
-                user_id: review.user_id,
-                userData: userData || undefined
-              };
-            })
-          );
+          const uniqueUserIds = [...new Set(data.map((review) => review.user_id))];
+          const { data: usersData, error: usersError } = await supabase
+            .from('users')
+            .select('id, username, display_name, avatar_url')
+            .in('id', uniqueUserIds);
+
+          if (usersError) {
+            console.error("Error fetching users batch:", usersError);
+          }
+
+          const userById = new Map((usersData || []).map((user) => [user.id, user]));
+          const reviewsWithUserData = data.map((review) => {
+            const user = userById.get(review.user_id);
+            return {
+              id: review.id,
+              rating: review.rating || 0,
+              review: review.review || '',
+              createdAt: review.created_at,
+              user_id: review.user_id,
+              userData: user
+                ? {
+                    username: user.username,
+                    display_name: user.display_name,
+                    avatar_url: user.avatar_url,
+                  }
+                : undefined
+            };
+          });
 
           setReviews(reviewsWithUserData);
         }

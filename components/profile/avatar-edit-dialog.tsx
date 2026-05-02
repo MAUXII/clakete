@@ -32,6 +32,7 @@ interface ImageEditDialogProps {
 }
 
 export function ImageEditDialog({ onClose, onSelect, isOpen, onSave, type, customSave, listId }: ImageEditDialogProps) {
+  const bannerAspect = 1152 / 487
   const [showSearchCommand, setShowSearchCommand] = useState(true);
   const [showCropper, setShowCropper] = useState(false);
   const [query, setQuery] = useState("")
@@ -97,13 +98,13 @@ export function ImageEditDialog({ onClose, onSelect, isOpen, onSave, type, custo
 
           if (type === 'avatar' || type === 'banner') {
             const posters = (data.posters || []).map((img: any) => ({
-              url: `/api/proxy-image?url=${encodeURIComponent(`https://image.tmdb.org/t/p/w500${img.file_path}`)}`,
+              url: `/api/proxy-image?url=${encodeURIComponent(`https://image.tmdb.org/t/p/original${img.file_path}`)}`,
               type: 'poster' as const,
               loaded: false
             }));
             
             const backdrops = (data.backdrops || []).map((img: any) => ({
-              url: `/api/proxy-image?url=${encodeURIComponent(`https://image.tmdb.org/t/p/w780${img.file_path}`)}`,
+              url: `/api/proxy-image?url=${encodeURIComponent(`https://image.tmdb.org/t/p/original${img.file_path}`)}`,
               type: 'banner' as const,
               loaded: false
             }));
@@ -114,7 +115,7 @@ export function ImageEditDialog({ onClose, onSelect, isOpen, onSave, type, custo
           } else {
             formattedImages = (data.backdrops || [])
               .map((img: any) => ({
-                url: `/api/proxy-image?url=${encodeURIComponent(`https://image.tmdb.org/t/p/w780${img.file_path}`)}`,
+                url: `/api/proxy-image?url=${encodeURIComponent(`https://image.tmdb.org/t/p/original${img.file_path}`)}`,
                 type: 'banner' as const,
                 loaded: false
               }))
@@ -267,7 +268,7 @@ export function ImageEditDialog({ onClose, onSelect, isOpen, onSave, type, custo
         .from('profile-images')
         .upload(filePath, webpBlob, {
           contentType: 'image/webp',
-          cacheControl: '0' // Desabilita cache para forçar atualização
+          cacheControl: '3600'
         });
 
       if (uploadError) {
@@ -291,7 +292,7 @@ export function ImageEditDialog({ onClose, onSelect, isOpen, onSave, type, custo
             .from('profile-images')
             .upload(uniqueFilePath, webpBlob, {
               contentType: 'image/webp',
-              cacheControl: '0'
+              cacheControl: '3600'
             });
           
           if (uniqueUploadError) {
@@ -394,7 +395,7 @@ export function ImageEditDialog({ onClose, onSelect, isOpen, onSave, type, custo
           onValueChange={setQuery}
           className=""
         />
-        <CommandList className="h-full max-h-[600px] overflow-y-auto custom-scrollbar">
+        <CommandList className="h-full max-h-[720px] overflow-y-auto custom-scrollbar">
           {loading && (
             <CommandEmpty>Searching...</CommandEmpty>
           )}
@@ -420,18 +421,18 @@ export function ImageEditDialog({ onClose, onSelect, isOpen, onSave, type, custo
                 <div className="flex flex-col w-full items-center relative">
                   {movie.backdrop_path ? (
                     <img
-                      src={`https://image.tmdb.org/t/p/w500/${movie.backdrop_path}`}
+                      src={`https://image.tmdb.org/t/p/original/${movie.backdrop_path}`}
                       alt={movie.title || ""}
-                      className="h-48 w-full object-cover rounded"
+                      className="h-56 w-full object-cover rounded"
                     />
                   ) : movie.poster_path ? (
                     <img
-                      src={`https://image.tmdb.org/t/p/w342/${movie.poster_path}`}
+                      src={`https://image.tmdb.org/t/p/w780/${movie.poster_path}`}
                       alt={movie.title || ""}
-                      className="h-48 w-full object-cover rounded"
+                      className="h-56 w-full object-cover rounded"
                     />
                   ) : (
-                    <div className="h-48 w-full bg-muted rounded flex items-center justify-center">
+                    <div className="h-56 w-full bg-muted rounded flex items-center justify-center">
                       <span className="text-muted-foreground">Sem imagem disponível</span>
                     </div>
                   )}
@@ -447,8 +448,7 @@ export function ImageEditDialog({ onClose, onSelect, isOpen, onSave, type, custo
       </CommandDialog>
 
       <Dialog open={isOpen && !showSearchCommand && !showCropper} onOpenChange={onClose}>
-        
-        <DialogContent className="dialog-content ">
+        <DialogContent className="dialog-content w-[96vw] max-w-6xl">
           <DialogHeader className="dialog-header h-fit">
             <DialogTitle className="flex items-center gap-2 text-sm">
               <Button
@@ -519,21 +519,21 @@ export function ImageEditDialog({ onClose, onSelect, isOpen, onSave, type, custo
       </Dialog>
 
       <Dialog open={isOpen && showCropper} onOpenChange={onClose}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Ajustar Imagem</DialogTitle>
+        <DialogContent className="w-[82vw] max-w-[38rem] overflow-hidden p-0">
+          <DialogHeader className="border-b border-border/50 px-4 py-2.5">
+            <DialogTitle>Editar imagem</DialogTitle>
           </DialogHeader>
           {showCropper && selectedImage && (
-            <div className="p-4">
+            <div className="px-2 py-2">
               <ImageCropper
                 image={selectedImage}
-                aspect={type === 'avatar' ? 1 : 16/9}
+                aspect={type === 'avatar' ? 1 : bannerAspect}
                 onCrop={setCroppedImage}
                 type={type}
               />
             </div>
           )}
-          <DialogFooter className="flex justify-between mt-4">
+          <DialogFooter className="mt-0 flex justify-end gap-2 border-t border-border/50 px-4 py-2.5">
             <Button
               variant="outline"
               onClick={() => {
@@ -542,13 +542,13 @@ export function ImageEditDialog({ onClose, onSelect, isOpen, onSave, type, custo
                 setCroppedImage(null);
               }}
             >
-              Voltar
+              Cancelar
             </Button>
             <Button
               onClick={handleSaveImage}
               disabled={saving || !croppedImage}
             >
-              {saving ? 'Salvando...' : 'Salvar'}
+              {saving ? 'Salvando...' : 'Aplicar'}
             </Button>
           </DialogFooter>
         </DialogContent>

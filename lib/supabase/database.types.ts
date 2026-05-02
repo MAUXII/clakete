@@ -52,69 +52,95 @@ export interface Database {
       }
       lists: {
         Row: {
-          id: number
+          id: string
           user_id: string
           title: string
           bio: string | null
           slug: string | null
+          backdrop_path: string | null
           is_public: boolean
           created_at: string
           updated_at: string
         }
         Insert: {
-          id?: number
+          id?: string
           user_id: string
           title: string
           bio?: string | null
           slug?: string | null
+          backdrop_path?: string | null
           is_public?: boolean
           created_at?: string
           updated_at?: string
         }
         Update: {
-          id?: number
+          id?: string
           user_id?: string
           title?: string
           bio?: string | null
           slug?: string | null
+          backdrop_path?: string | null
           is_public?: boolean
           created_at?: string
           updated_at?: string
         }
       }
-      list_films: {
+      list_items: {
         Row: {
           id: number
-          list_id: number
-          film_id: number
+          list_id: string
+          tmdb_id: number
           title: string
           poster_path: string | null
           backdrop_path: string | null
           release_date: string | null
           position: number
           added_at: string
+          media_type: string
         }
         Insert: {
           id?: number
-          list_id: number
-          film_id: number
+          list_id: string
+          tmdb_id: number
           title: string
           poster_path?: string | null
           backdrop_path?: string | null
           release_date?: string | null
           position: number
           added_at?: string
+          media_type?: string
         }
         Update: {
           id?: number
-          list_id?: number
-          film_id?: number
+          list_id?: string
+          tmdb_id?: number
           title?: string
           poster_path?: string | null
           backdrop_path?: string | null
           release_date?: string | null
           position?: number
           added_at?: string
+          media_type?: string
+        }
+      }
+      list_likes: {
+        Row: {
+          id: string
+          list_id: string
+          user_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          list_id: string
+          user_id: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          list_id?: string
+          user_id?: string
+          created_at?: string
         }
       }
       users_favorite_films: {

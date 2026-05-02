@@ -4,10 +4,13 @@ import { useEffect, useState } from "react"
 import { useSupabaseClient, useUser } from "@supabase/auth-helpers-react"
 import { MovieCard } from "../movies/movie-card"
 import { Plus } from "lucide-react"
-import { CommandDialog, CommandInput, CommandEmpty, CommandGroup, CommandItem, CommandList } from "@/components/ui/command"
+import { CommandDialog } from "@/components/ui/command"
 import { useDebounce } from "@/hooks/use-debounce"
+import { useMediaSearch } from "@/hooks/use-media-search"
+import { MediaSearchCommandContent } from "@/components/movies/media-search-command-content"
+import type { Movie } from "@/lib/tmdb/client"
 import { DndContext, DragEndEvent, closestCenter } from '@dnd-kit/core'
-import { SortableContext, arrayMove, useSortable } from '@dnd-kit/sortable'
+import { SortableContext, useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { MdDelete } from "react-icons/md"
 import {
@@ -17,7 +20,6 @@ import {
   ContextMenuTrigger,
 } from "@/components/ui/context-menu"
 import { Skeleton } from "../ui/skeleton"
-import { nan } from "zod"
 
 interface Film {
   id: number
@@ -27,14 +29,6 @@ interface Film {
   backdrop_path: string
   release_date: string
   position: number
-}
-
-interface SearchResult {
-  id: number
-  title: string
-  poster_path: string
-  backdrop_path: string
-  release_date: string
 }
 
 interface FavoriteFilmsProps {
@@ -139,18 +133,18 @@ export function UserFavoriteFilms({ userId, isEditable = false, onFilmAdded }: F
   const [selectedPosition, setSelectedPosition] = useState<number>(-1)
   const [showSearchCommand, setShowSearchCommand] = useState(false)
   const [query, setQuery] = useState("")
-  const [results, setResults] = useState<SearchResult[]>([])
-  const [isSearching, setIsSearching] = useState(false)
   const [draggedFilms, setDraggedFilms] = useState<Film[]>([])
   const [isDragging, setIsDragging] = useState(false)
 
   // 2. Hooks de contexto e clientes
   const supabase = useSupabaseClient()
   const currentUser = useUser()
-  const debouncedQuery = useDebounce(query, 300)
-
-  // 3. Determina se o usuário atual pode editar os filmes favoritos
   const canEdit = isEditable || (currentUser?.id === userId)
+  const debouncedQuery = useDebounce(query, 300)
+  const { filmResults, seriesResults, loading: searchLoading } = useMediaSearch(
+    debouncedQuery,
+    showSearchCommand && canEdit
+  )
 
   // 4. Todos os useEffects juntos
   // Efeito para buscar filmes favoritos
@@ -187,35 +181,6 @@ export function UserFavoriteFilms({ userId, isEditable = false, onFilmAdded }: F
       setDraggedFilms(favoriteFilms);
     }
   }, [favoriteFilms, isDragging])
-
-  // Efeito para buscar resultados de pesquisa
-  useEffect(() => {
-    const fetchMovies = async () => {
-      if (!canEdit) return
-      
-      setIsSearching(true)
-      try {
-        let endpoint = ""
-        if (debouncedQuery.trim().length === 0) {
-          endpoint = "/api/movies?type=top_rated"
-        } else {
-          endpoint = `/api/movies/search?q=${encodeURIComponent(debouncedQuery)}`
-        }
-        const response = await fetch(endpoint)
-        const data = await response.json()
-        
-        setResults(data.results || [])
-      } catch (error) {
-        console.error("Erro ao buscar filmes:", error)
-      } finally {
-        setIsSearching(false)
-      }
-    }
-    
-    if (showSearchCommand) {
-      fetchMovies()
-    }
-  }, [debouncedQuery, showSearchCommand, canEdit])
 
   if (loading) return <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
   {[...Array(4)].map((_, i) => (
@@ -350,9 +315,11 @@ export function UserFavoriteFilms({ userId, isEditable = false, onFilmAdded }: F
     }
   };
 
-  // Adicionar filme favorito
-  const handleFilmSelect = async (filmId: number) => {
+  // Adicionar filme favorito (mesmo UI do media search; aqui o command fecha após escolher)
+  const handleFilmSelect = async (selectedMovie: Movie) => {
     if (!canEdit || !currentUser) return
+
+    const filmId = selectedMovie.id
 
     try {
       // Verificar se já existe um filme nesta posição
@@ -381,19 +348,16 @@ export function UserFavoriteFilms({ userId, isEditable = false, onFilmAdded }: F
         }
       }
 
-      const selectedMovie = results.find(m => m.id === filmId)
-      if (!selectedMovie) return
-
       // Inserir o novo filme com a posição selecionada
       const { data: insertedFilm, error: insertError } = await supabase
         .from('users_favorite_films')
         .insert({
           user_id: userId,
           film_id: filmId,
-          title: selectedMovie.title,
-          poster_path: selectedMovie.poster_path,
-          backdrop_path: selectedMovie.backdrop_path || '',
-          release_date: selectedMovie.release_date || '',
+          title: selectedMovie.title ?? '',
+          poster_path: selectedMovie.poster_path ?? '',
+          backdrop_path: selectedMovie.backdrop_path ?? '',
+          release_date: selectedMovie.release_date ?? '',
           position: selectedPosition
         })
         .select()
@@ -437,6 +401,7 @@ export function UserFavoriteFilms({ userId, isEditable = false, onFilmAdded }: F
 
       setSelectedPosition(-1)
       setShowSearchCommand(false)
+      setQuery("")
     } catch (error) {
       console.error('Error selecting film:', error)
     }
@@ -508,60 +473,25 @@ export function UserFavoriteFilms({ userId, isEditable = false, onFilmAdded }: F
         </div>
       </DndContext>
 
-      {/* Dialog para pesquisa e seleção de filmes */}
+      {/* Mesmo padrão do command das listas / media search (Films + Series, hover, + para slot) */}
       <CommandDialog open={showSearchCommand} onOpenChange={setShowSearchCommand}>
-        <CommandInput
-          placeholder="Search for films"
-          value={query}
-          onValueChange={setQuery}
+        <MediaSearchCommandContent
+          query={query}
+          onQueryChange={setQuery}
+          filmResults={filmResults}
+          seriesResults={seriesResults}
+          loading={searchLoading}
+          inputPlaceholder="Search"
+          commandListClassName="custom-scrollbar max-h-[600px] h-full overflow-y-auto"
+          onSelectFilm={(movie) => {
+            void handleFilmSelect(movie)
+          }}
+          onSelectSeries={(series) => {
+            window.open(`/series/${series.id}`, "_blank", "noopener,noreferrer")
+          }}
+          filmRowMode="pick"
+          seriesRowMode="pick"
         />
-        <CommandList className="h-full max-h-[600px] overflow-y-auto custom-scrollbar">
-          {isSearching && (
-            <CommandEmpty>Searching...</CommandEmpty>
-          )}
-          {!isSearching && results.length === 0 && query && (
-            <CommandEmpty>Nenhum filme encontrado.</CommandEmpty>
-          )}
-          {!isSearching && results.length > 0 && (
-            <CommandGroup className="gap-2" heading="Select a film">
-              {results.map((movie) => (
-                <CommandItem 
-                  key={movie.id}
-                  className="my-4 mx-3"
-                  style={{ padding: '0px' }}
-                  value={movie.title || ""}
-                  onSelect={() => {
-                    handleFilmSelect(movie.id)
-                    setShowSearchCommand(false)
-                  }}
-                >
-                  <div className="flex flex-col w-full items-center relative">
-                    {movie.backdrop_path ? (
-                      <img
-                        src={`https://image.tmdb.org/t/p/w500/${movie.backdrop_path}`}
-                        alt={movie.title || ""}
-                        className="h-48 w-full object-cover rounded"
-                      />
-                    ) : movie.poster_path ? (
-                      <img
-                        src={`https://image.tmdb.org/t/p/w342/${movie.poster_path}`}
-                        alt={movie.title || ""}
-                        className="h-48 w-full object-cover rounded"
-                      />
-                    ) : (
-                      <div className="h-48 w-full bg-muted rounded flex items-center justify-center">
-                        <span className="text-muted-foreground">Sem imagem disponível</span>
-                      </div>
-                    )}
-                    <div className="absolute inset-0 rounded bg-black/60 flex items-center justify-center p-4">
-                      <p className="font-bold text-center text-white">{movie.title}</p>
-                    </div>
-    </div>
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          )}
-        </CommandList>
       </CommandDialog>
     </>
   )

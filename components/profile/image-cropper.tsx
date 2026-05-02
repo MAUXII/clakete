@@ -1,8 +1,7 @@
 "use client"
 
-import { useState } from 'react'
-import ReactCrop, { type Crop } from 'react-image-crop'
-import 'react-image-crop/dist/ReactCrop.css'
+import { useEffect, useState } from 'react'
+import Cropper, { type Area } from 'react-easy-crop'
 
 interface ImageCropperProps {
   image: string
@@ -12,155 +11,117 @@ interface ImageCropperProps {
 }
 
 export function ImageCropper({ image, aspect, onCrop, type = 'avatar' }: ImageCropperProps) {
-  const [crop, setCrop] = useState<Crop>({
-    unit: '%',
-    width: 90,
-    height: 90,
-    x: 5,
-    y: 5,
-  })
+  const [crop, setCrop] = useState({ x: 0, y: 0 })
+  const [zoom, setZoom] = useState(1)
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null)
+  const isBannerLike = type === 'banner' || type === 'list' // mantido para estilo de container
 
-  const getCroppedImg = (image: HTMLImageElement, crop: Crop): Promise<string> => {
+  const loadImage = (src: string): Promise<HTMLImageElement> => {
     return new Promise((resolve, reject) => {
-      const handleCrop = () => {
-        try {
-          const canvas = document.createElement('canvas');
-          
-          // Verifica se a imagem tem dimensões válidas
-          if (image.naturalWidth === 0 || image.naturalHeight === 0) {
-            reject(new Error('Imagem inválida: dimensões zero'));
-            return;
-          }
-          
-          // Calcula as dimensões em pixels da área selecionada
-          const scaleX = image.naturalWidth / 100;
-          const scaleY = image.naturalHeight / 100;
-          
-          const sourceX = Math.round(crop.x * scaleX);
-          const sourceY = Math.round(crop.y * scaleY);
-          const sourceWidth = Math.round(crop.width * scaleX);
-          const sourceHeight = Math.round(crop.height * scaleY);
+      const imageEl = new Image()
+      imageEl.crossOrigin = 'anonymous'
+      imageEl.src = src
+      imageEl.onload = () => resolve(imageEl)
+      imageEl.onerror = (err) => reject(err)
+    })
+  }
 
-          // Verifica se as dimensões do crop são válidas
-          if (sourceWidth <= 0 || sourceHeight <= 0) {
-            reject(new Error('Área de crop inválida'));
-            return;
-          }
+  const getCroppedImg = async (imageSrc: string, pixelCrop: Area): Promise<Blob> => {
+    const imageEl = await loadImage(imageSrc)
+    const canvas = document.createElement('canvas')
 
-          // Define um tamanho máximo baseado no tipo de imagem
-          const MAX_DIMENSIONS = (type === 'banner' || type === 'list')
-            ? { width: 2236, height: 900 }    // 2x a largura do seu banner
-            : { width: 800, height: 800 };    // Avatar mantém o mesmo tamanho
-          
-          let targetWidth = sourceWidth;
-          let targetHeight = sourceHeight;
-          
-          // Redimensiona proporcionalmente se necessário
-          if (sourceWidth > MAX_DIMENSIONS.width) {
-            targetWidth = MAX_DIMENSIONS.width;
-            targetHeight = (sourceHeight * MAX_DIMENSIONS.width) / sourceWidth;
-          }
-          
-          if (targetHeight > MAX_DIMENSIONS.height) {
-            targetHeight = MAX_DIMENSIONS.height;
-            targetWidth = (targetWidth * MAX_DIMENSIONS.height) / targetHeight;
-          }
-          
-          // Garante que as dimensões são números inteiros e maiores que zero
-          targetWidth = Math.max(1, Math.round(targetWidth));
-          targetHeight = Math.max(1, Math.round(targetHeight));
-          
-          // Define as dimensões do canvas
-          canvas.width = targetWidth;
-          canvas.height = targetHeight;
-          
-          const ctx = canvas.getContext('2d', {
-            alpha: true,  // Mantém transparência
-            willReadFrequently: false
-          });
+    const sourceWidth = Math.max(1, Math.round(pixelCrop.width))
+    const sourceHeight = Math.max(1, Math.round(pixelCrop.height))
 
-          if (!ctx) {
-            reject(new Error('Não foi possível obter o contexto 2D'));
-            return;
-          }
+    const maxDimensions = isBannerLike
+      ? { width: 3840, height: 2160 }
+      : { width: 1600, height: 1600 }
 
-          // Aplica suavização de alta qualidade
-          ctx.imageSmoothingEnabled = true;
-          ctx.imageSmoothingQuality = 'high';
+    let targetWidth = sourceWidth
+    let targetHeight = sourceHeight
 
-          // Desenha a imagem cropada
-          ctx.drawImage(
-            image,
-            sourceX,
-            sourceY,
-            sourceWidth,
-            sourceHeight,
-            0,
-            0,
-            targetWidth,
-            targetHeight
-          );
+    if (targetWidth > maxDimensions.width) {
+      targetHeight = Math.round((targetHeight * maxDimensions.width) / targetWidth)
+      targetWidth = maxDimensions.width
+    }
 
-          // Converte para WebP com alta qualidade
-          canvas.toBlob(
-            (blob) => {
-              if (!blob) {
-                reject(new Error('Falha ao gerar blob'));
-                return;
-              }
-              resolve(URL.createObjectURL(blob));
-            },
-            'image/webp',
-            0.95
-          );
-        } catch (error) {
-          console.error('Erro durante o crop:', error);
-          reject(error);
+    if (targetHeight > maxDimensions.height) {
+      targetWidth = Math.round((targetWidth * maxDimensions.height) / targetHeight)
+      targetHeight = maxDimensions.height
+    }
+
+    canvas.width = Math.max(1, targetWidth)
+    canvas.height = Math.max(1, targetHeight)
+
+    const ctx = canvas.getContext('2d')
+
+    if (ctx) {
+      ctx.imageSmoothingEnabled = true
+      ctx.imageSmoothingQuality = 'high'
+    }
+
+    ctx?.drawImage(
+      imageEl,
+      pixelCrop.x,
+      pixelCrop.y,
+      sourceWidth,
+      sourceHeight,
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    )
+
+    return new Promise((resolve, reject) => {
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          reject(new Error('Canvas is empty'))
+          return
         }
-      };
 
-      // Garante que a imagem está carregada
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.onload = handleCrop;
-      img.onerror = () => reject(new Error('Erro ao carregar a imagem'));
-      img.src = image.src;
-    });
-  };
+        resolve(blob)
+      }, 'image/webp', 0.98)
+    })
+  }
+
+  const handleCropComplete = (_croppedArea: Area, nextCroppedAreaPixels: Area) => {
+    setCroppedAreaPixels(nextCroppedAreaPixels)
+  }
+
+  useEffect(() => {
+    const runCrop = async () => {
+      if (!croppedAreaPixels) return
+
+      try {
+        const croppedBlob = await getCroppedImg(image, croppedAreaPixels)
+        const croppedUrl = URL.createObjectURL(croppedBlob)
+        onCrop(croppedUrl)
+      } catch (error) {
+        console.error(error)
+      }
+    }
+
+    void runCrop()
+  }, [image, croppedAreaPixels, onCrop])
 
   return (
-    <div className="relative w-full">
-      <ReactCrop
-        crop={crop}
-        onChange={(c) => setCrop(c)}
-        onComplete={async (c, pixelCrop) => {
-          try {
-            const img = document.createElement('img');
-            img.crossOrigin = 'anonymous';
-            img.src = image;
-            
-            // Aguarda a imagem carregar
-            await new Promise((resolve, reject) => {
-              img.onload = resolve;
-              img.onerror = reject;
-            });
-            
-            const croppedImage = await getCroppedImg(img, pixelCrop);
-            onCrop(croppedImage);
-          } catch (error) {
-            console.error('Erro ao fazer crop da imagem:', error);
-          }
-        }}
-        aspect={aspect}
-        className="crop-container"
+    <div className="w-full">
+      <div
+        className={isBannerLike
+          ? "relative w-full aspect-[16/9] overflow-hidden rounded-md bg-black"
+          : "relative w-full max-h-[78vh] overflow-hidden rounded-lg bg-black"}
+        style={{ aspectRatio: isBannerLike ? 16 / 9 : aspect }}
       >
-        <img 
-          src={image} 
-          alt="Crop me" 
-          crossOrigin="anonymous"
-          className="max-w-full h-auto max-h-[70vh] mx-auto"
+        <Cropper
+          image={image}
+          crop={crop}
+          zoom={zoom}
+          aspect={aspect}
+          onCropChange={setCrop}
+          onZoomChange={setZoom}
+          onCropComplete={handleCropComplete}
         />
-      </ReactCrop>
+      </div>
     </div>
   )
 }

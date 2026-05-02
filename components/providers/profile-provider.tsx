@@ -44,14 +44,6 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
 
       if (error) throw error
 
-      // Adiciona timestamp para evitar cache
-      if (data.avatar_url) {
-        data.avatar_url = `${data.avatar_url}?t=${Date.now()}`
-      }
-      if (data.banner_url) {
-        data.banner_url = `${data.banner_url}?t=${Date.now()}`
-      }
-
       setProfile(data)
     } catch (error) {
       console.error('Erro ao carregar perfil:', error)

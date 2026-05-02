@@ -41,26 +41,6 @@ export function UserRecentReviews({ userId, limit = 6, onLandingPage }: RecentRe
   // Use o userId passado como prop ou o id do usuário logado
   const targetUserId = userId || (loggedInUser?.id || '')
 
-  const fetchUserData = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('username, display_name, avatar_url')
-        .eq('id', userId)
-        .single()
-
-      if (error) {
-        console.error("Erro ao buscar dados do usuário:", error)
-        return null
-      }
-
-      return data
-    } catch (error) {
-      console.error("Exceção ao buscar dados do usuário:", error)
-      return null
-    }
-  }
-
   useEffect(() => {
     async function fetchReviews() {
       if (!targetUserId) return
@@ -79,16 +59,25 @@ export function UserRecentReviews({ userId, limit = 6, onLandingPage }: RecentRe
         if (error) throw error
 
         if (data) {
-          // Buscar dados do usuário para cada review
-          const reviewsWithUserData = await Promise.all(
-            data.map(async (review) => {
-              const userData = await fetchUserData(review.user_id)
-              return {
-                ...review,
-                userData: userData || undefined
-              }
-            })
-          )
+          const uniqueUserIds = [...new Set(data.map((review) => review.user_id))]
+          const { data: usersData, error: usersError } = await supabase
+            .from('users')
+            .select('id, username, display_name, avatar_url')
+            .in('id', uniqueUserIds)
+
+          if (usersError) throw usersError
+
+          const userById = new Map((usersData || []).map((user) => [user.id, user]))
+          const reviewsWithUserData = data.map((review) => ({
+            ...review,
+            userData: userById.get(review.user_id)
+              ? {
+                  username: userById.get(review.user_id)!.username,
+                  display_name: userById.get(review.user_id)!.display_name,
+                  avatar_url: userById.get(review.user_id)!.avatar_url,
+                }
+              : undefined,
+          }))
 
           setReviews(reviewsWithUserData)
         }
@@ -100,7 +89,7 @@ export function UserRecentReviews({ userId, limit = 6, onLandingPage }: RecentRe
     }
 
     fetchReviews()
-  }, [supabase, targetUserId, limit, fetchUserData])
+  }, [supabase, targetUserId, limit])
 
   if (loading) {
     return (

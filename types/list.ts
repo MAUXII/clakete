@@ -18,16 +18,23 @@ export interface List {
   preview_posters?: (string | null)[]
 }
 
-export interface ListFilm {
+export type ListMediaType = "movie" | "tv"
+
+export interface ListItem {
   id: string
   list_id: string
-  film_id: number
+  tmdb_id: number
   title: string
   poster_path?: string
   release_date?: string
   position: number
   added_at: string
+  /** movie = TMDB movie id em tmdb_id; tv = TMDB tv id em tmdb_id */
+  media_type?: ListMediaType
 }
+
+/** @deprecated Use `ListItem` */
+export type ListFilm = ListItem
 
 export interface CreateListData {
   title: string
@@ -44,10 +51,14 @@ export interface UpdateListData {
   slug?: string
 }
 
-export interface AddFilmToListData {
-  film_id: number
+export interface AddListItemData {
+  tmdb_id: number
   title: string
   poster_path?: string
   release_date?: string
   position: number
-} 
+  media_type?: ListMediaType
+}
+
+/** @deprecated Use `AddListItemData` */
+export type AddFilmToListData = AddListItemData

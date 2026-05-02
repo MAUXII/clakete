@@ -2,12 +2,15 @@
 
 import { useEffect, useState } from "react"
 import { useUser } from "@supabase/auth-helpers-react"
-import { ListFilm } from "@/types/list"
+import { ListItem } from "@/types/list"
 import { MovieCard } from "../movies/movie-card"
 import Image from "next/image"
 import { Plus } from "lucide-react"
-import { CommandDialog, CommandInput, CommandEmpty, CommandGroup, CommandItem, CommandList } from "@/components/ui/command"
+import { CommandDialog } from "@/components/ui/command"
 import { useDebounce } from "@/hooks/use-debounce"
+import { useMediaSearch, type SeriesSearchResult } from "@/hooks/use-media-search"
+import { MediaSearchCommandContent } from "@/components/movies/media-search-command-content"
+import type { Movie } from "@/lib/tmdb/client"
 import { DndContext, DragEndEvent, closestCenter } from '@dnd-kit/core'
 import { SortableContext, useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
@@ -20,16 +23,9 @@ import {
 } from "@/components/ui/context-menu"
 import { useLists } from "@/hooks/use-lists"
 
-interface SearchResult {
-  id: number
-  title: string
-  poster_path: string
-  backdrop_path?: string
-  release_date?: string
-}
-
 interface ListFilmsManagerProps {
-  listId: number
+  /** UUID da lista no Supabase */
+  listId: string | number
   isEditable?: boolean
   onFilmAdded?: () => void
 }
@@ -41,8 +37,8 @@ function SortableFilm({
   position, 
   canEdit 
 }: { 
-  film?: ListFilm, 
-  onRemove: (film: ListFilm) => void, 
+  film?: ListItem, 
+  onRemove: (film: ListItem) => void, 
   onSelect: (position: number) => void,
   position: number,
   canEdit: boolean
@@ -99,12 +95,6 @@ function SortableFilm({
                   <MdDelete className="h-4 w-4" />
                 </button>
               )}
-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2">
-                <p className="text-white text-xs font-medium truncate">{film.title}</p>
-                {film.release_date && (
-                  <p className="text-white/70 text-xs">{new Date(film.release_date).getFullYear()}</p>
-                )}
-              </div>
             </>
           ) : (
             <div 
@@ -129,18 +119,17 @@ function SortableFilm({
 }
 
 export function ListFilmsManager({ listId, isEditable = false, onFilmAdded }: ListFilmsManagerProps) {
-  const [listFilms, setListFilms] = useState<ListFilm[]>([])
+  const [listFilms, setListFilms] = useState<ListItem[]>([])
 
   const [showSearchCommand, setShowSearchCommand] = useState(false)
   const [query, setQuery] = useState("")
-  const [results, setResults] = useState<SearchResult[]>([])
-  const [isSearching, setIsSearching] = useState(false)
-  const [draggedFilms, setDraggedFilms] = useState<ListFilm[]>([])
+  const [draggedFilms, setDraggedFilms] = useState<ListItem[]>([])
   const [isDragging, setIsDragging] = useState(false)
 
   const currentUser = useUser()
-  const { fetchListFilms, addFilmToList, removeFilmFromList, reorderListFilms } = useLists()
+  const { fetchListItems, addItemToList, removeItemFromList, reorderListItems } = useLists()
   const debouncedQuery = useDebounce(query, 300)
+  const { filmResults, seriesResults, loading } = useMediaSearch(debouncedQuery, showSearchCommand)
 
   // Determina se o usuário atual pode editar os filmes da lista
   const canEdit = isEditable
@@ -149,7 +138,7 @@ export function ListFilmsManager({ listId, isEditable = false, onFilmAdded }: Li
   useEffect(() => {
     const loadListFilms = async () => {
       try {
-        const films = await fetchListFilms(listId.toString())
+        const films = await fetchListItems(listId.toString())
         setListFilms(films)
       } catch (error) {
         console.error('Erro ao carregar filmes da lista:', error)
@@ -157,7 +146,7 @@ export function ListFilmsManager({ listId, isEditable = false, onFilmAdded }: Li
     }
 
     loadListFilms()
-  }, [listId, fetchListFilms])
+  }, [listId, fetchListItems])
 
   // Sincronizar draggedFilms
   useEffect(() => {
@@ -166,44 +155,20 @@ export function ListFilmsManager({ listId, isEditable = false, onFilmAdded }: Li
     }
   }, [listFilms, isDragging])
 
-  // Buscar filmes baseado na query
-  useEffect(() => {
-    const searchMovies = async () => {
-      if (!debouncedQuery.trim()) {
-        setResults([])
-        return
-      }
-
-      setIsSearching(true)
-      try {
-        const response = await fetch(`/api/movies/search?query=${encodeURIComponent(debouncedQuery)}`)
-        const data = await response.json()
-        setResults(data.results || [])
-      } catch (error) {
-        console.error('Erro ao buscar filmes:', error)
-        setResults([])
-      } finally {
-        setIsSearching(false)
-      }
-    }
-
-    searchMovies()
-  }, [debouncedQuery])
-
   // Modo de visualização (sem edição)
   if (!canEdit) {
     return (
       <div className="grid grid-cols-4 gap-4">
         {listFilms.map((film) => (
           <MovieCard 
-            key={film.film_id} 
+            key={film.tmdb_id} 
             movie={{
-              id: film.film_id,
+              id: film.tmdb_id,
               title: film.title,
               poster_path: film.poster_path || '',
               vote_average: 0
             }} 
-            externalid={film.film_id} 
+            externalid={film.tmdb_id} 
           />
         ))}
       </div>
@@ -271,63 +236,98 @@ export function ListFilmsManager({ listId, isEditable = false, onFilmAdded }: Li
     
     // Atualizar banco de dados
     try {
-      await reorderListFilms(listId.toString(), updatedFilms);
+      await reorderListItems(listId.toString(), updatedFilms);
     } catch (error) {
       console.error('Erro ao reordenar filmes:', error);
     }
   };
 
   // Adicionar filme à lista
-  const handleFilmSelect = async (filmId: number) => {
+  const handleFilmSelect = async (selectedMovie: Movie) => {
     if (!canEdit || !currentUser) return
 
     try {
-      const selectedMovie = results.find(m => m.id === filmId)
-      if (!selectedMovie) return
+      const filmId = selectedMovie.id
 
       // Encontrar a próxima posição disponível
       const nextPosition = listFilms.length > 0 
         ? Math.max(...listFilms.map(f => f.position)) + 1 
         : 1
 
-      const success = await addFilmToList(listId.toString(), {
-        film_id: filmId,
-        title: selectedMovie.title,
-        poster_path: selectedMovie.poster_path,
-        release_date: selectedMovie.release_date || '',
-        position: nextPosition
+      const success = await addItemToList(String(listId), {
+        tmdb_id: filmId,
+        title: selectedMovie.title ?? "",
+        poster_path: selectedMovie.poster_path ?? undefined,
+        release_date: selectedMovie.release_date || "",
+        position: nextPosition,
+        media_type: "movie",
       })
 
       if (success) {
         // Atualizar estado local
-        const newFilm: ListFilm = {
+        const newFilm: ListItem = {
           id: Date.now().toString(), // ID temporário
-          list_id: listId.toString(),
-          film_id: filmId,
-          title: selectedMovie.title,
-          poster_path: selectedMovie.poster_path,
+          list_id: String(listId),
+          tmdb_id: filmId,
+          title: selectedMovie.title ?? "",
+          poster_path: selectedMovie.poster_path ?? undefined,
           release_date: selectedMovie.release_date || undefined,
           position: nextPosition,
-          added_at: new Date().toISOString()
+          added_at: new Date().toISOString(),
+          media_type: "movie",
         }
 
         setListFilms(prev => [...prev, newFilm])
         onFilmAdded?.()
       }
-
-      
-      setShowSearchCommand(false)
     } catch (error) {
       console.error('Error selecting film:', error)
     }
   }
 
+  const handleSeriesSelect = async (series: SeriesSearchResult) => {
+    if (!canEdit || !currentUser) return
+
+    try {
+      const nextPosition =
+        listFilms.length > 0 ? Math.max(...listFilms.map((f) => f.position)) + 1 : 1
+
+      const success = await addItemToList(String(listId), {
+        tmdb_id: series.id,
+        title: series.name ?? "",
+        poster_path: series.poster_path ?? undefined,
+        release_date: series.first_air_date || "",
+        position: nextPosition,
+        media_type: "tv",
+      })
+
+      if (success) {
+        const newItem: ListItem = {
+          id: Date.now().toString(),
+          list_id: String(listId),
+          tmdb_id: series.id,
+          title: series.name ?? "",
+          poster_path: series.poster_path ?? undefined,
+          release_date: series.first_air_date || undefined,
+          position: nextPosition,
+          added_at: new Date().toISOString(),
+          media_type: "tv",
+        }
+
+        setListFilms((prev) => [...prev, newItem])
+        onFilmAdded?.()
+      }
+    } catch (error) {
+      console.error("Error selecting series:", error)
+    }
+  }
+
   // Remover filme da lista
-  const handleRemoveFilm = async (film: ListFilm) => {
+  const handleRemoveFilm = async (film: ListItem) => {
     if (!canEdit || !currentUser) return
     
     try {
-      const success = await removeFilmFromList(listId.toString(), film.film_id)
+      const success = await removeItemFromList(String(listId), film.tmdb_id, film.media_type ?? "movie")
       
       if (success) {
         setListFilms(prev => prev.filter(f => f.id !== film.id))
@@ -378,43 +378,23 @@ export function ListFilmsManager({ listId, isEditable = false, onFilmAdded }: Li
         </div>
       </DndContext>
 
-      {/* Dialog para pesquisa e seleção de filmes */}
+      {/* Dialog: mesmo layout do Search (Films + Series); série abre a página da série */}
       <CommandDialog open={showSearchCommand} onOpenChange={setShowSearchCommand}>
-        <CommandInput 
-          placeholder="Buscar filmes..." 
-          value={query}
-          onValueChange={setQuery}
+        <MediaSearchCommandContent
+          query={query}
+          onQueryChange={setQuery}
+          filmResults={filmResults}
+          seriesResults={seriesResults}
+          loading={loading}
+          onSelectFilm={(movie) => {
+            void handleFilmSelect(movie)
+          }}
+          onSelectSeries={(series) => {
+            void handleSeriesSelect(series)
+          }}
+          filmRowMode="pick"
+          seriesRowMode="pick"
         />
-        <CommandList>
-          <CommandEmpty>
-            {isSearching ? "Buscando..." : "Nenhum filme encontrado."}
-          </CommandEmpty>
-          <CommandGroup>
-            {results.map((movie) => (
-              <CommandItem
-                key={movie.id}
-                onSelect={() => handleFilmSelect(movie.id)}
-                className="flex items-center gap-2"
-              >
-                <Image 
-                  src={movie.poster_path ? `https://image.tmdb.org/t/p/w92${movie.poster_path}` : '/placeholder.png'}
-                  alt={movie.title}
-                  width={32}
-                  height={48}
-                  className="w-8 h-12 object-cover rounded"
-                />
-                <div>
-                  <div className="font-medium">{movie.title}</div>
-                  {movie.release_date && (
-                    <div className="text-sm text-muted-foreground">
-                      {new Date(movie.release_date).getFullYear()}
-                    </div>
-                  )}
-                </div>
-              </CommandItem>
-            ))}
-          </CommandGroup>
-        </CommandList>
       </CommandDialog>
     </>
   )

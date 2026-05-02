@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react'
 import { useSupabaseClient, useUser } from '@supabase/auth-helpers-react'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { Database } from '@/lib/supabase/database.types'
-import { List, ListFilm, CreateListData, UpdateListData, AddFilmToListData } from '@/types/list'
+import { List, ListItem, CreateListData, UpdateListData, AddListItemData, ListMediaType } from '@/types/list'
 import { slugify } from '@/lib/list-slug'
 
 async function uniqueSlugForListOwner(
@@ -16,7 +16,7 @@ async function uniqueSlugForListOwner(
     const candidate = n === 0 ? base : `${base}-${n}`
     let q = supabase.from('lists').select('id').eq('user_id', userId).eq('slug', candidate)
     if (excludeListId) {
-      q = q.neq('id', Number(excludeListId))
+      q = q.neq('id', excludeListId)
     }
     const { data } = await q.maybeSingle()
     if (!data) return candidate
@@ -30,6 +30,38 @@ export function useLists() {
   const [lists, setLists] = useState<List[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const enrichListsWithFilmMeta = useCallback(async (baseLists: any[]) => {
+    if (baseLists.length === 0) return { countsByListId: new Map<number, number>(), previewsByListId: new Map<number, string[]>() }
+
+    const listIds = baseLists.map((list) => list.id)
+    const { data: filmRows, error: filmRowsError } = await supabase
+      .from('list_items')
+      .select('list_id, poster_path, position')
+      .in('list_id', listIds)
+      .order('list_id', { ascending: true })
+      .order('position', { ascending: true })
+
+    if (filmRowsError) throw filmRowsError
+
+    const countsByListId = new Map<number, number>()
+    const previewsByListId = new Map<number, string[]>()
+
+    for (const row of filmRows || []) {
+      const currentCount = countsByListId.get(row.list_id) || 0
+      countsByListId.set(row.list_id, currentCount + 1)
+
+      if (row.poster_path) {
+        const currentPreview = previewsByListId.get(row.list_id) || []
+        if (currentPreview.length < 5) {
+          currentPreview.push(row.poster_path)
+          previewsByListId.set(row.list_id, currentPreview)
+        }
+      }
+    }
+
+    return { countsByListId, previewsByListId }
+  }, [supabase])
 
   // Buscar dados do usuário
   const fetchUserData = useCallback(async (userId: string) => {
@@ -55,7 +87,7 @@ export function useLists() {
 
       const { data, error } = await supabase
         .from('lists')
-        .select('*')
+        .select('id, user_id, title, bio, is_public, slug, backdrop_path, created_at, updated_at')
         .eq('user_id', userId)
         .order('updated_at', { ascending: false })
 
@@ -63,29 +95,13 @@ export function useLists() {
 
       if (data) {
         const ownerProfile = await fetchUserData(userId)
-        const listsWithCounts = await Promise.all(
-          data.map(async (list) => {
-            const [countRes, rowsRes] = await Promise.all([
-              supabase
-                .from('list_films')
-                .select('*', { count: 'exact', head: true })
-                .eq('list_id', list.id),
-              supabase
-                .from('list_films')
-                .select('poster_path')
-                .eq('list_id', list.id)
-                .order('position', { ascending: true })
-                .limit(5),
-            ])
-
-            return {
-              ...list,
-              userData: ownerProfile || undefined,
-              films_count: countRes.count || 0,
-              preview_posters: (rowsRes.data || []).map((r) => r.poster_path),
-            }
-          })
-        )
+        const { countsByListId, previewsByListId } = await enrichListsWithFilmMeta(data)
+        const listsWithCounts = data.map((list) => ({
+          ...list,
+          userData: ownerProfile || undefined,
+          films_count: countsByListId.get(list.id) || 0,
+          preview_posters: previewsByListId.get(list.id) || [],
+        }))
 
         setLists(listsWithCounts)
       }
@@ -94,7 +110,7 @@ export function useLists() {
     } finally {
       setLoading(false)
     }
-  }, [supabase])
+  }, [supabase, fetchUserData, enrichListsWithFilmMeta])
 
   // Buscar listas públicas
   const fetchPublicLists = useCallback(async () => {
@@ -104,7 +120,7 @@ export function useLists() {
 
       const { data, error } = await supabase
         .from('lists')
-        .select('*')
+        .select('id, user_id, title, bio, is_public, slug, backdrop_path, created_at, updated_at')
         .eq('is_public', true)
         .order('updated_at', { ascending: false })
         .limit(20)
@@ -112,31 +128,22 @@ export function useLists() {
       if (error) throw error
 
       if (data) {
-        // Buscar dados do usuário e contagem de filmes
-        const listsWithData = await Promise.all(
-          data.map(async (list) => {
-            const [userData, countRes, rowsRes] = await Promise.all([
-              fetchUserData(list.user_id),
-              supabase
-                .from('list_films')
-                .select('*', { count: 'exact', head: true })
-                .eq('list_id', list.id),
-              supabase
-                .from('list_films')
-                .select('poster_path')
-                .eq('list_id', list.id)
-                .order('position', { ascending: true })
-                .limit(5),
-            ])
+        const { countsByListId, previewsByListId } = await enrichListsWithFilmMeta(data)
+        const userIds = [...new Set(data.map((list) => list.user_id))]
+        const { data: usersData, error: usersError } = await supabase
+          .from('users')
+          .select('id, username, display_name, avatar_url')
+          .in('id', userIds)
 
-            return {
-              ...list,
-              userData: userData || undefined,
-              films_count: countRes.count || 0,
-              preview_posters: (rowsRes.data || []).map((r) => r.poster_path),
-            }
-          })
-        )
+        if (usersError) throw usersError
+
+        const userById = new Map((usersData || []).map((user) => [user.id, user]))
+        const listsWithData = data.map((list) => ({
+          ...list,
+          userData: userById.get(list.user_id) || undefined,
+          films_count: countsByListId.get(list.id) || 0,
+          preview_posters: previewsByListId.get(list.id) || [],
+        }))
 
         setLists(listsWithData)
       }
@@ -145,7 +152,7 @@ export function useLists() {
     } finally {
       setLoading(false)
     }
-  }, [supabase, fetchUserData])
+  }, [supabase, enrichListsWithFilmMeta])
 
   // Criar nova lista
   const createList = useCallback(async (listData: CreateListData): Promise<List | null> => {
@@ -228,52 +235,67 @@ export function useLists() {
     }
   }, [supabase])
 
-  // Buscar filmes de uma lista
-  const fetchListFilms = useCallback(async (listId: string): Promise<ListFilm[]> => {
+  // Buscar itens (filme/série) de uma lista
+  const fetchListItems = useCallback(async (listId: string): Promise<ListItem[]> => {
     try {
       const { data, error } = await supabase
-        .from('list_films')
+        .from('list_items')
         .select('*')
         .eq('list_id', listId)
         .order('position')
 
       if (error) throw error
-      return data || []
+      if (!data?.length) return []
+      return data.map((row) => ({
+        ...row,
+        id: String(row.id),
+      })) as ListItem[]
     } catch (error) {
       return []
     }
   }, [supabase])
 
-  // Adicionar filme à lista
-  const addFilmToList = useCallback(async (listId: string, filmData: AddFilmToListData): Promise<boolean> => {
+  // Adicionar item à lista
+  const addItemToList = useCallback(async (listId: string, itemData: AddListItemData): Promise<boolean> => {
     try {
       const { error } = await supabase
-        .from('list_films')
+        .from('list_items')
         .insert({
           list_id: listId,
-          film_id: filmData.film_id,
-          title: filmData.title,
-          poster_path: filmData.poster_path,
-          release_date: filmData.release_date,
-          position: filmData.position
+          tmdb_id: itemData.tmdb_id,
+          title: itemData.title,
+          poster_path: itemData.poster_path ?? null,
+          release_date: itemData.release_date && itemData.release_date.length > 0
+            ? itemData.release_date
+            : null,
+          position: itemData.position,
+          media_type: itemData.media_type ?? 'movie',
         })
 
-      if (error) throw error
+      if (error) {
+        console.error('Erro ao adicionar item à lista:', error.message, error)
+        return false
+      }
       return true
     } catch (error) {
-      console.error('Erro ao adicionar filme à lista:', error)
+      console.error('Erro ao adicionar item à lista:', error)
       return false
     }
   }, [supabase])
 
-  // Remover filme da lista
-  const removeFilmFromList = useCallback(async (listId: string, filmId: number): Promise<boolean> => {
+  // Remover item da lista
+  const removeItemFromList = useCallback(async (
+    listId: string,
+    tmdbId: number,
+    mediaType: ListMediaType = 'movie',
+  ): Promise<boolean> => {
     try {
       const { error } = await supabase
-        .from('list_films')
+        .from('list_items')
         .delete()
         .eq('list_id', listId)
-        .eq('film_id', filmId)
+        .eq('tmdb_id', tmdbId)
+        .eq('media_type', mediaType)
 
       if (error) throw error
 
@@ -289,29 +311,105 @@ export function useLists() {
     }
   }, [supabase])
 
-  // Reordenar filmes na lista
-  const reorderListFilms = useCallback(async (listId: string, films: ListFilm[]): Promise<boolean> => {
+  /** Curtidas: total na lista e se o visitante já curtiu. `list_id` no banco é uuid (string). Sem linhas = contagem 0, nunca é erro. */
+  const fetchListLikesMeta = useCallback(
+    async (listId: string, viewerUserId?: string | null) => {
+      const { count, error: countErr } = await supabase
+        .from('list_likes')
+        .select('id', { count: 'exact', head: true })
+        .eq('list_id', listId)
+
+      if (countErr) {
+        return { count: 0, liked: false }
+      }
+
+      let liked = false
+      if (viewerUserId) {
+        const { data: row, error: rowErr } = await supabase
+          .from('list_likes')
+          .select('id')
+          .eq('list_id', listId)
+          .eq('user_id', viewerUserId)
+          .maybeSingle()
+
+        if (!rowErr && row) liked = true
+      }
+
+      return { count: count ?? 0, liked }
+    },
+    [supabase],
+  )
+
+  const toggleListLike = useCallback(
+    async (listId: string): Promise<{ count: number; liked: boolean } | null> => {
+      if (!user?.id) return null
+
+      try {
+        const { data: existing, error: selErr } = await supabase
+          .from('list_likes')
+          .select('id')
+          .eq('list_id', listId)
+          .eq('user_id', user.id)
+          .maybeSingle()
+
+        if (selErr) return null
+
+        if (existing) {
+          const { error } = await supabase
+            .from('list_likes')
+            .delete()
+            .eq('list_id', listId)
+            .eq('user_id', user.id)
+          if (error) return null
+        } else {
+          const { error } = await supabase.from('list_likes').insert({
+            list_id: listId,
+            user_id: user.id,
+          })
+          if (error) return null
+        }
+
+        const { count, error: cntErr } = await supabase
+          .from('list_likes')
+          .select('id', { count: 'exact', head: true })
+          .eq('list_id', listId)
+
+        let finalCount = count ?? 0
+        if (cntErr) {
+          const { data: rows } = await supabase.from('list_likes').select('id').eq('list_id', listId)
+          finalCount = rows?.length ?? 0
+        }
+
+        return { count: finalCount, liked: !existing }
+      } catch {
+        return null
+      }
+    },
+    [supabase, user?.id],
+  )
+
+  // Reordenar itens na lista
+  const reorderListItems = useCallback(async (listId: string, items: ListItem[]): Promise<boolean> => {
     try {
-      // Deletar todos os filmes da lista
       await supabase
-        .from('list_films')
+        .from('list_items')
         .delete()
         .eq('list_id', listId)
 
-      // Inserir novamente com as novas posições
-      if (films.length > 0) {
-        const filmsToInsert = films.map(film => ({
+      if (items.length > 0) {
+        const rows = items.map((item) => ({
           list_id: listId,
-          film_id: film.film_id,
-          title: film.title,
-          poster_path: film.poster_path,
-          release_date: film.release_date,
-          position: film.position
+          tmdb_id: item.tmdb_id,
+          title: item.title,
+          poster_path: item.poster_path,
+          release_date: item.release_date,
+          position: item.position,
+          media_type: item.media_type ?? 'movie',
         }))
 
         const { error } = await supabase
-          .from('list_films')
-          .insert(filmsToInsert)
+          .from('list_items')
+          .insert(rows)
 
         if (error) throw error
       }
@@ -331,9 +429,11 @@ export function useLists() {
     createList,
     updateList,
     deleteList,
-    fetchListFilms,
-    addFilmToList,
-    removeFilmFromList,
-    reorderListFilms
+    fetchListItems,
+    addItemToList,
+    removeItemFromList,
+    reorderListItems,
+    fetchListLikesMeta,
+    toggleListLike,
   }
 } 

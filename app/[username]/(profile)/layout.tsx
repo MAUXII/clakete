@@ -12,6 +12,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { toast } from "sonner"
 import Link from "next/link"
 import { Skeleton } from "@/components/ui/skeleton"
+import { ProfileLayoutProvider } from "@/components/providers/profile-layout-context"
 
 interface UserData {
   id: string;
@@ -20,6 +21,9 @@ interface UserData {
   bio?: string;
   avatar_url?: string;
   banner_url?: string;
+  website_url?: string | null;
+  twitter_url?: string | null;
+  instagram_url?: string | null;
 }
 
 
@@ -72,7 +76,7 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
         // Depois busca os dados do perfil
         const { data, error } = await supabase
       .from('users')
-          .select('*')
+          .select('id, username, display_name, bio, avatar_url, banner_url, website_url, twitter_url, instagram_url')
           .eq('username', username.toLowerCase())
       .single()
   
@@ -142,7 +146,7 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
             if (currentUser) {
               const { data: followData, error: followCheckError } = await supabase
                 .from('user_followers')
-                .select('*')
+                .select('user_id')
                 .eq('user_id', userId)
                 .eq('follower_id', currentUser.id)
                 .maybeSingle()
@@ -260,7 +264,7 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
         // Verificar novamente o status atual
         const { data: currentStatus, error: statusError } = await supabase
           .from('user_followers')
-          .select('*')
+          .select('user_id')
           .eq('user_id', userData.id)
           .eq('follower_id', currentUser.id)
           .maybeSingle()
@@ -325,7 +329,7 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
     if (loading) return (
       <section className="py-8 mt-20 w-full max-w-6xl">
        <Skeleton 
-        className="w-full h-[450px] border dark:border-white/20  border-black/20 rounded-lg bg-cover bg-center relative"
+        className="w-full h-[485px] border dark:border-white/20  border-black/20 rounded-lg bg-cover bg-center relative"
 
       />
       <div className="px-8 w-full ">
@@ -372,7 +376,7 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
     <section className="py-8 mt-20 w-full max-w-6xl">
         {/* Banner */}
         <div 
-        className="w-full h-[450px] border dark:border-white/20  border-black/20 rounded-lg bg-cover bg-center relative group"
+        className="w-full h-[487px] border dark:border-white/20  border-black/20 rounded-lg bg-cover bg-center relative group"
         style={{ 
           backgroundImage: `url(${userData.banner_url || '/default-banner.jpg'})`,
           backgroundPosition: 'center 20%'
@@ -451,8 +455,9 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
                         username={userData.username}
                         displayName={userData.display_name}
                         bio={userData.bio}
-                        avatarUrl={userData.avatar_url}
-                        bannerUrl={userData.banner_url}
+                        websiteUrl={userData.website_url ?? undefined}
+                        twitterUrl={userData.twitter_url ?? undefined}
+                        instagramUrl={userData.instagram_url ?? undefined}
                         onUpdate={updateProfile}
                       />
                     </div>
@@ -503,7 +508,9 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
   </TabsList>
   
   <div className="w-full">
-    {children}
+    <ProfileLayoutProvider value={{ userData, isOwnProfile }}>
+      {children}
+    </ProfileLayoutProvider>
   </div>
   
   </Tabs>
