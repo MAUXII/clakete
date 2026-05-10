@@ -9,14 +9,15 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
-      film_interactions: {
+      items_interactions: {
         Row: {
           release_date: string | null
           movie_title: string | undefined
           poster_path: string | undefined
           id: number
           user_id: string
-          film_id: number
+          tmdb_id: number
+          media_type: string
           rating: number | null
           review: string | null
           is_watched: boolean
@@ -28,7 +29,8 @@ export interface Database {
         Insert: {
           id?: number
           user_id: string
-          film_id: number
+          tmdb_id: number
+          media_type?: string
           rating?: number | null
           review?: string | null
           is_watched?: boolean
@@ -40,7 +42,8 @@ export interface Database {
         Update: {
           id?: number
           user_id?: string
-          film_id?: number
+          tmdb_id?: number
+          media_type?: string
           rating?: number | null
           review?: string | null
           is_watched?: boolean
@@ -56,8 +59,10 @@ export interface Database {
           user_id: string
           title: string
           bio: string | null
+          tags: string[]
           slug: string | null
           backdrop_path: string | null
+          banner_meta: Json | null
           is_public: boolean
           created_at: string
           updated_at: string
@@ -67,8 +72,10 @@ export interface Database {
           user_id: string
           title: string
           bio?: string | null
+          tags?: string[]
           slug?: string | null
           backdrop_path?: string | null
+          banner_meta?: Json | null
           is_public?: boolean
           created_at?: string
           updated_at?: string
@@ -78,8 +85,10 @@ export interface Database {
           user_id?: string
           title?: string
           bio?: string | null
+          tags?: string[]
           slug?: string | null
           backdrop_path?: string | null
+          banner_meta?: Json | null
           is_public?: boolean
           created_at?: string
           updated_at?: string
@@ -143,40 +152,56 @@ export interface Database {
           created_at?: string
         }
       }
-      users_favorite_films: {
+      users: {
         Row: {
-          id: number
-          user_id: string
-          film_id: number
-          title: string
-          poster_path: string | null
-          backdrop_path: string | null
-          release_date: string | null
-          position: number
+          id: string
+          username: string
+          email: string | null
+          display_name: string | null
+          bio: string | null
+          avatar_url: string | null
+          banner_url: string | null
+          avatar_meta: Json | null
+          banner_meta: Json | null
+          website_url: string | null
+          twitter_url: string | null
+          instagram_url: string | null
           created_at: string
+          updated_at: string
         }
         Insert: {
-          id?: number
-          user_id: string
-          film_id: number
-          title: string
-          poster_path?: string | null
-          backdrop_path?: string | null
-          release_date?: string | null
-          position: number
+          id: string
+          username: string
+          email?: string | null
+          display_name?: string | null
+          bio?: string | null
+          avatar_url?: string | null
+          banner_url?: string | null
+          avatar_meta?: Json | null
+          banner_meta?: Json | null
+          website_url?: string | null
+          twitter_url?: string | null
+          instagram_url?: string | null
           created_at?: string
+          updated_at?: string
         }
         Update: {
-          id?: number
-          user_id?: string
-          film_id?: number
-          title?: string
-          poster_path?: string | null
-          backdrop_path?: string | null
-          release_date?: string | null
-          position?: number
+          id?: string
+          username?: string
+          email?: string | null
+          display_name?: string | null
+          bio?: string | null
+          avatar_url?: string | null
+          banner_url?: string | null
+          avatar_meta?: Json | null
+          banner_meta?: Json | null
+          website_url?: string | null
+          twitter_url?: string | null
+          instagram_url?: string | null
           created_at?: string
-        }
+          updated_at?: string
+eated_at?: string
+    }
       }
     }
     Views: {

@@ -6,12 +6,20 @@ import { MovieCard } from "@/components/movies/movie-card";
 import { useGenres } from "@/hooks/use-genres";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Sheet, SheetTrigger, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { FaStarOfLife } from "react-icons/fa6";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
-import { MdOutlineKeyboardDoubleArrowUp } from "react-icons/md";
 import { Slider } from "@/components/ui/slider";
 import { IoOptions } from "react-icons/io5";
 import { PiClover } from "react-icons/pi";
+import {
+  FilmsCatalogShell,
+  FilmsCatalogHeader,
+  FilmsScrollToTopFab,
+  FilmsSubNav,
+  FilmsToolbarIconButton,
+  filmsPosterGridClassName,
+  filmsPosterSkeletonClassName,
+} from "@/components/films/films-catalog-shell";
+import { cn } from "@/lib/utils";
 
 interface Movie {
   id: number;
@@ -36,7 +44,6 @@ function FilmsDiscoverContent() {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [page, setPage] = useState(1);
-  const [totalMovies, setTotalMovies] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const router = useRouter();
@@ -94,12 +101,10 @@ function FilmsDiscoverContent() {
       const response = await fetch(`/api/movies/discover?${params.toString()}`);
       const data: MoviesResponse = await response.json();
       setMovies(Array.isArray(data.results) ? data.results : []);
-      setTotalMovies(data.total_results || 0);
       setPage(1);
       setHasMore(1 < data.total_pages);
     } catch {
       setMovies([]);
-      setTotalMovies(0);
       setHasMore(false);
     } finally {
       setLoading(false);
@@ -169,36 +174,36 @@ function FilmsDiscoverContent() {
   }
 
   return (
-    <div className="py-8 mt-20 w-full max-w-6xl">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-        <div>
-          <h1 className="text-3xl font-semibold ">Discover</h1>
-          <span className="text-muted-foreground">Find movies by genre and more</span>
-        </div>
-        <div className="flex gap-2">
-          <button
-            className="flex items-center gap-2 bg-[#FF0048]/10 text-[#FF0048] border border-[#FF0048]/20 px-3 py-3 rounded-md font-medium hover:bg-[#FF0048]/20 transition-all"
-            onClick={handleFeelingLucky}
-            type="button"
-            aria-label="I'm Feeling Lucky"
-          >
-            <PiClover className="w-5 h-5" />
-          </button>
-          <Sheet open={open} onOpenChange={setOpen}>
-            <SheetTrigger asChild>
-              <button className="flex items-center gap-2 bg-[#FF0048]/10 text-[#FF0048] border border-[#FF0048]/20 px-3 py-3 rounded-md font-medium hover:bg-[#FF0048]/20 transition-all">
-                <IoOptions />
-              </button>
-            </SheetTrigger>
-            <SheetContent side="right" className="max-w-sm w-full">
-              <SheetHeader>
-                <SheetTitle>Filter Movies</SheetTitle>
-              </SheetHeader>
-              <div className="flex flex-col gap-4 mt-4">
+    <FilmsCatalogShell>
+      <FilmsCatalogHeader
+        eyebrow="Catalog"
+        title="Discover"
+        description="Browse by genre, cap by rating and sort — filters apply to the full TMDB discover index."
+        actions={
+          <>
+            <FilmsToolbarIconButton onClick={handleFeelingLucky} aria-label="I'm feeling lucky">
+              <PiClover className="h-5 w-5" />
+            </FilmsToolbarIconButton>
+            <Sheet open={open} onOpenChange={setOpen}>
+              <SheetTrigger asChild>
+                <FilmsToolbarIconButton aria-label="Filters">
+                  <IoOptions className="h-5 w-5" />
+                </FilmsToolbarIconButton>
+              </SheetTrigger>
+              <SheetContent
+                side="right"
+                className="w-full max-w-sm border-l border-white/10 bg-zinc-950 text-zinc-100"
+              >
+                <SheetHeader>
+                  <SheetTitle className="text-left text-lg text-zinc-50">Filters</SheetTitle>
+                </SheetHeader>
+                <div className="mt-6 flex flex-col gap-5">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Genre</label>
+                  <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-zinc-500">
+                    Genre
+                  </label>
                   <Select value={localGenre} onValueChange={setLocalGenre} disabled={genresLoading}>
-                    <SelectTrigger>
+                    <SelectTrigger className="border-white/10 bg-white/[0.04]">
                       <SelectValue placeholder={genresLoading ? "Loading genres..." : "All genres"} />
                     </SelectTrigger>
                     <SelectContent>
@@ -212,7 +217,9 @@ function FilmsDiscoverContent() {
                   </Select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Max rating</label>
+                  <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-zinc-500">
+                    Max rating
+                  </label>
                   <div className="flex items-center gap-2">
                     <Slider
                       min={0}
@@ -226,9 +233,11 @@ function FilmsDiscoverContent() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Sort by</label>
+                  <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-zinc-500">
+                    Sort by
+                  </label>
                   <Select value={localSortBy} onValueChange={setLocalSortBy}>
-                    <SelectTrigger>
+                    <SelectTrigger className="border-white/10 bg-white/[0.04]">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -242,56 +251,52 @@ function FilmsDiscoverContent() {
                   </Select>
                 </div>
                 <button
-                  className="mt-4 bg-[#FF0048] text-white rounded-md py-2 font-medium hover:bg-[#FF0048]/90 transition-all"
+                  className="mt-2 rounded-xl bg-[#FF0048] py-3 text-sm font-semibold text-white transition-colors hover:bg-[#e60042]"
                   onClick={handleSaveFilters}
                   type="button"
                 >
-                  Save changes
+                  Apply filters
                 </button>
               </div>
             </SheetContent>
           </Sheet>
-        </div>
-      </div>
-      <div className="bg-muted-foreground/20 w-full h-[0.8px] mb-4"></div>
-      <span className="w-full font-medium bg-[#FF0048]/10 text-[#FF0048]/70  h-auto border border-black/10 dark:border-white/10 py-3 rounded-md mb-8 flex items-center justify-center">
-      <FaStarOfLife className="mr-2" /> There are {totalMovies.toLocaleString()} films
-      </span>
+          </>
+        }
+      />
+      <FilmsSubNav />
       {loading ? (
-        <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-6">
+        <div className={cn(filmsPosterGridClassName)}>
           {[...Array(18)].map((_, i) => (
-            <Skeleton key={i} className="w-full border-[1px] border-black/15 shadow-black/5 dark:border-white/15 h-full relative shadow-sm dark:shadow-white/5 aspect-[2/3] rounded-[5px] overflow-hidden" />
+            <Skeleton key={i} className={filmsPosterSkeletonClassName} />
           ))}
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-6">
+          <div className={filmsPosterGridClassName}>
             {movies.map((movie) => (
               <MovieCard key={movie.id} movie={movie} />
             ))}
-            {loadingMore && 
-              [...Array(20)].map((_, i) => (
-                <Skeleton key={`loading-${i}`} className="w-full border-[1px] border-black/15 shadow-black/5 dark:border-white/15 h-full relative shadow-sm dark:shadow-white/5 aspect-[2/3] rounded-[5px] overflow-hidden" />
-              ))
-            }
+            {loadingMore &&
+              [...Array(12)].map((_, i) => (
+                <Skeleton key={`loading-${i}`} className={filmsPosterSkeletonClassName} />
+              ))}
           </div>
-          {showScrollTop && (
-            <button
-              onClick={scrollToTop}
-              className="fixed bottom-8 right-8 bg-[#FF0048]/10 text-[#FF0048] p-3 rounded-md border border-black/10 dark:border-white/10 hover:opacity-90 hover:bg-[#FF0048]/20 hover:text-[#FF0048]/90 transition-all h-12 aspect-square flex items-center justify-center"
-              aria-label="Scroll to top">
-              <MdOutlineKeyboardDoubleArrowUp />
-            </button>
-          )}
+          <FilmsScrollToTopFab visible={showScrollTop} onClick={scrollToTop} />
         </>
       )}
-    </div>
+    </FilmsCatalogShell>
   );
 }
 
 export default function FilmsDiscoverPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense
+      fallback={
+        <FilmsCatalogShell>
+          <div className="py-16 text-center text-sm text-zinc-500">Loading catalog…</div>
+        </FilmsCatalogShell>
+      }
+    >
       <FilmsDiscoverContent />
     </Suspense>
   );

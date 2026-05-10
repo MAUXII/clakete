@@ -1,6 +1,6 @@
 'use client'
 import { EditProfileDialog } from "@/components/profile/edit-profile-dialog"
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { ImageEditDialog } from "@/components/profile/avatar-edit-dialog"
 import { MdEdit } from "react-icons/md"
 import { notFound, usePathname } from 'next/navigation'
@@ -12,15 +12,19 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { toast } from "sonner"
 import Link from "next/link"
 import { Skeleton } from "@/components/ui/skeleton"
-import { ProfileLayoutProvider } from "@/components/providers/profile-layout-context"
+import {
+  ProfileLayoutProvider,
+  type ProfileLayoutUser,
+} from "@/components/providers/profile-layout-context"
+import { parseTmdbStoredImageMeta } from "@/lib/tmdb-stored-image"
+import {
+  invalidatePublicProfileCache,
+  readPublicProfileCache,
+  writePublicProfileCache,
+} from "@/lib/profile-public-cache"
+import { profileBannerPresentation, profileAvatarPresentation } from "@/lib/profile-media"
 
-interface UserData {
-  id: string;
-  username: string;
-  display_name?: string;
-  bio?: string;
-  avatar_url?: string;
-  banner_url?: string;
+interface UserData extends ProfileLayoutUser {
   website_url?: string | null;
   twitter_url?: string | null;
   instagram_url?: string | null;
@@ -44,6 +48,7 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
     const [showBannerEdit, setShowBannerEdit] = useState(false)
     const [stats, setStats] = useState({
       filmsCount: 0,
+      seriesCount: 0,
       followersCount: 0,
       followingCount: 0,
       isFollowing: false
@@ -52,7 +57,11 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
     const currentUser = useUser()
     const { username } = use(params)
     const { refreshProfile } = useProfile()
-    const pathname = usePathname();
+    const pathname = usePathname()
+    const usernameRef = useRef(username)
+    useEffect(() => {
+      usernameRef.current = username
+    }, [username])
     const getTabFromPath = () => {
       if (pathname.endsWith('/films')) return 'films';
       if (pathname.endsWith('/lists')) return 'lists';
@@ -68,115 +77,181 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
     };
     const activeTab = getTabFromPath();
   
-    const fetchProfile = async () => {
-      try {
-        // Primeiro, pega a sessão atual
-        const { data: { session } } = await supabase.auth.getSession()
-        
-        // Depois busca os dados do perfil
-        const { data, error } = await supabase
-      .from('users')
-          .select('id, username, display_name, bio, avatar_url, banner_url, website_url, twitter_url, instagram_url')
-          .eq('username', username.toLowerCase())
-      .single()
-  
-        if (error || !data) {
-      notFound()
-    }
-  
-        setUserData(data)
-        setIsOwnProfile(session?.user?.id === data.id)
-        
-        // Buscar estatísticas após confirmar que o usuário existe
-        fetchUserStats(data.id)
-      } catch (error) {
-        console.error('Erro ao carregar perfil:', error)
-        setLoading(false)
-      }
-    }
-  
-    const fetchUserStats = async (userId: string) => {
-      try {
-        // 1. Buscar contagem de filmes assistidos
-        const { count: filmsCount, error: filmsError } = await supabase
-          .from('film_interactions')
-          .select('*', { count: 'exact', head: true })
-          .eq('user_id', userId)
-          .eq('is_watched', true)
-        
-        if (filmsError) {
-          console.error('Erro ao buscar contagem de filmes:', filmsError)
-        }
-        
-        // 2. Buscar contagem de seguidores (criar tabela se não existir)
-        let followersCount = 0
-        let followingCount = 0
-        let isFollowing = false
-        
+    const fetchUserStats = useCallback(
+      async (
+        userId: string,
+        cachePack?: { profile: UserData; isOwnProfile: boolean; targetUsername: string },
+      ) => {
         try {
-          // Verificar se a tabela user_followers existe
-          const { error: tableCheckError } = await supabase
-            .from('user_followers')
-            .select('user_id', { count: 'exact', head: true })
-            .limit(1)
-          
-          // Se a tabela existir, buscar contagens
-          if (!tableCheckError) {
-            // Buscar seguidores
-            const { count: followers, error: followersError } = await supabase
-              .from('user_followers')
-              .select('follower_id', { count: 'exact', head: true })
+          const [
+            { count: filmsCount, error: filmsError },
+            { count: seriesCount, error: seriesError },
+          ] = await Promise.all([
+            supabase
+              .from('items_interactions')
+              .select('*', { count: 'exact', head: true })
               .eq('user_id', userId)
-            
-            if (!followersError) {
-              followersCount = followers || 0
-            }
-            
-            // Buscar seguindo
-            const { count: following, error: followingError } = await supabase
+              .eq('is_watched', true)
+              .eq('media_type', 'movie'),
+            supabase
+              .from('items_interactions')
+              .select('*', { count: 'exact', head: true })
+              .eq('user_id', userId)
+              .eq('is_watched', true)
+              .eq('media_type', 'tv'),
+          ])
+
+          if (filmsError) {
+            console.error('Erro ao buscar contagem de filmes:', filmsError)
+          }
+          if (seriesError) {
+            console.error('Erro ao buscar contagem de séries:', seriesError)
+          }
+
+          let followersCount = 0
+          let followingCount = 0
+          let isFollowing = false
+
+          try {
+            const { error: tableCheckError } = await supabase
               .from('user_followers')
               .select('user_id', { count: 'exact', head: true })
-              .eq('follower_id', userId)
-            
-            if (!followingError) {
-              followingCount = following || 0
-            }
-            
-            // Verificar se o usuário atual está seguindo este perfil
-            if (currentUser) {
-              const { data: followData, error: followCheckError } = await supabase
+              .limit(1)
+
+            if (!tableCheckError) {
+              const { count: followers, error: followersError } = await supabase
                 .from('user_followers')
-                .select('user_id')
+                .select('follower_id', { count: 'exact', head: true })
                 .eq('user_id', userId)
-                .eq('follower_id', currentUser.id)
-                .maybeSingle()
-              
-              if (!followCheckError && followData) {
-                isFollowing = true
-              } else {
-                isFollowing = false
+
+              if (!followersError) {
+                followersCount = followers || 0
+              }
+
+              const { count: following, error: followingError } = await supabase
+                .from('user_followers')
+                .select('user_id', { count: 'exact', head: true })
+                .eq('follower_id', userId)
+
+              if (!followingError) {
+                followingCount = following || 0
+              }
+
+              if (currentUser) {
+                const { data: followData, error: followCheckError } = await supabase
+                  .from('user_followers')
+                  .select('user_id')
+                  .eq('user_id', userId)
+                  .eq('follower_id', currentUser.id)
+                  .maybeSingle()
+
+                if (!followCheckError && followData) {
+                  isFollowing = true
+                } else {
+                  isFollowing = false
+                }
               }
             }
+          } catch (error) {
+            console.error('Erro ao verificar tabela de seguidores:', error)
+          }
+
+          const snapshot = {
+            filmsCount: filmsCount || 0,
+            seriesCount: seriesCount || 0,
+            followersCount,
+            followingCount,
+            isFollowing,
+          }
+
+          if (cachePack && usernameRef.current.toLowerCase() !== cachePack.targetUsername) {
+            setLoading(false)
+            return
+          }
+
+          setStats((prev) => ({
+            ...prev,
+            ...snapshot,
+          }))
+
+          setLoading(false)
+
+          if (
+            cachePack &&
+            usernameRef.current.toLowerCase() === cachePack.targetUsername
+          ) {
+            const p = cachePack.profile
+            writePublicProfileCache(cachePack.targetUsername, {
+              user: {
+                id: p.id,
+                username: p.username,
+                display_name: p.display_name,
+                bio: p.bio,
+                avatar_url: p.avatar_url,
+                banner_url: p.banner_url,
+                website_url: p.website_url,
+                twitter_url: p.twitter_url,
+                instagram_url: p.instagram_url,
+                avatar_meta: p.avatar_meta ?? null,
+                banner_meta: p.banner_meta ?? null,
+              },
+              isOwnProfile: cachePack.isOwnProfile,
+              stats: snapshot,
+              fetchedAt: Date.now(),
+            })
           }
         } catch (error) {
-          console.error('Erro ao verificar tabela de seguidores:', error)
+          console.error('Erro ao buscar estatísticas:', error)
+          setLoading(false)
         }
-        
-        // Atualizar estado com as contagens
-        setStats(prev => ({
-          ...prev,
-          filmsCount: filmsCount || 0,
-          followersCount,
-          followingCount,
-          isFollowing
-        }))
-        
-        setLoading(false)
-      } catch (error) {
-        console.error('Erro ao buscar estatísticas:', error)
-        setLoading(false)
-      }
-    }
+      },
+      [supabase, currentUser],
+    )
+
+    const fetchProfile = useCallback(
+      async (targetUsername: string) => {
+        try {
+          const { data: { session } } = await supabase.auth.getSession()
+
+          const { data, error } = await supabase
+            .from('users')
+            .select(
+              'id, username, display_name, bio, avatar_url, banner_url, avatar_meta, banner_meta, website_url, twitter_url, instagram_url',
+            )
+            .eq('username', targetUsername)
+            .single()
+
+          if (error || !data) {
+            notFound()
+            return
+          }
+
+          if (usernameRef.current.toLowerCase() !== targetUsername) {
+            return
+          }
+
+          const parsed: UserData = {
+            ...data,
+            avatar_meta: parseTmdbStoredImageMeta(data.avatar_meta),
+            banner_meta: parseTmdbStoredImageMeta(data.banner_meta),
+          }
+          const own = session?.user?.id === data.id
+
+          setUserData(parsed)
+          setIsOwnProfile(own)
+
+          await fetchUserStats(data.id, {
+            profile: parsed,
+            isOwnProfile: own,
+            targetUsername,
+          })
+        } catch (error) {
+          console.error('Erro ao carregar perfil:', error)
+          setLoading(false)
+        }
+      },
+      [supabase, fetchUserStats],
+    )
   
 
   
@@ -203,7 +278,8 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
           throw error
         }
         
-        await fetchProfile()
+        invalidatePublicProfileCache(userData.username)
+        await fetchProfile(userData.username.toLowerCase())
         await refreshProfile()
       } catch (error) {
         console.error('Erro completo:', error)
@@ -212,16 +288,27 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
     }
   
     useEffect(() => {
-      fetchProfile()
-    }, [username])
-  
+      const target = username.toLowerCase()
+      const cached = readPublicProfileCache(username)
+      if (cached) {
+        setUserData(cached.user as UserData)
+        setStats((prev) => ({ ...prev, ...cached.stats }))
+        setIsOwnProfile(cached.isOwnProfile)
+        setLoading(false)
+      } else {
+        setUserData(null)
+        setLoading(true)
+      }
+      void fetchProfile(target)
+    }, [username, fetchProfile])
+
     useEffect(() => {
       const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
-        fetchProfile()
+        void fetchProfile(usernameRef.current.toLowerCase())
       })
 
       return () => subscription.unsubscribe()
-    }, [])
+    }, [fetchProfile, supabase])
   
     useEffect(() => {
       if (userData && currentUser) {
@@ -329,7 +416,7 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
     if (loading) return (
       <section className="py-8 mt-20 w-full max-w-6xl">
        <Skeleton 
-        className="w-full h-[485px] border dark:border-white/20  border-black/20 rounded-lg bg-cover bg-center relative"
+        className="w-full h-[485px] overflow-hidden rounded-2xl border border-white/[0.12] bg-cover bg-center relative"
 
       />
       <div className="px-8 w-full ">
@@ -371,39 +458,51 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
 
     )
     if (!userData) return null
-  
+
+  const bannerDisplay = profileBannerPresentation(userData)
+  const avatarDisplay = profileAvatarPresentation(userData)
+
   return (
-    <section className="py-8 mt-20 w-full max-w-6xl">
+    <section className="mt-28 w-full max-w-6xl">
         {/* Banner */}
         <div 
-        className="w-full h-[487px] border dark:border-white/20  border-black/20 rounded-lg bg-cover bg-center relative group"
+        className="group relative h-[487px] w-full overflow-hidden rounded-2xl border border-white/[0.12] bg-cover bg-center"
         style={{ 
-          backgroundImage: `url(${userData.banner_url || '/default-banner.jpg'})`,
-          backgroundPosition: 'center 20%'
+          backgroundImage: `url(${bannerDisplay.src})`,
+          backgroundPosition: bannerDisplay.backgroundPosition,
         }}
         onClick={() => isOwnProfile && setShowBannerEdit(true)}
       >
         {isOwnProfile && (
           <button 
             onClick={() => setShowBannerEdit(true)}
-            className="absolute z-10 w-full backdrop-blur-[1.2px] h-full rounded-lg inset-0 cursor-pointer flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity"
+            className="absolute inset-0 z-10 flex h-full w-full cursor-pointer items-center justify-center rounded-2xl bg-black/50 opacity-0 backdrop-blur-[1.2px] transition-opacity group-hover:opacity-100"
           >
             <span className="text-white">Edit Banner</span>
           </button>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t  rounded-lg from-black/50 to-transparent" />
+        <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-black/50 to-transparent" />
       </div>
       
       {/* Profile info */}
       <div className="px-8 w-full ">
         <div className="relative z-10">
-          <div className="flex gap-6 ">
+          <div className="flex flex-wrap gap-6 lg:flex-nowrap lg:items-stretch">
           <div className="flex flex-col w-full gap-6">
             {/* Avatar */}
-            <div className="sticky top-28 flex flex-col gap-6">
-            <div className="relative -mt-24 aspect-square border-4  dark:border-[#090909] border-white  shadow-sm  overflow-clip h-36 group rounded-2xl max-w-36">
+            <div className="sticky top-[calc(env(safe-area-inset-top,0px)+12rem)] z-20 flex flex-col gap-6 self-start">
+            <div className="relative -mt-24 aspect-square ring-2  dark:ring-[#090909] ring-white   shadow-sm  overflow-clip h-36 group rounded-2xl max-w-36">
             <Avatar className="w-full h-full rounded-md shadow-none ">
-              <AvatarImage src={userData.avatar_url || undefined} alt={userData.display_name || userData.username || ''} />
+              <AvatarImage
+                src={avatarDisplay.src || undefined}
+                alt={userData.display_name || userData.username || ''}
+                className="object-cover"
+                style={
+                  avatarDisplay.objectPosition
+                    ? { objectPosition: avatarDisplay.objectPosition }
+                    : undefined
+                }
+              />
               <AvatarFallback className="rounded-md text-2xl font-semibold w-full flex">{(userData.display_name?.[0] || userData.username?.[0] || 'U').toUpperCase()}</AvatarFallback>
             </Avatar>
         {isOwnProfile && (
@@ -431,6 +530,13 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
                   <div className="flex flex-col">
                     <span className="dark:text-white text-xl font-semibold text-black">{stats.filmsCount}</span>
                     <span className="text-muted-foreground text-sm">Films</span>
+                  </div>
+
+                  <div className="text-muted-foreground text-sm w-[1px] h-[61%] bg-muted-foreground/40"/>
+
+                   <div className="flex flex-col">
+                    <span className="dark:text-white text-xl font-semibold text-black">{stats.seriesCount}</span>
+                    <span className="text-muted-foreground text-sm">Series</span>
                   </div>
                   
                   <div className="text-muted-foreground text-sm w-[1px] h-[61%] bg-muted-foreground/40"/>
@@ -480,7 +586,7 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
           </div>
           <div className="w-full">
           <Tabs value={activeTab} className="w-full mt-6 translate-x-8">
-          <TabsList className="dark:bg-[#111111] w-full h-12">
+          <TabsList className="dark:bg-[#09090B] border border-white/[0.08] w-full h-12">
     <Link href={`/${username}`}>
     <TabsTrigger className="px-8 w-full py-2 font-medium data-[state=active]:bg-[#FF0048]/10 data-[state=active]:text-[#FF0048] " value="profile">Profile</TabsTrigger>
     </Link>
@@ -524,9 +630,13 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
         isOpen={showAvatarEdit}
           onClose={() => setShowAvatarEdit(false)}
         onSave={async (image: string) => {
-          await updateProfile({ avatar_url: image });
-            setShowAvatarEdit(false);
-          }}
+          if (image) {
+            await updateProfile({ avatar_url: image, avatar_meta: null })
+          } else {
+            await fetchProfile(usernameRef.current.toLowerCase())
+          }
+          setShowAvatarEdit(false)
+        }}
           onSelect={() => {}}
         type="avatar"
         />
@@ -535,9 +645,13 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
         isOpen={showBannerEdit}
           onClose={() => setShowBannerEdit(false)}
         onSave={async (image: string) => {
-          await updateProfile({ banner_url: image });
-            setShowBannerEdit(false);
-          }}
+          if (image) {
+            await updateProfile({ banner_url: image, banner_meta: null })
+          } else {
+            await fetchProfile(usernameRef.current.toLowerCase())
+          }
+          setShowBannerEdit(false)
+        }}
           onSelect={() => {}}
         type="banner"
         />

@@ -31,6 +31,8 @@ export interface MediaSearchCommandContentProps {
   commandListClassName?: string
   filmRowMode?: FilmRowMode
   seriesRowMode?: SeriesRowMode
+  /** Quando true, não renderiza `DialogTitle` (use dentro de outro `Dialog` com título próprio). */
+  suppressDialogTitle?: boolean
 }
 
 export function MediaSearchCommandContent({
@@ -46,13 +48,16 @@ export function MediaSearchCommandContent({
   commandListClassName,
   filmRowMode = "navigate",
   seriesRowMode = "navigate",
+  suppressDialogTitle = false,
 }: MediaSearchCommandContentProps) {
   const pickFilms = filmRowMode === "pick"
   const pickSeries = seriesRowMode === "pick"
 
   return (
     <>
-      <DialogTitle className="flex items-center gap-2 text-sm" />
+      {!suppressDialogTitle ? (
+        <DialogTitle className="flex items-center gap-2 text-sm" />
+      ) : null}
       <CommandInput
         placeholder={inputPlaceholder}
         value={query}

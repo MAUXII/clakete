@@ -8,7 +8,7 @@ import { Skeleton } from "../ui/skeleton"
 import { useRive } from "@rive-app/react-canvas"
 interface FilmInteraction {
   id: number
-  film_id: number
+  tmdb_id: number
   poster_path: string
   created_at: string
 }
@@ -64,8 +64,8 @@ export function UserRecentActivity({ userId, showAllWatched }: RecentActivityPro
         console.log('Buscando filmes assistidos para o usuário:', userId)
         
         const { data: interactions, error: interactionsError } = await supabase
-          .from('film_interactions')
-          .select('id, film_id, poster_path, created_at')
+          .from('items_interactions')
+          .select('id, tmdb_id, poster_path, created_at')
           .eq('user_id', userId)
           .eq('is_watched', true)
           .order('created_at', { ascending: false })
@@ -121,14 +121,14 @@ export function UserRecentActivity({ userId, showAllWatched }: RecentActivityPro
       <div className="grid grid-cols-4 gap-4">
         {watchedFilms.slice(0, visibleCount).map((film) => (
           <MovieCard
-            key={film.film_id}
+            key={film.tmdb_id}
             movie={{
-              id: film.film_id,
+              id: film.tmdb_id,
               title: "", // O título não é mais necessário aqui
               poster_path: film.poster_path,
               vote_average: 0
             }}
-            externalid={film.film_id}
+            externalid={film.tmdb_id}
           />
         ))}
         

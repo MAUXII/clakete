@@ -3,12 +3,17 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import { useUser, useSupabaseClient } from '@supabase/auth-helpers-react'
 
+import type { TmdbStoredImageMeta } from '@/types/tmdb-stored-image'
+import { parseTmdbStoredImageMeta } from '@/lib/tmdb-stored-image'
+
 interface UserProfile {
   username: string
   display_name?: string
   bio?: string
-  avatar_url?: string
-  banner_url?: string
+  avatar_url?: string | null
+  banner_url?: string | null
+  avatar_meta?: TmdbStoredImageMeta | null
+  banner_meta?: TmdbStoredImageMeta | null
 }
 
 interface ProfileContextType {
@@ -44,7 +49,11 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
 
       if (error) throw error
 
-      setProfile(data)
+      setProfile({
+        ...data,
+        avatar_meta: parseTmdbStoredImageMeta(data.avatar_meta),
+        banner_meta: parseTmdbStoredImageMeta(data.banner_meta),
+      } as UserProfile)
     } catch (error) {
       console.error('Erro ao carregar perfil:', error)
       setProfile(null)

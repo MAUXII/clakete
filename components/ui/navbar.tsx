@@ -18,6 +18,7 @@ import {
   TrendingUp,
   Star,
   CalendarClock,
+  Menu,
 } from "lucide-react"
 import { BiHomeAlt } from "react-icons/bi"
 import Link from "next/link"
@@ -33,8 +34,10 @@ import { SearchCommand } from "../movies/search-command"
 import { useSupabaseClient } from '@supabase/auth-helpers-react'
 import { useRouter } from 'next/navigation'
 import { useProfile } from "@/components/providers/profile-provider"
+import { profileAvatarPresentation } from "@/lib/profile-media"
 import React from "react"
 import { cn } from "@/lib/utils"
+import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "./sheet"
 
 export function Navbar() {
   const { movies, loading: moviesLoading } = useMovies()
@@ -42,6 +45,7 @@ export function Navbar() {
   const { series, loading: seriesLoading } = useSeries()
   const featuredSeries = series?.[0]
   const { profile, loading } = useProfile()
+  const navAvatar = profile ? profileAvatarPresentation(profile) : null
   const supabase = useSupabaseClient()
   const router = useRouter()
 
@@ -107,33 +111,33 @@ export function Navbar() {
   ] as const
 
   return (
-    <header className="pointer-events-none w-full absolute max-w-6xl self-center left-1/2 -translate-x-1/2 inset-x-0 top-0 z-[50] flex justify-center pt-3 sm:pt-4">
+    <header className="pointer-events-none fixed inset-x-0 top-0 z-[50] w-full pt-[env(safe-area-inset-top,0px)]">
       <div
         className={cn(
-          "pointer-events-auto flex w-full  items-center gap-3 sm:gap-4",
-          "rounded-2xl border border-white/[0.08]",
-          "bg-zinc-950/45 shadow-[0_8px_32px_-8px_rgba(0,0,0,0.55)]",
+          "pointer-events-auto w-full",
+          "border-b border-white/[0.08]",
+          "bg-zinc-950/45 shadow-[0_12px_40px_-12px_rgba(0,0,0,0.55)]",
           "backdrop-blur-2xl backdrop-saturate-150",
           "supports-[backdrop-filter]:bg-zinc-950/30",
-          "px-3 py-2.5 sm:px-4 sm:py-3  ",
         )}
       >
+        <div
+          className={cn(
+            "mx-auto flex w-full max-w-6xl items-center gap-3 sm:gap-4",
+            "py-2.5 sm:py-3",
+          )}
+        >
         <Link
           href="/"
           className={cn(
             "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl sm:h-12 sm:w-12",
-            "border border-white/[0.08] bg-white/[0.04]",
-            "ring-1 ring-inset ring-white/[0.04]",
-            "transition hover:border-white/[0.12] hover:bg-white/[0.07]",
+            
           )}
-          style={{
-            backgroundImage:
-              "linear-gradient(145deg, rgba(255,255,255,0.06) 0%, rgba(255,0,72,0.06) 100%)",
-          }}
+        
         >
-          <Image src="/logopage.svg" alt="Clakete" width={44} height={44} className="h-9 w-9 sm:h-10 sm:w-10" />
+          <Image src="/claketelogov2.svg" alt="Clakete" width={44} height={44} className="h-9 w-9 sm:h-10 sm:w-10" />
         </Link>
-        <nav className="flex h-11 min-w-0 flex-1 items-center justify-between gap-2 sm:h-12 sm:gap-3 sm:px-1">
+        <nav className="hidden h-11 min-w-0 flex-1 items-center justify-between gap-2 sm:h-12 sm:gap-3 md:flex">
       <NavigationMenu>
         <NavigationMenuList>
           <NavigationMenuItem>
@@ -272,7 +276,83 @@ export function Navbar() {
 
       <SearchCommand />
     </nav>
- 
+
+        <div className="ml-auto flex items-center gap-2">
+          <Sheet>
+            <SheetTrigger asChild>
+              <button
+                type="button"
+                aria-label="Open menu"
+                className={cn(
+                  "flex size-11 items-center justify-center rounded-xl md:hidden",
+                  "border border-white/[0.08] bg-white/[0.04] text-zinc-200",
+                  "ring-1 ring-inset ring-white/[0.04]",
+                  "transition hover:border-white/[0.12] hover:bg-white/[0.07] hover:text-white",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0048]/50",
+                )}
+              >
+                <Menu className="h-5 w-5" />
+              </button>
+            </SheetTrigger>
+            <SheetContent
+              side="bottom"
+              className="h-[min(82dvh,44rem)] w-full rounded-t-2xl border-t border-white/[0.1] bg-zinc-950/95 text-zinc-100 backdrop-blur-xl"
+            >
+              <SheetHeader className="pr-8">
+                <SheetTitle>Menu</SheetTitle>
+              </SheetHeader>
+
+              <div className="mt-6 flex flex-col gap-6">
+                <nav className="flex flex-col gap-1">
+                  <SheetClose asChild>
+                    <Link href="/" className="rounded-lg px-3 py-2 text-sm font-medium text-zinc-200 hover:bg-white/[0.06]">
+                      Home
+                    </Link>
+                  </SheetClose>
+                  <SheetClose asChild>
+                    <Link href="/lists" className="rounded-lg px-3 py-2 text-sm font-medium text-zinc-200 hover:bg-white/[0.06]">
+                      Lists
+                    </Link>
+                  </SheetClose>
+                </nav>
+
+                <div className="space-y-2">
+                  <p className="px-3 text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">Movies</p>
+                  <div className="flex flex-col gap-1">
+                    {movieNavLinks.map(({ href, title, Icon }) => (
+                      <SheetClose asChild key={href}>
+                        <Link
+                          href={href}
+                          className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-zinc-200 hover:bg-white/[0.06]"
+                        >
+                          <Icon className="h-4 w-4 text-zinc-400" />
+                          {title}
+                        </Link>
+                      </SheetClose>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="px-3 text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">Series</p>
+                  <div className="flex flex-col gap-1">
+                    {seriesNavLinks.map(({ href, title, Icon }) => (
+                      <SheetClose asChild key={href}>
+                        <Link
+                          href={href}
+                          className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-zinc-200 hover:bg-white/[0.06]"
+                        >
+                          <Icon className="h-4 w-4 text-zinc-400" />
+                          {title}
+                        </Link>
+                      </SheetClose>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </SheetContent>
+          </Sheet>
+
         <DropdownMenu>
           <DropdownMenuTrigger
             className={cn(
@@ -285,13 +365,18 @@ export function Navbar() {
           >
       {!loading && (
           <>
-            {profile?.avatar_url ? (
-              <Image 
-                src={profile.avatar_url}
+            {navAvatar?.src && profile ? (
+              <Image
+                src={navAvatar.src}
                 alt={profile.username}
                 width={48}
                 height={48}
                 className="w-full h-full object-cover"
+                style={
+                  navAvatar.objectPosition
+                    ? { objectPosition: navAvatar.objectPosition }
+                    : undefined
+                }
               />
             ) : (
               <FiUser />
@@ -342,6 +427,8 @@ export function Navbar() {
         )}
           </DropdownMenuContent>
         </DropdownMenu>
+        </div>
+        </div>
       </div>
     </header>
   )

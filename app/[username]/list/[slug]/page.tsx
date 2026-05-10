@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useSupabaseClient, useUser } from "@supabase/auth-helpers-react";
 import { Database } from "@/lib/supabase/database.types";
 import { List, ListItem } from "@/types/list";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Plus, Heart, Copy, Share2, Tags, LayoutGrid, List as ListIcon, Clock3 } from "lucide-react";
+import { Plus, Heart, Copy, Share2, Tags, LayoutGrid, List as ListIcon, Clock3, Pencil } from "lucide-react";
 import Link from "next/link";
 import { useLists } from "@/hooks/use-lists";
 import { CommandDialog } from "@/components/ui/command";
@@ -19,7 +19,12 @@ import { ImageEditDialog } from "@/components/profile/avatar-edit-dialog";
 import { MovieCard } from "@/components/movies/movie-card";
 import { IoTrashOutline } from "react-icons/io5";
 import { userProfilePath } from "@/lib/list-href";
+import { listBannerPresentation, parseListBannerMeta } from "@/lib/list-banner";
+import { FilmsCatalogShell } from "@/components/films/films-catalog-shell";
+import { EditListDialog } from "@/components/profile/edit-list-dialog";
 import { cn } from "@/lib/utils";
+
+const LIST_LETTERBOX_HEIGHT = "487px";
 
 export default function UserListDetailPage() {
   const params = useParams();
@@ -41,6 +46,7 @@ export default function UserListDetailPage() {
   const debouncedQuery = useDebounce(query, 300);
 
   const [showBannerEdit, setShowBannerEdit] = useState(false);
+  const [editListDialogOpen, setEditListDialogOpen] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   const [likeCount, setLikeCount] = useState(0);
@@ -55,10 +61,16 @@ export default function UserListDetailPage() {
     [films],
   );
 
-  const movieEntriesCount = useMemo(
-    () => films.filter((f) => (f.media_type ?? "movie") === "movie").length,
-    [films],
-  );
+  const totalListItems = films.length
+
+  const progressPercent =
+    totalListItems === 0 ? 0 : Math.min(100, Math.round((watchedInList / totalListItems) * 100))
+
+  const listTags = useMemo(() => {
+    const raw = list?.tags
+    if (!Array.isArray(raw)) return [] as string[]
+    return raw.map((t) => String(t).trim()).filter(Boolean)
+  }, [list?.tags])
 
   const { filmResults, seriesResults, loading: searchLoading } = useMediaSearch(
     debouncedQuery,
@@ -110,6 +122,7 @@ export default function UserListDetailPage() {
           setList({
             ...listData,
             id: String(listData.id),
+            banner_meta: parseListBannerMeta(listData.banner_meta),
             userData: userData || undefined,
             films_count: filmsData?.length || 0,
           });
@@ -149,27 +162,27 @@ export default function UserListDetailPage() {
         return;
       }
 
-      const movieRows = films.filter((f) => (f.media_type ?? "movie") === "movie");
-      if (movieRows.length === 0) {
-        setWatchedInList(0);
-        return;
-      }
-
-      const uniqueIds = [...new Set(movieRows.map((f) => f.tmdb_id))];
+      const uniqueIds = [...new Set(films.map((f) => f.tmdb_id))];
       const { data: rows, error } = await supabase
-        .from("film_interactions")
-        .select("film_id")
+        .from("items_interactions")
+        .select("tmdb_id, media_type")
         .eq("user_id", currentUser.id)
         .eq("is_watched", true)
-        .in("film_id", uniqueIds);
+        .in("tmdb_id", uniqueIds);
 
       if (error) {
         setWatchedInList(0);
         return;
       }
 
-      const watchedSet = new Set(rows?.map((r) => r.film_id) ?? []);
-      setWatchedInList(movieRows.filter((f) => watchedSet.has(f.tmdb_id)).length);
+      const watchedSet = new Set(
+        rows?.map((r) => `${r.tmdb_id}:${r.media_type ?? "movie"}`) ?? [],
+      );
+      setWatchedInList(
+        films.filter((f) =>
+          watchedSet.has(`${f.tmdb_id}:${f.media_type ?? "movie"}`),
+        ).length,
+      );
     };
 
     void loadLikesAndProgress();
@@ -193,6 +206,25 @@ export default function UserListDetailPage() {
       setLikePending(false);
     }
   };
+
+  const refreshListAfterEdit = useCallback(async () => {
+    if (!listId) return;
+    const { data: listData, error } = await supabase.from("lists").select("*").eq("id", listId).single();
+    if (error || !listData) return;
+
+    setList((prev) => ({
+      ...listData,
+      id: String(listData.id),
+      banner_meta: parseListBannerMeta(listData.banner_meta),
+      userData: prev?.userData,
+      films_count: films.length,
+    }));
+
+    const nextSlug = listData.slug != null ? String(listData.slug) : "";
+    if (nextSlug && nextSlug !== listSlug) {
+      router.replace(`/${profileUsername}/list/${encodeURIComponent(nextSlug)}`);
+    }
+  }, [listId, supabase, films.length, listSlug, profileUsername, router]);
 
   const handleFilmSelect = async (selectedMovie: Movie) => {
     if (!canEdit || !currentUser || !listId) return;
@@ -290,56 +322,72 @@ export default function UserListDetailPage() {
 
   if (loading) {
     return (
-      <div className="mx-auto mt-20 w-full max-w-6xl pb-12 pt-6">
-        <div className="animate-pulse">
-          <div className="h-[485px] w-full rounded-2xl bg-muted max-md:h-[360px]" />
-          <div className="mt-10 space-y-4">
-            <div className="h-9 w-2/3 max-w-md rounded-md bg-muted" />
-            <div className="h-4 w-24 rounded bg-muted" />
-            <div className="h-4 max-w-sm rounded bg-muted" />
+      <div className="min-h-screen w-full overflow-x-clip bg-[#09090B]">
+        <FilmsCatalogShell>
+          <div
+            className="relative z-0 w-full overflow-hidden rounded-2xl border border-white/[0.12] bg-[#09090B]"
+            style={{ height: LIST_LETTERBOX_HEIGHT }}
+            aria-hidden
+          />
+          <div className="relative z-10 mt-8 animate-pulse space-y-4 px-1">
+            <div className="h-9 w-2/3 max-w-md rounded-md bg-white/[0.06]" />
+            <div className="h-4 w-24 rounded bg-white/[0.06]" />
+            <div className="h-4 max-w-sm rounded bg-white/[0.06]" />
           </div>
-        </div>
+        </FilmsCatalogShell>
       </div>
     );
   }
 
   if (error || !list || !listId) {
     return (
-      <div className="mx-auto mt-20 w-full max-w-6xl py-16">
-        <div className="text-center">
-          <h1 className="text-xl font-semibold tracking-tight">List not found</h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            This list does not exist or may have been removed.
-          </p>
-        </div>
+      <div className="min-h-screen w-full overflow-x-clip bg-[#09090B]">
+        <FilmsCatalogShell>
+          <div className="py-16 text-center">
+            <h1 className="text-xl font-semibold tracking-tight">List not found</h1>
+            <p className="mt-2 text-sm text-zinc-500">
+              This list does not exist or may have been removed.
+            </p>
+          </div>
+        </FilmsCatalogShell>
       </div>
     );
   }
 
+  const bannerPres = listBannerPresentation(list);
+  const listBackdropUrl = bannerPres.src;
+
   return (
-    <div className="mx-auto mt-20 w-full max-w-6xl pb-16 pt-6">
-      <div className="overflow-hidden rounded-2xl">
+    <div className="min-h-screen w-full overflow-x-clip bg-[#09090B]">
+      <FilmsCatalogShell>
         <div
-          className="group relative h-[485px] w-full rounded-2xl border border-black/20 bg-muted bg-cover bg-center max-md:h-[360px] dark:border-white/20"
-          style={{
-            backgroundImage: `url(${list.backdrop_path || "/wavebg.png"})`,
-            backgroundPosition: "center 22%",
-          }}
-          onClick={() => canEdit && setShowBannerEdit(true)}
+          className="relative z-0 w-full overflow-hidden rounded-2xl border border-white/[0.12] bg-[#09090B]"
+          style={{ height: LIST_LETTERBOX_HEIGHT }}
         >
-          {canEdit && (
+          {listBackdropUrl ? (
+            <img
+              src={listBackdropUrl}
+              alt=""
+              className="absolute inset-0 h-full w-full object-cover"
+              style={{ objectPosition: bannerPres.objectPosition ?? "center 22%" }}
+            />
+          ) : (
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_35%,rgba(255,255,255,0.06),transparent_55%)]" />
+          )}
+          {canEdit ? (
             <button
               type="button"
               onClick={() => setShowBannerEdit(true)}
-              className="absolute inset-0 z-10 flex h-full w-full cursor-pointer items-center justify-center rounded-2xl bg-black/50 opacity-0 backdrop-blur-[1.2px] transition-opacity group-hover:opacity-100"
+              className="absolute inset-0 z-10 flex cursor-pointer items-center justify-center bg-black/45 opacity-0 backdrop-blur-[1.2px] transition-opacity hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
             >
-              <span className="text-white">{list.backdrop_path ? "Update banner" : "Add banner"}</span>
+              <span className="text-sm font-medium text-white">
+                {list.banner_meta?.file_path || list.backdrop_path ? "Update banner" : "Add banner"}
+              </span>
             </button>
-          )}
+          ) : null}
         </div>
-      </div>
 
-      <header className="mt-10 grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_300px]">
+        <header className="relative z-10 mt-8 grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,1fr)_300px]">
         <div className="space-y-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <Link
@@ -569,29 +617,41 @@ export default function UserListDetailPage() {
 
         </div>
 
-        <aside className="space-y-3 rounded-xl border border-border/50 bg-card/40 p-3">
+        <aside className="sticky top-[calc(env(safe-area-inset-top,0px)+6.5rem)] z-10 h-fit w-full max-h-[calc(100dvh-8rem)] space-y-3 overflow-y-auto rounded-xl border border-border/50 bg-card/40 p-3">
+          {canEdit && list ? (
+            <button
+              type="button"
+              onClick={() => setEditListDialogOpen(true)}
+              className="flex h-10 w-full items-center justify-center rounded-md border border-border/50 bg-muted/30 px-3 text-sm text-muted-foreground transition-colors hover:bg-muted/50"
+            >
+              <span className="inline-flex items-center gap-2">
+                <Pencil className="h-4 w-4" />
+                Edit list
+              </span>
+            </button>
+          ) : null}
           <button
             type="button"
             disabled={likePending || !listId}
             onClick={() => void handleToggleListLike()}
             className={cn(
-              "flex w-full items-center justify-between rounded-md border px-3 py-2 text-sm transition-colors disabled:opacity-60",
+              "flex h-10 w-full items-center justify-center rounded-md border px-3 text-sm transition-colors disabled:opacity-60",
               userLiked
                 ? "border-[#FF0048]/30 bg-[#FF0048]/10 text-[#FF0048] hover:bg-[#FF0048]/15"
-                : "border-black/10 bg-muted/30 text-muted-foreground hover:bg-muted/50 dark:border-white/10",
+                : "border-border/50 bg-muted/30 text-muted-foreground hover:bg-muted/50",
             )}
           >
-            <span className="inline-flex items-center gap-2 font-medium">
+            <span className="inline-flex items-center gap-2">
               <Heart
                 className={cn("h-4 w-4 shrink-0 transition-colors", userLiked && "fill-[#FF0048] text-[#FF0048]")}
               />
-              {userLiked ? "You liked this list" : "Like this list"}
+              {userLiked ? "Liked" : "Like"}
+              <span className="tabular-nums">{likeCount}</span>
             </span>
-            <span className="text-xs tabular-nums">{likeCount}</span>
           </button>
           <button
             type="button"
-            className="flex w-full items-center justify-center rounded-md border border-border/50 bg-muted/30 px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted/50"
+            className="flex h-10 w-full items-center justify-center rounded-md border border-border/50 bg-muted/30 px-3 text-sm text-muted-foreground transition-colors hover:bg-muted/50"
           >
             <span className="inline-flex items-center gap-2">
               <Copy className="h-4 w-4" />
@@ -600,7 +660,7 @@ export default function UserListDetailPage() {
           </button>
           <button
             type="button"
-            className="flex w-full items-center justify-center rounded-md border border-border/50 bg-muted/30 px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted/50"
+            className="flex h-10 w-full items-center justify-center rounded-md border border-border/50 bg-muted/30 px-3 text-sm text-muted-foreground transition-colors hover:bg-muted/50"
           >
             <span className="inline-flex items-center gap-2">
               <Share2 className="h-4 w-4" />
@@ -612,45 +672,47 @@ export default function UserListDetailPage() {
               <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 Progress
               </span>
-              <span className="tabular-nums">
+              <span className="tabular-nums text-xs sm:text-sm">
                 <span className="font-semibold text-foreground">{watchedInList}</span>
                 <span className="text-muted-foreground"> / </span>
-                <span className="text-muted-foreground">{movieEntriesCount}</span>
-                <span className="ml-1 text-xs text-muted-foreground">movies</span>
+                <span className="text-muted-foreground">{totalListItems}</span>
+                <span className="ml-1.5 font-medium text-muted-foreground">
+                  ({progressPercent}%)
+                </span>
               </span>
             </div>
             <p className="mb-2 text-[11px] leading-snug text-muted-foreground">
               {currentUser
-                ? "Films in this list that you’ve marked as watched on Clakete so far."
-                : "Sign in to see how many of these films you’ve watched."}
+                ? "Movies & shows in this list that you’ve marked as watched on Clakete."
+                : "Sign in to see your watch progress for titles in this list."}
             </p>
             <div className="h-2 overflow-hidden rounded-full bg-muted/80 ring-1 ring-black/5 dark:ring-white/10">
               <div
                 className="h-full rounded-full bg-gradient-to-r from-[#FF0048]/85 to-[#FF0048] shadow-[0_0_12px_rgba(255,0,72,0.35)] transition-[width] duration-300 ease-out"
                 style={{
-                  width:
-                    movieEntriesCount === 0
-                      ? "0%"
-                      : `${Math.min(100, Math.round((watchedInList / movieEntriesCount) * 100))}%`,
+                  width: totalListItems === 0 ? "0%" : `${progressPercent}%`,
                 }}
               />
             </div>
           </div>
-          <div className="rounded-md border border-border/50 bg-background/40 p-3">
-            <p className="mb-2 inline-flex items-center gap-2 text-xs uppercase tracking-wide text-muted-foreground">
-              <Tags className="h-3.5 w-3.5" />
-              Tags
-            </p>
-            <div className="flex flex-wrap gap-2">
-              <span className="rounded bg-muted px-2 py-1 text-xs text-muted-foreground">cinema</span>
-              <span className="rounded bg-muted px-2 py-1 text-xs text-muted-foreground">
-                {list.is_public ? "public" : "private"}
-              </span>
-              <span className="rounded bg-muted px-2 py-1 text-xs text-muted-foreground">
-                {films.length >= 50 ? "long list" : "curated"}
-              </span>
+          {listTags.length > 0 ? (
+            <div className="rounded-md border border-border/50 bg-background/40 p-3">
+              <p className="mb-2 inline-flex items-center gap-2 text-xs uppercase tracking-wide text-muted-foreground">
+                <Tags className="h-3.5 w-3.5" />
+                Tags
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {listTags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="rounded bg-muted px-2 py-1 text-xs text-muted-foreground"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
             </div>
-          </div>
+          ) : null}
         </aside>
       </header>
 
@@ -675,23 +737,34 @@ export default function UserListDetailPage() {
         />
       </CommandDialog>
 
-      {showBannerEdit && (
+      {canEdit && list ? (
+        <EditListDialog
+          list={list}
+          open={editListDialogOpen}
+          onOpenChange={setEditListDialogOpen}
+          onListUpdated={() => void refreshListAfterEdit()}
+        />
+      ) : null}
+
+      {showBannerEdit && listId ? (
         <ImageEditDialog
           isOpen={showBannerEdit}
           onClose={() => setShowBannerEdit(false)}
-          onSave={async (imageUrl: string) => {
-            try {
-              await updateList(listId, { backdrop_path: imageUrl });
-              setList((prev) => (prev ? { ...prev, backdrop_path: imageUrl } : null));
-              setShowBannerEdit(false);
-            } catch {
-              /* ignore */
+          onSave={() => {}}
+          type="list"
+          listId={listId}
+          customListBannerSave={async (meta) => {
+            const ok = await updateList(listId, { backdrop_path: null, banner_meta: meta });
+            if (ok) {
+              setList((prev) =>
+                prev ? { ...prev, backdrop_path: undefined, banner_meta: meta } : null,
+              );
             }
           }}
-          type="banner"
           onSelect={() => {}}
         />
-      )}
+      ) : null}
+      </FilmsCatalogShell>
     </div>
   );
 }

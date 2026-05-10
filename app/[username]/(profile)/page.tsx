@@ -26,7 +26,7 @@ export default function ProfilePage() {
         <UserRecentReviews userId={userData.id} />
       </div>
       <div className='mt-4'>
-        <UserLists gridCols={2} alwaysShowThree={true} userId={userData.id} onLandingPage={isOwnProfile} />
+        <UserLists alwaysShowThree userId={userData.id} onLandingPage={isOwnProfile} />
       </div>
     </div>
   )

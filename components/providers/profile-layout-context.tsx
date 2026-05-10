@@ -1,14 +1,17 @@
 "use client"
 
 import { createContext, useContext } from "react"
+import type { TmdbStoredImageMeta } from "@/types/tmdb-stored-image"
 
-interface ProfileLayoutUser {
+export interface ProfileLayoutUser {
   id: string
   username: string
   display_name?: string
   bio?: string
-  avatar_url?: string
-  banner_url?: string
+  avatar_url?: string | null
+  banner_url?: string | null
+  avatar_meta?: TmdbStoredImageMeta | null
+  banner_meta?: TmdbStoredImageMeta | null
 }
 
 interface ProfileLayoutContextType {

@@ -17,9 +17,17 @@ interface FilmInteractions {
   release_date?: string | null;
 }
 
-type FilmInteractionRow = Database['public']['Tables']['film_interactions']['Row'];
+type FilmInteractionRow = Database["public"]["Tables"]["items_interactions"]["Row"];
 
-export function useFilmInteractions(filmId: number, posterPath?: string, movieTitle?: string, releaseDate?: string) {
+export type FilmInteractionMediaType = "movie" | "tv";
+
+export function useFilmInteractions(
+  filmId: number,
+  posterPath?: string,
+  movieTitle?: string,
+  releaseDate?: string,
+  mediaType: FilmInteractionMediaType = "movie",
+) {
   const supabase = useSupabaseClient<Database>();
   const user = useUser();
   const [interactions, setInteractions] = useState<FilmInteractions>({
@@ -44,11 +52,12 @@ export function useFilmInteractions(filmId: number, posterPath?: string, movieTi
 
     try {
       const { data, error } = await supabase
-        .from("film_interactions")
+        .from("items_interactions")
         .select("*")
         .eq("user_id", user.id)
-        .eq("film_id", filmId)
-        .single();
+        .eq("tmdb_id", filmId)
+        .eq("media_type", mediaType)
+        .maybeSingle();
 
       // Se não houver dados, é normal - significa que o usuário ainda não interagiu com o filme
       if (!data) {
@@ -82,21 +91,21 @@ export function useFilmInteractions(filmId: number, posterPath?: string, movieTi
     } finally {
       setLoading(false);
     }
-  }, [supabase, user, filmId, posterPath, movieTitle, releaseDate]);
+  }, [supabase, user, filmId, posterPath, movieTitle, releaseDate, mediaType]);
 
   // Subscribe to realtime changes
   useEffect(() => {
     if (!user) return;
 
     const channel = supabase
-      .channel(`film_interactions:${filmId}`)
+      .channel(`items_interactions:${filmId}:${mediaType}`)
       .on(
         'postgres_changes' as any,
         {
           event: '*',
           schema: 'public',
-          table: 'film_interactions',
-          filter: `user_id=eq.${user.id} AND film_id=eq.${filmId}`,
+          table: 'items_interactions',
+          filter: `user_id=eq.${user.id} AND tmdb_id=eq.${filmId} AND media_type=eq.${mediaType}`,
         },
         (payload: { new: FilmInteractionRow }) => {
           if (payload.new) {
@@ -118,7 +127,7 @@ export function useFilmInteractions(filmId: number, posterPath?: string, movieTi
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [supabase, user, filmId]);
+  }, [supabase, user, filmId, mediaType]);
 
   // Update interactions in Supabase
   const updateInteractions = async (updates: Partial<FilmInteractions>) => {
@@ -138,10 +147,11 @@ export function useFilmInteractions(filmId: number, posterPath?: string, movieTi
 
     try {
       const { error } = await supabase
-        .from("film_interactions")
+        .from("items_interactions")
         .upsert({
           user_id: user.id,
-          film_id: filmId,
+          tmdb_id: filmId,
+          media_type: mediaType,
           rating: newInteractions.rating,
           review: newInteractions.review,
           is_watched: newInteractions.isWatched,
@@ -152,7 +162,7 @@ export function useFilmInteractions(filmId: number, posterPath?: string, movieTi
           release_date: releaseDate || newInteractions.release_date,
           updated_at: new Date().toISOString(),
         }, {
-          onConflict: 'user_id,film_id'
+          onConflict: "user_id,tmdb_id,media_type",
         });
 
       if (error) {

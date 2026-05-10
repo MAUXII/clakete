@@ -26,6 +26,7 @@
 
 *.txt
 *.md
+!docs/plano-list-new.md
 *.sql
 
 

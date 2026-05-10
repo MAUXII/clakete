@@ -11,6 +11,11 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel"
+import {
+  SeriesCatalogShell,
+  FilmsCatalogHeader,
+  SeriesSubNav,
+} from "@/components/films/films-catalog-shell"
 
 interface SeriesResponse {
   results: Series[]
@@ -110,13 +115,13 @@ export default function SeriesPage() {
   }, [])
 
   return (
-    <div className="py-8 mt-20 w-full max-w-6xl">
-      <div className="mb-10 sm:mb-12">
-        <h1 className="text-3xl font-semibold sm:text-4xl">Series</h1>
-        <p className="mt-2 max-w-2xl text-muted-foreground">
-          Browse popular, trending, and top-rated TV — same catalog flow as films, tuned for shows.
-        </p>
-      </div>
+    <SeriesCatalogShell>
+      <FilmsCatalogHeader
+        eyebrow="TV"
+        title="Series"
+        description="Browse popular, trending, and top-rated TV — same catalog flow as films, tuned for shows."
+      />
+      <SeriesSubNav />
 
       <SeriesRow
         title="Popular on TV"
@@ -142,6 +147,6 @@ export default function SeriesPage() {
         viewAllHref="/series/upcoming"
         items={onTheAir}
       />
-    </div>
+    </SeriesCatalogShell>
   )
 }

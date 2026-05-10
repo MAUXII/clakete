@@ -3,13 +3,17 @@ import { useSupabaseClient } from '@supabase/auth-helpers-react'
 import { useEffect, useState } from 'react'
 import { User } from '@supabase/supabase-js'
 import { Database } from '@/lib/supabase/database.types'
+import { parseTmdbStoredImageMeta } from '@/lib/tmdb-stored-image'
+import type { TmdbStoredImageMeta } from '@/types/tmdb-stored-image'
 
 type Profile = {
   id: string
   username: string
   display_name?: string
-  avatar_url?: string
-  banner_url?: string
+  avatar_url?: string | null
+  banner_url?: string | null
+  avatar_meta?: TmdbStoredImageMeta | null
+  banner_meta?: TmdbStoredImageMeta | null
   bio?: string
   created_at: string
   updated_at: string
@@ -34,7 +38,15 @@ export function useAuth() {
             .eq('id', session.user.id)
             .single()
             
-          setProfile(profile)
+          setProfile(
+            profile
+              ? {
+                  ...profile,
+                  avatar_meta: parseTmdbStoredImageMeta(profile.avatar_meta),
+                  banner_meta: parseTmdbStoredImageMeta(profile.banner_meta),
+                }
+              : null,
+          )
         }
         
         setLoading(false)

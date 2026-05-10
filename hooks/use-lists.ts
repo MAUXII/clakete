@@ -4,6 +4,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { Database } from '@/lib/supabase/database.types'
 import { List, ListItem, CreateListData, UpdateListData, AddListItemData, ListMediaType } from '@/types/list'
 import { slugify } from '@/lib/list-slug'
+import { parseListBannerMeta } from '@/lib/list-banner'
 
 async function uniqueSlugForListOwner(
   supabase: SupabaseClient<Database>,
@@ -31,33 +32,42 @@ export function useLists() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const enrichListsWithFilmMeta = useCallback(async (baseLists: any[]) => {
-    if (baseLists.length === 0) return { countsByListId: new Map<number, number>(), previewsByListId: new Map<number, string[]>() }
+  const enrichListsWithFilmMeta = useCallback(async (baseLists: { id: string }[]) => {
+    if (baseLists.length === 0) {
+      return { countsByListId: new Map<string, number>(), previewsByListId: new Map<string, (string | null)[]>() }
+    }
 
     const listIds = baseLists.map((list) => list.id)
     const { data: filmRows, error: filmRowsError } = await supabase
       .from('list_items')
       .select('list_id, poster_path, position')
       .in('list_id', listIds)
-      .order('list_id', { ascending: true })
-      .order('position', { ascending: true })
 
     if (filmRowsError) throw filmRowsError
 
-    const countsByListId = new Map<number, number>()
-    const previewsByListId = new Map<number, string[]>()
-
+    const byListId = new Map<string, { poster_path: string | null; position: number }[]>()
     for (const row of filmRows || []) {
-      const currentCount = countsByListId.get(row.list_id) || 0
-      countsByListId.set(row.list_id, currentCount + 1)
+      const lid = String(row.list_id)
+      const bucket = byListId.get(lid) ?? []
+      bucket.push({
+        poster_path: row.poster_path,
+        position: row.position ?? 0,
+      })
+      byListId.set(lid, bucket)
+    }
 
-      if (row.poster_path) {
-        const currentPreview = previewsByListId.get(row.list_id) || []
-        if (currentPreview.length < 5) {
-          currentPreview.push(row.poster_path)
-          previewsByListId.set(row.list_id, currentPreview)
-        }
-      }
+    const countsByListId = new Map<string, number>()
+    const previewsByListId = new Map<string, (string | null)[]>()
+
+    for (const [lid, rows] of byListId) {
+      countsByListId.set(lid, rows.length)
+      const ordered = [...rows].sort((a, b) => a.position - b.position)
+      const top5: (string | null)[] = ordered.slice(0, 5).map((r) => {
+        const p = r.poster_path?.trim()
+        return p ? p : null
+      })
+      while (top5.length < 5) top5.push(null)
+      previewsByListId.set(lid, top5)
     }
 
     return { countsByListId, previewsByListId }
@@ -87,7 +97,7 @@ export function useLists() {
 
       const { data, error } = await supabase
         .from('lists')
-        .select('id, user_id, title, bio, is_public, slug, backdrop_path, created_at, updated_at')
+        .select('id, user_id, title, bio, is_public, slug, backdrop_path, banner_meta, created_at, updated_at')
         .eq('user_id', userId)
         .order('updated_at', { ascending: false })
 
@@ -96,12 +106,16 @@ export function useLists() {
       if (data) {
         const ownerProfile = await fetchUserData(userId)
         const { countsByListId, previewsByListId } = await enrichListsWithFilmMeta(data)
-        const listsWithCounts = data.map((list) => ({
-          ...list,
-          userData: ownerProfile || undefined,
-          films_count: countsByListId.get(list.id) || 0,
-          preview_posters: previewsByListId.get(list.id) || [],
-        }))
+        const listsWithCounts = data.map((list) => {
+          const lid = String(list.id)
+          return {
+            ...list,
+            banner_meta: parseListBannerMeta(list.banner_meta),
+            userData: ownerProfile || undefined,
+            films_count: countsByListId.get(lid) ?? 0,
+            preview_posters: previewsByListId.get(lid) ?? [],
+          }
+        })
 
         setLists(listsWithCounts)
       }
@@ -120,7 +134,7 @@ export function useLists() {
 
       const { data, error } = await supabase
         .from('lists')
-        .select('id, user_id, title, bio, is_public, slug, backdrop_path, created_at, updated_at')
+        .select('id, user_id, title, bio, is_public, slug, backdrop_path, banner_meta, created_at, updated_at')
         .eq('is_public', true)
         .order('updated_at', { ascending: false })
         .limit(20)
@@ -138,12 +152,16 @@ export function useLists() {
         if (usersError) throw usersError
 
         const userById = new Map((usersData || []).map((user) => [user.id, user]))
-        const listsWithData = data.map((list) => ({
-          ...list,
-          userData: userById.get(list.user_id) || undefined,
-          films_count: countsByListId.get(list.id) || 0,
-          preview_posters: previewsByListId.get(list.id) || [],
-        }))
+        const listsWithData = data.map((list) => {
+          const lid = String(list.id)
+          return {
+            ...list,
+            banner_meta: parseListBannerMeta(list.banner_meta),
+            userData: userById.get(list.user_id) || undefined,
+            films_count: countsByListId.get(lid) ?? 0,
+            preview_posters: previewsByListId.get(lid) ?? [],
+          }
+        })
 
         setLists(listsWithData)
       }
@@ -166,8 +184,10 @@ export function useLists() {
           user_id: user.id,
           title: listData.title,
           bio: listData.bio || null,
+          tags: listData.tags?.map((tag) => tag.trim()).filter(Boolean) ?? [],
           is_public: listData.is_public !== false,
           slug,
+          backdrop_path: listData.backdrop_path?.trim() || null,
         })
         .select()
         .single()
@@ -177,6 +197,7 @@ export function useLists() {
       if (data) {
         const newList: List = {
           ...data,
+          banner_meta: parseListBannerMeta(data.banner_meta),
           films_count: 0,
           preview_posters: [],
         }

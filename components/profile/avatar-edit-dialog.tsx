@@ -14,9 +14,13 @@ import { ChevronLeft } from "lucide-react";
 import { useSupabaseClient } from "@supabase/auth-helpers-react";
 import { useDebounce } from "@/hooks/use-debounce";
 import { Skeleton } from "@/components/ui/skeleton";
-import Masonry from 'react-masonry-css'
-import { useProfile } from "@/components/providers/profile-provider"
+import { useProfile } from "@/components/providers/profile-provider";
 import ReactMasonryCss from "react-masonry-css";
+import type { Area } from "react-easy-crop";
+
+import type { ListBannerMeta } from "@/types/list";
+import { buildListBannerMeta } from "@/lib/list-banner";
+import { buildTmdbStoredImageMeta } from "@/lib/tmdb-stored-image";
 
 interface ImageEditDialogProps {
   open?: boolean;
@@ -28,19 +32,42 @@ interface ImageEditDialogProps {
   onSelect: (image: string) => void;
   isOpen?: boolean;
   customSave?: (imageUrl: string) => Promise<void>;
-  listId?: string; // ID da lista para banners de lista
+  /** Salva apenas meta TMDB + crop (sem upload Storage). Para `type="list"` + listId. */
+  customListBannerSave?: (meta: ListBannerMeta) => Promise<void>;
+  listId?: string;
 }
 
-export function ImageEditDialog({ onClose, onSelect, isOpen, onSave, type, customSave, listId }: ImageEditDialogProps) {
+export function ImageEditDialog({ onClose, onSelect, isOpen, onSave, type, customSave, customListBannerSave, listId }: ImageEditDialogProps) {
   const bannerAspect = 1152 / 487
+  const listMetaFlow = type === "list" && Boolean(customListBannerSave && listId)
+  /** Lista (meta) ou perfil avatar/banner: grava só JSON TMDB+crop; sem blob Storage. */
+  const tmdbMetaOnlyFlow =
+    listMetaFlow ||
+    type === "avatar" ||
+    type === "banner"
+
   const [showSearchCommand, setShowSearchCommand] = useState(true);
   const [showCropper, setShowCropper] = useState(false);
   const [query, setQuery] = useState("")
   const [movies, setMovies] = useState<Movie[]>([])
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null)
-  const [images, setImages] = useState<{ url: string, type: 'poster' | 'banner', aspectRatio: number, loaded: boolean }[]>([])
+  const [images, setImages] = useState<
+    {
+      url: string
+      type: "poster" | "banner"
+      aspectRatio: number
+      loaded: boolean
+      tmdb_file_path?: string | null
+    }[]
+  >([])
   const [loading, setLoading] = useState(false)
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
+  const [selectedTmdbFilePath, setSelectedTmdbFilePath] = useState<string | null>(null)
+  const [listCropGeometry, setListCropGeometry] = useState<{
+    pixelCrop: Area
+    imageWidth: number
+    imageHeight: number
+  } | null>(null)
   const [croppedImage, setCroppedImage] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const supabase = useSupabaseClient()
@@ -48,6 +75,17 @@ export function ImageEditDialog({ onClose, onSelect, isOpen, onSave, type, custo
   const [open, setOpen] = useState(false)
   const [results, setResults] = useState<Movie[]>([])
   const { refreshProfile } = useProfile()
+
+  const handleListCropGeometry = useCallback(
+    (geo: { pixelCrop: Area; imageWidth: number; imageHeight: number }) => {
+      setListCropGeometry(geo)
+    },
+    [],
+  )
+
+  useEffect(() => {
+    setListCropGeometry(null)
+  }, [selectedImage])
 
   useEffect(() => {
     const fetchMovies = async () => {
@@ -97,29 +135,30 @@ export function ImageEditDialog({ onClose, onSelect, isOpen, onSave, type, custo
           let formattedImages = [];
 
           if (type === 'avatar' || type === 'banner') {
-            const posters = (data.posters || []).map((img: any) => ({
+            const posters = (data.posters || []).map((img: { file_path: string }) => ({
               url: `/api/proxy-image?url=${encodeURIComponent(`https://image.tmdb.org/t/p/original${img.file_path}`)}`,
-              type: 'poster' as const,
-              loaded: false
-            }));
+              type: "poster" as const,
+              loaded: false,
+              tmdb_file_path: img.file_path,
+            }))
             
-            const backdrops = (data.backdrops || []).map((img: any) => ({
+            const backdrops = (data.backdrops || []).map((img: { file_path: string }) => ({
               url: `/api/proxy-image?url=${encodeURIComponent(`https://image.tmdb.org/t/p/original${img.file_path}`)}`,
-              type: 'banner' as const,
-              loaded: false
-            }));
+              type: "banner" as const,
+              loaded: false,
+              tmdb_file_path: img.file_path,
+            }))
 
-            formattedImages = [...posters, ...backdrops]
-              .sort(() => Math.random() - 0.5)
-              .slice(0, 50);
+            formattedImages = [...posters, ...backdrops].sort(() => Math.random() - 0.5).slice(0, 50)
           } else {
             formattedImages = (data.backdrops || [])
-              .map((img: any) => ({
+              .map((img: { file_path: string }) => ({
                 url: `/api/proxy-image?url=${encodeURIComponent(`https://image.tmdb.org/t/p/original${img.file_path}`)}`,
-                type: 'banner' as const,
-                loaded: false
+                type: "banner" as const,
+                loaded: false,
+                tmdb_file_path: img.file_path,
               }))
-              .slice(0, 50);
+              .slice(0, 50)
           }
           
           setImages(formattedImages);
@@ -159,30 +198,76 @@ export function ImageEditDialog({ onClose, onSelect, isOpen, onSave, type, custo
     setSelectedMovie(null);
     setShowSearchCommand(true);
     setSelectedImage(null);
+    setSelectedTmdbFilePath(null)
+    setListCropGeometry(null)
     setCroppedImage(null);
     setShowCropper(false);
   };
 
-  const handleImageSelect = (imageUrl: string) => {
-    setSelectedImage(imageUrl);
-    setShowCropper(true);
+  const handleImageSelect = (imageUrl: string, tmdbFilePath?: string | null) => {
+    setSelectedImage(imageUrl)
+    const fp = typeof tmdbFilePath === "string" ? tmdbFilePath.trim() : ""
+    setSelectedTmdbFilePath(fp.length > 0 ? fp : null)
+    setListCropGeometry(null)
+    setCroppedImage(null)
+    setShowCropper(true)
   };
 
   const handleSaveImage = async () => {
-    if (!croppedImage) {
-      console.error('Imagem não selecionada');
-      return;
-    }
-    
     try {
       setSaving(true);
-      console.log('=== INÍCIO DO PROCESSO DE SALVAMENTO ===');
-      
-      // Verifica autenticação
-      const { data: { session } } = await supabase.auth.getSession()
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
       if (!session?.user) {
-        throw new Error('Usuário não autenticado')
+        throw new Error("Usuário não autenticado")
       }
+
+      /* Lista: só TMDB path + crop, sem Storage */
+      if (listMetaFlow && customListBannerSave && listId && selectedTmdbFilePath && listCropGeometry) {
+        const meta = buildListBannerMeta(
+          selectedTmdbFilePath,
+          listCropGeometry.pixelCrop,
+          listCropGeometry.imageWidth,
+          listCropGeometry.imageHeight,
+        )
+        await customListBannerSave(meta)
+        onSave("")
+        return
+      }
+
+      /* Perfil: igual à lista — só meta em users.avatar_meta / banner_meta */
+      if (
+        (type === "avatar" || type === "banner") &&
+        selectedTmdbFilePath &&
+        listCropGeometry
+      ) {
+        const meta = buildTmdbStoredImageMeta(
+          selectedTmdbFilePath,
+          listCropGeometry.pixelCrop,
+          listCropGeometry.imageWidth,
+          listCropGeometry.imageHeight,
+        )
+        const metaKey = type === "avatar" ? "avatar_meta" : "banner_meta"
+        const urlKey = type === "avatar" ? "avatar_url" : "banner_url"
+        const { error: profileMetaErr } = await supabase
+          .from("users")
+          .update({
+            [metaKey]: meta,
+            [urlKey]: null,
+          })
+          .eq("id", session.user.id)
+        if (profileMetaErr) throw profileMetaErr
+        await refreshProfile()
+        onSave("")
+        return
+      }
+
+      if (!croppedImage) {
+        alert("Escolha o recorte antes de aplicar.")
+        return
+      }
+      
       console.log('✅ Usuário autenticado:', session.user.id);
       
       // Converte o Data URL para Blob e força o tipo como webp
@@ -332,8 +417,8 @@ export function ImageEditDialog({ onClose, onSelect, isOpen, onSave, type, custo
           throw customError;
         }
       } else {
-        // Atualiza o perfil com a nova URL (apenas para avatar/banner)
-        if (type === 'avatar' || type === 'banner') {
+        // Avatar/banner de perfil — nunca confundir com type list
+        if (type !== 'list' && (type === 'avatar' || type === 'banner')) {
           console.log('🔄 Atualizando perfil do usuário...');
           const { error: updateError } = await supabase
             .from('users')
@@ -504,7 +589,7 @@ export function ImageEditDialog({ onClose, onSelect, isOpen, onSave, type, custo
                       src={image.url}
                       alt={`${selectedMovie?.title} ${index + 1}`}
                       className="w-full h-full object-cover cursor-pointer"
-                      onClick={() => handleImageSelect(image.url)}
+                      onClick={() => handleImageSelect(image.url, image.tmdb_file_path)}
                       loading="lazy"
                       decoding="async"
                       onLoad={() => handleImageLoad(image.url)}
@@ -530,6 +615,8 @@ export function ImageEditDialog({ onClose, onSelect, isOpen, onSave, type, custo
                 aspect={type === 'avatar' ? 1 : bannerAspect}
                 onCrop={setCroppedImage}
                 type={type}
+                deferWebpBlob={tmdbMetaOnlyFlow}
+                onCropGeometry={tmdbMetaOnlyFlow ? handleListCropGeometry : undefined}
               />
             </div>
           )}
@@ -539,14 +626,19 @@ export function ImageEditDialog({ onClose, onSelect, isOpen, onSave, type, custo
               onClick={() => {
                 setShowCropper(false);
                 setSelectedImage(null);
+                setSelectedTmdbFilePath(null);
+                setListCropGeometry(null);
                 setCroppedImage(null);
               }}
             >
               Cancelar
             </Button>
             <Button
-              onClick={handleSaveImage}
-              disabled={saving || !croppedImage}
+              onClick={() => void handleSaveImage()}
+              disabled={
+                saving ||
+                (tmdbMetaOnlyFlow ? !(selectedTmdbFilePath && listCropGeometry) : !croppedImage)
+              }
             >
               {saving ? 'Salvando...' : 'Aplicar'}
             </Button>

@@ -11,7 +11,7 @@ import Image from "next/image"
 
 interface FilmReview {
   id: number
-  film_id: number
+  tmdb_id: number
   rating: number
   review: string
   created_at: string
@@ -48,8 +48,8 @@ export function UserRecentReviews({ userId, limit = 6, onLandingPage }: RecentRe
       try {
         // Buscar apenas reviews que tenham texto
         const { data, error } = await supabase
-          .from("film_interactions")
-          .select("id, film_id, rating, review, created_at, poster_path, user_id, movie_title, release_date")
+          .from("items_interactions")
+          .select("id, tmdb_id, rating, review, created_at, poster_path, user_id, movie_title, release_date")
           .eq("user_id", targetUserId)
           .not("review", "is", null)
           .neq("review", "")
@@ -107,7 +107,7 @@ export function UserRecentReviews({ userId, limit = 6, onLandingPage }: RecentRe
   }
 
   if (reviews.length === 0) {
-    return 
+    return null
   }
 
   return (
@@ -125,7 +125,7 @@ export function UserRecentReviews({ userId, limit = 6, onLandingPage }: RecentRe
           <div className="flex flex-col mb-4">
             <div className="flex gap-2">
               
-                <Link href={`/film/${review.film_id}`}>
+                <Link href={`/film/${review.tmdb_id}`}>
                   <div className="aspect-[2/3] w-32 rounded-md border dark:border-white/20 border-black/20 overflow-hidden">
                     <Image 
                       src={review.poster_path ? `https://image.tmdb.org/t/p/w200${review.poster_path}` : '/placeholder.png'}

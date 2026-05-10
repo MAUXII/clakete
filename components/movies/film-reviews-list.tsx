@@ -21,9 +21,11 @@ interface Review {
 
 interface FilmReviewsListProps {
   filmId: number;
+  /** TMDB: movie vs tv na mesma tabela `items_interactions`. */
+  mediaType?: "movie" | "tv";
 }
 
-export function FilmReviewsList({ filmId }: FilmReviewsListProps) {
+export function FilmReviewsList({ filmId, mediaType = "movie" }: FilmReviewsListProps) {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const supabase = useSupabaseClient();
@@ -32,9 +34,10 @@ export function FilmReviewsList({ filmId }: FilmReviewsListProps) {
     async function fetchReviews() {
       try {
         const { data, error } = await supabase
-          .from('film_interactions')
+          .from('items_interactions')
           .select('id, rating, review, created_at, user_id')
-          .eq('film_id', filmId)
+          .eq('tmdb_id', filmId)
+          .eq('media_type', mediaType)
           .not('review', 'is', null)
           .neq('review', '')
           .not('rating', 'is', null)
@@ -85,7 +88,7 @@ export function FilmReviewsList({ filmId }: FilmReviewsListProps) {
     }
 
     fetchReviews();
-  }, [filmId, supabase]);
+  }, [filmId, mediaType, supabase]);
 
   if (loading) {
     return <div className="animate-pulse space-y-4">

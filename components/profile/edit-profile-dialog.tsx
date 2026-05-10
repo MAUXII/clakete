@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { useState, useEffect } from "react"
 import { useUser } from "@supabase/auth-helpers-react"
 import { useProfile } from "@/components/providers/profile-provider"
-import { User, Settings, Link2, type LucideIcon } from "lucide-react"
+import { User, Settings, Link2, Pencil, type LucideIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface EditProfileDialogProps {
@@ -124,8 +124,17 @@ export function EditProfileDialog({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <button className="flex w-full items-center justify-center rounded-md border border-black/10 bg-[#FF0048]/10 px-3 py-2 text-nowrap text-[#FF0048]/70 transition-colors dark:border-white/10">
-          Edit Profile
+        <button
+          type="button"
+          className={cn(
+            "inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/[0.08] bg-white/[0.03] text-zinc-300 transition-colors",
+            "hover:border-[#FF0048]/35 hover:bg-[#FF0048]/10 hover:text-[#FF0048]",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0048]/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[#09090B]",
+          )}
+          aria-label="Edit profile"
+          title="Edit profile"
+        >
+          <Pencil className="h-4 w-4" aria-hidden />
         </button>
       </DialogTrigger>
       <DialogContent className="flex max-h-[min(85vh,720px)] w-[min(95vw,920px)] max-w-none flex-col gap-0 overflow-hidden p-0 sm:rounded-xl">

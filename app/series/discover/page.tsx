@@ -6,11 +6,20 @@ import { SeriesCard } from "@/components/series/series-card"
 import { useTvGenres } from "@/hooks/use-tv-genres"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Sheet, SheetTrigger, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
-import { FaStarOfLife } from "react-icons/fa6"
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select"
-import { MdOutlineKeyboardDoubleArrowUp } from "react-icons/md"
 import { Slider } from "@/components/ui/slider"
 import { IoOptions } from "react-icons/io5"
+import { PiClover } from "react-icons/pi"
+import {
+  SeriesCatalogShell,
+  FilmsCatalogHeader,
+  FilmsScrollToTopFab,
+  SeriesSubNav,
+  FilmsToolbarIconButton,
+  filmsPosterGridClassName,
+  filmsPosterSkeletonClassName,
+} from "@/components/films/films-catalog-shell"
+import { cn } from "@/lib/utils"
 
 interface TvShow {
   id: number
@@ -35,7 +44,6 @@ function SeriesDiscoverContent() {
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
   const [page, setPage] = useState(1)
-  const [totalSeries, setTotalSeries] = useState(0)
   const [hasMore, setHasMore] = useState(true)
   const [showScrollTop, setShowScrollTop] = useState(false)
   const router = useRouter()
@@ -78,6 +86,7 @@ function SeriesDiscoverContent() {
 
   useEffect(() => {
     fetchShows()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [genre, voteAverageLte, sortBy])
 
   async function fetchShows() {
@@ -91,12 +100,10 @@ function SeriesDiscoverContent() {
       const response = await fetch(`/api/series/discover?${params.toString()}`)
       const data: SeriesResponse = await response.json()
       setShows(Array.isArray(data.results) ? data.results : [])
-      setTotalSeries(data.total_results || 0)
       setPage(1)
       setHasMore(1 < data.total_pages)
     } catch {
       setShows([])
-      setTotalSeries(0)
       setHasMore(false)
     } finally {
       setLoading(false)
@@ -146,134 +153,145 @@ function SeriesDiscoverContent() {
     router.push(`/series/discover?${params.toString()}`)
   }
 
+  async function handleFeelingLucky() {
+    try {
+      const response = await fetch("/api/series/discover?sort_by=popularity.desc&page=1")
+      const data = await response.json()
+      if (data.results?.length) {
+        const pick = data.results[Math.floor(Math.random() * data.results.length)]
+        if (pick?.id) router.push(`/series/${pick.id}`)
+      }
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
   return (
-    <div className="py-8 mt-20 w-full max-w-6xl">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-        <div>
-          <h1 className="text-3xl font-semibold ">Discover</h1>
-          <span className="text-muted-foreground">Find TV series by genre and more</span>
-        </div>
-        <div className="flex gap-2">
-          <Sheet open={open} onOpenChange={setOpen}>
-            <SheetTrigger asChild>
-              <button
-                type="button"
-                className="flex items-center gap-2 bg-[#FF0048]/10 text-[#FF0048] border border-[#FF0048]/20 px-3 py-3 rounded-md font-medium hover:bg-[#FF0048]/20 transition-all"
+    <SeriesCatalogShell>
+      <FilmsCatalogHeader
+        eyebrow="Catalog"
+        title="Discover"
+        description="Browse TV by genre, cap by rating and sort — same discover index as TMDB, tuned for series."
+        actions={
+          <>
+            <FilmsToolbarIconButton onClick={handleFeelingLucky} aria-label="I'm feeling lucky">
+              <PiClover className="h-5 w-5" />
+            </FilmsToolbarIconButton>
+            <Sheet open={open} onOpenChange={setOpen}>
+              <SheetTrigger asChild>
+                <FilmsToolbarIconButton aria-label="Filters">
+                  <IoOptions className="h-5 w-5" />
+                </FilmsToolbarIconButton>
+              </SheetTrigger>
+              <SheetContent
+                side="right"
+                className="w-full max-w-sm border-l border-white/10 bg-zinc-950 text-zinc-100"
               >
-                <IoOptions />
-              </button>
-            </SheetTrigger>
-            <SheetContent side="right" className="max-w-sm w-full">
-              <SheetHeader>
-                <SheetTitle>Filter TV shows</SheetTitle>
-              </SheetHeader>
-              <div className="flex flex-col gap-4 mt-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Genre</label>
-                  <Select value={localGenre} onValueChange={setLocalGenre} disabled={genresLoading}>
-                    <SelectTrigger>
-                      <SelectValue placeholder={genresLoading ? "Loading genres..." : "All genres"} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {genres.length === 0 && !genresLoading && (
-                        <div className="px-3 py-2 text-muted-foreground text-sm">No genres found</div>
-                      )}
-                      {genres.map((g) => (
-                        <SelectItem key={g.id} value={g.id.toString()}>
-                          {g.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Max rating</label>
-                  <div className="flex items-center gap-2">
-                    <Slider
-                      min={0}
-                      max={10}
-                      step={1}
-                      value={[localVoteAverageLte]}
-                      onValueChange={(v) => setLocalVoteAverageLte(v[0])}
-                      className="w-full"
-                    />
-                    <span className="text-sm font-medium w-10 text-right">{localVoteAverageLte}</span>
+                <SheetHeader>
+                  <SheetTitle className="text-left text-lg text-zinc-50">Filters</SheetTitle>
+                </SheetHeader>
+                <div className="mt-6 flex flex-col gap-5">
+                  <div>
+                    <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-zinc-500">
+                      Genre
+                    </label>
+                    <Select value={localGenre} onValueChange={setLocalGenre} disabled={genresLoading}>
+                      <SelectTrigger className="border-white/10 bg-white/[0.04]">
+                        <SelectValue placeholder={genresLoading ? "Loading genres..." : "All genres"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {genres.length === 0 && !genresLoading && (
+                          <div className="px-3 py-2 text-sm text-muted-foreground">No genres found</div>
+                        )}
+                        {genres.map((g) => (
+                          <SelectItem key={g.id} value={g.id.toString()}>
+                            {g.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
+                  <div>
+                    <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-zinc-500">
+                      Max rating
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <Slider
+                        min={0}
+                        max={10}
+                        step={1}
+                        value={[localVoteAverageLte]}
+                        onValueChange={(v) => setLocalVoteAverageLte(v[0])}
+                        className="w-full"
+                      />
+                      <span className="w-10 text-right text-sm font-medium">{localVoteAverageLte}</span>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-zinc-500">
+                      Sort by
+                    </label>
+                    <Select value={localSortBy} onValueChange={setLocalSortBy}>
+                      <SelectTrigger className="border-white/10 bg-white/[0.04]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="popularity.desc">Most popular</SelectItem>
+                        <SelectItem value="popularity.asc">Least popular</SelectItem>
+                        <SelectItem value="first_air_date.desc">Most recent</SelectItem>
+                        <SelectItem value="first_air_date.asc">Oldest</SelectItem>
+                        <SelectItem value="vote_average.desc">Highest rated</SelectItem>
+                        <SelectItem value="vote_average.asc">Lowest rated</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <button
+                    type="button"
+                    className="mt-2 rounded-xl bg-[#FF0048] py-3 text-sm font-semibold text-white transition-colors hover:bg-[#e60042]"
+                    onClick={handleSaveFilters}
+                  >
+                    Apply filters
+                  </button>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Sort by</label>
-                  <Select value={localSortBy} onValueChange={setLocalSortBy}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="popularity.desc">Most popular</SelectItem>
-                      <SelectItem value="popularity.asc">Least popular</SelectItem>
-                      <SelectItem value="first_air_date.desc">Most recent</SelectItem>
-                      <SelectItem value="first_air_date.asc">Oldest</SelectItem>
-                      <SelectItem value="vote_average.desc">Highest rated</SelectItem>
-                      <SelectItem value="vote_average.asc">Lowest rated</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <button
-                  type="button"
-                  className="mt-4 bg-[#FF0048] text-white rounded-md py-2 font-medium hover:bg-[#FF0048]/90 transition-all"
-                  onClick={handleSaveFilters}
-                >
-                  Save changes
-                </button>
-              </div>
-            </SheetContent>
-          </Sheet>
-        </div>
-      </div>
-      <div className="bg-muted-foreground/20 w-full h-[0.8px] mb-4"></div>
-      <span className="w-full font-medium bg-[#FF0048]/10 text-[#FF0048]/70  h-auto border border-black/10 dark:border-white/10 py-3 rounded-md mb-8 flex items-center justify-center">
-        <FaStarOfLife className="mr-2" /> There are {totalSeries.toLocaleString()} series
-      </span>
+              </SheetContent>
+            </Sheet>
+          </>
+        }
+      />
+      <SeriesSubNav />
       {loading ? (
-        <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-6">
+        <div className={cn(filmsPosterGridClassName)}>
           {[...Array(18)].map((_, i) => (
-            <Skeleton
-              key={i}
-              className="w-full border-[1px] border-black/15 shadow-black/5 dark:border-white/15 h-full relative shadow-sm dark:shadow-white/5 aspect-[2/3] rounded-[5px] overflow-hidden"
-            />
+            <Skeleton key={i} className={filmsPosterSkeletonClassName} />
           ))}
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-6">
+          <div className={filmsPosterGridClassName}>
             {shows.map((show) => (
               <SeriesCard key={show.id} series={show} />
             ))}
             {loadingMore &&
-              [...Array(20)].map((_, i) => (
-                <Skeleton
-                  key={`loading-${i}`}
-                  className="w-full border-[1px] border-black/15 shadow-black/5 dark:border-white/15 h-full relative shadow-sm dark:shadow-white/5 aspect-[2/3] rounded-[5px] overflow-hidden"
-                />
+              [...Array(12)].map((_, i) => (
+                <Skeleton key={`loading-${i}`} className={filmsPosterSkeletonClassName} />
               ))}
           </div>
-          {showScrollTop && (
-            <button
-              type="button"
-              onClick={scrollToTop}
-              className="fixed bottom-8 right-8 bg-[#FF0048]/10 text-[#FF0048] p-3 rounded-md border border-black/10 dark:border-white/10 hover:opacity-90 hover:bg-[#FF0048]/20 hover:text-[#FF0048]/90 transition-all h-12 aspect-square flex items-center justify-center"
-              aria-label="Scroll to top"
-            >
-              <MdOutlineKeyboardDoubleArrowUp />
-            </button>
-          )}
+          <FilmsScrollToTopFab visible={showScrollTop} onClick={scrollToTop} />
         </>
       )}
-    </div>
+    </SeriesCatalogShell>
   )
 }
 
 export default function SeriesDiscoverPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense
+      fallback={
+        <SeriesCatalogShell>
+          <div className="py-16 text-center text-sm text-zinc-500">Loading catalog…</div>
+        </SeriesCatalogShell>
+      }
+    >
       <SeriesDiscoverContent />
     </Suspense>
   )
