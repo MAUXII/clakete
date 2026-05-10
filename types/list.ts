@@ -49,6 +49,8 @@ export interface CreateListData {
   bio?: string
   tags?: string[]
   backdrop_path?: string
+  /** Banner TMDB/crop; mesmo formato que em `UpdateListData`. */
+  banner_meta?: ListBannerMeta | null
   is_public: boolean
 }
 

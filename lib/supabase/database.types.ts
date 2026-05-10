@@ -166,6 +166,7 @@ export interface Database {
           website_url: string | null
           twitter_url: string | null
           instagram_url: string | null
+          home_preferences: Json | null
           created_at: string
           updated_at: string
         }
@@ -182,6 +183,7 @@ export interface Database {
           website_url?: string | null
           twitter_url?: string | null
           instagram_url?: string | null
+          home_preferences?: Json | null
           created_at?: string
           updated_at?: string
         }
@@ -198,10 +200,10 @@ export interface Database {
           website_url?: string | null
           twitter_url?: string | null
           instagram_url?: string | null
+          home_preferences?: Json | null
           created_at?: string
           updated_at?: string
-eated_at?: string
-    }
+        }
       }
     }
     Views: {

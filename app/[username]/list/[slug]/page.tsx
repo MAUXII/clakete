@@ -24,7 +24,8 @@ import { FilmsCatalogShell } from "@/components/films/films-catalog-shell";
 import { EditListDialog } from "@/components/profile/edit-list-dialog";
 import { cn } from "@/lib/utils";
 
-const LIST_LETTERBOX_HEIGHT = "487px";
+/** Igual ao hero em `app/film/[id]/page.tsx` — altura responsiva + full-bleed + fades. */
+const LIST_LETTERBOX_HEIGHT = "clamp(400px, min(60vh, 680px), 780px)"
 
 export default function UserListDetailPage() {
   const params = useParams();
@@ -325,7 +326,7 @@ export default function UserListDetailPage() {
       <div className="min-h-screen w-full overflow-x-clip bg-[#09090B]">
         <FilmsCatalogShell>
           <div
-            className="relative z-0 w-full overflow-hidden rounded-2xl border border-white/[0.12] bg-[#09090B]"
+            className="relative left-1/2 z-0 w-screen max-w-[100vw] -translate-x-1/2 overflow-hidden bg-[#09090B]"
             style={{ height: LIST_LETTERBOX_HEIGHT }}
             aria-hidden
           />
@@ -361,24 +362,48 @@ export default function UserListDetailPage() {
     <div className="min-h-screen w-full overflow-x-clip bg-[#09090B]">
       <FilmsCatalogShell>
         <div
-          className="relative z-0 w-full overflow-hidden rounded-2xl border border-white/[0.12] bg-[#09090B]"
+          className="relative mt-[3.75rem] left-1/2 z-0 w-screen max-w-[100vw] -translate-x-1/2 overflow-hidden bg-[#09090B]"
           style={{ height: LIST_LETTERBOX_HEIGHT }}
         >
-          {listBackdropUrl ? (
-            <img
-              src={listBackdropUrl}
-              alt=""
-              className="absolute inset-0 h-full w-full object-cover"
-              style={{ objectPosition: bannerPres.objectPosition ?? "center 22%" }}
+          <div className="pointer-events-none absolute inset-0">
+            {listBackdropUrl ? (
+              <img
+                src={listBackdropUrl}
+                alt=""
+                className="absolute inset-0 h-full w-full object-cover object-[center_22%]"
+                style={
+                  bannerPres.objectPosition
+                    ? { objectPosition: bannerPres.objectPosition }
+                    : undefined
+                }
+              />
+            ) : (
+              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_35%,rgba(255,255,255,0.06),transparent_55%)]" />
+            )}
+            <div
+              className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(9,9,11,0.18)_0%,transparent_38%)]"
+              aria-hidden
             />
-          ) : (
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_35%,rgba(255,255,255,0.06),transparent_55%)]" />
-          )}
+            <div
+              className="absolute inset-0 bg-gradient-to-r from-black/25 via-transparent to-black/10"
+              aria-hidden
+            />
+            <div
+              className="absolute inset-0 bg-[linear-gradient(to_top,#09090B_0%,#09090B_0%,rgba(9,9,11,0.55)_32%,transparent_62%)]"
+              aria-hidden
+            />
+            <img
+              src="/noise.avif"
+              alt=""
+              className="pointer-events-none absolute inset-0 z-[4] h-full w-full object-cover opacity-[0.02]"
+              aria-hidden
+            />
+          </div>
           {canEdit ? (
             <button
               type="button"
               onClick={() => setShowBannerEdit(true)}
-              className="absolute inset-0 z-10 flex cursor-pointer items-center justify-center bg-black/45 opacity-0 backdrop-blur-[1.2px] transition-opacity hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+              className="absolute inset-0 z-[5] flex cursor-pointer items-center justify-center bg-black/45 opacity-0 backdrop-blur-[1.2px] transition-opacity hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
             >
               <span className="text-sm font-medium text-white">
                 {list.banner_meta?.file_path || list.backdrop_path ? "Update banner" : "Add banner"}

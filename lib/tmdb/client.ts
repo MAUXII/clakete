@@ -10,7 +10,8 @@ export interface Movie {
   vote_average: number | null
   backdrop_path: string | null
   genre_ids: number[] | null
-
+  /** TMDB: filme vs série — mesmo `id` pode existir nos dois. */
+  media_type?: 'movie' | 'tv'
 }
 
 export interface MovieDetails extends Movie {
@@ -53,6 +54,12 @@ export const createTMDBClient = () => {
         `https://api.themoviedb.org/3/movie/${movieId}/images?api_key=${TMDB_API_KEY}`
       )
       return response.json()
-    }
+    },
+    getTvImages: async (tvId: string) => {
+      const response = await fetch(
+        `https://api.themoviedb.org/3/tv/${tvId}/images?api_key=${TMDB_API_KEY}`
+      )
+      return response.json()
+    },
   }
 } 

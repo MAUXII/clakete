@@ -236,7 +236,7 @@ export default function FilmPage({ params }: { params: Promise<{ id: string }> }
     <div className="min-h-screen w-full overflow-x-clip bg-[#09090B]">
     <FilmsCatalogShell>
       <div
-        className="pointer-events-none -mt-16 relative left-1/2 z-0 w-screen max-w-[100vw] -translate-x-1/2 overflow-hidden bg-[#09090B]"
+        className="pointer-events-none mt-[3.75rem] relative left-1/2 z-0 w-screen max-w-[100vw] -translate-x-1/2 overflow-hidden bg-[#09090B]"
         style={{ height: FILM_LETTERBOX_HEIGHT }}
         aria-hidden
       >

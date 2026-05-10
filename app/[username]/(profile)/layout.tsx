@@ -23,11 +23,13 @@ import {
   writePublicProfileCache,
 } from "@/lib/profile-public-cache"
 import { profileBannerPresentation, profileAvatarPresentation } from "@/lib/profile-media"
+import type { Json } from "@/lib/supabase/database.types"
 
 interface UserData extends ProfileLayoutUser {
   website_url?: string | null;
   twitter_url?: string | null;
   instagram_url?: string | null;
+  home_preferences?: Json | null;
 }
 
 
@@ -210,48 +212,56 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
 
     const fetchProfile = useCallback(
       async (targetUsername: string) => {
-        try {
-          const { data: { session } } = await supabase.auth.getSession()
+        const { data: { session }, error: sessionError } =
+          await supabase.auth.getSession()
+        if (sessionError) {
+          console.error('Erro ao obter sessão:', sessionError)
+        }
 
-          const { data, error } = await supabase
-            .from('users')
-            .select(
-              'id, username, display_name, bio, avatar_url, banner_url, avatar_meta, banner_meta, website_url, twitter_url, instagram_url',
-            )
-            .eq('username', targetUsername)
-            .single()
+        const { data, error } = await supabase
+          .from('users')
+          .select(
+            'id, username, display_name, bio, avatar_url, banner_url, avatar_meta, banner_meta, website_url, twitter_url, instagram_url, home_preferences',
+          )
+          .eq('username', targetUsername)
+          .maybeSingle()
 
-          if (error || !data) {
-            notFound()
-            return
-          }
-
-          if (usernameRef.current.toLowerCase() !== targetUsername) {
-            return
-          }
-
-          const parsed: UserData = {
-            ...data,
-            avatar_meta: parseTmdbStoredImageMeta(data.avatar_meta),
-            banner_meta: parseTmdbStoredImageMeta(data.banner_meta),
-          }
-          const own = session?.user?.id === data.id
-
-          setUserData(parsed)
-          setIsOwnProfile(own)
-
-          await fetchUserStats(data.id, {
-            profile: parsed,
-            isOwnProfile: own,
-            targetUsername,
-          })
-        } catch (error) {
+        if (error) {
           console.error('Erro ao carregar perfil:', error)
           setLoading(false)
+          return
         }
+
+        if (!data) {
+          notFound()
+          return
+        }
+
+        if (usernameRef.current.toLowerCase() !== targetUsername) {
+          return
+        }
+
+        const parsed: UserData = {
+          ...data,
+          avatar_meta: parseTmdbStoredImageMeta(data.avatar_meta),
+          banner_meta: parseTmdbStoredImageMeta(data.banner_meta),
+        }
+        const own = session?.user?.id === data.id
+
+        setUserData(parsed)
+        setIsOwnProfile(own)
+
+        await fetchUserStats(data.id, {
+          profile: parsed,
+          isOwnProfile: own,
+          targetUsername,
+        })
       },
       [supabase, fetchUserStats],
     )
+
+    const fetchProfileRef = useRef(fetchProfile)
+    fetchProfileRef.current = fetchProfile
   
 
   
@@ -288,7 +298,6 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
     }
   
     useEffect(() => {
-      const target = username.toLowerCase()
       const cached = readPublicProfileCache(username)
       if (cached) {
         setUserData(cached.user as UserData)
@@ -299,16 +308,19 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
         setUserData(null)
         setLoading(true)
       }
-      void fetchProfile(target)
-    }, [username, fetchProfile])
+    }, [username])
+
+    useEffect(() => {
+      void fetchProfileRef.current(username.toLowerCase())
+    }, [username])
 
     useEffect(() => {
       const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
-        void fetchProfile(usernameRef.current.toLowerCase())
+        void fetchProfileRef.current(usernameRef.current.toLowerCase())
       })
 
       return () => subscription.unsubscribe()
-    }, [fetchProfile, supabase])
+    }, [supabase])
   
     useEffect(() => {
       if (userData && currentUser) {
@@ -414,12 +426,12 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
     }
   
     if (loading) return (
-      <section className="py-8 mt-20 w-full max-w-6xl">
+      <section className="relative z-10 mt-20 w-full py-8">
        <Skeleton 
-        className="w-full h-[485px] overflow-hidden rounded-2xl border border-white/[0.12] bg-cover bg-center relative"
+        className="relative h-[485px] w-full min-w-0 overflow-hidden rounded-none border-0 bg-cover bg-center ring-1 ring-white/[0.06]"
 
       />
-      <div className="px-8 w-full ">
+      <div className="mx-auto w-full max-w-6xl px-8">
         <div className="relative z-10">
           <div className="flex gap-6">
           <div className="flex flex-col w-full  gap-6">
@@ -457,16 +469,29 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
         </section>
 
     )
+    if (!userData && !loading) {
+      return (
+        <section className="mx-auto mt-16 w-full max-w-6xl px-4 py-16 text-center sm:px-6">
+          <p className="text-muted-foreground">Não foi possível carregar este perfil.</p>
+          <Link
+            href="/"
+            className="mt-4 inline-block text-sm font-medium text-[#FF0048] underline underline-offset-2 hover:opacity-90"
+          >
+            Voltar ao início
+          </Link>
+        </section>
+      )
+    }
     if (!userData) return null
 
   const bannerDisplay = profileBannerPresentation(userData)
   const avatarDisplay = profileAvatarPresentation(userData)
 
   return (
-    <section className="mt-28 w-full max-w-6xl">
+    <section className="relative z-10 mt-[3.75rem] w-full">
         {/* Banner */}
         <div 
-        className="group relative h-[487px] w-full overflow-hidden rounded-2xl border border-white/[0.12] bg-cover bg-center"
+        className="group relative h-[567px] w-full min-w-0 overflow-hidden rounded-none border-0 bg-cover bg-center ring-1 ring-b ring-white/[0.06] "
         style={{ 
           backgroundImage: `url(${bannerDisplay.src})`,
           backgroundPosition: bannerDisplay.backgroundPosition,
@@ -476,16 +501,17 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
         {isOwnProfile && (
           <button 
             onClick={() => setShowBannerEdit(true)}
-            className="absolute inset-0 z-10 flex h-full w-full cursor-pointer items-center justify-center rounded-2xl bg-black/50 opacity-0 backdrop-blur-[1.2px] transition-opacity group-hover:opacity-100"
+            className="absolute inset-0 z-10 flex h-full w-full cursor-pointer items-center justify-center rounded-none bg-black/50 opacity-0 backdrop-blur-[1.2px] transition-opacity group-hover:opacity-100 "
           >
             <span className="text-white">Edit Banner</span>
           </button>
         )}
-        <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-black/50 to-transparent" />
+        <div className="absolute inset-0 rounded-none bg-gradient-to-t from-black/50 to-transparent z" />
       </div>
-      
+
+      <div className="mx-auto w-full max-w-6xl">
       {/* Profile info */}
-      <div className="px-8 w-full ">
+      <div className="w-full px-8">
         <div className="relative z-10">
           <div className="flex flex-wrap gap-6 lg:flex-nowrap lg:items-stretch">
           <div className="flex flex-col w-full gap-6">
@@ -564,6 +590,10 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
                         websiteUrl={userData.website_url ?? undefined}
                         twitterUrl={userData.twitter_url ?? undefined}
                         instagramUrl={userData.instagram_url ?? undefined}
+                        homePreferences={userData.home_preferences ?? null}
+                        onHomeBackdropUpdated={() =>
+                          fetchProfile(usernameRef.current.toLowerCase())
+                        }
                         onUpdate={updateProfile}
                       />
                     </div>
@@ -585,7 +615,7 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
           </div>
           </div>
           <div className="w-full">
-          <Tabs value={activeTab} className="w-full mt-6 translate-x-8">
+          <Tabs value={activeTab} className="w-full mt-6 ">
           <TabsList className="dark:bg-[#09090B] border border-white/[0.08] w-full h-12">
     <Link href={`/${username}`}>
     <TabsTrigger className="px-8 w-full py-2 font-medium data-[state=active]:bg-[#FF0048]/10 data-[state=active]:text-[#FF0048] " value="profile">Profile</TabsTrigger>
@@ -624,6 +654,7 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
         </div>
         </div>
       </div>
+      </div>
 
       {/* Modais de edição */}
         <ImageEditDialog
@@ -655,7 +686,6 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
           onSelect={() => {}}
         type="banner"
         />
-    <div/>
     </section>
   ) 
 }

@@ -16,7 +16,9 @@ import {
   NewListSwipeStep,
   type PickedMovie,
 } from "@/components/list-new/new-list-swipe-step"
-import type { ListBannerMeta } from "@/types/list"
+import type { CreateListData, ListBannerMeta } from "@/types/list"
+import { useLists } from "@/hooks/use-lists"
+import { listPublicHref } from "@/lib/list-href"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useProfile } from "@/components/providers/profile-provider"
 import { userProfilePath } from "@/lib/list-href"
@@ -45,6 +47,9 @@ export default function NewListPage() {
   const [selectedGenreIds, setSelectedGenreIds] = useState<number[]>([])
   const [pickedMovies, setPickedMovies] = useState<PickedMovie[]>([])
   const [canFinishSwipe, setCanFinishSwipe] = useState(false)
+  const [finalizeBusy, setFinalizeBusy] = useState(false)
+
+  const { createList, addItemToList } = useLists()
 
   const canContinueStep1 = title.trim().length > 0
   const canContinueStep2 = true
@@ -118,16 +123,84 @@ export default function NewListPage() {
     setStep((s) => (s > 1 ? ((s - 1) as WizardStep) : s))
   }
 
-  const handleFinalize = () => {
-    if (!canFinishSwipe) return
-    playListFinishConfetti()
-    toast.success("Draft ready — saving to your profile is coming soon.", {
-      duration: 4000,
-    })
-    window.setTimeout(() => {
-      router.push("/lists")
-    }, 1600)
-  }
+  const handleFinalize = useCallback(async () => {
+    if (!canFinishSwipe || finalizeBusy) return
+    if (!user) {
+      toast.error("Faça login para criar a lista.")
+      return
+    }
+    const name = title.trim()
+    if (!name) {
+      toast.error("Defina um nome para a lista no primeiro passo.")
+      return
+    }
+    if (pickedMovies.length === 0) {
+      toast.error("Adicione pelo menos um filme à lista.")
+      return
+    }
+
+    setFinalizeBusy(true)
+    try {
+      const listData: CreateListData = {
+        title: name,
+        bio: bio.trim() || undefined,
+        tags: selectedTags.length ? selectedTags : undefined,
+        is_public: true,
+        banner_meta: bannerMeta ?? undefined,
+      }
+      const newList = await createList(listData)
+      if (!newList) {
+        toast.error("Não foi possível criar a lista.")
+        return
+      }
+
+      let failed = 0
+      for (let i = 0; i < pickedMovies.length; i++) {
+        const p = pickedMovies[i]!
+        const ok = await addItemToList(newList.id, {
+          tmdb_id: p.tmdb_id,
+          title: p.title,
+          poster_path: p.poster_path,
+          release_date: p.release_date,
+          position: i + 1,
+          media_type: p.media_type ?? "movie",
+        })
+        if (!ok) failed += 1
+      }
+
+      playListFinishConfetti()
+      if (failed > 0) {
+        toast.warning(`Lista criada, mas ${failed} filme(s) não foram adicionados.`)
+      } else {
+        toast.success("Lista criada!")
+      }
+
+      router.push(
+        listPublicHref({
+          id: newList.id,
+          slug: newList.slug,
+          userData: profile?.username ? { username: profile.username } : undefined,
+        }),
+      )
+    } catch {
+      toast.error("Erro ao criar a lista.")
+    } finally {
+      setFinalizeBusy(false)
+    }
+  }, [
+    addItemToList,
+    bannerMeta,
+    bio,
+    canFinishSwipe,
+    createList,
+    finalizeBusy,
+    pickedMovies,
+    profile?.username,
+    router,
+    selectedTags,
+    title,
+    user,
+  ])
 
   const mainClass =
     step === 4 || step === 1
@@ -137,7 +210,7 @@ export default function NewListPage() {
   return (
     <main className={cn("w-full bg-[#09090B] text-zinc-100", mainClass)}>
       <FilmsCatalogShell compact={step === 4}>
-        <header className="mb-5 flex items-center justify-between gap-4">
+        <header className="mb-5 mt-28 flex items-center justify-between gap-4">
           <div className="flex min-w-0 flex-1 items-center gap-3">
             <button
               type="button"
@@ -190,7 +263,7 @@ export default function NewListPage() {
         {step === 1 ? (
           <>
             <div
-              className="relative z-0 w-full overflow-hidden rounded-2xl border border-white/[0.12] bg-[#09090B]"
+              className="relative z-0 w-full overflow-hidden rounded-2xl bg-[#09090B] ring-1 ring-white/[0.06]"
               style={{ height: LIST_BANNER_HEIGHT }}
             >
               {bannerPresentation ? (
@@ -342,6 +415,7 @@ export default function NewListPage() {
               onCanFinishChange={setCanFinishSwipe}
               canFinalize={canFinishSwipe}
               onFinalize={handleFinalize}
+              finalizeBusy={finalizeBusy}
               compactLayout
             />
           </div>

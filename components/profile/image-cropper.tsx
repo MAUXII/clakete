@@ -7,7 +7,7 @@ interface ImageCropperProps {
   image: string
   aspect: number
   onCrop: (croppedImage: string) => void
-  type?: "avatar" | "banner" | "list"
+  type?: "avatar" | "banner" | "list" | "home_backdrop"
   /** Não gerar blob WebP (ex.: lista grava só meta TMDB + crop). */
   deferWebpBlob?: boolean
   onCropGeometry?: (data: {
@@ -28,7 +28,7 @@ export function ImageCropper({
   const [crop, setCrop] = useState({ x: 0, y: 0 })
   const [zoom, setZoom] = useState(1)
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null)
-  const isBannerLike = type === "banner" || type === "list"
+  const isBannerLike = type === "banner" || type === "list" || type === "home_backdrop"
 
   const loadImage = (src: string): Promise<HTMLImageElement> => {
     return new Promise((resolve, reject) => {

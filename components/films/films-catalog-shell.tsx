@@ -21,6 +21,12 @@ const SERIES_NAV = [
   { href: "/series/upcoming", label: "Upcoming" },
 ] as const
 
+/** Só nestas rotas o conteúdo do shell fica abaixo da navbar fixa (`mt-28`). */
+const CATALOG_NAVBAR_OFFSET_ROUTES = new Set<string>([
+  ...FILMS_NAV.map((x) => x.href),
+  ...SERIES_NAV.map((x) => x.href),
+])
+
 function CatalogPillNav({
   items,
   ariaLabel,
@@ -105,18 +111,26 @@ export function FilmsCatalogShell({
   children,
   compact,
   className,
+  disableNavbarOffset,
 }: {
   children: ReactNode
   compact?: boolean
-  /** Mescla no container interno (ex.: `mt-28` para alinhar com o perfil). */
+  /** Mescla no container interno. */
   className?: string
+  /** Quando `true`, não aplica `mt-28` mesmo em rotas de catálogo (discover/popular/etc.). */
+  disableNavbarOffset?: boolean
 }) {
+  const pathname = usePathname()
+  const catalogNavbarOffset =
+    !disableNavbarOffset && CATALOG_NAVBAR_OFFSET_ROUTES.has(pathname)
+
   return (
     <div className={cn("relative min-w-0 w-full", compact && "flex min-h-0 flex-1 flex-col")}>
       <div
         className={cn(
           "relative mx-auto w-full max-w-6xl",
-          compact ? "mt-28 flex min-h-0 flex-1 flex-col pb-4" : "mt-28 pb-20",
+          compact ? " flex min-h-0 flex-1 flex-col pb-4" : " pb-20",
+          catalogNavbarOffset && "mt-28",
           className,
         )}
       >

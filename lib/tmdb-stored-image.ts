@@ -11,6 +11,7 @@ export function parseTmdbStoredImageMeta(raw: unknown): TmdbStoredImageMeta | nu
   if (!raw || typeof raw !== "object") return null
   const o = raw as Record<string, unknown>
   if (o.provider !== "tmdb" || typeof o.file_path !== "string") return null
+  if (!o.file_path.trim()) return null
   const c = o.crop
   if (!c || typeof c !== "object") return null
   const crop = c as Record<string, unknown>

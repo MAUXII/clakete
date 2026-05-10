@@ -101,7 +101,9 @@ interface NewListSwipeStepProps {
   onAddPick: (item: PickedMovie) => void
   onCanFinishChange?: (ok: boolean) => void
   canFinalize?: boolean
-  onFinalize?: () => void
+  onFinalize?: () => void | Promise<void>
+  /** Desabilita o botão Finish durante persistência no servidor. */
+  finalizeBusy?: boolean
   compactLayout?: boolean
 }
 
@@ -112,6 +114,7 @@ export function NewListSwipeStep({
   onCanFinishChange,
   canFinalize = false,
   onFinalize,
+  finalizeBusy = false,
   compactLayout = false,
 }: NewListSwipeStepProps) {
   const [deck, setDeck] = useState<DeckMovie[]>([])
@@ -327,21 +330,21 @@ export function NewListSwipeStep({
     onFinalize ? (
       <button
         type="button"
-        disabled={!canFinalize}
+        disabled={!canFinalize || finalizeBusy}
         title={
           canFinalize
             ? undefined
             : `Add at least ${MIN_TITLES_TO_FINISH} movies to your list (or finish if suggestions run out).`
         }
-        onClick={onFinalize}
+        onClick={() => void onFinalize()}
         className={cn(
           "flex h-11 w-full shrink-0 items-center justify-center rounded-full px-5 text-sm font-semibold transition-colors",
-          canFinalize
+          canFinalize && !finalizeBusy
             ? "bg-[#FF0048] text-white hover:bg-[#e60042]"
             : "cursor-not-allowed bg-white/[0.08] text-zinc-600",
         )}
       >
-        Finish
+        {finalizeBusy ? "Saving…" : "Finish"}
       </button>
     ) : null
 

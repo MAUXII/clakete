@@ -212,7 +212,7 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ id: str
     <div className="min-h-screen w-full overflow-x-clip bg-[#09090B]">
       <FilmsCatalogShell>
         <div
-          className="pointer-events-none -mt-16 relative left-1/2 z-0 w-screen max-w-[100vw] -translate-x-1/2 overflow-hidden bg-[#09090B]"
+          className="pointer-events-none mt-[3.75rem] relative left-1/2 z-0 w-screen max-w-[100vw] -translate-x-1/2 overflow-hidden bg-[#09090B]"
           style={{ height: SERIES_LETTERBOX_HEIGHT }}
           aria-hidden
         >

@@ -188,6 +188,12 @@ export function useLists() {
           is_public: listData.is_public !== false,
           slug,
           backdrop_path: listData.backdrop_path?.trim() || null,
+          ...(listData.banner_meta !== undefined
+            ? {
+                banner_meta:
+                  listData.banner_meta as Database['public']['Tables']['lists']['Insert']['banner_meta'],
+              }
+            : {}),
         })
         .select()
         .single()

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, type ReactNode } from "react"
 import { useSupabaseClient, useUser } from "@supabase/auth-helpers-react"
 import { Database } from "@/lib/supabase/database.types"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -30,9 +30,19 @@ interface RecentReviewsProps {
   userId?: string
   limit?: number
   onLandingPage?: boolean
+  /** Exibido quando não há resenhas (em vez de não renderizar nada). */
+  emptyFallback?: ReactNode
+  /** Quando true, não renderiza o `h2` da seção (título vem do pai). */
+  hideSectionTitle?: boolean
 }
 
-export function UserRecentReviews({ userId, limit = 6, onLandingPage }: RecentReviewsProps) {
+export function UserRecentReviews({
+  userId,
+  limit = 6,
+  onLandingPage,
+  emptyFallback,
+  hideSectionTitle = false,
+}: RecentReviewsProps) {
   const supabase = useSupabaseClient<Database>()
   const loggedInUser = useUser()
   const [reviews, setReviews] = useState<FilmReview[]>([])
@@ -106,17 +116,27 @@ export function UserRecentReviews({ userId, limit = 6, onLandingPage }: RecentRe
     )
   }
 
+  const sectionTitle = onLandingPage ? "Your Last Review" : "Recent reviews"
+
   if (reviews.length === 0) {
+    if (emptyFallback != null) {
+      return (
+        <div>
+          {!hideSectionTitle ? (
+            <h2 className="font-medium text-muted-foreground/50 text-sm uppercase">{sectionTitle}</h2>
+          ) : null}
+          {emptyFallback}
+        </div>
+      )
+    }
     return null
   }
 
   return (
     <div className="">
-       {onLandingPage ? (
-        <h2 className="font-medium text-muted-foreground/50 text-sm uppercase">Your Last Review</h2>
-      ) : (
-        <h2 className="font-medium text-muted-foreground/50 text-sm uppercase">Recent Reviews</h2>
-      )}
+      {!hideSectionTitle ? (
+        <h2 className="font-medium text-muted-foreground/50 text-sm uppercase">{sectionTitle}</h2>
+      ) : null}
     
       {reviews.map((review) => (
         

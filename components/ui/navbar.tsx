@@ -35,6 +35,7 @@ import { useSupabaseClient } from '@supabase/auth-helpers-react'
 import { useRouter } from 'next/navigation'
 import { useProfile } from "@/components/providers/profile-provider"
 import { profileAvatarPresentation } from "@/lib/profile-media"
+import { remoteImageSrcLooksLikeGif } from "@/lib/next-remote-image"
 import React from "react"
 import { cn } from "@/lib/utils"
 import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "./sheet"
@@ -371,6 +372,7 @@ export function Navbar() {
                 alt={profile.username}
                 width={48}
                 height={48}
+                unoptimized={remoteImageSrcLooksLikeGif(navAvatar.src)}
                 className="w-full h-full object-cover"
                 style={
                   navAvatar.objectPosition

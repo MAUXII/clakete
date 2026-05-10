@@ -91,15 +91,18 @@ function FavoriteSlot({
   }
 
   return (
-    <div className="relative h-[225px] w-[150px] shrink-0 overflow-hidden rounded-md border bg-card group">
+    <div
+      className="group relative aspect-[2/3] w-full min-w-[100px] overflow-hidden rounded-[5px] border-[1px] border-black/15 bg-card shadow-sm shadow-black/5 dark:border-white/15 dark:shadow-white/5"
+    >
       {film ? (
         <ContextMenu>
           <ContextMenuTrigger>
             <img
-              src={`https://image.tmdb.org/t/p/w185${film.poster_path}`}
+              src={`https://image.tmdb.org/t/p/w500${film.poster_path}`}
               alt={film.title}
-              className="h-full w-full object-cover"
+              className="h-full w-full object-cover transition-all"
             />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
             <div className="absolute inset-0" />
           </ContextMenuTrigger>
           {canEdit && (
@@ -133,9 +136,9 @@ function FavoriteSlot({
 /** Preview no overlay de drag — mesmo tamanho do slot. */
 function FavoriteSlotOverlay({ film }: { film: Film }) {
   return (
-    <div className="relative h-[225px] w-[150px] shrink-0 overflow-hidden rounded-md border bg-card shadow-lg">
+    <div className="relative aspect-[2/3] w-[150px] shrink-0 overflow-hidden rounded-[5px] border-[1px] border-black/15 bg-card shadow-lg shadow-black/5 dark:border-white/15 dark:shadow-white/5">
       <img
-        src={`https://image.tmdb.org/t/p/w185${film.poster_path}`}
+        src={`https://image.tmdb.org/t/p/w500${film.poster_path}`}
         alt={film.title}
         className="h-full w-full object-cover"
       />
@@ -249,7 +252,7 @@ export function UserFavoriteFilms({ userId, isEditable = false, onFilmAdded }: F
         {[...Array(4)].map((_, i) => (
           <Skeleton
             key={i}
-            className="relative aspect-[2/3] h-full w-full rounded-[5px] border border-black/15 shadow-sm shadow-black/5 dark:border-white/15 dark:shadow-white/5"
+            className="relative aspect-[2/3] h-full w-full rounded-[5px] border-[1px] border-black/15 shadow-sm shadow-black/5 dark:border-white/15 dark:shadow-white/5"
           />
         ))}
       </div>
@@ -398,9 +401,9 @@ export function UserFavoriteFilms({ userId, isEditable = false, onFilmAdded }: F
     setShowSearchCommand(true)
   }
 
-  /** Uma linha só; overflow-x em telas estreitas. Drag livre em X/Y via `modifiers={[]}` + orientation mixed. */
+  /** Quatro colunas fluidas preenchendo a linha; scroll só se min-width dos slots não couber. */
   const slotListClass =
-    "m-0 flex min-w-0 list-none flex-row flex-nowrap gap-4 overflow-x-auto p-0 [scrollbar-width:thin]"
+    "m-0 flex min-w-0 w-full list-none flex-row flex-nowrap gap-3 overflow-x-auto p-0 [scrollbar-width:thin] sm:gap-4"
 
   return (
     <>
@@ -480,7 +483,7 @@ function FavoriteSortableRow({
 
   return (
     <SortableItem value={item.id} asChild asHandle={hasFilm}>
-      <li className="relative shrink-0 list-none">
+      <li className="relative min-w-0 flex-1 basis-0 list-none">
         <div className="relative isolate">
           <FavoriteSlot
             film={item.film ?? undefined}

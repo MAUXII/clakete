@@ -5,6 +5,7 @@ import { useUser, useSupabaseClient } from '@supabase/auth-helpers-react'
 
 import type { TmdbStoredImageMeta } from '@/types/tmdb-stored-image'
 import { parseTmdbStoredImageMeta } from '@/lib/tmdb-stored-image'
+import type { Json } from '@/lib/supabase/database.types'
 
 interface UserProfile {
   username: string
@@ -14,6 +15,7 @@ interface UserProfile {
   banner_url?: string | null
   avatar_meta?: TmdbStoredImageMeta | null
   banner_meta?: TmdbStoredImageMeta | null
+  home_preferences?: Json | null
 }
 
 interface ProfileContextType {
@@ -53,6 +55,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
         ...data,
         avatar_meta: parseTmdbStoredImageMeta(data.avatar_meta),
         banner_meta: parseTmdbStoredImageMeta(data.banner_meta),
+        home_preferences: data.home_preferences ?? null,
       } as UserProfile)
     } catch (error) {
       console.error('Erro ao carregar perfil:', error)

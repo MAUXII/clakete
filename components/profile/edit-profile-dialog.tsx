@@ -15,6 +15,15 @@ import { useUser } from "@supabase/auth-helpers-react"
 import { useProfile } from "@/components/providers/profile-provider"
 import { User, Settings, Link2, Pencil, type LucideIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
+import type { Json } from "@/lib/supabase/database.types"
+import { HomePreferencesEditor } from "@/components/profile/home-preferences-editor"
+import {
+  defaultUserHomePreferences,
+  extractHomeBackdropFromPreferences,
+  parseUserHomePreferences,
+  serializeUserHomePreferencesKeepingBackdrop,
+  type UserHomePreferences,
+} from "@/lib/user-home-preferences"
 
 interface EditProfileDialogProps {
   username: string
@@ -23,12 +32,16 @@ interface EditProfileDialogProps {
   websiteUrl?: string
   twitterUrl?: string
   instagramUrl?: string
+  homePreferences?: Json | null
+  /** Recarrega o perfil após gravar/remover backdrop da home (meta TMDB+crop em `home_preferences`). */
+  onHomeBackdropUpdated?: () => void | Promise<void>
   onUpdate: (updates: {
     display_name?: string
     bio?: string
     website_url?: string | null
     twitter_url?: string | null
     instagram_url?: string | null
+    home_preferences?: Json | null
   }) => void
 }
 
@@ -56,7 +69,7 @@ const SECTION_HEADINGS: Record<ProfileSectionId, string> = {
 
 const SECTION_HINTS: Record<ProfileSectionId, string> = {
   profile: "Update your display name and bio.",
-  preferences: "More options will appear here over time.",
+  preferences: "Home page backdrop and which sections show after login.",
   social: "URLs for your website and social profiles.",
 }
 
@@ -67,6 +80,8 @@ export function EditProfileDialog({
   websiteUrl = "",
   twitterUrl = "",
   instagramUrl = "",
+  homePreferences = null,
+  onHomeBackdropUpdated,
   onUpdate,
 }: EditProfileDialogProps) {
   const [isOpen, setIsOpen] = useState(false)
@@ -77,6 +92,7 @@ export function EditProfileDialog({
   const [linkWebsite, setLinkWebsite] = useState(websiteUrl || "")
   const [linkTwitter, setLinkTwitter] = useState(twitterUrl || "")
   const [linkInstagram, setLinkInstagram] = useState(instagramUrl || "")
+  const [homePrefsDraft, setHomePrefsDraft] = useState<UserHomePreferences>(defaultUserHomePreferences)
   const user = useUser()
   const { refreshProfile } = useProfile()
 
@@ -87,7 +103,10 @@ export function EditProfileDialog({
     setLinkWebsite(websiteUrl || "")
     setLinkTwitter(twitterUrl || "")
     setLinkInstagram(instagramUrl || "")
-  }, [isOpen, displayName, bio, websiteUrl, twitterUrl, instagramUrl])
+    setHomePrefsDraft(parseUserHomePreferences(homePreferences))
+  }, [isOpen, displayName, bio, websiteUrl, twitterUrl, instagramUrl, homePreferences])
+
+  const homeBackdropFields = extractHomeBackdropFromPreferences(homePreferences)
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -111,6 +130,10 @@ export function EditProfileDialog({
         website_url: linkWebsite.trim() || null,
         twitter_url: linkTwitter.trim() || null,
         instagram_url: linkInstagram.trim() || null,
+        home_preferences: serializeUserHomePreferencesKeepingBackdrop(
+          homePreferences,
+          homePrefsDraft,
+        ),
       })
       await refreshProfile()
       setIsOpen(false)
@@ -206,9 +229,13 @@ export function EditProfileDialog({
               )}
 
               {activeSection === "preferences" && (
-                <div className="rounded-lg border border-border bg-muted/30 px-4 py-8 text-center text-sm text-muted-foreground">
-                  No configurable preferences yet. Check back later.
-                </div>
+                <HomePreferencesEditor
+                  initialJson={homePreferences}
+                  onChange={setHomePrefsDraft}
+                  homeBackdropUrl={homeBackdropFields.url}
+                  homeBackdropMeta={homeBackdropFields.meta}
+                  onHomeBackdropUpdated={onHomeBackdropUpdated}
+                />
               )}
 
               {activeSection === "social" && (
