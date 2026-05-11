@@ -17,6 +17,7 @@ import { MediaSearchCommandContent } from "@/components/movies/media-search-comm
 import type { Movie } from "@/lib/tmdb/client";
 import { ImageEditDialog } from "@/components/profile/avatar-edit-dialog";
 import { MovieCard } from "@/components/movies/movie-card";
+import { SeriesCard } from "@/components/series/series-card";
 import { IoTrashOutline } from "react-icons/io5";
 import { userProfilePath } from "@/lib/list-href";
 import { listBannerPresentation, parseListBannerMeta } from "@/lib/list-banner";
@@ -506,22 +507,16 @@ export default function UserListDetailPage() {
                         className="group relative flex items-end justify-end gap-2"
                       >
                         {film.media_type === "tv" ? (
-                          <Link
-                            href={`/series/${film.tmdb_id}`}
-                            className="relative block aspect-[2/3] w-full overflow-hidden rounded-md border border-black/15 shadow-sm dark:border-white/15"
-                          >
-                            {film.poster_path ? (
-                              <img
-                                src={`https://image.tmdb.org/t/p/w500${film.poster_path}`}
-                                alt={film.title}
-                                className="h-full w-full object-cover"
-                              />
-                            ) : (
-                              <div className="flex h-full w-full items-center justify-center bg-muted text-sm text-muted-foreground">
-                                TV
-                              </div>
-                            )}
-                          </Link>
+                          <SeriesCard
+                            series={{
+                              id: film.tmdb_id,
+                              name: film.title,
+                              poster_path: film.poster_path || null,
+                              vote_average: 0,
+                              first_air_date: film.release_date ?? null,
+                            }}
+                            externalid={film.tmdb_id}
+                          />
                         ) : (
                           <MovieCard
                             movie={{
