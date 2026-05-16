@@ -19,6 +19,14 @@ export type CachedPublicProfile = {
     website_url?: string | null
     twitter_url?: string | null
     instagram_url?: string | null
+    spotify_url?: string | null
+    discord_url?: string | null
+    youtube_url?: string | null
+    github_url?: string | null
+    soundcloud_url?: string | null
+    pinterest_url?: string | null
+    telegram_url?: string | null
+    ethereum_url?: string | null
     avatar_meta?: TmdbStoredImageMeta | null
     banner_meta?: TmdbStoredImageMeta | null
   }

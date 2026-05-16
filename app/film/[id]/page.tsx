@@ -228,7 +228,7 @@ export default function FilmPage({ params }: { params: Promise<{ id: string }> }
   const tabTriggerClass = cn(
     "min-w-0 flex-1 rounded-md px-3 py-2.5 text-center text-sm font-medium text-zinc-500 transition-colors",
     "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/25 focus-visible:ring-offset-1 focus-visible:ring-offset-background",
-    "data-[state=active]:bg-[#FF0048]/10 data-[state=active]:text-[#FF0048]",
+    "data-[state=active]:bg-[#FF0048]/10 data-[state=active]:text-[#e8486b]",
     "hover:text-zinc-300",
   );
 
@@ -382,7 +382,7 @@ export default function FilmPage({ params }: { params: Promise<{ id: string }> }
                     <Link
                       key={genre.id}
                       href={`/films/discover?genres=${genre.id}`}
-                      className="rounded-full bg-[#FF0048]/10 px-3 py-1 text-xs font-medium text-[#FF0048] ring-1 ring-[#FF0048]/30 transition-colors hover:bg-[#FF0048]/18 hover:ring-[#FF0048]/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0048]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#09090B]"
+                      className="rounded-full bg-[#FF0048]/10 px-3 py-1 text-xs font-medium text-[#e8486b] ring-1 ring-[#e8486b]/35 transition-colors hover:bg-[#FF0048]/18 hover:ring-[#FF0048]/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0048]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#09090B]"
                     >
                       {genre.name}
                     </Link>

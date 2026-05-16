@@ -93,6 +93,7 @@ export function HomePreferencesEditor({
             id="home-now"
             checked={prefs.show_now_showing}
             onCheckedChange={(v) => update({ ...prefs, show_now_showing: v })}
+            className="data-[state=checked]:bg-[#FF0048]"
           />
         </div>
         <div className="flex items-center justify-between gap-4 rounded-md border border-border/80 bg-background/50 px-4 py-3">
@@ -103,6 +104,7 @@ export function HomePreferencesEditor({
             id="home-up"
             checked={prefs.show_upcoming}
             onCheckedChange={(v) => update({ ...prefs, show_upcoming: v })}
+            className="data-[state=checked]:bg-[#FF0048]"
           />
         </div>
         <div className="flex items-center justify-between gap-4 rounded-md border border-border/80 bg-background/50 px-4 py-3">
@@ -113,6 +115,7 @@ export function HomePreferencesEditor({
             id="home-rev"
             checked={prefs.show_recent_reviews}
             onCheckedChange={(v) => update({ ...prefs, show_recent_reviews: v })}
+            className="data-[state=checked]:bg-[#FF0048]"
           />
         </div>
       </div>

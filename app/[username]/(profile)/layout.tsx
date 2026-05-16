@@ -1,5 +1,6 @@
 'use client'
 import { EditProfileDialog } from "@/components/profile/edit-profile-dialog"
+import { ProfileSocialLinks } from "@/components/profile/profile-social-links"
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { ImageEditDialog } from "@/components/profile/avatar-edit-dialog"
 import { MdEdit } from "react-icons/md"
@@ -25,11 +26,31 @@ import {
 import { profileBannerPresentation, profileAvatarPresentation } from "@/lib/profile-media"
 import { avatarDisplaySrc } from "@/lib/next-remote-image"
 import type { Json } from "@/lib/supabase/database.types"
+import { cn } from "@/lib/utils"
+
+const profileTabLinkClass = "group flex h-full min-h-0 flex-1"
+const profileTabTriggerClass = cn(
+  "h-full w-full rounded-md px-8 py-2 text-sm font-medium transition-colors",
+  "bg-transparent text-zinc-400 shadow-none",
+  "group-hover:text-zinc-200 dark:group-hover:text-zinc-100",
+  "data-[state=active]:!bg-[#FF0048]/10 data-[state=active]:!text-[#e8486b]",
+  "dark:data-[state=active]:!bg-[#FF0048]/14 dark:data-[state=active]:!text-[#ff9eb0]",
+  "data-[state=active]:group-hover:!text-[#e8486b] dark:data-[state=active]:group-hover:!text-[#ff9eb0]",
+  "data-[state=active]:!shadow-none",
+)
 
 interface UserData extends ProfileLayoutUser {
   website_url?: string | null;
   twitter_url?: string | null;
   instagram_url?: string | null;
+  spotify_url?: string | null;
+  discord_url?: string | null;
+  youtube_url?: string | null;
+  github_url?: string | null;
+  soundcloud_url?: string | null;
+  pinterest_url?: string | null;
+  telegram_url?: string | null;
+  ethereum_url?: string | null;
   home_preferences?: Json | null;
 }
 
@@ -195,6 +216,14 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
                 website_url: p.website_url,
                 twitter_url: p.twitter_url,
                 instagram_url: p.instagram_url,
+                spotify_url: p.spotify_url,
+                discord_url: p.discord_url,
+                youtube_url: p.youtube_url,
+                github_url: p.github_url,
+                soundcloud_url: p.soundcloud_url,
+                pinterest_url: p.pinterest_url,
+                telegram_url: p.telegram_url,
+                ethereum_url: p.ethereum_url,
                 avatar_meta: p.avatar_meta ?? null,
                 banner_meta: p.banner_meta ?? null,
               },
@@ -222,7 +251,7 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
         const { data, error } = await supabase
           .from('users')
           .select(
-            'id, username, display_name, bio, avatar_url, banner_url, avatar_meta, banner_meta, website_url, twitter_url, instagram_url, home_preferences',
+            'id, username, display_name, bio, avatar_url, banner_url, avatar_meta, banner_meta, website_url, twitter_url, instagram_url, spotify_url, discord_url, youtube_url, github_url, soundcloud_url, pinterest_url, telegram_url, ethereum_url, home_preferences',
           )
           .eq('username', targetUsername)
           .maybeSingle()
@@ -589,9 +618,16 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
                     displayName={userData.display_name}
                     bio={userData.bio}
                     avatarUrl={userData.avatar_url ?? undefined}
-                    websiteUrl={userData.website_url ?? undefined}
-                        twitterUrl={userData.twitter_url ?? undefined}
-                        instagramUrl={userData.instagram_url ?? undefined}
+                    instagramUrl={userData.instagram_url ?? null}
+                        twitterUrl={userData.twitter_url ?? null}
+                        spotifyUrl={userData.spotify_url ?? null}
+                        discordUrl={userData.discord_url ?? null}
+                        youtubeUrl={userData.youtube_url ?? null}
+                        githubUrl={userData.github_url ?? null}
+                        soundcloudUrl={userData.soundcloud_url ?? null}
+                        pinterestUrl={userData.pinterest_url ?? null}
+                        telegramUrl={userData.telegram_url ?? null}
+                        ethereumUrl={userData.ethereum_url ?? null}
                         homePreferences={userData.home_preferences ?? null}
                         onHomeBackdropUpdated={() =>
                           fetchProfile(usernameRef.current.toLowerCase())
@@ -610,38 +646,48 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
                   )}
                 </div>
               </div>
+              <ProfileSocialLinks
+                className="mt-4"
+                social={{
+                  instagram_url: userData.instagram_url,
+                  twitter_url: userData.twitter_url,
+                  spotify_url: userData.spotify_url,
+                  discord_url: userData.discord_url,
+                  youtube_url: userData.youtube_url,
+                  github_url: userData.github_url,
+                  soundcloud_url: userData.soundcloud_url,
+                  pinterest_url: userData.pinterest_url,
+                  telegram_url: userData.telegram_url,
+                  ethereum_url: userData.ethereum_url,
+                }}
+                homePreferences={userData.home_preferences}
+              />
               {userData.bio && (
-                <p className="mt-6 text-muted-foreground">{userData.bio}</p>
+                <p className="mt-4 text-muted-foreground">{userData.bio}</p>
         )}
       </div>
           </div>
           </div>
           <div className="w-full">
           <Tabs value={activeTab} className="w-full mt-6 ">
-          <TabsList className="dark:bg-[#09090B] border border-white/[0.08] w-full h-12">
-    <Link href={`/${username}`}>
-    <TabsTrigger className="px-8 w-full py-2 font-medium data-[state=active]:bg-[#FF0048]/10 data-[state=active]:text-[#FF0048] " value="profile">Profile</TabsTrigger>
+          <TabsList className="flex h-12 w-full border border-white/[0.08] bg-[#09090B] p-1 text-zinc-400 dark:bg-[#09090B]">
+    <Link href={`/${username}`} className={profileTabLinkClass}>
+      <TabsTrigger className={profileTabTriggerClass} value="profile">Profile</TabsTrigger>
     </Link>
-    <Link href={`/${username}/films`}>
-    <TabsTrigger className="px-8 w-full py-2 font-medium data-[state=active]:bg-[#FF0048]/10 data-[state=active]:text-[#FF0048] " value="films">
-    Films
-    </TabsTrigger>
+    <Link href={`/${username}/films`} className={profileTabLinkClass}>
+      <TabsTrigger className={profileTabTriggerClass} value="films">Films</TabsTrigger>
     </Link>
-    
-    <Link href={`/${username}/lists`}>
-    <TabsTrigger className="px-8 w-full py-2 font-medium data-[state=active]:bg-[#FF0048]/10 data-[state=active]:text-[#FF0048] " value="lists">
-    Lists
-    </TabsTrigger>
+    <Link href={`/${username}/lists`} className={profileTabLinkClass}>
+      <TabsTrigger className={profileTabTriggerClass} value="lists">Lists</TabsTrigger>
     </Link>
-
-    <Link href={`/${username}/reviews`}>
-    <TabsTrigger className="px-8 w-full py-2 font-medium data-[state=active]:bg-[#FF0048]/10 data-[state=active]:text-[#FF0048] " value="reviews">Reviews</TabsTrigger>
+    <Link href={`/${username}/reviews`} className={profileTabLinkClass}>
+      <TabsTrigger className={profileTabTriggerClass} value="reviews">Reviews</TabsTrigger>
     </Link>
-    <Link href={`/${username}/activity`}>
-    <TabsTrigger className="px-8 w-full py-2 font-medium data-[state=active]:bg-[#FF0048]/10 data-[state=active]:text-[#FF0048] " value="activity">Activity</TabsTrigger>
+    <Link href={`/${username}/activity`} className={profileTabLinkClass}>
+      <TabsTrigger className={profileTabTriggerClass} value="activity">Activity</TabsTrigger>
     </Link>
-    <Link href={`/${username}/watchlist`}>
-    <TabsTrigger className="px-8 w-full py-2 font-medium data-[state=active]:bg-[#FF0048]/10 data-[state=active]:text-[#FF0048] " value="watchlist">Watchlist</TabsTrigger>
+    <Link href={`/${username}/watchlist`} className={profileTabLinkClass}>
+      <TabsTrigger className={profileTabTriggerClass} value="watchlist">Watchlist</TabsTrigger>
     </Link>
   </TabsList>
   

@@ -166,6 +166,14 @@ export interface Database {
           website_url: string | null
           twitter_url: string | null
           instagram_url: string | null
+          spotify_url: string | null
+          discord_url: string | null
+          youtube_url: string | null
+          github_url: string | null
+          soundcloud_url: string | null
+          pinterest_url: string | null
+          telegram_url: string | null
+          ethereum_url: string | null
           home_preferences: Json | null
           created_at: string
           updated_at: string
@@ -183,6 +191,14 @@ export interface Database {
           website_url?: string | null
           twitter_url?: string | null
           instagram_url?: string | null
+          spotify_url?: string | null
+          discord_url?: string | null
+          youtube_url?: string | null
+          github_url?: string | null
+          soundcloud_url?: string | null
+          pinterest_url?: string | null
+          telegram_url?: string | null
+          ethereum_url?: string | null
           home_preferences?: Json | null
           created_at?: string
           updated_at?: string
@@ -200,6 +216,14 @@ export interface Database {
           website_url?: string | null
           twitter_url?: string | null
           instagram_url?: string | null
+          spotify_url?: string | null
+          discord_url?: string | null
+          youtube_url?: string | null
+          github_url?: string | null
+          soundcloud_url?: string | null
+          pinterest_url?: string | null
+          telegram_url?: string | null
+          ethereum_url?: string | null
           home_preferences?: Json | null
           created_at?: string
           updated_at?: string

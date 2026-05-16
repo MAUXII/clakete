@@ -47,7 +47,7 @@ function CatalogPillNav({
             className={cn(
               "rounded-full px-4 py-2 text-sm font-medium transition-colors",
               isActive
-                ? "bg-[#FF0048]/15 text-[#FF0048] ring-1 ring-[#FF0048]/35"
+                ? "bg-[#FF0048]/10 text-[#e8486b] ring-1 ring-[#e8486b]/35"
                 : "text-zinc-400 hover:bg-white/[0.05] hover:text-zinc-100",
             )}
           >
@@ -73,7 +73,7 @@ const listsPillClass = (active: boolean) =>
   cn(
     "rounded-full px-4 py-2 text-sm font-medium transition-colors",
     active
-      ? "bg-[#FF0048]/15 text-[#FF0048] ring-1 ring-[#FF0048]/35"
+      ? "bg-[#FF0048]/10 text-[#e8486b] ring-1 ring-[#e8486b]/35"
       : "text-zinc-400 hover:bg-white/[0.05] hover:text-zinc-100",
   )
 

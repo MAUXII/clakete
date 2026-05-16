@@ -42,15 +42,31 @@ NavigationMenuList.displayName = NavigationMenuPrimitive.List.displayName
 const NavigationMenuItem = NavigationMenuPrimitive.Item
 
 const navigationMenuTriggerStyle = cva(
-  "group inline-flex h-9 w-max items-center justify-center rounded-md gap-2 items-center px-4 py-2 text-sm font-medium transition-colors hover:bg-[#FF0048]/10 hover:text-[#FF0048]  focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active=true]:text-[#FF0048] data-[state=open]:bg-[#FF0048]/10 data-[state=open]:text-[#FF0048] cursor-pointer"
+  "group inline-flex h-9 w-max items-center justify-center rounded-md gap-2 items-center px-4 py-2 text-sm font-medium transition-colors hover:bg-[#FF0048]/10 hover:text-[#e8486b] dark:hover:bg-[#FF0048]/14 dark:hover:text-[#ff9eb0] focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-[#FF0048]/10 data-[active]:text-[#e8486b] dark:data-[active]:bg-[#FF0048]/14 dark:data-[active]:text-[#ff9eb0] data-[state=open]:bg-[#FF0048]/10 data-[state=open]:text-[#e8486b] dark:data-[state=open]:bg-[#FF0048]/14 dark:data-[state=open]:text-[#ff9eb0] cursor-pointer"
 )
+
+export function isNavHrefActive(pathname: string, href: string): boolean {
+  if (href === "/") return pathname === "/"
+  return pathname === href || pathname.startsWith(`${href}/`)
+}
+
+export function isMoviesNavActive(pathname: string): boolean {
+  return pathname.startsWith("/films") || pathname.startsWith("/film/")
+}
+
+export function isSeriesNavActive(pathname: string): boolean {
+  return pathname.startsWith("/series")
+}
 
 const NavigationMenuTrigger = React.forwardRef<
   React.ElementRef<typeof NavigationMenuPrimitive.Trigger>,
-  React.ComponentPropsWithoutRef<typeof NavigationMenuPrimitive.Trigger>
->(({ className, children, ...props }, ref) => (
+  React.ComponentPropsWithoutRef<typeof NavigationMenuPrimitive.Trigger> & {
+    active?: boolean
+  }
+>(({ className, children, active, ...props }, ref) => (
   <NavigationMenuPrimitive.Trigger
     ref={ref}
+    data-active={active ? "" : undefined}
     className={cn(navigationMenuTriggerStyle(), "group", className)}
     {...props}
   >
@@ -85,14 +101,14 @@ const NavigationMenuLink = React.forwardRef<
   }
 >(({ className, href, ...props }, ref) => {
   const pathname = usePathname()
-  const isActive = href === '/' ? pathname === '/' : pathname.startsWith(href || '')
+  const isActive = href ? isNavHrefActive(pathname, href) : false
 
   return (
     <NavigationMenuPrimitive.Link
       ref={ref}
       className={cn(className)}
       {...props}
-      data-active={isActive}
+      data-active={isActive ? "" : undefined}
     />
   )
 })

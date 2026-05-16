@@ -12,11 +12,20 @@ import { Label } from "@/components/ui/label"
 import { useState, useEffect } from "react"
 import { useUser } from "@supabase/auth-helpers-react"
 import { useProfile } from "@/components/providers/profile-provider"
-import { Settings, Link2, Pencil, ChevronRight, type LucideIcon } from "lucide-react"
+import { Settings, Link2, Pencil, ChevronRight, User, type LucideIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { Json } from "@/lib/supabase/database.types"
+import { ConnectionsEditor } from "@/components/profile/connections-editor"
 import { HomePreferencesEditor } from "@/components/profile/home-preferences-editor"
 import { ProfileBioEditor } from "@/components/profile/profile-bio-editor"
+import {
+  defaultSocialDisplayMap,
+  mergeSocialDisplayIntoPreferencesJson,
+  parseSocialDisplay,
+  socialUrlsFromRecord,
+  type SocialDisplayMap,
+  type SocialUrls,
+} from "@/lib/social-platforms"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { avatarDisplaySrc } from "@/lib/next-remote-image"
 import {
@@ -33,22 +42,36 @@ interface EditProfileDialogProps {
   bio?: string
   /** Avatar atual (URL ou path) para o cabeçalho da sidebar. */
   avatarUrl?: string | null
-  websiteUrl?: string
-  twitterUrl?: string
-  instagramUrl?: string
+  instagramUrl?: string | null
+  twitterUrl?: string | null
+  spotifyUrl?: string | null
+  discordUrl?: string | null
+  youtubeUrl?: string | null
+  githubUrl?: string | null
+  soundcloudUrl?: string | null
+  pinterestUrl?: string | null
+  telegramUrl?: string | null
+  ethereumUrl?: string | null
   homePreferences?: Json | null
   onHomeBackdropUpdated?: () => void | Promise<void>
   onUpdate: (updates: {
     display_name?: string
     bio?: string
-    website_url?: string | null
     twitter_url?: string | null
     instagram_url?: string | null
+    spotify_url?: string | null
+    discord_url?: string | null
+    youtube_url?: string | null
+    github_url?: string | null
+    soundcloud_url?: string | null
+    pinterest_url?: string | null
+    telegram_url?: string | null
+    ethereum_url?: string | null
     home_preferences?: Json | null
   }) => void
 }
 
-type ProfileSectionId = "profile" | "preferences" | "social"
+type ProfileSectionId = "account" | "profile" | "preferences" | "social"
 
 const NAV_GROUPS: {
   heading?: string
@@ -56,6 +79,7 @@ const NAV_GROUPS: {
 }[] = [
   {
     items: [
+      { id: "account", label: "Account", Icon: User },
       { id: "preferences", label: "Preferences", Icon: Settings },
       { id: "social", label: "Connections", Icon: Link2 },
     ],
@@ -63,15 +87,17 @@ const NAV_GROUPS: {
 ]
 
 const SECTION_HEADINGS: Record<ProfileSectionId, string> = {
+  account: "Account",
   profile: "Profile",
   preferences: "Preferences",
   social: "Connections",
 }
 
 const SECTION_HINTS: Record<ProfileSectionId, string> = {
-  profile: "Display name, username, and bio. Markdown is supported.",
+  account: "Your username and sign-in identity.",
+  profile: "Display name and bio shown on your public profile. Markdown is supported in bio.",
   preferences: "Home backdrop and which sections appear after you sign in.",
-  social: "Website and social links shown on your public profile.",
+  social: "Social platforms shown on your public profile.",
 }
 
 /** Fixed shell — sections scroll inside; modal size does not change per tab. */
@@ -85,23 +111,42 @@ export function EditProfileDialog({
   displayName,
   bio,
   avatarUrl,
-  websiteUrl = "",
-  twitterUrl = "",
-  instagramUrl = "",
+  instagramUrl = null,
+  twitterUrl = null,
+  spotifyUrl = null,
+  discordUrl = null,
+  youtubeUrl = null,
+  githubUrl = null,
+  soundcloudUrl = null,
+  pinterestUrl = null,
+  telegramUrl = null,
+  ethereumUrl = null,
   homePreferences = null,
   onHomeBackdropUpdated,
   onUpdate,
 }: EditProfileDialogProps) {
   const [isOpen, setIsOpen] = useState(false)
-  const [activeSection, setActiveSection] = useState<ProfileSectionId>("profile")
+  const [activeSection, setActiveSection] = useState<ProfileSectionId>("account")
   const [loading, setLoading] = useState(false)
   const [newDisplayName, setNewDisplayName] = useState(displayName || "")
   const [newBio, setNewBio] = useState(bio || "")
   const [bioEditorKey, setBioEditorKey] = useState(0)
-  const [linkWebsite, setLinkWebsite] = useState(websiteUrl || "")
-  const [linkTwitter, setLinkTwitter] = useState(twitterUrl || "")
-  const [linkInstagram, setLinkInstagram] = useState(instagramUrl || "")
+  const [socialUrls, setSocialUrls] = useState<SocialUrls>(() =>
+    socialUrlsFromRecord({
+      instagram_url: instagramUrl,
+      twitter_url: twitterUrl,
+      spotify_url: spotifyUrl,
+      discord_url: discordUrl,
+      youtube_url: youtubeUrl,
+      github_url: githubUrl,
+      soundcloud_url: soundcloudUrl,
+      pinterest_url: pinterestUrl,
+      telegram_url: telegramUrl,
+      ethereum_url: ethereumUrl,
+    }),
+  )
   const [homePrefsDraft, setHomePrefsDraft] = useState<UserHomePreferences>(defaultUserHomePreferences)
+  const [socialDisplay, setSocialDisplay] = useState<SocialDisplayMap>(defaultSocialDisplayMap)
   const user = useUser()
   const { refreshProfile } = useProfile()
 
@@ -109,11 +154,38 @@ export function EditProfileDialog({
     if (!isOpen) return
     setNewDisplayName(displayName || "")
     setNewBio(bio || "")
-    setLinkWebsite(websiteUrl || "")
-    setLinkTwitter(twitterUrl || "")
-    setLinkInstagram(instagramUrl || "")
+    setSocialUrls(
+      socialUrlsFromRecord({
+        instagram_url: instagramUrl,
+        twitter_url: twitterUrl,
+        spotify_url: spotifyUrl,
+        discord_url: discordUrl,
+        youtube_url: youtubeUrl,
+        github_url: githubUrl,
+        soundcloud_url: soundcloudUrl,
+        pinterest_url: pinterestUrl,
+        telegram_url: telegramUrl,
+        ethereum_url: ethereumUrl,
+      }),
+    )
     setHomePrefsDraft(parseUserHomePreferences(homePreferences))
-  }, [isOpen, displayName, bio, websiteUrl, twitterUrl, instagramUrl, homePreferences])
+    setSocialDisplay(parseSocialDisplay(homePreferences))
+  }, [
+    isOpen,
+    displayName,
+    bio,
+    instagramUrl,
+    twitterUrl,
+    spotifyUrl,
+    discordUrl,
+    youtubeUrl,
+    githubUrl,
+    soundcloudUrl,
+    pinterestUrl,
+    telegramUrl,
+    ethereumUrl,
+    homePreferences,
+  ])
 
   useEffect(() => {
     if (!isOpen) return
@@ -121,17 +193,6 @@ export function EditProfileDialog({
   }, [isOpen])
 
   const homeBackdropFields = extractHomeBackdropFromPreferences(homePreferences)
-
-  useEffect(() => {
-    const down = (e: KeyboardEvent) => {
-      if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault()
-        setIsOpen((open) => !open)
-      }
-    }
-    document.addEventListener("keydown", down)
-    return () => document.removeEventListener("keydown", down)
-  }, [])
 
   const handleSave = async () => {
     if (!user) return
@@ -141,12 +202,19 @@ export function EditProfileDialog({
       await onUpdate({
         display_name: newDisplayName,
         bio: newBio,
-        website_url: linkWebsite.trim() || null,
-        twitter_url: linkTwitter.trim() || null,
-        instagram_url: linkInstagram.trim() || null,
-        home_preferences: serializeUserHomePreferencesKeepingBackdrop(
-          homePreferences,
-          homePrefsDraft,
+        twitter_url: socialUrls.twitter_url ?? null,
+        instagram_url: socialUrls.instagram_url ?? null,
+        spotify_url: socialUrls.spotify_url ?? null,
+        discord_url: socialUrls.discord_url ?? null,
+        youtube_url: socialUrls.youtube_url ?? null,
+        github_url: socialUrls.github_url ?? null,
+        soundcloud_url: socialUrls.soundcloud_url ?? null,
+        pinterest_url: socialUrls.pinterest_url ?? null,
+        telegram_url: socialUrls.telegram_url ?? null,
+        ethereum_url: socialUrls.ethereum_url ?? null,
+        home_preferences: mergeSocialDisplayIntoPreferencesJson(
+          serializeUserHomePreferencesKeepingBackdrop(homePreferences, homePrefsDraft),
+          socialDisplay,
         ),
       })
       await refreshProfile()
@@ -181,7 +249,7 @@ export function EditProfileDialog({
         className={cn(
           "flex flex-col gap-0 overflow-hidden rounded-lg border border-border bg-background p-0 text-foreground shadow-lg sm:rounded-xl",
           EDIT_PROFILE_MODAL_SIZE,
-          "[&>button:last-child]:right-3 [&>button:last-child]:top-3 [&>button:last-child]:h-8 [&>button:last-child]:w-8 [&>button:last-child]:rounded-md [&>button:last-child]:text-muted-foreground [&>button:last-child]:hover:bg-muted [&>button:last-child]:hover:text-foreground",
+          "[&>button:last-child]:right-3 [&>button:last-child]:top-3 [&>button:last-child]:inline-flex [&>button:last-child]:h-8 [&>button:last-child]:w-8 [&>button:last-child]:items-center [&>button:last-child]:justify-center [&>button:last-child]:rounded-md [&>button:last-child]:p-0 [&>button:last-child]:text-muted-foreground [&>button:last-child]:opacity-70 [&>button:last-child]:hover:bg-transparent [&>button:last-child]:hover:text-muted-foreground [&>button:last-child]:hover:opacity-70 [&>button:last-child>svg]:size-4",
         )}
       >
         <div className="flex h-full min-h-0 flex-1 flex-col sm:flex-row">
@@ -207,7 +275,7 @@ export function EditProfileDialog({
                 </Avatar>
                 <div className="min-w-0 flex-1 space-y-0.5">
                   <p className="truncate text-sm font-semibold text-foreground">{showName}</p>
-                  <p className="truncate text-xs text-muted-foreground">@{username}</p>
+                  <p className="truncate text-xs text-muted-foreground">Edit profile</p>
                 </div>
                 <ChevronRight
                   className={cn(
@@ -263,6 +331,25 @@ export function EditProfileDialog({
             </div>
 
             <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto px-6 py-5 sm:px-8 sm:py-6">
+              {activeSection === "account" && (
+                <div className="space-y-4 rounded-lg border border-border/80 bg-muted/5 p-4 sm:p-5">
+                  <div>
+                    <Label htmlFor="account-username" className="text-xs font-medium text-muted-foreground">
+                      Username
+                    </Label>
+                    <Input
+                      id="account-username"
+                      value={username}
+                      disabled
+                      className="mt-1.5 bg-muted/30"
+                    />
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Your username cannot be changed here.
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {activeSection === "profile" && (
                 <div className="space-y-8">
                   <div className="space-y-4 rounded-lg border border-border/80 bg-muted/5 p-4 sm:p-5">
@@ -331,52 +418,12 @@ export function EditProfileDialog({
               )}
 
               {activeSection === "social" && (
-                <div className="space-y-4 rounded-lg border border-border/80 bg-muted/5 p-4 sm:p-5">
-                  <div>
-                    <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Links</h3>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      Optional URLs. Leave blank to hide a link on your profile.
-                    </p>
-                  </div>
-                  <div className="space-y-5">
-                    <div className="space-y-1.5">
-                      <Label htmlFor="social-website" className="text-xs font-medium text-muted-foreground">
-                        Website
-                      </Label>
-                      <Input
-                        id="social-website"
-                        value={linkWebsite}
-                        onChange={(e) => setLinkWebsite(e.target.value)}
-                        placeholder="https://"
-                        className="bg-background/80"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="social-twitter" className="text-xs font-medium text-muted-foreground">
-                        X (Twitter)
-                      </Label>
-                      <Input
-                        id="social-twitter"
-                        value={linkTwitter}
-                        onChange={(e) => setLinkTwitter(e.target.value)}
-                        placeholder="https://x.com/username"
-                        className="bg-background/80"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="social-instagram" className="text-xs font-medium text-muted-foreground">
-                        Instagram
-                      </Label>
-                      <Input
-                        id="social-instagram"
-                        value={linkInstagram}
-                        onChange={(e) => setLinkInstagram(e.target.value)}
-                        placeholder="https://instagram.com/username"
-                        className="bg-background/80"
-                      />
-                    </div>
-                  </div>
-                </div>
+                <ConnectionsEditor
+                  urls={socialUrls}
+                  onChange={setSocialUrls}
+                  display={socialDisplay}
+                  onDisplayChange={setSocialDisplay}
+                />
               )}
             </div>
 

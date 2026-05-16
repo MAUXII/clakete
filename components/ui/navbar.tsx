@@ -7,8 +7,11 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
   NavigationMenuTrigger,
+  isMoviesNavActive,
+  isNavHrefActive,
+  isSeriesNavActive,
   navigationMenuTriggerStyle,
-  } from "@/components/ui/navigation-menu"
+} from "@/components/ui/navigation-menu"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./dropdown-menu"
 import { FiUser } from "react-icons/fi"
 import { RiLoginBoxLine } from "react-icons/ri"
@@ -32,7 +35,7 @@ import { Skeleton } from "./skeleton"
 
 import { SearchCommand } from "../movies/search-command"
 import { useSupabaseClient } from '@supabase/auth-helpers-react'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useProfile } from "@/components/providers/profile-provider"
 import { profileAvatarPresentation } from "@/lib/profile-media"
 import { avatarDisplaySrc, remoteImageSrcLooksLikeGif } from "@/lib/next-remote-image"
@@ -49,6 +52,7 @@ export function Navbar() {
   const navAvatar = profile ? profileAvatarPresentation(profile) : null
   const supabase = useSupabaseClient()
   const router = useRouter()
+  const pathname = usePathname()
 
 
   const handleSignOut = async () => {
@@ -111,6 +115,21 @@ export function Navbar() {
     },
   ] as const
 
+  const navLinkHover =
+    "transition-colors hover:bg-[#FF0048]/10 hover:text-[#e8486b] dark:hover:bg-[#FF0048]/14 dark:hover:text-[#ff9eb0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0048]/25"
+
+  const navMegaLinkAccent =
+    "bg-[#FF0048]/10 text-[#e8486b] dark:bg-[#FF0048]/14 dark:text-[#ff9eb0]"
+
+  const profileMenuItemClass = cn(
+    "cursor-pointer rounded-md text-zinc-200 outline-none transition-colors",
+    "focus:bg-transparent focus:text-zinc-200",
+    "data-[highlighted]:bg-[#FF0048]/10 data-[highlighted]:text-[#e8486b]",
+    "dark:data-[highlighted]:bg-[#FF0048]/14 dark:data-[highlighted]:text-[#ff9eb0]",
+    "focus-visible:bg-[#FF0048]/10 focus-visible:text-[#e8486b]",
+    "dark:focus-visible:bg-[#FF0048]/14 dark:focus-visible:text-[#ff9eb0]",
+  )
+
   return (
     <header className="pointer-events-none fixed inset-x-0 top-0 z-[50] w-full pt-[env(safe-area-inset-top,0px)]">
       <div
@@ -160,7 +179,7 @@ export function Navbar() {
           </NavigationMenuItem >
 
           <NavigationMenuItem className="py-2  ">
-            <NavigationMenuTrigger>
+            <NavigationMenuTrigger active={isMoviesNavActive(pathname)}>
             <LuClapperboard />
             Movies
             </NavigationMenuTrigger >
@@ -181,7 +200,9 @@ export function Navbar() {
                     "border border-white/[0.06] bg-zinc-900/40",
                   )}
                 >
-                  {movieNavLinks.map(({ href, title, description, Icon }, index) => (
+                  {movieNavLinks.map(({ href, title, description, Icon }, index) => {
+                    const isActive = isNavHrefActive(pathname, href)
+                    return (
                     <li
                       key={href}
                       className={cn(
@@ -193,31 +214,56 @@ export function Navbar() {
                         href={href}
                         className={cn(
                           "group flex h-full w-full min-h-0 items-center gap-3 px-3 py-2 sm:px-4",
-                          "transition-[background-color,color,transform] duration-200 hover:bg-white/[0.06] active:scale-[0.99]",
-                          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/20",
+                          "transition-[background-color,color,transform] duration-200 active:scale-[0.99]",
+                          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#FF0048]/25",
+                          isActive
+                            ? navMegaLinkAccent
+                            : "hover:bg-[#FF0048]/10 dark:hover:bg-[#FF0048]/14",
                         )}
                       >
-                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-zinc-800/70 text-zinc-400 transition-colors group-hover:bg-zinc-800 group-hover:text-[#FF335F]">
+                        <span
+                          className={cn(
+                            "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-zinc-800/70 text-zinc-400 transition-colors",
+                            isActive
+                              ? navMegaLinkAccent
+                              : "group-hover:bg-[#FF0048]/10 group-hover:text-[#e8486b] dark:group-hover:bg-[#FF0048]/14 dark:group-hover:text-[#ff9eb0]",
+                          )}
+                        >
                           <Icon className="h-4 w-4" aria-hidden />
                         </span>
                         <span className="min-w-0 flex-1 leading-snug">
-                          <span className="block text-sm font-semibold tracking-tight text-zinc-100 transition-colors group-hover:text-white">
+                          <span
+                            className={cn(
+                              "block text-sm font-semibold tracking-tight transition-colors",
+                              isActive
+                                ? "text-[#e8486b] dark:text-[#ff9eb0]"
+                                : "text-zinc-100 group-hover:text-[#e8486b] dark:group-hover:text-[#ff9eb0]",
+                            )}
+                          >
                             {title}
                           </span>
-                          <span className="mt-0.5 block text-[11px] text-zinc-500 transition-colors group-hover:text-zinc-400 sm:text-xs">
+                          <span
+                            className={cn(
+                              "mt-0.5 block text-[11px] transition-colors sm:text-xs",
+                              isActive
+                                ? "text-[#e8486b]/80 dark:text-[#ff9eb0]/75"
+                                : "text-zinc-500 group-hover:text-[#e8486b]/80 dark:group-hover:text-[#ff9eb0]/75",
+                            )}
+                          >
                             {description}
                           </span>
                         </span>
                       </Link>
                     </li>
-                  ))}
+                    )
+                  })}
                 </ul>
               </div>
             </NavigationMenuContent>
           </NavigationMenuItem>
 
           <NavigationMenuItem className="py-2  ">
-            <NavigationMenuTrigger>
+            <NavigationMenuTrigger active={isSeriesNavActive(pathname)}>
             <LuTv />
             Series
             </NavigationMenuTrigger >
@@ -238,7 +284,9 @@ export function Navbar() {
                     "border border-white/[0.06] bg-zinc-900/40",
                   )}
                 >
-                  {seriesNavLinks.map(({ href, title, description, Icon }, index) => (
+                  {seriesNavLinks.map(({ href, title, description, Icon }, index) => {
+                    const isActive = isNavHrefActive(pathname, href)
+                    return (
                     <li
                       key={href}
                       className={cn(
@@ -250,24 +298,49 @@ export function Navbar() {
                         href={href}
                         className={cn(
                           "group flex h-full w-full min-h-0 items-center gap-3 px-3 py-2 sm:px-4",
-                          "transition-[background-color,color,transform] duration-200 hover:bg-white/[0.06] active:scale-[0.99]",
-                          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/20",
+                          "transition-[background-color,color,transform] duration-200 active:scale-[0.99]",
+                          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#FF0048]/25",
+                          isActive
+                            ? navMegaLinkAccent
+                            : "hover:bg-[#FF0048]/10 dark:hover:bg-[#FF0048]/14",
                         )}
                       >
-                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-zinc-800/70 text-zinc-400 transition-colors group-hover:bg-zinc-800 group-hover:text-[#FF335F]">
+                        <span
+                          className={cn(
+                            "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-zinc-800/70 text-zinc-400 transition-colors",
+                            isActive
+                              ? navMegaLinkAccent
+                              : "group-hover:bg-[#FF0048]/10 group-hover:text-[#e8486b] dark:group-hover:bg-[#FF0048]/14 dark:group-hover:text-[#ff9eb0]",
+                          )}
+                        >
                           <Icon className="h-4 w-4" aria-hidden />
                         </span>
                         <span className="min-w-0 flex-1 leading-snug">
-                          <span className="block text-sm font-semibold tracking-tight text-zinc-100 transition-colors group-hover:text-white">
+                          <span
+                            className={cn(
+                              "block text-sm font-semibold tracking-tight transition-colors",
+                              isActive
+                                ? "text-[#e8486b] dark:text-[#ff9eb0]"
+                                : "text-zinc-100 group-hover:text-[#e8486b] dark:group-hover:text-[#ff9eb0]",
+                            )}
+                          >
                             {title}
                           </span>
-                          <span className="mt-0.5 block text-[11px] text-zinc-500 transition-colors group-hover:text-zinc-400 sm:text-xs">
+                          <span
+                            className={cn(
+                              "mt-0.5 block text-[11px] transition-colors sm:text-xs",
+                              isActive
+                                ? "text-[#e8486b]/80 dark:text-[#ff9eb0]/75"
+                                : "text-zinc-500 group-hover:text-[#e8486b]/80 dark:group-hover:text-[#ff9eb0]/75",
+                            )}
+                          >
                             {description}
                           </span>
                         </span>
                       </Link>
                     </li>
-                  ))}
+                    )
+                  })}
                 </ul>
               </div>
             </NavigationMenuContent>
@@ -288,7 +361,7 @@ export function Navbar() {
                   "flex size-11 items-center justify-center rounded-xl md:hidden",
                   "border border-white/[0.08] bg-white/[0.04] text-zinc-200",
                   "ring-1 ring-inset ring-white/[0.04]",
-                  "transition hover:border-white/[0.12] hover:bg-white/[0.07] hover:text-white",
+                  "transition hover:border-[#FF0048]/25 hover:bg-[#FF0048]/10 hover:text-[#e8486b] dark:hover:bg-[#FF0048]/14 dark:hover:text-[#ff9eb0]",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0048]/50",
                 )}
               >
@@ -306,12 +379,24 @@ export function Navbar() {
               <div className="mt-6 flex flex-col gap-6">
                 <nav className="flex flex-col gap-1">
                   <SheetClose asChild>
-                    <Link href="/" className="rounded-lg px-3 py-2 text-sm font-medium text-zinc-200 hover:bg-white/[0.06]">
+                    <Link
+                      href="/"
+                      className={cn(
+                        "rounded-lg px-3 py-2 text-sm font-medium",
+                        isNavHrefActive(pathname, "/") ? navMegaLinkAccent : cn("text-zinc-200", navLinkHover),
+                      )}
+                    >
                       Home
                     </Link>
                   </SheetClose>
                   <SheetClose asChild>
-                    <Link href="/lists" className="rounded-lg px-3 py-2 text-sm font-medium text-zinc-200 hover:bg-white/[0.06]">
+                    <Link
+                      href="/lists"
+                      className={cn(
+                        "rounded-lg px-3 py-2 text-sm font-medium",
+                        isNavHrefActive(pathname, "/lists") ? navMegaLinkAccent : cn("text-zinc-200", navLinkHover),
+                      )}
+                    >
                       Lists
                     </Link>
                   </SheetClose>
@@ -320,34 +405,60 @@ export function Navbar() {
                 <div className="space-y-2">
                   <p className="px-3 text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">Movies</p>
                   <div className="flex flex-col gap-1">
-                    {movieNavLinks.map(({ href, title, Icon }) => (
+                    {movieNavLinks.map(({ href, title, Icon }) => {
+                      const isActive = isNavHrefActive(pathname, href)
+                      return (
                       <SheetClose asChild key={href}>
                         <Link
                           href={href}
-                          className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-zinc-200 hover:bg-white/[0.06]"
+                          className={cn(
+                            "group flex items-center gap-2 rounded-lg px-3 py-2 text-sm",
+                            isActive ? navMegaLinkAccent : cn("text-zinc-200", navLinkHover),
+                          )}
                         >
-                          <Icon className="h-4 w-4 text-zinc-400" />
+                          <Icon
+                            className={cn(
+                              "h-4 w-4 transition-colors",
+                              isActive
+                                ? "text-[#e8486b] dark:text-[#ff9eb0]"
+                                : "text-zinc-400 group-hover:text-[#e8486b] dark:group-hover:text-[#ff9eb0]",
+                            )}
+                          />
                           {title}
                         </Link>
                       </SheetClose>
-                    ))}
+                      )
+                    })}
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   <p className="px-3 text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">Series</p>
                   <div className="flex flex-col gap-1">
-                    {seriesNavLinks.map(({ href, title, Icon }) => (
+                    {seriesNavLinks.map(({ href, title, Icon }) => {
+                      const isActive = isNavHrefActive(pathname, href)
+                      return (
                       <SheetClose asChild key={href}>
                         <Link
                           href={href}
-                          className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-zinc-200 hover:bg-white/[0.06]"
+                          className={cn(
+                            "group flex items-center gap-2 rounded-lg px-3 py-2 text-sm",
+                            isActive ? navMegaLinkAccent : cn("text-zinc-200", navLinkHover),
+                          )}
                         >
-                          <Icon className="h-4 w-4 text-zinc-400" />
+                          <Icon
+                            className={cn(
+                              "h-4 w-4 transition-colors",
+                              isActive
+                                ? "text-[#e8486b] dark:text-[#ff9eb0]"
+                                : "text-zinc-400 group-hover:text-[#e8486b] dark:group-hover:text-[#ff9eb0]",
+                            )}
+                          />
                           {title}
                         </Link>
                       </SheetClose>
-                    ))}
+                      )
+                    })}
                   </div>
                 </div>
               </div>
@@ -360,8 +471,9 @@ export function Navbar() {
               "flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-xl sm:size-12",
               "border border-white/[0.08] bg-white/[0.04] text-zinc-200",
               "ring-1 ring-inset ring-white/[0.04]",
-              "transition hover:border-white/[0.12] hover:bg-white/[0.07] hover:text-white",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0048]/50",
+              "transition hover:border-[#FF0048]/25 hover:bg-[#FF0048]/10 hover:text-[#e8486b] dark:hover:bg-[#FF0048]/14 dark:hover:text-[#ff9eb0]",
+              "outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0048]/50",
+              "data-[state=open]:border-white/[0.12] data-[state=open]:ring-1 data-[state=open]:ring-inset data-[state=open]:ring-white/[0.08]",
             )}
           >
       {!loading && (
@@ -389,37 +501,38 @@ export function Navbar() {
           <DropdownMenuContent
             align="end"
             sideOffset={8}
-            className="min-w-[10.5rem] rounded-xl border border-white/[0.08] bg-zinc-950/95 p-1 text-zinc-100 shadow-2xl shadow-black/50 backdrop-blur-xl"
+            onCloseAutoFocus={(e) => e.preventDefault()}
+            className="min-w-[10.5rem] rounded-xl border border-white/[0.08] bg-zinc-950/95 p-1 shadow-2xl shadow-black/50 backdrop-blur-xl"
           >
       {profile ? (
         <>
-        <DropdownMenuItem asChild>
+        <DropdownMenuItem asChild className={profileMenuItemClass}>
           <Link href={`/${profile.username}`}>
             Profile
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem asChild>
+        <DropdownMenuItem asChild className={profileMenuItemClass}>
           <Link href={`/${profile.username}/films`}>
             Films
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem asChild>
+        <DropdownMenuItem asChild className={profileMenuItemClass}>
           <Link href={`/${profile.username}/watchlist`}>
             Watchlist
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem asChild>
+        <DropdownMenuItem asChild className={profileMenuItemClass}>
           <Link href="/lists">
             Lists
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={handleSignOut}>
+        <DropdownMenuItem onClick={handleSignOut} className={profileMenuItemClass}>
           Sign Out
         </DropdownMenuItem>
       </>
         ) : (
           <>
-        <DropdownMenuItem asChild>
+        <DropdownMenuItem asChild className={profileMenuItemClass}>
           <Link href="/sign-in">
             <RiLoginBoxLine className="mr-2 h-4 w-4" />
             Sign In
