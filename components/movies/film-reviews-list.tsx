@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useSupabaseClient } from '@supabase/auth-helpers-react';
 import { FaStar } from "react-icons/fa";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { avatarDisplaySrc } from "@/lib/next-remote-image";
 import Link from "next/link";
 
 interface Review {
@@ -120,7 +121,7 @@ export function FilmReviewsList({ filmId, mediaType = "movie" }: FilmReviewsList
             <div className="flex items-center gap-2">
               <Link href={`/${review.userData?.username}`}>
             <Avatar className="h-11 w-11 rounded-md border dark:border-white/20 border-black/20 aspect-square">
-              <AvatarImage src={review.userData?.avatar_url || undefined} alt={review.userData?.display_name || review.userData?.username || ''} />
+              <AvatarImage src={avatarDisplaySrc(review.userData?.avatar_url) || undefined} alt={review.userData?.display_name || review.userData?.username || ''} />
               <AvatarFallback className="rounded-md text-2xl font-semibold w-full flex">{(review.userData?.display_name?.[0] || review.userData?.username?.[0] || 'U').toUpperCase()}</AvatarFallback>
             </Avatar>
             </Link>

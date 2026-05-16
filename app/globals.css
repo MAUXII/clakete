@@ -60,9 +60,10 @@ body {
   font-family: 'Poppins', sans-serif; 
 }
 
-/* Estilo personalizado da scrollbar */
+/* Estilo personalizado da scrollbar — fina, quadrada, sem setas (WebKit/Blink) */
 .custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
+  width: 4px;
+  height: 4px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
@@ -70,8 +71,23 @@ body {
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background-color: hsl(var(--muted-foreground) / 0.3);
-  border-radius: 0px;
+  background-color: hsl(var(--muted-foreground) / 0.35);
+  border-radius: 0;
+}
+
+.custom-scrollbar::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+.custom-scrollbar::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--muted-foreground) / 0.35) transparent;
 }
 
 /* Layout Masonry */

@@ -516,10 +516,12 @@ function SortableItemHandle(props: SortableItemHandleProps) {
 const SortableOverlayContext = React.createContext(false);
 
 const dropAnimation: DropAnimation = {
+  duration: 200,
+  easing: "ease",
   sideEffects: defaultDropAnimationSideEffects({
     styles: {
       active: {
-        opacity: "0.4",
+        opacity: "1",
       },
     },
   }),

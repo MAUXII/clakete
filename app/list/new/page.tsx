@@ -23,6 +23,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useProfile } from "@/components/providers/profile-provider"
 import { userProfilePath } from "@/lib/list-href"
 import { profileAvatarPresentation } from "@/lib/profile-media"
+import { avatarDisplaySrc } from "@/lib/next-remote-image"
 import { playListFinishConfetti } from "@/lib/list-finish-confetti"
 import { tmdbStoredImagePresentation } from "@/lib/tmdb-stored-image"
 
@@ -80,7 +81,7 @@ export default function NewListPage() {
     <>
       <Avatar className="h-11 w-11 border border-white/10 ring-2 ring-background shadow-md">
         <AvatarImage
-          src={navAvatar?.src ?? undefined}
+          src={avatarDisplaySrc(navAvatar?.src) ?? undefined}
           alt={profile?.display_name || profile?.username || ""}
           style={
             navAvatar?.objectPosition ? { objectPosition: navAvatar.objectPosition } : undefined

@@ -21,8 +21,9 @@ const SERIES_NAV = [
   { href: "/series/upcoming", label: "Upcoming" },
 ] as const
 
-/** Só nestas rotas o conteúdo do shell fica abaixo da navbar fixa (`mt-28`). */
+/** Nestas rotas o conteúdo do shell fica abaixo da navbar fixa (`mt-28`). */
 const CATALOG_NAVBAR_OFFSET_ROUTES = new Set<string>([
+  "/lists",
   ...FILMS_NAV.map((x) => x.href),
   ...SERIES_NAV.map((x) => x.href),
 ])

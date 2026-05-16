@@ -23,6 +23,7 @@ import {
   writePublicProfileCache,
 } from "@/lib/profile-public-cache"
 import { profileBannerPresentation, profileAvatarPresentation } from "@/lib/profile-media"
+import { avatarDisplaySrc } from "@/lib/next-remote-image"
 import type { Json } from "@/lib/supabase/database.types"
 
 interface UserData extends ProfileLayoutUser {
@@ -511,7 +512,7 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
 
       <div className="mx-auto w-full max-w-6xl">
       {/* Profile info */}
-      <div className="w-full px-8">
+      <div className="w-full">
         <div className="relative z-10">
           <div className="flex flex-wrap gap-6 lg:flex-nowrap lg:items-stretch">
           <div className="flex flex-col w-full gap-6">
@@ -520,7 +521,7 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
             <div className="relative -mt-24 aspect-square ring-2  dark:ring-[#090909] ring-white   shadow-sm  overflow-clip h-36 group rounded-2xl max-w-36">
             <Avatar className="w-full h-full rounded-md shadow-none ">
               <AvatarImage
-                src={avatarDisplay.src || undefined}
+                src={avatarDisplaySrc(avatarDisplay.src, { allowGifPlayback: true }) || undefined}
                 alt={userData.display_name || userData.username || ''}
                 className="object-cover"
                 style={
@@ -583,11 +584,12 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
 
                   {isOwnProfile ? (
                     <div className="ml-4">
-                      <EditProfileDialog
-                        username={userData.username}
-                        displayName={userData.display_name}
-                        bio={userData.bio}
-                        websiteUrl={userData.website_url ?? undefined}
+                  <EditProfileDialog
+                    username={userData.username}
+                    displayName={userData.display_name}
+                    bio={userData.bio}
+                    avatarUrl={userData.avatar_url ?? undefined}
+                    websiteUrl={userData.website_url ?? undefined}
                         twitterUrl={userData.twitter_url ?? undefined}
                         instagramUrl={userData.instagram_url ?? undefined}
                         homePreferences={userData.home_preferences ?? null}

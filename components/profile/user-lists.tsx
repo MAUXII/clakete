@@ -139,7 +139,7 @@ export function UserLists({
                   "group relative flex h-full min-h-0 flex-col",
                   compactCards
                     ? "overflow-visible rounded-xl"
-                    : "overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-shadow hover:shadow-md",
+                    : "overflow-hidden rounded-2xl border border-border bg-card",
                 )}
               >
                 {canEdit && (
@@ -286,7 +286,7 @@ export function UserLists({
                 "group relative flex h-full min-h-0 flex-col",
                 compactCards
                   ? "overflow-visible rounded-xl"
-                  : "overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-shadow hover:shadow-md",
+                  : "overflow-hidden rounded-2xl border border-border bg-card",
               )}
             >
               {canEdit && (

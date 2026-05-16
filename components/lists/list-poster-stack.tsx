@@ -105,7 +105,7 @@ export function ListPosterStack({ posters, className, compact = false }: Props) 
   return (
     <div
       className={cn(
-        "mx-auto flex w-max max-w-full min-w-0 items-end justify-center px-0.5 drop-shadow-[0_16px_32px_rgba(0,0,0,0.24)] transition-transform duration-300 ease-out dark:drop-shadow-[0_20px_40px_rgba(0,0,0,0.55)] group-hover:-translate-y-0.5 group-hover:scale-[1.015]",
+        "mx-auto flex w-max max-w-full min-w-0 items-end justify-center px-0.5",
         className,
       )}
       aria-hidden
@@ -114,7 +114,7 @@ export function ListPosterStack({ posters, className, compact = false }: Props) 
         <div
           key={i}
           className={cn(
-            "relative aspect-[2/3] shrink-0 origin-bottom overflow-hidden rounded-xl bg-gradient-to-b from-muted to-muted/70 ring-[3px] ring-card shadow-[0_4px_16px_-2px_rgba(0,0,0,0.3)] dark:from-muted/90 dark:to-muted/45 dark:shadow-[0_6px_20px_-4px_rgba(0,0,0,0.52)]",
+            "relative aspect-[2/3] shrink-0 origin-bottom overflow-hidden rounded-xl bg-gradient-to-b from-muted to-muted/70 ring-2 ring-card dark:from-muted/90 dark:to-muted/45",
             "w-[3.95rem] sm:w-[4.55rem] lg:w-[5.25rem]",
             i > 0 && "-ml-[1.18rem] sm:-ml-[1.38rem] lg:-ml-[1.58rem]",
           )}
@@ -128,7 +128,7 @@ export function ListPosterStack({ posters, className, compact = false }: Props) 
               src={posterSrc(path)}
               alt=""
               fill
-              className="object-cover transition-[filter,transform] duration-300 ease-out group-hover:brightness-[1.06]"
+              className="object-cover object-center"
               sizes="(max-width: 640px) 48vw, (max-width: 1024px) 165px, 200px"
             />
           ) : (

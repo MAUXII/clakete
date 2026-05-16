@@ -1,14 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useSupabaseClient, useUser } from "@supabase/auth-helpers-react";
 import { Database } from "@/lib/supabase/database.types";
 import { List, ListItem } from "@/types/list";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Plus, Heart, Copy, Share2, Tags, LayoutGrid, List as ListIcon, Clock3, Pencil } from "lucide-react";
+import { Plus, Heart, Copy, Share2, Tags, LayoutGrid, List as ListIcon, Clock3, Pencil, GripVertical } from "lucide-react";
 import Link from "next/link";
+import { toast } from "sonner";
+import { rectSortingStrategy, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { useLists } from "@/hooks/use-lists";
 import { CommandDialog } from "@/components/ui/command";
 import { useDebounce } from "@/hooks/use-debounce";
@@ -22,11 +24,97 @@ import { IoTrashOutline } from "react-icons/io5";
 import { userProfilePath } from "@/lib/list-href";
 import { listBannerPresentation, parseListBannerMeta } from "@/lib/list-banner";
 import { FilmsCatalogShell } from "@/components/films/films-catalog-shell";
+import { avatarDisplaySrc } from "@/lib/next-remote-image";
 import { EditListDialog } from "@/components/profile/edit-list-dialog";
 import { cn } from "@/lib/utils";
+import type { DragStartEvent } from "@dnd-kit/core";
+import { motion } from "framer-motion";
+import { Sortable, SortableContent, SortableItem, SortableOverlay } from "@/components/ui/sortable";
 
 /** Igual ao hero em `app/film/[id]/page.tsx` — altura responsiva + full-bleed + fades. */
-const LIST_LETTERBOX_HEIGHT = "clamp(400px, min(60vh, 680px), 780px)"
+const LIST_LETTERBOX_HEIGHT = "clamp(400px, min(60vh, 680px), 780px)";
+
+const REORDER_SHELL_DURATION_S = 0.55;
+const REORDER_SHELL_EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
+/** Margem após a animação do padding antes de desmontar o modo reorder. */
+const REORDER_SHELL_MS = Math.ceil(REORDER_SHELL_DURATION_S * 1000) + 90;
+
+function normalizeDragBox(
+  r: { width: number; height: number } | null | undefined,
+): { w: number; h: number } | null {
+  if (!r) return null;
+  const w = Math.round(r.width);
+  const h = Math.round(r.height);
+  if (w < 8 || h < 8) return null;
+  return { w, h };
+}
+
+/** Same TMDB size as the reorder row — avoids a second fetch + flash when the drag overlay mounts. */
+const LIST_REORDER_POSTER_GRID = "w500" as const;
+const LIST_REORDER_POSTER_LIST = "w185" as const;
+
+/** Rect do dnd-kit no start pode vir vazio; usa DOM + rAF como em layouts responsivos. */
+function measureListReorderDragBox(e: DragStartEvent): { w: number; h: number } | null {
+  const cur = e.active.rect.current;
+  const fromKit =
+    normalizeDragBox(cur.initial) ?? normalizeDragBox(cur.translated);
+  if (fromKit) return fromKit;
+
+  const act = e.activatorEvent;
+  if (act && "target" in act) {
+    const t = act.target;
+    if (t instanceof Element) {
+      const li = t.closest("li");
+      if (li) return normalizeDragBox(li.getBoundingClientRect());
+    }
+  }
+  return null;
+}
+
+/** Tamanho congelado no drag start — evita encolher no drop quando o rect do kit anima/zera. */
+function ListReorderDragPreview({
+  film,
+  box,
+  posterProfile,
+  variant,
+}: {
+  film: ListItem;
+  box: { w: number; h: number } | null;
+  posterProfile: typeof LIST_REORDER_POSTER_GRID | typeof LIST_REORDER_POSTER_LIST;
+  variant: "grid" | "list";
+}) {
+  const w = box?.w ?? 0;
+  const h = box?.h ?? 0;
+  const hasSize = w > 4 && h > 4;
+  const src = film.poster_path?.trim()
+    ? `https://image.tmdb.org/t/p/${posterProfile}${film.poster_path}`
+    : null;
+  return (
+    <div
+      style={hasSize ? { width: w, height: h } : undefined}
+      className={cn(
+        variant === "grid" &&
+          "overflow-hidden rounded-md border border-black/15 dark:border-white/15",
+        variant === "list" && "overflow-hidden rounded",
+        !hasSize && variant === "grid" && "aspect-[2/3] w-[5.5rem]",
+        !hasSize && variant === "list" && "h-14 w-10",
+      )}
+    >
+      {src ? (
+        <img
+          src={src}
+          alt=""
+          draggable={false}
+          className="h-full w-full object-cover"
+        />
+      ) : (
+        <div className="flex h-full items-center justify-center bg-muted text-xs text-muted-foreground">
+          …
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function UserListDetailPage() {
   const params = useParams();
@@ -35,7 +123,7 @@ export default function UserListDetailPage() {
   const supabase = useSupabaseClient<Database>();
   const router = useRouter();
   const currentUser = useUser();
-  const { addItemToList, removeItemFromList, updateList, fetchListLikesMeta, toggleListLike } = useLists();
+  const { addItemToList, removeItemFromList, updateList, fetchListLikesMeta, toggleListLike, reorderListItems } = useLists();
 
   const [list, setList] = useState<List | null>(null);
   const [listId, setListId] = useState<string | null>(null);
@@ -50,6 +138,16 @@ export default function UserListDetailPage() {
   const [showBannerEdit, setShowBannerEdit] = useState(false);
   const [editListDialogOpen, setEditListDialogOpen] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [reorderMode, setReorderMode] = useState(false);
+  const [reorderShellExpanded, setReorderShellExpanded] = useState(false);
+  const [reorderShellBorder, setReorderShellBorder] = useState(false);
+  const [reorderLeaving, setReorderLeaving] = useState(false);
+  const [filmsBeforeReorder, setFilmsBeforeReorder] = useState<ListItem[] | null>(null);
+  const [reorderSaving, setReorderSaving] = useState(false);
+  const reorderCollapseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const reorderWasActiveRef = useRef(false);
+  const reorderAnimEpochRef = useRef(0);
+  const [listReorderDragBox, setListReorderDragBox] = useState<{ w: number; h: number } | null>(null);
 
   const [likeCount, setLikeCount] = useState(0);
   const [userLiked, setUserLiked] = useState(false);
@@ -57,6 +155,42 @@ export default function UserListDetailPage() {
   const [watchedInList, setWatchedInList] = useState(0);
 
   const canEdit = currentUser?.id === list?.user_id;
+
+  useLayoutEffect(() => {
+    const active = !!(reorderMode && canEdit);
+    if (!active) {
+      setReorderShellExpanded(false);
+      setReorderShellBorder(false);
+      setListReorderDragBox(null);
+      reorderWasActiveRef.current = false;
+      return;
+    }
+    const entering = active && !reorderWasActiveRef.current;
+    reorderWasActiveRef.current = true;
+    if (!entering) return;
+    const epoch = reorderAnimEpochRef.current;
+    setReorderShellExpanded(false);
+    setReorderShellBorder(false);
+    const id = requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (reorderAnimEpochRef.current !== epoch) return;
+        setReorderShellBorder(true);
+        setReorderShellExpanded(true);
+      });
+    });
+    return () => cancelAnimationFrame(id);
+  }, [reorderMode, canEdit]);
+
+  useEffect(
+    () => () => {
+      if (reorderCollapseTimerRef.current) {
+        clearTimeout(reorderCollapseTimerRef.current);
+        reorderCollapseTimerRef.current = null;
+      }
+    },
+    [],
+  );
+
 
   const filmsProgressKey = useMemo(
     () => films.map((f) => `${f.tmdb_id}:${f.id}:${f.media_type ?? "movie"}`).join("|"),
@@ -227,6 +361,93 @@ export default function UserListDetailPage() {
       router.replace(`/${profileUsername}/list/${encodeURIComponent(nextSlug)}`);
     }
   }, [listId, supabase, films.length, listSlug, profileUsername, router]);
+
+  const reloadListItems = useCallback(async () => {
+    if (!listId) return;
+    const { data, error } = await supabase
+      .from("list_items")
+      .select("*")
+      .eq("list_id", listId)
+      .order("position");
+    if (error || !data) return;
+    setFilms(
+      data.map((row) => ({
+        ...row,
+        id: String(row.id),
+      })) as ListItem[],
+    );
+  }, [listId, supabase]);
+
+  const handleListReorderDragStart = useCallback((e: DragStartEvent) => {
+    const apply = () => {
+      const m = measureListReorderDragBox(e);
+      if (m) setListReorderDragBox(m);
+    };
+    apply();
+    requestAnimationFrame(() => {
+      apply();
+      requestAnimationFrame(apply);
+    });
+  }, []);
+
+  const enterReorder = useCallback(() => {
+    reorderAnimEpochRef.current += 1;
+    setListReorderDragBox(null);
+    setFilmsBeforeReorder(films.map((f) => ({ ...f })));
+    setReorderLeaving(false);
+    if (reorderCollapseTimerRef.current) {
+      clearTimeout(reorderCollapseTimerRef.current);
+      reorderCollapseTimerRef.current = null;
+    }
+    setReorderMode(true);
+  }, [films]);
+
+  const cancelReorder = useCallback(() => {
+    reorderAnimEpochRef.current += 1;
+    if (filmsBeforeReorder) setFilms(filmsBeforeReorder);
+    setFilmsBeforeReorder(null);
+    setReorderShellBorder(false);
+    requestAnimationFrame(() => setReorderShellExpanded(false));
+    setReorderLeaving(true);
+    if (reorderCollapseTimerRef.current) {
+      clearTimeout(reorderCollapseTimerRef.current);
+    }
+    reorderCollapseTimerRef.current = setTimeout(() => {
+      reorderCollapseTimerRef.current = null;
+      setReorderMode(false);
+      setReorderLeaving(false);
+    }, REORDER_SHELL_MS);
+  }, [filmsBeforeReorder]);
+
+  const confirmReorder = useCallback(async () => {
+    if (!listId) return;
+    setReorderSaving(true);
+    try {
+      const ordered = films.map((f, i) => ({ ...f, position: i + 1 }));
+      const ok = await reorderListItems(listId, ordered);
+      if (!ok) {
+        toast.error("Could not save order.");
+        return;
+      }
+      toast.success("Order updated.");
+      await reloadListItems();
+      setFilmsBeforeReorder(null);
+      reorderAnimEpochRef.current += 1;
+      setReorderShellBorder(false);
+      requestAnimationFrame(() => setReorderShellExpanded(false));
+      setReorderLeaving(true);
+      if (reorderCollapseTimerRef.current) {
+        clearTimeout(reorderCollapseTimerRef.current);
+      }
+      reorderCollapseTimerRef.current = setTimeout(() => {
+        reorderCollapseTimerRef.current = null;
+        setReorderMode(false);
+        setReorderLeaving(false);
+      }, REORDER_SHELL_MS);
+    } finally {
+      setReorderSaving(false);
+    }
+  }, [listId, films, reorderListItems, reloadListItems]);
 
   const handleFilmSelect = async (selectedMovie: Movie) => {
     if (!canEdit || !currentUser || !listId) return;
@@ -422,7 +643,7 @@ export default function UserListDetailPage() {
             >
               <Avatar className="h-11 w-11 border border-white/10 ring-2 ring-background shadow-md">
                 <AvatarImage
-                  src={list.userData?.avatar_url || undefined}
+                  src={avatarDisplaySrc(list.userData?.avatar_url) || undefined}
                   alt={list.userData?.display_name || list.userData?.username || ""}
                 />
                 <AvatarFallback className="bg-muted text-sm font-semibold">
@@ -439,17 +660,23 @@ export default function UserListDetailPage() {
               </div>
             </Link>
 
-            <div className="inline-flex items-center gap-2">
+            <div className="inline-flex flex-wrap items-center justify-end gap-2">
               <span className="inline-flex items-center gap-1.5 rounded-full border border-border/50 bg-card/40 px-2.5 py-1 text-[11px] text-muted-foreground">
                 <Clock3 className="h-3 w-3" />
                 Updated {new Date(list.updated_at).toLocaleDateString("en-US")}
               </span>
-              <div className="inline-flex items-center rounded-full border border-border/60 bg-card/60 p-1 shadow-sm">
+              <div
+                className={cn(
+                  "inline-flex items-center rounded-full border border-border/60 bg-card/60 p-1 shadow-sm",
+                  reorderMode && "pointer-events-none opacity-50",
+                )}
+              >
                 <button
                   type="button"
                   onClick={() => setViewMode("grid")}
                   aria-label="Grid view"
                   title="Grid"
+                  disabled={reorderMode}
                   className={`rounded-full p-1.5 transition-colors ${
                     viewMode === "grid"
                       ? "border border-[#FF0048]/20 bg-[#280F16] text-[#FF0048] hover:bg-[#280F16]"
@@ -463,6 +690,7 @@ export default function UserListDetailPage() {
                   onClick={() => setViewMode("list")}
                   aria-label="List view"
                   title="List"
+                  disabled={reorderMode}
                   className={`rounded-full p-1.5 transition-colors ${
                     viewMode === "list"
                       ? "border border-[#FF0048]/20 bg-[#280F16] text-[#FF0048] hover:bg-[#280F16]"
@@ -472,6 +700,46 @@ export default function UserListDetailPage() {
                   <ListIcon className="h-3.5 w-3.5" />
                 </button>
               </div>
+              {canEdit && films.length > 0 ? (
+                <div className="flex flex-wrap items-center gap-2">
+                  {reorderMode && !reorderLeaving ? (
+                    <>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-8 rounded-full px-3 text-xs"
+                        onClick={cancelReorder}
+                        disabled={reorderSaving}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        className="h-8 rounded-full bg-[#FF0048] px-3 text-xs text-white hover:bg-[#e60042]"
+                        onClick={() => void confirmReorder()}
+                        disabled={reorderSaving}
+                      >
+                        Done
+                      </Button>
+                    </>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-8 rounded-full border-border/60 px-3 text-xs disabled:pointer-events-none disabled:opacity-50"
+                      onClick={enterReorder}
+                      disabled={reorderMode}
+                      title={reorderMode ? "Aguarde a animação terminar" : undefined}
+                    >
+                      <GripVertical className="mr-1.5 h-3.5 w-3.5" />
+                      Reorder
+                    </Button>
+                  )}
+                </div>
+              ) : null}
             </div>
           </div>
 
@@ -499,7 +767,137 @@ export default function UserListDetailPage() {
               </div>
             ) : (
               <>
-                {viewMode === "grid" ? (
+                {reorderMode && canEdit ? (
+                  <motion.div
+                    key="list-reorder-shell"
+                    className="overflow-visible rounded-xl"
+                    animate={{
+                      padding: reorderShellExpanded ? 16 : 0,
+                      borderWidth: reorderShellBorder ? 1 : 0,
+                    }}
+                    transition={{
+                      padding: {
+                        type: "tween",
+                        duration: REORDER_SHELL_DURATION_S,
+                        ease: REORDER_SHELL_EASE,
+                      },
+                      borderWidth: reorderShellBorder
+                        ? {
+                            type: "tween",
+                            duration: REORDER_SHELL_DURATION_S,
+                            ease: REORDER_SHELL_EASE,
+                          }
+                        : { type: "tween", duration: 0 },
+                    }}
+                    style={{
+                      borderStyle: "dashed",
+                      borderColor: "rgba(255, 255, 255, 0.14)",
+                      boxSizing: "border-box",
+                    }}
+                  >
+                    <Sortable
+                      value={films}
+                      onValueChange={setFilms}
+                      getItemValue={(f) => f.id}
+                      orientation={viewMode === "list" ? "vertical" : "mixed"}
+                      modifiers={[]}
+                      onDragStart={handleListReorderDragStart}
+                    >
+                      <SortableContent
+                        asChild
+                        strategy={
+                          viewMode === "list"
+                            ? verticalListSortingStrategy
+                            : rectSortingStrategy
+                        }
+                      >
+                        <ul
+                          className={cn(
+                            "m-0 w-full list-none p-0",
+                            viewMode === "list"
+                              ? "flex flex-col gap-2"
+                              : "grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5",
+                          )}
+                        >
+                          {films.map((film, idx) =>
+                            viewMode === "list" ? (
+                              <SortableItem
+                                key={film.id}
+                                value={film.id}
+                                asChild
+                                asHandle
+                                className="data-[dragging]:bg-muted/50"
+                              >
+                                <li className="flex touch-none list-none select-none items-center gap-3 rounded-xl border border-border/60 bg-card/40 p-2 pr-3">
+                                  <span className="w-6 text-center text-xs font-semibold text-muted-foreground">
+                                    {idx + 1}
+                                  </span>
+                                  <div className="relative h-14 w-10 shrink-0 overflow-hidden rounded object-cover">
+                                    {film.poster_path ? (
+                                      <img
+                                        src={`https://image.tmdb.org/t/p/${LIST_REORDER_POSTER_LIST}${film.poster_path}`}
+                                        alt={film.title}
+                                        draggable={false}
+                                        className="h-full w-full object-cover"
+                                      />
+                                    ) : (
+                                      <div className="flex h-full w-full items-center justify-center bg-muted text-[10px] text-muted-foreground">
+                                        {(film.media_type ?? "movie") === "tv" ? "TV" : "?"}
+                                      </div>
+                                    )}
+                                  </div>
+                                </li>
+                              </SortableItem>
+                            ) : (
+                              <SortableItem
+                                key={film.id}
+                                value={film.id}
+                                asChild
+                                asHandle
+                                className="data-[dragging]:bg-muted/50"
+                              >
+                                <li className="relative aspect-[2/3] w-full min-w-0 touch-none list-none select-none">
+                                  <div className="relative h-full w-full overflow-hidden rounded-md border border-black/15 dark:border-white/15">
+                                    {film.poster_path ? (
+                                      <img
+                                        src={`https://image.tmdb.org/t/p/${LIST_REORDER_POSTER_GRID}${film.poster_path}`}
+                                        alt={film.title}
+                                        draggable={false}
+                                        className="h-full w-full object-cover"
+                                      />
+                                    ) : (
+                                      <div className="flex h-full w-full items-center justify-center bg-muted text-sm text-muted-foreground">
+                                        {(film.media_type ?? "movie") === "tv" ? "TV" : "?"}
+                                      </div>
+                                    )}
+                                  </div>
+                                </li>
+                              </SortableItem>
+                            )
+                          )}
+                        </ul>
+                      </SortableContent>
+                      <SortableOverlay className="shadow-none ring-0">
+                        {({ value }) => {
+                          const f = films.find((x) => x.id === value);
+                          if (!f) return null;
+                          return (
+                            <ListReorderDragPreview
+                              film={f}
+                              box={listReorderDragBox}
+                              posterProfile={
+                                viewMode === "list" ? LIST_REORDER_POSTER_LIST : LIST_REORDER_POSTER_GRID
+                              }
+                              variant={viewMode === "list" ? "list" : "grid"}
+                            />
+                          );
+                        }}
+                      </SortableOverlay>
+                    </Sortable>
+                  </motion.div>
+                ) : (
+                  <div className="w-full">
+                    {viewMode === "grid" ? (
                   <div className="grid w-full grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5">
                     {films.map((film) => (
                       <div
@@ -629,6 +1027,8 @@ export default function UserListDetailPage() {
                         )}
                       </div>
                     ))}
+                  </div>
+                )}
                   </div>
                 )}
               </>

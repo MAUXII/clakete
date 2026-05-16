@@ -26,7 +26,7 @@ export function HomePreferencesEditor({
   onChange: (prefs: UserHomePreferences) => void
   homeBackdropUrl?: string | null
   homeBackdropMeta?: Json | null
-  /** Após gravar/remover backdrop no dialog — recarrega `userData` no layout do perfil. */
+  /** After saving/removing backdrop in the dialog — refreshes profile layout `userData`. */
   onHomeBackdropUpdated?: () => void | Promise<void>
 }) {
   const [prefs, setPrefs] = useState<UserHomePreferences>(() =>
@@ -77,15 +77,15 @@ export function HomePreferencesEditor({
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       <div className="space-y-4">
-        <div>
-          <h3 className="text-sm font-medium text-foreground">Home sections</h3>
+        <div className="border-b border-border/60 pb-4">
+          <h3 className="text-sm font-semibold text-foreground">Home sections</h3>
           <p className="mt-1 text-sm text-muted-foreground">
             Choose what appears on your logged-in home page.
           </p>
         </div>
-        <div className="flex items-center justify-between gap-4 rounded-lg border border-border px-4 py-3">
+        <div className="flex items-center justify-between gap-4 rounded-md border border-border/80 bg-background/50 px-4 py-3">
           <Label htmlFor="home-now" className="cursor-pointer text-sm font-normal">
             Now showing carousel
           </Label>
@@ -95,7 +95,7 @@ export function HomePreferencesEditor({
             onCheckedChange={(v) => update({ ...prefs, show_now_showing: v })}
           />
         </div>
-        <div className="flex items-center justify-between gap-4 rounded-lg border border-border px-4 py-3">
+        <div className="flex items-center justify-between gap-4 rounded-md border border-border/80 bg-background/50 px-4 py-3">
           <Label htmlFor="home-up" className="cursor-pointer text-sm font-normal">
             Upcoming strip
           </Label>
@@ -105,7 +105,7 @@ export function HomePreferencesEditor({
             onCheckedChange={(v) => update({ ...prefs, show_upcoming: v })}
           />
         </div>
-        <div className="flex items-center justify-between gap-4 rounded-lg border border-border px-4 py-3">
+        <div className="flex items-center justify-between gap-4 rounded-md border border-border/80 bg-background/50 px-4 py-3">
           <Label htmlFor="home-rev" className="cursor-pointer text-sm font-normal">
             Recent reviews
           </Label>
@@ -117,16 +117,16 @@ export function HomePreferencesEditor({
         </div>
       </div>
 
-      <div className="space-y-3">
-        <div>
-          <h3 className="text-sm font-medium text-foreground">Home backdrop</h3>
+      <div className="space-y-4">
+        <div className="border-b border-border/60 pb-4">
+          <h3 className="text-sm font-semibold text-foreground">Home backdrop</h3>
           <p className="mt-1 text-sm text-muted-foreground">
             Same flow as profile banner: pick a film from TMDB, choose a backdrop, crop. Stored as
             path + crop (no title or TMDB id in the database).
           </p>
         </div>
 
-        <div className="overflow-hidden rounded-lg border border-border">
+        <div className="overflow-hidden rounded-md border border-border/80 bg-muted/20">
           <div
             className="relative aspect-[1152/487] max-h-[140px] w-full bg-muted"
             style={

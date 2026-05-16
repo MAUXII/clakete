@@ -113,7 +113,7 @@ export default function ListsPage() {
                 <div
                   key={i}
                   className={cn(
-                    "flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.02] shadow-sm shadow-black/20",
+                    "flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.02]",
                     listCardMinHeightClassName,
                   )}
                 >
@@ -182,7 +182,7 @@ export default function ListsPage() {
                 <ListCard
                   key={list.id}
                   list={list}
-                  className="h-full min-h-0 border-white/[0.08] bg-white/[0.02] shadow-black/20 hover:border-[#FF0048]/25 hover:shadow-[#FF0048]/10"
+                  className="h-full min-h-0 border border-white/[0.08] bg-white/[0.02] shadow-none hover:border-white/[0.08] hover:shadow-none"
                 />
               ))}
             </div>

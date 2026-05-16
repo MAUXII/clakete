@@ -12,6 +12,7 @@ const nextConfig: NextConfig = {
         pathname: "/**",
       },
       { protocol: "https", hostname: "*.tenor.com", pathname: "/**" },
+      { protocol: "https", hostname: "wsrv.nl", pathname: "/**" },
     ],
     dangerouslyAllowSVG: true,
     contentDispositionType: 'attachment',

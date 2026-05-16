@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { List } from "@/types/list";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { avatarDisplaySrc } from "@/lib/next-remote-image";
 import Link from "next/link";
 import {
   listCardMinHeightClassName,
@@ -47,7 +48,7 @@ export function UserListCard({ list, compact = false }: UserListCardProps) {
         <Link
           href={listHref}
           aria-label={`Open list: ${list.title}`}
-          className="absolute inset-0 z-[1] rounded-xl outline-none ring-inset focus-visible:ring-2 focus-visible:ring-[#e94e7a]/40"
+          className="absolute inset-0 z-[1] rounded-xl outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         />
         <div className="relative z-[2] flex w-full flex-col items-center gap-1.5 pointer-events-none">
           <div className="w-full min-w-0 pt-0.5">
@@ -71,7 +72,7 @@ export function UserListCard({ list, compact = false }: UserListCardProps) {
       <Link
         href={listHref}
         aria-label={`Open list: ${list.title}`}
-        className="absolute inset-0 z-[1] rounded-2xl outline-none ring-inset focus-visible:ring-2 focus-visible:ring-[#e94e7a]/40"
+        className="absolute inset-0 z-[1] rounded-2xl outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
       />
 
       <div className="relative z-[2] flex min-h-0 flex-1 flex-col pointer-events-none">
@@ -85,7 +86,7 @@ export function UserListCard({ list, compact = false }: UserListCardProps) {
                   fill
                   sizes="(max-width:640px) 100vw, (max-width:1280px) 33vw, 420px"
                   style={banner.objectPosition ? { objectPosition: banner.objectPosition } : undefined}
-                  className={`object-cover transition-[transform,filter] duration-500 ease-out group-hover:scale-[1.03] group-hover:brightness-[1.03] ${banner.objectPosition ? "" : "object-center"}`}
+                  className={`object-cover transition-[transform,filter] duration-500 ease-out ${banner.objectPosition ? "" : "object-center"}`}
                 />
                 <div
                   aria-hidden
@@ -125,7 +126,7 @@ export function UserListCard({ list, compact = false }: UserListCardProps) {
           )}
         >
           <div className="min-w-0 space-y-1.5">
-            <h3 className="line-clamp-2 text-lg font-semibold leading-snug tracking-tight text-foreground transition-colors group-hover:text-[#e94e7a] sm:text-xl">
+            <h3 className="line-clamp-2 text-lg font-semibold leading-snug tracking-tight text-foreground sm:text-xl">
               {list.title}
             </h3>
             {bio ? (
@@ -136,7 +137,7 @@ export function UserListCard({ list, compact = false }: UserListCardProps) {
           <div className="mt-auto flex min-w-0 items-center gap-2.5 border-t border-border/70 pt-3 pointer-events-auto">
             <Link href={userProfilePath(list.userData?.username)} className="shrink-0">
               <Avatar className="h-8 w-8 ring-2 ring-background">
-                <AvatarImage src={list.userData?.avatar_url || undefined} alt={displayName} />
+                <AvatarImage src={avatarDisplaySrc(list.userData?.avatar_url)} alt={displayName} />
                 <AvatarFallback className="text-[11px] font-medium">
                   {(list.userData?.display_name?.[0] || list.userData?.username?.[0] || "U").toUpperCase()}
                 </AvatarFallback>
@@ -146,7 +147,7 @@ export function UserListCard({ list, compact = false }: UserListCardProps) {
               <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Created by</p>
               <Link
                 href={userProfilePath(list.userData?.username)}
-                className="block truncate text-sm font-medium text-foreground transition-colors hover:text-[#e94e7a]"
+                className="block truncate text-sm font-medium text-foreground transition-colors hover:text-foreground/90"
               >
                 {displayName}
               </Link>
