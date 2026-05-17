@@ -10,18 +10,14 @@ export async function middleware(request: NextRequest) {
     data: { session },
   } = await supabase.auth.getSession()
 
-  // Se não estiver autenticado e tentar acessar rotas protegidas
-  if (!session && (
-    request.nextUrl.pathname.startsWith('/profile')
-  )) {
+  if (!session && request.nextUrl.pathname.startsWith('/profile')) {
     return NextResponse.redirect(new URL('/sign-in', request.url))
   }
 
-  // Se estiver autenticado e tentar acessar sign-in ou sign-up
-  if (session && (
-    request.nextUrl.pathname === '/sign-in' ||
-    request.nextUrl.pathname === '/sign-up'
-  )) {
+  if (
+    session &&
+    (request.nextUrl.pathname === '/sign-in' || request.nextUrl.pathname === '/sign-up')
+  ) {
     return NextResponse.redirect(new URL('/', request.url))
   }
 
@@ -34,6 +30,6 @@ export const config = {
     '/sign-in',
     '/sign-up',
     '/:username/watchlist',
-    '/:username/filmes'
-  ]
-} 
+    '/:username/filmes',
+  ],
+}

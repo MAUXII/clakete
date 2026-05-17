@@ -17,6 +17,8 @@ import {
   useTransform,
 } from "framer-motion"
 import { Hand, Plus, SkipForward } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { onboardingContinueButtonClass } from "@/components/onboarding/onboarding-step-actions"
 import { cn } from "@/lib/utils"
 import type { ListMediaType } from "@/types/list"
 
@@ -95,6 +97,37 @@ function takeNewMovies(rows: DeckMovie[], seen: Set<number>): DeckMovie[] {
   return shuffleMovies(out)
 }
 
+export interface SwipeStepCopy {
+  title: string
+  description: string
+  skipLabel: string
+  addLabel: string
+  rightOverlay: string
+  leftOverlay: string
+  rightHint: string
+  leftHint: string
+  finishLabel: string
+  emptyNoGenres: string
+  emptyNoMore: string
+  footnoteNoMore: string
+}
+
+const DEFAULT_SWIPE_COPY: SwipeStepCopy = {
+  title: "Add to your list",
+  description: "Swipe sideways to add movies to your list.",
+  skipLabel: "Skip",
+  addLabel: "Add to list",
+  rightOverlay: "On list",
+  leftOverlay: "Skip",
+  rightHint: "On list",
+  leftHint: "Skip",
+  finishLabel: "Finish",
+  emptyNoGenres: "No suggestions here. Go back one step and adjust your list genres.",
+  emptyNoMore:
+    "Could not load more suggestions right now. You can still finish with what you added.",
+  footnoteNoMore: "Couldn't load more suggestions. Finish with what you have or go back to genres.",
+}
+
 interface NewListSwipeStepProps {
   genreIds: number[]
   pickedCount: number
@@ -105,6 +138,9 @@ interface NewListSwipeStepProps {
   /** Desabilita o botão Finish durante persistência no servidor. */
   finalizeBusy?: boolean
   compactLayout?: boolean
+  /** Ações (skip / add / finish) fixas no rodapé — onboarding. */
+  pinActionsFooter?: boolean
+  copy?: Partial<SwipeStepCopy>
 }
 
 export function NewListSwipeStep({
@@ -116,7 +152,10 @@ export function NewListSwipeStep({
   onFinalize,
   finalizeBusy = false,
   compactLayout = false,
+  pinActionsFooter = false,
+  copy: copyOverrides,
 }: NewListSwipeStepProps) {
+  const copy = { ...DEFAULT_SWIPE_COPY, ...copyOverrides }
   const [deck, setDeck] = useState<DeckMovie[]>([])
   const [loading, setLoading] = useState(true)
   const [fetchError, setFetchError] = useState<string | null>(null)
@@ -328,24 +367,104 @@ export function NewListSwipeStep({
 
   const finalizeControl =
     onFinalize ? (
-      <button
-        type="button"
-        disabled={!canFinalize || finalizeBusy}
-        title={
-          canFinalize
-            ? undefined
-            : `Add at least ${MIN_TITLES_TO_FINISH} movies to your list (or finish if suggestions run out).`
-        }
-        onClick={() => void onFinalize()}
-        className={cn(
-          "flex h-11 w-full shrink-0 items-center justify-center rounded-full px-5 text-sm font-semibold transition-colors",
-          canFinalize && !finalizeBusy
-            ? "bg-[#FF0048] text-white hover:bg-[#e60042]"
-            : "cursor-not-allowed bg-white/[0.08] text-zinc-600",
-        )}
-      >
-        {finalizeBusy ? "Saving…" : "Finish"}
-      </button>
+      pinActionsFooter ? (
+        <Button
+          type="button"
+          disabled={!canFinalize || finalizeBusy}
+          title={
+            canFinalize
+              ? undefined
+              : `Add at least ${MIN_TITLES_TO_FINISH} movies to your list (or finish if suggestions run out).`
+          }
+          onClick={() => void onFinalize()}
+          className={cn(
+            onboardingContinueButtonClass,
+            (!canFinalize || finalizeBusy) &&
+              "cursor-not-allowed opacity-40 hover:bg-[#FF0048]",
+          )}
+        >
+          {finalizeBusy ? "Saving…" : copy.finishLabel}
+        </Button>
+      ) : (
+        <button
+          type="button"
+          disabled={!canFinalize || finalizeBusy}
+          title={
+            canFinalize
+              ? undefined
+              : `Add at least ${MIN_TITLES_TO_FINISH} movies to your list (or finish if suggestions run out).`
+          }
+          onClick={() => void onFinalize()}
+          className={cn(
+            "flex h-11 w-full shrink-0 items-center justify-center rounded-full px-5 text-sm font-semibold transition-colors",
+            canFinalize && !finalizeBusy
+              ? "bg-[#FF0048] text-white hover:bg-[#e60042]"
+              : "cursor-not-allowed bg-white/[0.08] text-zinc-600",
+          )}
+        >
+          {finalizeBusy ? "Saving…" : copy.finishLabel}
+        </button>
+      )
+    ) : null
+
+  const renderCardActions = (movie: DeckMovie) => (
+    <>
+      <div className="flex justify-center gap-8 text-[10px] text-zinc-500 sm:hidden">
+        <span>{copy.skipLabel} ←</span>
+        <span>→ {copy.addLabel}</span>
+      </div>
+      <div className="flex w-full gap-3">
+        <button
+          type="button"
+          onClick={skipAdvance}
+          className="flex h-11 min-h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-full border border-white/[0.12] bg-white/[0.04] text-sm font-semibold text-zinc-200 transition-colors hover:bg-white/[0.08] active:bg-white/[0.06]"
+        >
+          <SkipForward className="h-4 w-4 shrink-0 opacity-80" />
+          {copy.skipLabel}
+        </button>
+        <button
+          type="button"
+          onClick={() => addAndAdvance(movie)}
+          className="flex h-11 min-h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-full bg-[#FF0048] text-sm font-semibold text-white shadow-lg shadow-black/35 transition-colors hover:bg-[#e60042] active:bg-[#d4003c]"
+        >
+          <Plus className="h-4 w-4 shrink-0" strokeWidth={2.5} />
+          {copy.addLabel}
+        </button>
+      </div>
+    </>
+  )
+
+  const renderActionsBlock = (movie: DeckMovie | null, inline: boolean) => {
+    if (!finalizeControl && !movie) return null
+
+    const inner = (
+      <>
+        {movie ? renderCardActions(movie) : null}
+        {finalizeControl}
+      </>
+    )
+
+    if (inline) {
+      return (
+        <div
+          className={cn(
+            actionColumnClass,
+            "mt-5 flex shrink-0 flex-col gap-3 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:mt-6 sm:pb-4",
+          )}
+        >
+          {inner}
+        </div>
+      )
+    }
+
+    return (
+      <div className="mx-auto flex w-full max-w-[280px] flex-col gap-3">{inner}</div>
+    )
+  }
+
+  const bodyInlineFinalize =
+    !pinActionsFooter && finalizeControl ? (
+      <div className={cn(actionColumnClass, "mt-5")}>{finalizeControl}</div>
     ) : null
 
   let body: ReactNode
@@ -358,9 +477,7 @@ export function NewListSwipeStep({
             <p className="text-center text-sm text-zinc-500">Loading suggestions…</p>
           </div>
         </div>
-        {finalizeControl ? (
-          <div className={cn(actionColumnClass, "mt-5")}>{finalizeControl}</div>
-        ) : null}
+        {bodyInlineFinalize}
       </div>
     )
   } else if (fetchError) {
@@ -374,9 +491,7 @@ export function NewListSwipeStep({
         >
           <p className="text-center text-sm text-red-300/95">{fetchError}</p>
         </div>
-        {finalizeControl ? (
-          <div className={cn(actionColumnClass, "mt-5")}>{finalizeControl}</div>
-        ) : null}
+        {bodyInlineFinalize}
       </div>
     )
   } else if (!current && deckTailBuffering) {
@@ -388,9 +503,7 @@ export function NewListSwipeStep({
             <p className="text-center text-sm text-zinc-500">Loading more…</p>
           </div>
         </div>
-        {finalizeControl ? (
-          <div className={cn(actionColumnClass, "mt-5")}>{finalizeControl}</div>
-        ) : null}
+        {bodyInlineFinalize}
       </div>
     )
   } else if (!current) {
@@ -403,14 +516,10 @@ export function NewListSwipeStep({
           )}
         >
           <p className="max-w-xs text-center text-sm leading-relaxed text-zinc-400">
-            {pickedCount === 0
-              ? "No suggestions here. Go back one step and adjust your list genres."
-              : "Could not load more suggestions right now. You can still finish with what you added."}
+            {pickedCount === 0 ? copy.emptyNoGenres : copy.emptyNoMore}
           </p>
         </div>
-        {finalizeControl ? (
-          <div className={cn(actionColumnClass, "mt-5")}>{finalizeControl}</div>
-        ) : null}
+        {bodyInlineFinalize}
       </div>
     )
   } else {
@@ -424,7 +533,7 @@ export function NewListSwipeStep({
       >
         <div className="relative flex w-full max-w-[min(480px,calc(100vw-1rem))] items-stretch justify-center gap-2 sm:gap-4">
           <span className="hidden w-[4rem] shrink-0 pt-[min(28%,175px)] text-right text-[10px] font-medium uppercase tracking-wider text-zinc-600 sm:block">
-            Skip
+            {copy.leftHint}
             <span className="mt-0.5 block text-zinc-500 normal-case tracking-normal">drag ←</span>
           </span>
 
@@ -472,6 +581,8 @@ export function NewListSwipeStep({
                 key={current.id}
                 movie={current}
                 leaveTo={leaveTo}
+                leftOverlay={copy.leftOverlay}
+                rightOverlay={copy.rightOverlay}
                 onSwipeLeft={skipAdvance}
                 onSwipeRight={() => addAndAdvance(current)}
                 onDragResolve={(dir) => setLeaveTo(dir)}
@@ -480,78 +591,58 @@ export function NewListSwipeStep({
           </div>
 
           <span className="hidden w-[4rem] shrink-0 pt-[min(28%,175px)] text-left text-[10px] font-medium uppercase tracking-wider text-zinc-600 sm:block">
-            On list
+            {copy.rightHint}
             <span className="mt-0.5 block text-zinc-500 normal-case tracking-normal">drag →</span>
           </span>
         </div>
 
-        <div
-          className={cn(
-            actionColumnClass,
-            "mt-5 flex shrink-0 flex-col gap-3 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:mt-6 sm:pb-4",
-          )}
-        >
-          <div className="flex justify-center gap-8 text-[10px] text-zinc-500 sm:hidden">
-            <span>Skip ←</span>
-            <span>→ On list</span>
-          </div>
-          <div className="flex w-full gap-3">
-            <button
-              type="button"
-              onClick={skipAdvance}
-              className="flex h-11 min-h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-full border border-white/[0.12] bg-white/[0.04] text-sm font-semibold text-zinc-200 transition-colors hover:bg-white/[0.08] active:bg-white/[0.06]"
-            >
-              <SkipForward className="h-4 w-4 shrink-0 opacity-80" />
-              Skip
-            </button>
-            <button
-              type="button"
-              onClick={() => addAndAdvance(current)}
-              className="flex h-11 min-h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-full bg-[#FF0048] text-sm font-semibold text-white shadow-lg shadow-black/35 transition-colors hover:bg-[#e60042] active:bg-[#d4003c]"
-            >
-              <Plus className="h-4 w-4 shrink-0" strokeWidth={2.5} />
-              Add to list
-            </button>
-          </div>
-          {finalizeControl}
-        </div>
+        {!pinActionsFooter ? renderActionsBlock(current, true) : null}
       </div>
     )
   }
 
   const footNote =
     deckExhausted && pickedCount < MIN_TITLES_TO_FINISH ? (
-      <p className="mt-2 line-clamp-2 text-center text-[10px] leading-snug text-amber-200/80">
-        Couldn&apos;t load more suggestions. Finish with what you have or go back to genres.
+      <p className="line-clamp-2 text-center text-[10px] leading-snug text-amber-200/80">
+        {copy.footnoteNoMore}
       </p>
     ) : null
+
+  const pinnedActionsFooter = pinActionsFooter ? renderActionsBlock(current, false) : null
 
   return (
     <div
       className={cn(
         "mx-auto flex w-full max-w-2xl flex-col px-3 sm:px-4",
-        compactLayout && "min-h-0 flex-1",
+        (compactLayout || pinActionsFooter) && "min-h-0 flex-1",
       )}
     >
-      <div className="min-w-0 shrink-0 text-center">
-        <h2 className="text-lg font-semibold tracking-tight text-white sm:text-xl">Add to your list</h2>
-        <div className="mt-1 flex min-h-[3rem] items-start justify-center sm:min-h-[3.25rem]">
-          <p className="text-xs leading-relaxed text-zinc-500 sm:text-[13px]">
-            Swipe sideways to add movies to your list.
-          </p>
-        </div>
+      <div className="min-w-0 w-full shrink-0 text-center">
+        <h2 className="text-lg font-semibold tracking-tight text-white sm:text-xl">{copy.title}</h2>
+        <p className="mt-2 text-xs leading-relaxed text-zinc-500 sm:text-[13px]">{copy.description}</p>
       </div>
 
       <div
         className={cn(
           "flex min-h-0 w-full flex-col items-center",
-          compactLayout ? "mt-6 min-h-0 flex-1 justify-between" : "mt-6 justify-start",
+          pinActionsFooter
+            ? "mt-8 min-h-0 flex-1 justify-center"
+            : compactLayout
+              ? "mt-6 min-h-0 flex-1 justify-between"
+              : "mt-6 justify-start",
         )}
       >
         {body}
       </div>
 
-      {footNote}
+      {pinActionsFooter && pinnedActionsFooter ? (
+        <div className="mt-auto w-full shrink-0 space-y-2 pt-8 pb-[max(1rem,env(safe-area-inset-bottom))]">
+          {footNote}
+          {pinnedActionsFooter}
+        </div>
+      ) : (
+        footNote
+      )}
     </div>
   )
 }
@@ -559,6 +650,8 @@ export function NewListSwipeStep({
 interface SwipeCardProps {
   movie: DeckMovie
   leaveTo: "L" | "R"
+  leftOverlay: string
+  rightOverlay: string
   onSwipeLeft: () => void
   onSwipeRight: () => void
   onDragResolve: (dir: "L" | "R") => void
@@ -567,6 +660,8 @@ interface SwipeCardProps {
 function SwipeCard({
   movie,
   leaveTo,
+  leftOverlay,
+  rightOverlay,
   onSwipeLeft,
   onSwipeRight,
   onDragResolve,
@@ -661,15 +756,16 @@ function SwipeCard({
           className="pointer-events-none absolute left-6 top-8 rotate-[-12deg] rounded-lg border-4 border-[#FF0048]/80 bg-[#0a0a0c]/85 px-3 py-1.5 text-lg font-black uppercase text-[#FF0048] shadow-lg backdrop-blur-sm"
           style={{ opacity: likeOpacity }}
         >
-          On list
+          {rightOverlay}
         </motion.span>
         <motion.span
           className="pointer-events-none absolute right-6 top-8 rotate-[12deg] rounded-lg border-4 border-zinc-500 bg-[#0a0a0c]/85 px-3 py-1.5 text-lg font-black uppercase text-zinc-100 shadow-lg backdrop-blur-sm"
           style={{ opacity: nopeOpacity }}
         >
-          Skip
+          {leftOverlay}
         </motion.span>
       </div>
     </motion.div>
   )
 }
+

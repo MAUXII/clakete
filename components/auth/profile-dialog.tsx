@@ -6,7 +6,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from '@/components/ui/dialog'
 import {
   Form,
   FormControl,
@@ -14,25 +14,21 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-
-import { Button } from "@/components/ui/button"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import { z } from "zod"
-import { useState } from "react"
-import { useSupabaseClient } from "@supabase/auth-helpers-react"
-import { useRouter } from "next/navigation"
+} from '@/components/ui/form'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useForm } from 'react-hook-form'
+import { useState } from 'react'
+import { useSupabaseClient } from '@supabase/auth-helpers-react'
+import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
+import { useProfile } from '@/components/providers/profile-provider'
+import { usernameSchema } from '@/lib/onboarding'
+import { z } from 'zod'
 
 const profileFormSchema = z.object({
-  username: z
-    .string()
-    .min(2, 'Username deve ter no mínimo 2 caracteres')
-    .max(20, 'Username deve ter no máximo 20 caracteres')
-    .regex(/^[a-zA-Z0-9_]+$/, 'Username deve conter apenas letras, números e _')
-    .transform(val => val.toLowerCase()),
-  avatar_url: z.string().max(160,'URL inválida').optional(),
+  username: usernameSchema,
 })
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>
@@ -46,54 +42,60 @@ export function ProfileDialog({ isOpen, onClose }: ProfileDialogProps) {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
   const supabase = useSupabaseClient()
+  const { refreshProfile } = useProfile()
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
       username: '',
-      avatar_url: '',
     },
   })
 
   async function onSubmit(values: ProfileFormValues) {
     try {
       setLoading(true)
-      
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('Usuário não encontrado')
 
-      const { error: userError } = await supabase
-        .from('users')
-        .insert({
-          id: user.id,
-          username: values.username,
-          email: user.email!,
-          avatar_url: values.avatar_url! || null,
-        })
-        .select()
-        .single()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not signed in')
 
-      if (userError) throw userError
+      const { error: userError } = await supabase.from('users').insert({
+        id: user.id,
+        username: values.username,
+        email: user.email!,
+        avatar_url: null,
+      })
 
+      if (userError) {
+        if (userError.code === '23505') {
+          toast.error('This username is already taken')
+          return
+        }
+        throw userError
+      }
 
-
+      await refreshProfile()
       onClose()
-      router.push(`/${values.username}`)
+      router.push('/onboarding')
       router.refresh()
     } catch (error) {
-      console.error('Erro ao atualizar perfil:', error)
+      console.error('Error creating profile:', error)
+      toast.error('Could not save profile', {
+        description: error instanceof Error ? error.message : 'Try again',
+      })
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Complete seu perfil </DialogTitle>
+          <DialogTitle>Choose your username</DialogTitle>
           <DialogDescription>
-            Adicione algumas informações para personalizar seu perfil
+            Pick a unique handle for your public profile on Clakete.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -105,19 +107,19 @@ export function ProfileDialog({ isOpen, onClose }: ProfileDialogProps) {
                 <FormItem>
                   <FormLabel>Username</FormLabel>
                   <FormControl>
-                    <Input placeholder="seu_username" {...field} />
+                    <Input placeholder="your_username" autoComplete="off" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            
+
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Salvando...' : 'Salvar perfil'}
+              {loading ? 'Saving…' : 'Continue'}
             </Button>
           </form>
         </Form>
       </DialogContent>
     </Dialog>
   )
-} 
+}

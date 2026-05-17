@@ -23,6 +23,7 @@ import { ProfileDialog } from '@/components/auth/profile-dialog'
 import { AuthClaketeWordmark } from '@/components/auth/auth-clakete-wordmark'
 import { AuthGoogleIcon } from '@/components/auth/auth-google-icon'
 import { AuthMarketingPanel } from '@/components/auth/auth-marketing-panel'
+import { userProfilePath } from '@/lib/list-href'
 
 const formSchema = z.object({
   email: z.string().email('Invalid email'),
@@ -69,7 +70,7 @@ export default function SignUp() {
       if (error) throw error
 
       toast.success('Account created!', {
-        description: 'Complete your profile to get started.',
+        description: 'Choose your username to continue.',
       })
       setShowProfileDialog(true)
     } catch (error) {
@@ -119,12 +120,12 @@ export default function SignUp() {
         .from('users')
         .select('username')
         .eq('id', user.id)
-        .single()
+        .maybeSingle()
 
-      if (!profile) {
+      if (!profile?.username) {
         setShowProfileDialog(true)
       } else {
-        router.push(`/${profile.username}`)
+        router.push(userProfilePath(profile.username))
       }
     }
 

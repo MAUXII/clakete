@@ -7,12 +7,12 @@ export const createClient = () => {
   if (!supabaseUrl || !supabaseKey) {
     throw new Error('Missing Supabase environment variables')
   }
-  
+
   return createSupabaseClient(supabaseUrl, supabaseKey, {
     auth: {
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: true,
-    }
+    },
   })
-} 
+}

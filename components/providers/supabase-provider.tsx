@@ -13,7 +13,6 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       </SessionContextProvider>
     )
   } catch (error) {
-    // Fallback when Supabase is not available (e.g., during build)
     return <>{children}</>
   }
 }

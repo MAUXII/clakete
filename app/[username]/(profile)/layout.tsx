@@ -93,7 +93,7 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
       usernameRef.current = username
     }, [username])
     const getTabFromPath = () => {
-      if (pathname.endsWith('/films')) return 'films';
+      if (pathname.endsWith('/watched') || pathname.endsWith('/films')) return 'watched';
       if (pathname.endsWith('/lists')) return 'lists';
       if (pathname.endsWith('/reviews')) return 'reviews';
       if (pathname.endsWith('/activity')) return 'activity';
@@ -714,8 +714,8 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
     <Link href={`/${username}`} className={profileTabLinkClass}>
       <TabsTrigger className={profileTabTriggerClass} value="profile">Profile</TabsTrigger>
     </Link>
-    <Link href={`/${username}/films`} className={profileTabLinkClass}>
-      <TabsTrigger className={profileTabTriggerClass} value="films">Films</TabsTrigger>
+    <Link href={`/${username}/watched`} className={profileTabLinkClass}>
+      <TabsTrigger className={profileTabTriggerClass} value="watched">Watched</TabsTrigger>
     </Link>
     <Link href={`/${username}/lists`} className={profileTabLinkClass}>
       <TabsTrigger className={profileTabTriggerClass} value="lists">Lists</TabsTrigger>

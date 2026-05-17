@@ -23,6 +23,7 @@ import { ProfileDialog } from '@/components/auth/profile-dialog'
 import { AuthClaketeWordmark } from '@/components/auth/auth-clakete-wordmark'
 import { AuthGoogleIcon } from '@/components/auth/auth-google-icon'
 import { AuthMarketingPanel } from '@/components/auth/auth-marketing-panel'
+import { userProfilePath } from '@/lib/list-href'
 
 const formSchema = z.object({
   email: z.string().email('Email inválido'),
@@ -63,7 +64,7 @@ export default function SignIn() {
       if (success) {
         stateMachine.find((i) => i.name === 'formValid')?.fire()
         toast.success('Login bem sucedido!', {
-          description: 'Redirecionando para a página inicial...',
+          description: 'Redirecionando...',
         })
       } else {
         stateMachine.find((i) => i.name === 'formInvalid')?.fire()
@@ -88,10 +89,25 @@ export default function SignIn() {
       }
 
       handleLoginResult(true)
-      setTimeout(() => {
-        router.push('/')
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
+      if (!user) return
+
+      const { data: profile } = await supabase
+        .from('users')
+        .select('username')
+        .eq('id', user.id)
+        .maybeSingle()
+
+      if (!profile?.username) {
+        setShowProfileDialog(true)
+      } else {
+        router.push(userProfilePath(profile.username))
         router.refresh()
-      }, 2000)
+      }
     } catch (error) {
       console.error('Erro ao fazer login:', error)
     } finally {
@@ -141,9 +157,9 @@ export default function SignIn() {
           .from('users')
           .select('username')
           .eq('id', session.user.id)
-          .single()
+          .maybeSingle()
 
-        if (!profile) {
+        if (!profile?.username) {
           setShowProfileDialog(true)
         } else {
           router.push('/')

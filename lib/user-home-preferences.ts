@@ -8,6 +8,8 @@ export interface UserHomePreferences {
   show_now_showing: boolean
   show_upcoming: boolean
   show_recent_reviews: boolean
+  /** TMDB genre ids chosen during onboarding (optional). */
+  favorite_genre_ids?: number[]
 }
 
 export const defaultUserHomePreferences: UserHomePreferences = {
@@ -25,15 +27,36 @@ export function parseUserHomePreferences(raw: Json | null | undefined): UserHome
   if (typeof o.show_upcoming === "boolean") base.show_upcoming = o.show_upcoming
   if (typeof o.show_recent_reviews === "boolean") base.show_recent_reviews = o.show_recent_reviews
 
+  if (Array.isArray(o.favorite_genre_ids)) {
+    base.favorite_genre_ids = o.favorite_genre_ids.filter(
+      (id): id is number => typeof id === "number" && Number.isFinite(id),
+    )
+  }
+
   return base
 }
 
 export function serializeUserHomePreferences(prefs: UserHomePreferences): Json {
-  return {
+  const out: Record<string, unknown> = {
     show_now_showing: prefs.show_now_showing,
     show_upcoming: prefs.show_upcoming,
     show_recent_reviews: prefs.show_recent_reviews,
   }
+  if (prefs.favorite_genre_ids?.length) {
+    out.favorite_genre_ids = prefs.favorite_genre_ids
+  }
+  return out as Json
+}
+
+/** Merge genre picks into existing `home_preferences` JSON. */
+export function setFavoriteGenresInsidePreferences(
+  raw: Json | null | undefined,
+  genreIds: number[],
+): Json {
+  const prefs = parseUserHomePreferences(raw)
+  prefs.favorite_genre_ids = genreIds.length > 0 ? [...genreIds] : undefined
+  const backdrop = extractHomeBackdropFromPreferences(raw)
+  return setHomeBackdropInsidePreferences(serializeUserHomePreferences(prefs), backdrop)
 }
 
 export function extractHomeBackdropFromPreferences(raw: Json | null | undefined): {

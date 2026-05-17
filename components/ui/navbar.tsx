@@ -512,8 +512,8 @@ export function Navbar() {
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild className={profileMenuItemClass}>
-          <Link href={`/${profile.username}/films`}>
-            Films
+          <Link href={`/${profile.username}/watched`}>
+            Watched
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild className={profileMenuItemClass}>

@@ -19,6 +19,8 @@
     "hooks": "@/hooks"
   },
   "registries": {
-    "@diceui": "https://diceui.com/r/{name}.json"
+    "@diceui": "https://diceui.com/r/{name}.json",
+    "@forgeui": "https://forgeui.in/r/{name}.json",
+    "@aceternity": "https://ui.aceternity.com/registry/{name}.json"
   }
 }

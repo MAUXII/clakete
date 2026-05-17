@@ -19,6 +19,7 @@ import ReactMasonryCss from "react-masonry-css";
 import type { Area } from "react-easy-crop";
 
 import type { ListBannerMeta } from "@/types/list";
+import type { TmdbStoredImageMeta } from "@/types/tmdb-stored-image";
 import { buildListBannerMeta } from "@/lib/list-banner";
 import { buildTmdbStoredImageMeta } from "@/lib/tmdb-stored-image";
 import type { Json } from "@/lib/supabase/database.types";
@@ -65,10 +66,12 @@ interface ImageEditDialogProps {
   customSave?: (imageUrl: string) => Promise<void>;
   /** Salva apenas meta TMDB + crop (sem upload Storage). Para `type="list"` + listId. */
   customListBannerSave?: (meta: ListBannerMeta) => Promise<void>;
+  /** Persistência local (ex.: onboarding antes de existir row em `users`). */
+  customTmdbMetaSave?: (meta: TmdbStoredImageMeta) => Promise<void>;
   listId?: string;
 }
 
-export function ImageEditDialog({ onClose, onSelect, isOpen, onSave, type, customSave, customListBannerSave, listId }: ImageEditDialogProps) {
+export function ImageEditDialog({ onClose, onSelect, isOpen, onSave, type, customSave, customListBannerSave, customTmdbMetaSave, listId }: ImageEditDialogProps) {
   const bannerAspect = 1152 / 487
   const listMetaFlow = type === "list" && Boolean(customListBannerSave && listId)
   /** Lista (meta) ou perfil avatar/banner/home_backdrop: grava só JSON TMDB+crop; sem blob Storage. */
@@ -340,6 +343,11 @@ export function ImageEditDialog({ onClose, onSelect, isOpen, onSave, type, custo
             .eq("id", session.user.id)
           if (profileMetaErr) throw profileMetaErr
           await refreshProfile()
+          onSave("")
+          return
+        }
+        if (customTmdbMetaSave) {
+          await customTmdbMetaSave(meta)
           onSave("")
           return
         }

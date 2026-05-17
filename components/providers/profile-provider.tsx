@@ -52,9 +52,18 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
         .from('users')
         .select('*')
         .eq('id', user.id)
-        .single()
+        .maybeSingle()
 
-      if (error) throw error
+      if (error) {
+        console.error('Erro ao carregar perfil:', error)
+        setProfile(null)
+        return
+      }
+
+      if (!data) {
+        setProfile(null)
+        return
+      }
 
       setProfile({
         ...data,
