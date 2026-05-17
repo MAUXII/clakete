@@ -12,6 +12,9 @@ export interface ProfileLayoutUser {
   banner_url?: string | null
   avatar_meta?: TmdbStoredImageMeta | null
   banner_meta?: TmdbStoredImageMeta | null
+  plan?: string
+  plan_status?: string | null
+  plan_current_period_end?: string | null
 }
 
 interface ProfileLayoutContextType {

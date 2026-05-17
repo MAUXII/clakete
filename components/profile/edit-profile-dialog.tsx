@@ -12,12 +12,14 @@ import { Label } from "@/components/ui/label"
 import { useState, useEffect } from "react"
 import { useUser } from "@supabase/auth-helpers-react"
 import { useProfile } from "@/components/providers/profile-provider"
-import { Settings, Link2, Pencil, ChevronRight, User, type LucideIcon } from "lucide-react"
+import { Settings, Link2, Pencil, ChevronRight, User, CreditCard, type LucideIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { Json } from "@/lib/supabase/database.types"
 import { ConnectionsEditor } from "@/components/profile/connections-editor"
 import { HomePreferencesEditor } from "@/components/profile/home-preferences-editor"
 import { ProfileBioEditor } from "@/components/profile/profile-bio-editor"
+import { ManageSubscription } from "@/components/premium/manage-subscription"
+import type { PlanFields } from "@/lib/plans"
 import {
   defaultSocialDisplayMap,
   mergeSocialDisplayIntoPreferencesJson,
@@ -53,6 +55,8 @@ interface EditProfileDialogProps {
   telegramUrl?: string | null
   ethereumUrl?: string | null
   homePreferences?: Json | null
+  planFields?: PlanFields
+  stripeCustomerId?: string | null
   onHomeBackdropUpdated?: () => void | Promise<void>
   onUpdate: (updates: {
     display_name?: string
@@ -71,7 +75,7 @@ interface EditProfileDialogProps {
   }) => void
 }
 
-type ProfileSectionId = "account" | "profile" | "preferences" | "social"
+type ProfileSectionId = "account" | "subscription" | "profile" | "preferences" | "social"
 
 const NAV_GROUPS: {
   heading?: string
@@ -82,12 +86,14 @@ const NAV_GROUPS: {
       { id: "account", label: "Account", Icon: User },
       { id: "preferences", label: "Preferences", Icon: Settings },
       { id: "social", label: "Connections", Icon: Link2 },
+      { id: "subscription", label: "Subscription", Icon: CreditCard },
     ],
   },
 ]
 
 const SECTION_HEADINGS: Record<ProfileSectionId, string> = {
   account: "Account",
+  subscription: "Subscription",
   profile: "Profile",
   preferences: "Preferences",
   social: "Connections",
@@ -95,6 +101,7 @@ const SECTION_HEADINGS: Record<ProfileSectionId, string> = {
 
 const SECTION_HINTS: Record<ProfileSectionId, string> = {
   account: "Your username and sign-in identity.",
+  subscription: "The Shining — upgrade, billing, and plan status.",
   profile: "Display name and bio shown on your public profile. Markdown is supported in bio.",
   preferences: "Home backdrop and which sections appear after you sign in.",
   social: "Social platforms shown on your public profile.",
@@ -122,6 +129,8 @@ export function EditProfileDialog({
   telegramUrl = null,
   ethereumUrl = null,
   homePreferences = null,
+  planFields = { plan: "free", plan_status: null, plan_current_period_end: null },
+  stripeCustomerId = null,
   onHomeBackdropUpdated,
   onUpdate,
 }: EditProfileDialogProps) {
@@ -332,7 +341,7 @@ export function EditProfileDialog({
 
             <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto px-6 py-5 sm:px-8 sm:py-6">
               {activeSection === "account" && (
-                <div className="space-y-4 rounded-lg border border-border/80 bg-muted/5 p-4 sm:p-5">
+                <div className="rounded-lg border border-border/80 bg-muted/5 p-4 sm:p-5">
                   <div>
                     <Label htmlFor="account-username" className="text-xs font-medium text-muted-foreground">
                       Username
@@ -348,6 +357,13 @@ export function EditProfileDialog({
                     </p>
                   </div>
                 </div>
+              )}
+
+              {activeSection === "subscription" && (
+                <ManageSubscription
+                  planFields={planFields}
+                  stripeCustomerId={stripeCustomerId}
+                />
               )}
 
               {activeSection === "profile" && (

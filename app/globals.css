@@ -60,6 +60,22 @@ body {
   font-family: 'Poppins', sans-serif; 
 }
 
+/* Clakete Premium — The Shining (profile only) */
+.profile--shining {
+  --shining-accent: #9b2335;
+  --shining-glow: #c9a227;
+}
+
+.profile--shining .shining-banner-overlay {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 12px,
+    rgba(201, 162, 39, 0.35) 12px,
+    rgba(201, 162, 39, 0.35) 13px
+  );
+}
+
 /* Scrollbar fina, quadrada, sem setas — página + `.custom-scrollbar` */
 html,
 body,

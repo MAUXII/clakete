@@ -27,6 +27,8 @@ import { profileBannerPresentation, profileAvatarPresentation } from "@/lib/prof
 import { avatarDisplaySrc } from "@/lib/next-remote-image"
 import type { Json } from "@/lib/supabase/database.types"
 import { cn } from "@/lib/utils"
+import { hasShiningAccess } from "@/lib/plans"
+import { ShiningBadge } from "@/components/premium/shining-badge"
 
 const profileTabLinkClass = "group flex h-full min-h-0 flex-1"
 const profileTabTriggerClass = cn(
@@ -52,6 +54,10 @@ interface UserData extends ProfileLayoutUser {
   telegram_url?: string | null;
   ethereum_url?: string | null;
   home_preferences?: Json | null;
+  plan?: string;
+  plan_status?: string | null;
+  plan_current_period_end?: string | null;
+  stripe_customer_id?: string | null;
 }
 
 
@@ -251,7 +257,7 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
         const { data, error } = await supabase
           .from('users')
           .select(
-            'id, username, display_name, bio, avatar_url, banner_url, avatar_meta, banner_meta, website_url, twitter_url, instagram_url, spotify_url, discord_url, youtube_url, github_url, soundcloud_url, pinterest_url, telegram_url, ethereum_url, home_preferences',
+            'id, username, display_name, bio, avatar_url, banner_url, avatar_meta, banner_meta, website_url, twitter_url, instagram_url, spotify_url, discord_url, youtube_url, github_url, soundcloud_url, pinterest_url, telegram_url, ethereum_url, home_preferences, plan, plan_status, plan_current_period_end, stripe_customer_id',
           )
           .eq('username', targetUsername)
           .maybeSingle()
@@ -516,9 +522,19 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
 
   const bannerDisplay = profileBannerPresentation(userData)
   const avatarDisplay = profileAvatarPresentation(userData)
+  const isShiningProfile = hasShiningAccess({
+    plan: userData.plan,
+    plan_status: userData.plan_status,
+    plan_current_period_end: userData.plan_current_period_end,
+  })
 
   return (
-    <section className="relative z-10 mt-[3.75rem] w-full">
+    <section
+      className={cn(
+        "relative z-10 mt-[3.75rem] w-full",
+        isShiningProfile && "profile--shining",
+      )}
+    >
         {/* Banner */}
         <div 
         className="group relative h-[567px] w-full min-w-0 overflow-hidden rounded-none border-0 bg-cover bg-center ring-1 ring-b ring-white/[0.06] "
@@ -537,6 +553,12 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
           </button>
         )}
         <div className="absolute inset-0 rounded-none bg-gradient-to-t from-black/50 to-transparent z" />
+        {isShiningProfile ? (
+          <div
+            className="pointer-events-none absolute inset-0 opacity-[0.14] shining-banner-overlay"
+            aria-hidden
+          />
+        ) : null}
       </div>
 
       <div className="mx-auto w-full max-w-6xl">
@@ -547,7 +569,14 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
           <div className="flex flex-col w-full gap-6">
             {/* Avatar */}
             <div className="sticky top-[calc(env(safe-area-inset-top,0px)+12rem)] z-20 flex flex-col gap-6 self-start">
-            <div className="relative -mt-24 aspect-square ring-2  dark:ring-[#090909] ring-white   shadow-sm  overflow-clip h-36 group rounded-2xl max-w-36">
+            <div
+              className={cn(
+                "relative -mt-24 aspect-square overflow-clip h-36 group rounded-2xl max-w-36 shadow-sm ring-2",
+                isShiningProfile
+                  ? "ring-[#C9A227]/50 dark:ring-[#9B2335]/80 ring-offset-2 ring-offset-[#09090B]"
+                  : "ring-white dark:ring-[#090909]",
+              )}
+            >
             <Avatar className="w-full h-full rounded-md shadow-none ">
               <AvatarImage
                 src={avatarDisplaySrc(avatarDisplay.src, { allowGifPlayback: true }) || undefined}
@@ -579,7 +608,12 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
               <h2 className="text-lg -mt-1 text-muted-foreground">
                 @{userData.username}
               </h2>
-              
+              {isShiningProfile ? (
+                <div className="mt-2">
+                  <ShiningBadge />
+                </div>
+              ) : null}
+
               <div className='flex'>
                 
               <div className='flex items-center mt-2 gap-4'> 
@@ -629,6 +663,12 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
                         telegramUrl={userData.telegram_url ?? null}
                         ethereumUrl={userData.ethereum_url ?? null}
                         homePreferences={userData.home_preferences ?? null}
+                        planFields={{
+                          plan: userData.plan,
+                          plan_status: userData.plan_status,
+                          plan_current_period_end: userData.plan_current_period_end,
+                        }}
+                        stripeCustomerId={userData.stripe_customer_id}
                         onHomeBackdropUpdated={() =>
                           fetchProfile(usernameRef.current.toLowerCase())
                         }

@@ -72,7 +72,11 @@ export function setHomeBackdropInsidePreferences(
   backdrop: { url: string | null; meta: Json | null },
 ): Json {
   const prefs = parseUserHomePreferences(raw)
-  const o = { ...serializeUserHomePreferences(prefs) } as Record<string, unknown>
+  const serialized = serializeUserHomePreferences(prefs)
+  const o: Record<string, unknown> =
+    serialized != null && typeof serialized === "object" && !Array.isArray(serialized)
+      ? { ...(serialized as Record<string, unknown>) }
+      : {}
   Reflect.deleteProperty(o, "home_backdrop_url")
   Reflect.deleteProperty(o, "home_backdrop_meta")
 

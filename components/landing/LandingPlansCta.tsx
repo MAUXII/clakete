@@ -95,8 +95,8 @@ export function LandingPlansCta() {
             <p className="mt-1 text-sm text-white/75">
               More profile visibility and extra features - an added glow for your movie world.
             </p>
-            <p className="mt-4 text-3xl font-semibold tabular-nums text-white sm:text-4xl">
-              Coming soon
+            <p className="mt-4 text-sm text-white/80">
+              Monthly subscription — manage billing anytime.
             </p>
             <ul className="mt-6 flex flex-col gap-3">
               {iluminadoFeatures.map((line) => (
@@ -107,18 +107,16 @@ export function LandingPlansCta() {
               ))}
             </ul>
             <Link
-  href="/sign-in"
-  aria-disabled="true"
-  tabIndex={-1}
-  className={cn(
-    "mt-8 inline-flex w-full items-center justify-center rounded-full bg-white py-3 text-center text-sm font-semibold text-[#FF0048]",
-    "opacity-50 pointer-events-none cursor-not-allowed"
-  )}
->
+              href="/account/billing"
+              className={cn(
+                "mt-8 inline-flex w-full items-center justify-center rounded-full bg-white py-3 text-center text-sm font-semibold text-[#FF0048]",
+                "transition hover:bg-white/90",
+              )}
+            >
               I want The Shining
             </Link>
             <p className="mt-3 text-center text-[11px] text-white/55">
-              Billing and checkout come next - for now, join the waitlist through your account.
+              Sign in required. You will be redirected to secure Stripe checkout.
             </p>
           </div>
         </div>

@@ -12,6 +12,7 @@ import {
   noisyHeroFragmentShader,
   noisyHeroVertexShader,
 } from '@/lib/noisyHeroGradientShader'
+import { cn } from '@/lib/utils'
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
 
@@ -44,12 +45,15 @@ export type CinematicBackgroundProps = {
   colorB?: string
   /** Multiplica `HERO_NOISY_GRADIENT_PARAMS.speed`. */
   speed?: number
+  /** Preenche o ancestral `relative` em vez do bleed full-viewport da landing. */
+  fillParent?: boolean
 }
 
 export default function CinematicBackground({
   colorA = HERO_NOISY_GRADIENT_COLORS.colorA,
   colorB = HERO_NOISY_GRADIENT_COLORS.colorB,
   speed = 1,
+  fillParent = false,
 }: CinematicBackgroundProps) {
   const mountRef = useRef<HTMLDivElement>(null)
   const [reducedMotion, setReducedMotion] = useState(false)
@@ -174,16 +178,18 @@ export default function CinematicBackground({
   }, [reducedMotion, colorA, colorB, speed])
 
   return (
-    <div className="pointer-events-none absolute top-0 bottom-0 left-1/2 z-0 h-full min-h-0 w-screen max-w-[100vw] -translate-x-1/2 overflow-hidden">
+    <div
+      className={cn(
+        'pointer-events-none absolute z-0 h-full min-h-0 overflow-hidden',
+        fillParent
+          ? 'inset-0 w-full'
+          : 'top-0 bottom-0 left-1/2 w-screen max-w-[100vw] -translate-x-1/2',
+      )}
+    >
       <div
         ref={mountRef}
         className="absolute inset-0 z-0 h-full min-h-0 w-full bg-[#09091B]"
-      >
-     
-      </div>
-     
-     
-    
+      />
     </div>
   )
 }

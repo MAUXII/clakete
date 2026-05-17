@@ -1,18 +1,22 @@
 import * as React from "react";
 
-type PossibleRef<T> = React.Ref<T> | undefined;
+type PossibleRef<T> = React.LegacyRef<T> | undefined;
 
 /**
  * Set a given ref to a given value
  * This utility takes care of different types of refs: callback refs and RefObject(s)
  */
 function setRef<T>(ref: PossibleRef<T>, value: T) {
+  if (typeof ref === "string" || ref == null) {
+    return;
+  }
+
   if (typeof ref === "function") {
     return ref(value);
   }
 
-  if (ref !== null && ref !== undefined) {
-    ref.current = value;
+  if (typeof ref === "object" && "current" in ref) {
+    (ref as React.MutableRefObject<T>).current = value;
   }
 }
 

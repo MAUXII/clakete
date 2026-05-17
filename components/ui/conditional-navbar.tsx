@@ -5,7 +5,7 @@ import { Navbar } from './navbar'
 
 export function ConditionalNavbar() {
   const pathname = usePathname()
-  const hideNavbar = pathname === '/sign-in'
+  const hideNavbar = pathname === '/sign-in' || pathname === '/sign-up'
 
   if (hideNavbar) return null
   return <Navbar />

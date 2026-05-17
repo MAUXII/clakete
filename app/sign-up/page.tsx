@@ -1,13 +1,15 @@
 'use client'
 
+import { useEffect, useState } from 'react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+import { useSupabaseClient } from '@supabase/auth-helpers-react'
+import { useRive } from '@rive-app/react-canvas'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
 import {
   Form,
   FormControl,
@@ -17,18 +19,14 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { useSupabaseClient } from '@supabase/auth-helpers-react'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { useRouter } from 'next/navigation'
-import { useState, useEffect } from 'react'
-import { useForm } from 'react-hook-form'
-import { z } from 'zod'
-import Link from 'next/link'
 import { ProfileDialog } from '@/components/auth/profile-dialog'
+import { AuthClaketeWordmark } from '@/components/auth/auth-clakete-wordmark'
+import { AuthGoogleIcon } from '@/components/auth/auth-google-icon'
+import { AuthMarketingPanel } from '@/components/auth/auth-marketing-panel'
 
 const formSchema = z.object({
-  email: z.string().email('Email inválido'),
-  password: z.string().min(6, 'A senha deve ter no mínimo 6 caracteres'),
+  email: z.string().email('Invalid email'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
 })
 
 export default function SignUp() {
@@ -36,14 +34,26 @@ export default function SignUp() {
   const [loading, setLoading] = useState(false)
   const [showProfileDialog, setShowProfileDialog] = useState(false)
   const supabase = useSupabaseClient()
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+
+  const { rive, RiveComponent } = useRive({
+    src: '/cat_password.riv',
+    artboard: 'Main',
+    stateMachines: ['PasswordStates'],
+    autoplay: true,
+  })
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      email: '',
-      password: '',
-    },
+    defaultValues: { email: '', password: '' },
   })
+
+  const handlePasswordChange = () => {
+    if (!rive) return
+    const stateMachine = rive.stateMachineInputs('PasswordStates')
+    const input = stateMachine?.find((i) => i.name === 'passwordTyping')
+    input?.fire()
+  }
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
@@ -52,16 +62,21 @@ export default function SignUp() {
         email: values.email,
         password: values.password,
         options: {
-          emailRedirectTo: `${location.origin}/auth/callback`,
+          emailRedirectTo: `${siteUrl}/auth/callback`,
         },
       })
 
       if (error) throw error
 
-      // Após o cadastro bem sucedido, mostra o dialog
+      toast.success('Account created!', {
+        description: 'Complete your profile to get started.',
+      })
       setShowProfileDialog(true)
     } catch (error) {
-      console.error('Erro ao fazer cadastro:', error)
+      console.error('Sign up error:', error)
+      toast.error('Could not create account', {
+        description: error instanceof Error ? error.message : 'Try again',
+      })
     } finally {
       setLoading(false)
     }
@@ -73,57 +88,75 @@ export default function SignUp() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${location.origin}/auth/callback`,
+          redirectTo: `${siteUrl}/auth/callback`,
           queryParams: {
+            access_type: 'offline',
             prompt: 'select_account',
           },
         },
       })
 
-      if (error) throw error
-
-      // O dialog será mostrado após o retorno do OAuth
-      // através do useEffect abaixo
+      if (error) {
+        toast.error('Google sign-up failed', { description: error.message })
+        throw error
+      }
     } catch (error) {
-      console.error('Erro ao fazer cadastro com Google:', error)
+      console.error('Google sign-up error:', error)
+    } finally {
       setLoading(false)
     }
   }
 
-  // Verifica se o usuário está autenticado após o retorno do OAuth
   useEffect(() => {
     const checkUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        const { data: profile } = await supabase
-          .from('users')
-          .select('username')
-          .eq('id', user.id)
-          .single()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
 
-        // Se não tiver perfil, mostra o dialog
-        if (!profile) {
-          setShowProfileDialog(true)
-        } else {
-          // Se já tiver perfil, redireciona para home
-          router.push(`/${profile.username}`)
-        }
+      if (!user) return
+
+      const { data: profile } = await supabase
+        .from('users')
+        .select('username')
+        .eq('id', user.id)
+        .single()
+
+      if (!profile) {
+        setShowProfileDialog(true)
+      } else {
+        router.push(`/${profile.username}`)
       }
     }
 
-    checkUser()
-  }, [router, supabase.auth])
+    void checkUser()
+  }, [router, supabase])
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>Criar conta</CardTitle>
-          <CardDescription>
-            Crie sua conta para começar a usar o aplicativo
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+    <div className="flex min-h-screen h-screen w-full max-w-screen items-center justify-center px-4 py-4 lg:max-w-none">
+      <section className="flex h-full w-full flex-col items-center justify-center lg:w-1/2">
+        <div className="flex w-full max-w-[400px] flex-col gap-5">
+          <div className="flex flex-col">
+            <h1 className="text-4xl font-bold text-[#FF0048]">Join Clakete</h1>
+            <span className="text-sm text-muted-foreground">Create your free account</span>
+            <AuthClaketeWordmark className="absolute left-12 top-12" />
+          </div>
+
+          <Button
+            type="button"
+            onClick={handleGoogleSignUp}
+            disabled={loading}
+            className="mt-4 w-full border border-black/10 bg-transparent p-[22px] font-semibold text-black hover:bg-[#FF0048]/10 hover:text-[#FF0048] dark:border-white/10 dark:text-white dark:hover:text-[#FF0048]"
+          >
+            <AuthGoogleIcon className="mr-2 h-4 w-4" />
+            Google
+          </Button>
+
+          <div className="flex w-full items-center justify-center">
+            <div className="h-px w-full bg-black/10 dark:bg-white/10" />
+            <span className="px-4 text-sm text-muted-foreground">or</span>
+            <div className="h-px w-full bg-black/10 dark:bg-white/10" />
+          </div>
+
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
@@ -131,9 +164,13 @@ export default function SignUp() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel className="text-sm text-muted-foreground">Email</FormLabel>
                     <FormControl>
-                      <Input placeholder="seu@email.com" {...field} />
+                      <Input
+                        className="border border-black/10 py-[22px] dark:border-white/10"
+                        placeholder="your@email.com"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -144,61 +181,48 @@ export default function SignUp() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Senha</FormLabel>
+                    <FormLabel className="text-sm text-muted-foreground">Password</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="******" {...field} />
+                      <Input
+                        className="border border-black/10 py-[22px] dark:border-white/10"
+                        type="password"
+                        placeholder="•••••••••••••"
+                        {...field}
+                        onChange={(e) => {
+                          field.onChange(e)
+                          handlePasswordChange()
+                        }}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? 'Criando conta...' : 'Criar conta'}
+              <Button
+                type="submit"
+                className="w-full border border-black/10 bg-[#FF0048] p-[22px] font-semibold text-white hover:bg-[#FF0048]/80 dark:border-white/10"
+                disabled={loading}
+              >
+                {loading ? 'Creating account…' : 'Create account'}
               </Button>
             </form>
           </Form>
 
-          <div className="mt-4 flex items-center justify-center">
-            <span className="text-sm text-gray-500">ou</span>
-          </div>
-
-          <Button
-            variant="outline"
-            onClick={handleGoogleSignUp}
-            disabled={loading}
-            className="mt-4 w-full"
-          >
-            <svg
-              className="mr-2 h-4 w-4"
-              aria-hidden="true"
-              focusable="false"
-              data-prefix="fab"
-              data-icon="google"
-              role="img"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 488 512"
-            >
-              <path
-                fill="currentColor"
-                d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"
-              ></path>
-            </svg>
-            Cadastrar com Google
-          </Button>
-
-          <div className="mt-4 text-center text-sm">
-            Já tem uma conta?{' '}
-            <Link href="/sign-in" className="text-blue-500 hover:underline">
-              Faça login
+          <p className="mt-4 text-center text-sm text-muted-foreground">
+            Already have an account?{' '}
+            <Link href="/sign-in" className="text-[#FF0048] hover:underline">
+              Sign in
             </Link>
-          </div>
-        </CardContent>
-      </Card>
+          </p>
+        </div>
+      </section>
 
-      <ProfileDialog 
-        isOpen={showProfileDialog} 
-        onClose={() => setShowProfileDialog(false)} 
+      <AuthMarketingPanel RiveComponent={RiveComponent} />
+
+      <ProfileDialog
+        isOpen={showProfileDialog}
+        onClose={() => setShowProfileDialog(false)}
       />
     </div>
   )
-} 
+}

@@ -155,7 +155,7 @@ export function NewListSwipeStep({
       for (const gid of genreIdList) {
         const totalPagesStored = genreTotalPagesRef.current.get(gid)
         let page = genreNextPageRef.current.get(gid) ?? 1
-        let totalPages = totalPagesStored ?? 500
+        const totalPages = totalPagesStored ?? 500
         if (page > totalPages) page = 1
         const { rows, totalPages: tp } = await discoverGenrePage(gid, page, sortBy)
         genreTotalPagesRef.current.set(gid, tp)
@@ -246,7 +246,7 @@ export function NewListSwipeStep({
     setDeckTailBuffering(true)
     void (async () => {
       try {
-        let extra: DeckMovie[] = []
+        const extra: DeckMovie[] = []
         let passes = 0
         while (extra.length < REFILL_CHUNK_MIN && passes < MAX_REFILL_FETCH_PASSES) {
           passes += 1

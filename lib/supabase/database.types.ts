@@ -175,6 +175,12 @@ export interface Database {
           telegram_url: string | null
           ethereum_url: string | null
           home_preferences: Json | null
+          plan: string
+          plan_status: string | null
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          plan_current_period_end: string | null
+          plan_updated_at: string | null
           created_at: string
           updated_at: string
         }
@@ -200,6 +206,12 @@ export interface Database {
           telegram_url?: string | null
           ethereum_url?: string | null
           home_preferences?: Json | null
+          plan?: string
+          plan_status?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          plan_current_period_end?: string | null
+          plan_updated_at?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -225,6 +237,12 @@ export interface Database {
           telegram_url?: string | null
           ethereum_url?: string | null
           home_preferences?: Json | null
+          plan?: string
+          plan_status?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          plan_current_period_end?: string | null
+          plan_updated_at?: string | null
           created_at?: string
           updated_at?: string
         }
