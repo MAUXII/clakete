@@ -2,9 +2,8 @@
 
 import { useState } from "react"
 import { useSupabaseClient } from "@supabase/auth-helpers-react"
-import { Loader2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { hasShiningAccess, SHINING_PRODUCT_NAME, type PlanFields } from "@/lib/plans"
+import { ClaketePlanPicker } from "@/components/premium/clakete-plan-picker"
+import type { PlanFields } from "@/lib/plans"
 import { cn } from "@/lib/utils"
 import type { Database } from "@/lib/supabase/database.types"
 
@@ -29,16 +28,17 @@ async function postJson(
 export function ManageSubscription({
   planFields,
   stripeCustomerId,
+  embedded = false,
   className,
 }: {
   planFields: PlanFields
   stripeCustomerId?: string | null
+  /** Tighter layout for edit-profile modal (no duplicate title, less scroll) */
+  embedded?: boolean
   className?: string
 }) {
   const supabase = useSupabaseClient<Database>()
   const [loading, setLoading] = useState<"checkout" | "portal" | null>(null)
-  const isPremium = hasShiningAccess(planFields)
-  const hasCustomer = Boolean(stripeCustomerId)
 
   const getAccessToken = async () => {
     const {
@@ -80,64 +80,15 @@ export function ManageSubscription({
   }
 
   return (
-    <div className={cn("space-y-4 rounded-lg border border-border/80 bg-muted/5 p-4 sm:p-5", className)}>
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          Clakete Premium
-        </p>
-        <p className="mt-1 text-sm font-medium text-foreground">{SHINING_PRODUCT_NAME}</p>
-        <p className="mt-1 text-xs text-muted-foreground">
-          {isPremium
-            ? "Your profile shows the premium highlight. Manage billing below."
-            : "Stand out on your public profile with member styling."}
-        </p>
-        {planFields.plan_status ? (
-          <p className="mt-2 text-xs text-muted-foreground">
-            Status:{" "}
-            <span className="font-medium text-foreground">{planFields.plan_status}</span>
-          </p>
-        ) : null}
-      </div>
-
-      <div className="flex flex-wrap gap-2">
-        {!isPremium ? (
-          <Button
-            type="button"
-            onClick={startCheckout}
-            disabled={loading !== null}
-            className="bg-[#FF0048] hover:bg-[#FF0048]/90"
-          >
-            {loading === "checkout" ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : null}
-            Upgrade to {SHINING_PRODUCT_NAME}
-          </Button>
-        ) : hasCustomer ? (
-          <Button
-            type="button"
-            variant="outline"
-            onClick={openPortal}
-            disabled={loading !== null}
-          >
-            {loading === "portal" ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : null}
-            Manage subscription
-          </Button>
-        ) : (
-          <Button
-            type="button"
-            onClick={startCheckout}
-            disabled={loading !== null}
-            variant="outline"
-          >
-            {loading === "checkout" ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : null}
-            Complete setup
-          </Button>
-        )}
-      </div>
-    </div>
+    <ClaketePlanPicker
+      embedded={embedded}
+      className={cn("max-w-none", className)}
+      planFields={planFields}
+      stripeCustomerId={stripeCustomerId}
+      onCheckout={startCheckout}
+      onPortal={openPortal}
+      checkoutLoading={loading === "checkout"}
+      portalLoading={loading === "portal"}
+    />
   )
 }

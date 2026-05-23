@@ -6,6 +6,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { MdOutlineKeyboardDoubleArrowUp } from "react-icons/md"
 import { cn } from "@/lib/utils"
+import { pageContainerClass } from "@/lib/page-container"
 
 const FILMS_NAV = [
   { href: "/films/discover", label: "Discover" },
@@ -129,7 +130,8 @@ export function FilmsCatalogShell({
     <div className={cn("relative min-w-0 w-full", compact && "flex min-h-0 flex-1 flex-col")}>
       <div
         className={cn(
-          "relative mx-auto w-full max-w-6xl",
+          pageContainerClass,
+          "relative",
           compact ? " flex min-h-0 flex-1 flex-col pb-4" : " pb-20",
           catalogNavbarOffset && "mt-28",
           className,

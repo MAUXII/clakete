@@ -101,7 +101,7 @@ const SECTION_HEADINGS: Record<ProfileSectionId, string> = {
 
 const SECTION_HINTS: Record<ProfileSectionId, string> = {
   account: "Your username and sign-in identity.",
-  subscription: "The Shining — upgrade, billing, and plan status.",
+  subscription: "The Shining — choose a plan, upgrade, and manage billing.",
   profile: "Display name and bio shown on your public profile. Markdown is supported in bio.",
   preferences: "Home backdrop and which sections appear after you sign in.",
   social: "Social platforms shown on your public profile.",
@@ -109,7 +109,7 @@ const SECTION_HINTS: Record<ProfileSectionId, string> = {
 
 /** Fixed shell — sections scroll inside; modal size does not change per tab. */
 const EDIT_PROFILE_MODAL_SIZE = cn(
-  "h-[min(90vh,640px)] min-h-[min(90vh,640px)] max-h-[min(90vh,640px)]",
+  "h-[min(92vh,680px)] min-h-[min(92vh,680px)] max-h-[min(92vh,680px)]",
   "w-[min(96vw,920px)] min-w-[min(96vw,920px)] max-w-[min(96vw,920px)]",
 )
 
@@ -339,7 +339,14 @@ export function EditProfileDialog({
               </DialogDescription>
             </div>
 
-            <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto px-6 py-5 sm:px-8 sm:py-6">
+            <div
+              className={cn(
+                "custom-scrollbar min-h-0 flex-1 px-6 py-5 sm:px-8 sm:py-6",
+                activeSection === "subscription"
+                  ? "overflow-y-visible"
+                  : "overflow-y-auto",
+              )}
+            >
               {activeSection === "account" && (
                 <div className="rounded-lg border border-border/80 bg-muted/5 p-4 sm:p-5">
                   <div>
@@ -360,10 +367,13 @@ export function EditProfileDialog({
               )}
 
               {activeSection === "subscription" && (
-                <ManageSubscription
-                  planFields={planFields}
-                  stripeCustomerId={stripeCustomerId}
-                />
+                <div className="rounded-lg border border-border/80 bg-[#0c0c0e] p-4 sm:p-5">
+                  <ManageSubscription
+                    embedded
+                    planFields={planFields}
+                    stripeCustomerId={stripeCustomerId}
+                  />
+                </div>
               )}
 
               {activeSection === "profile" && (

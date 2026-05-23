@@ -41,6 +41,7 @@ import { profileAvatarPresentation } from "@/lib/profile-media"
 import { avatarDisplaySrc, remoteImageSrcLooksLikeGif } from "@/lib/next-remote-image"
 import React from "react"
 import { cn } from "@/lib/utils"
+import { pageContainerClass } from "@/lib/page-container"
 import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "./sheet"
 
 export function Navbar() {
@@ -143,7 +144,8 @@ export function Navbar() {
       >
         <div
           className={cn(
-            "mx-auto flex w-full max-w-6xl items-center gap-3 sm:gap-4",
+            pageContainerClass,
+            "flex items-center gap-3 sm:gap-4",
             "py-2.5 sm:py-3",
           )}
         >

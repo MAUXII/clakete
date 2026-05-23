@@ -9,7 +9,7 @@ import { use } from 'react'
 import { useSupabaseClient, useUser } from '@supabase/auth-helpers-react'
 import { useProfile } from "@/components/providers/profile-provider"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ProfileTabBar } from "@/components/profile/profile-tab-bar"
 import { toast } from "sonner"
 import Link from "next/link"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -27,19 +27,9 @@ import { profileBannerPresentation, profileAvatarPresentation } from "@/lib/prof
 import { avatarDisplaySrc } from "@/lib/next-remote-image"
 import type { Json } from "@/lib/supabase/database.types"
 import { cn } from "@/lib/utils"
+import { pageContainerClass } from "@/lib/page-container"
 import { hasShiningAccess } from "@/lib/plans"
 import { ShiningBadge } from "@/components/premium/shining-badge"
-
-const profileTabLinkClass = "group flex h-full min-h-0 flex-1"
-const profileTabTriggerClass = cn(
-  "h-full w-full rounded-md px-8 py-2 text-sm font-medium transition-colors",
-  "bg-transparent text-zinc-400 shadow-none",
-  "group-hover:text-zinc-200 dark:group-hover:text-zinc-100",
-  "data-[state=active]:!bg-[#FF0048]/10 data-[state=active]:!text-[#e8486b]",
-  "dark:data-[state=active]:!bg-[#FF0048]/14 dark:data-[state=active]:!text-[#ff9eb0]",
-  "data-[state=active]:group-hover:!text-[#e8486b] dark:data-[state=active]:group-hover:!text-[#ff9eb0]",
-  "data-[state=active]:!shadow-none",
-)
 
 interface UserData extends ProfileLayoutUser {
   website_url?: string | null;
@@ -467,7 +457,7 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
         className="relative h-[485px] w-full min-w-0 overflow-hidden rounded-none border-0 bg-cover bg-center ring-1 ring-white/[0.06]"
 
       />
-      <div className="mx-auto w-full max-w-6xl px-8">
+      <div className={pageContainerClass}>
         <div className="relative z-10">
           <div className="flex gap-6">
           <div className="flex flex-col w-full  gap-6">
@@ -507,7 +497,7 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
     )
     if (!userData && !loading) {
       return (
-        <section className="mx-auto mt-16 w-full max-w-6xl px-4 py-16 text-center sm:px-6">
+        <section className={cn(pageContainerClass, "mt-16 py-16 text-center")}>
           <p className="text-muted-foreground">Não foi possível carregar este perfil.</p>
           <Link
             href="/"
@@ -561,7 +551,7 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
         ) : null}
       </div>
 
-      <div className="mx-auto w-full max-w-6xl">
+      <div className={pageContainerClass}>
       {/* Profile info */}
       <div className="w-full">
         <div className="relative z-10">
@@ -709,35 +699,11 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
           </div>
           </div>
           <div className="w-full">
-          <Tabs value={activeTab} className="w-full mt-6 ">
-          <TabsList className="flex h-12 w-full border border-white/[0.08] bg-[#09090B] p-1 text-zinc-400 dark:bg-[#09090B]">
-    <Link href={`/${username}`} className={profileTabLinkClass}>
-      <TabsTrigger className={profileTabTriggerClass} value="profile">Profile</TabsTrigger>
-    </Link>
-    <Link href={`/${username}/watched`} className={profileTabLinkClass}>
-      <TabsTrigger className={profileTabTriggerClass} value="watched">Watched</TabsTrigger>
-    </Link>
-    <Link href={`/${username}/lists`} className={profileTabLinkClass}>
-      <TabsTrigger className={profileTabTriggerClass} value="lists">Lists</TabsTrigger>
-    </Link>
-    <Link href={`/${username}/reviews`} className={profileTabLinkClass}>
-      <TabsTrigger className={profileTabTriggerClass} value="reviews">Reviews</TabsTrigger>
-    </Link>
-    <Link href={`/${username}/activity`} className={profileTabLinkClass}>
-      <TabsTrigger className={profileTabTriggerClass} value="activity">Activity</TabsTrigger>
-    </Link>
-    <Link href={`/${username}/watchlist`} className={profileTabLinkClass}>
-      <TabsTrigger className={profileTabTriggerClass} value="watchlist">Watchlist</TabsTrigger>
-    </Link>
-  </TabsList>
-  
-  <div className="w-full">
-    <ProfileLayoutProvider value={{ userData, isOwnProfile }}>
-      {children}
-    </ProfileLayoutProvider>
-  </div>
-  
-  </Tabs>
+          <ProfileTabBar username={username} activeTab={activeTab}>
+            <ProfileLayoutProvider value={{ userData, isOwnProfile }}>
+              {children}
+            </ProfileLayoutProvider>
+          </ProfileTabBar>
           </div>
         </div>
         </div>

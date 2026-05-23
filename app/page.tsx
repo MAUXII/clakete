@@ -13,6 +13,7 @@ import {
   Zap,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { pageContainerClass } from '@/lib/page-container'
 import { UserRecentReviews } from "@/components/profile/recent-reviews";
 import CinematicBackground from '@/components/CinematicBackground'
 import { LandingSpotlight } from '@/components/landing/LandingSpotlight'
@@ -313,7 +314,7 @@ export default function HomePage() {
         <LandingSpotlight movie={spotlightMovie} />
 
         <section className="relative left-1/2 w-screen max-w-[100vw] -translate-x-1/2  bg-black py-16 sm:py-20">
-          <div className="mx-auto w-full max-w-6xl sm:px-6 lg:px-8">
+          <div className={pageContainerClass}>
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-zinc-500">
@@ -370,7 +371,7 @@ export default function HomePage() {
 
         {/*
         <section className="relative left-1/2 w-screen max-w-[100vw] -translate-x-1/2 bg-zinc-950 py-16 sm:py-24">
-          <div className="mx-auto w-full max-w-6xl sm:px-6 lg:px-8">
+          <div className={pageContainerClass}>
             <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-zinc-500">
               Clakete deixa você…
             </p>
@@ -435,7 +436,7 @@ export default function HomePage() {
               <CtaCatalogGridBg className="min-h-[min(100%,520px)] w-full opacity-[0.55] sm:opacity-[0.65]" />
             </div>
           </div>
-          <div className="relative z-10 mx-auto flex max-w-6xl flex-col items-center text-center">
+          <div className={cn(pageContainerClass, "relative z-10 flex flex-col items-center text-center")}>
             <p className="text-[10px] font-medium uppercase tracking-[0.3em] text-white/70">
             TMDB Catalog
             </p>
@@ -503,7 +504,12 @@ export default function HomePage() {
               aria-hidden
             />
 
-            <div className="relative z-10 mx-auto flex min-h-[620px] w-full max-w-6xl flex-col justify-end pb-16 pt-28 sm:px-6 sm:pb-20 sm:pt-32 md:min-h-[80svh] md:pb-24 lg:px-8">
+            <div
+              className={cn(
+                pageContainerClass,
+                "relative z-10 flex min-h-[620px] flex-col justify-end pb-16 pt-28 sm:pb-20 sm:pt-32 md:min-h-[80svh] md:pb-24",
+              )}
+            >
               <div className="max-w-2xl">
                 <p className="text-[10px] font-medium uppercase tracking-[0.35em] text-neutral-500">
                   Profile
@@ -619,7 +625,7 @@ export default function HomePage() {
 
       <div
         className={cn(
-          'mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8',
+          pageContainerClass,
           hasFilmHero ? 'relative z-10 -mt-[6rem] sm:-mt-[7.25rem]' : 'mt-20 pt-6',
         )}
       >
