@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, type ReactNode, Suspense } from 'react'
 import { useUser } from '@supabase/auth-helpers-react'
 import Link from 'next/link'
 import {
@@ -762,11 +762,13 @@ export default function HomePage() {
               title="Activity"
               titleId="home-following-feed"
             />
-            <SocialFeed
-              selfUsername={userProfile?.username}
-              selfAvatar={userProfile?.avatar_url}
-              limit={12}
-            />
+            <Suspense fallback={null}>
+              <SocialFeed
+                selfUsername={userProfile?.username}
+                selfAvatar={userProfile?.avatar_url}
+                limit={12}
+              />
+            </Suspense>
           </section>
         ) : null}
 

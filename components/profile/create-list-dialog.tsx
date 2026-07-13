@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react"
 import Image from "next/image"
-import { Loader2, X } from "lucide-react"
+import { Globe2, Loader2, Users, X } from "lucide-react"
 import { useUser } from "@supabase/auth-helpers-react"
 import { toast } from "sonner"
 
@@ -61,6 +61,8 @@ export function CreateListDialog({ open, onOpenChange, onListCreated }: CreateLi
   const [title, setTitle] = useState("")
   const [bio, setBio] = useState("")
   const [isPublic, setIsPublic] = useState(true)
+  const [shareToFeed, setShareToFeed] = useState(false)
+  const [feedVisibility, setFeedVisibility] = useState<"friends" | "public">("friends")
   const [tags, setTags] = useState<string[]>([])
   const [tagInput, setTagInput] = useState("")
   const [loading, setLoading] = useState(false)
@@ -76,6 +78,8 @@ export function CreateListDialog({ open, onOpenChange, onListCreated }: CreateLi
     setTitle("")
     setBio("")
     setIsPublic(true)
+    setShareToFeed(false)
+    setFeedVisibility("friends")
     setTags([])
     setTagInput("")
     setSidebarQuery("")
@@ -163,6 +167,9 @@ export function CreateListDialog({ open, onOpenChange, onListCreated }: CreateLi
         bio: bio.trim() || undefined,
         is_public: isPublic,
         tags: tags.length ? tags : undefined,
+        feed_shared: shareToFeed,
+        feed_visibility:
+          !isPublic || feedVisibility === "friends" ? "friends" : "public",
       }
 
       const newList = await createList(listData)
@@ -298,7 +305,10 @@ export function CreateListDialog({ open, onOpenChange, onListCreated }: CreateLi
                       name="list-privacy"
                       value="private"
                       checked={!isPublic}
-                      onChange={() => setIsPublic(false)}
+                      onChange={() => {
+                        setIsPublic(false)
+                        setFeedVisibility("friends")
+                      }}
                       className="mt-1 h-4 w-4 accent-zinc-900 dark:accent-zinc-100"
                     />
                     <span>
@@ -307,6 +317,62 @@ export function CreateListDialog({ open, onOpenChange, onListCreated }: CreateLi
                     </span>
                   </label>
                 </fieldset>
+
+                <div className="space-y-3 rounded-xl border border-border/80 bg-muted/20 p-3">
+                  <label className="flex cursor-pointer items-start gap-3 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={shareToFeed}
+                      onChange={(e) => setShareToFeed(e.target.checked)}
+                      className="mt-1 h-4 w-4 accent-[#FF0048]"
+                    />
+                    <span>
+                      <span className="font-medium text-foreground">Share to feed</span>
+                      <span className="mt-0.5 block text-xs text-muted-foreground">
+                        Post this list for people who follow you.
+                      </span>
+                    </span>
+                  </label>
+
+                  {shareToFeed ? (
+                    <div className="grid grid-cols-2 gap-2 pl-7">
+                      <button
+                        type="button"
+                        onClick={() => setFeedVisibility("friends")}
+                        className={cn(
+                          "flex flex-col items-start gap-1 rounded-lg border px-3 py-2.5 text-left transition",
+                          feedVisibility === "friends"
+                            ? "border-[#FF0048]/40 bg-[#FF0048]/10"
+                            : "border-border/80 hover:border-border",
+                        )}
+                      >
+                        <Users className="size-4 text-[#FF0048]" />
+                        <span className="text-xs font-medium">Friends</span>
+                        <span className="text-[10px] text-muted-foreground">
+                          Mutual follows only
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        disabled={!isPublic}
+                        onClick={() => setFeedVisibility("public")}
+                        className={cn(
+                          "flex flex-col items-start gap-1 rounded-lg border px-3 py-2.5 text-left transition",
+                          !isPublic && "cursor-not-allowed opacity-40",
+                          feedVisibility === "public"
+                            ? "border-[#FF0048]/40 bg-[#FF0048]/10"
+                            : "border-border/80 hover:border-border",
+                        )}
+                      >
+                        <Globe2 className="size-4 text-[#FF0048]" />
+                        <span className="text-xs font-medium">Public</span>
+                        <span className="text-[10px] text-muted-foreground">
+                          {isPublic ? "Anyone on Clakete" : "Lista precisa ser pública"}
+                        </span>
+                      </button>
+                    </div>
+                  ) : null}
+                </div>
               </div>
             ) : null}
 

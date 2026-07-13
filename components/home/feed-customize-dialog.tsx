@@ -59,8 +59,8 @@ interface FeedCustomizeDialogProps {
   onPost: (payload: FeedPostPayload) => void | Promise<void>
 }
 
-function interleave<T>(a: T[], b: T[]): T[] {
-  const out: T[] = []
+function interleave<A, B>(a: A[], b: B[]): Array<A | B> {
+  const out: Array<A | B> = []
   const max = Math.max(a.length, b.length)
   for (let i = 0; i < max; i++) {
     if (i < a.length) out.push(a[i])
@@ -146,14 +146,18 @@ function PreviewMedia({
     return <CollagePreview images={images} />
   }
 
-  const isPoster = current.kind === "poster"
+  const useFixedSlideFrame = images.length > 1 && layout === "slide"
 
   return (
     <div className="relative overflow-hidden rounded-xl border border-white/[0.08] bg-zinc-950">
       <div
         className={cn(
           "relative w-full overflow-hidden",
-          isPoster ? "aspect-[2/3] max-h-[320px]" : "aspect-[16/9]",
+          useFixedSlideFrame
+            ? "h-[min(70vh,28rem)]"
+            : current.kind === "poster"
+              ? "aspect-[2/3] max-h-[320px]"
+              : "aspect-[16/9]",
         )}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}

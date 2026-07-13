@@ -1,14 +1,18 @@
 "use client"
 
-import { UserRecentActivity } from "@/components/profile/recent-activity"
+import { WatchedDiary } from "@/components/profile/watched-diary"
 import { useProfileLayoutData } from "@/components/providers/profile-layout-context"
 
 export default function WatchedPage() {
-  const { userData } = useProfileLayoutData()
+  const { userData, isOwnProfile } = useProfileLayoutData()
 
   return (
     <div>
-      <UserRecentActivity userId={userData.id} showAllWatched />
+      <WatchedDiary
+        userId={userData.id}
+        username={userData.username}
+        isOwnProfile={isOwnProfile}
+      />
     </div>
   )
 }

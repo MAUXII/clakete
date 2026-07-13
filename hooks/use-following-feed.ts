@@ -21,6 +21,8 @@ export type FollowingFeedItem =
   | {
       kind: "review"
       id: string
+      interactionId: number
+      shareUid: string | null
       at: string
       user: FollowingFeedUser
       tmdbId: number
@@ -29,11 +31,17 @@ export type FollowingFeedItem =
       posterPath: string | null
       rating: number | null
       review: string
+      feedVisibility: "friends" | "public"
+      fromDiscover?: boolean
+      likeCount: number
+      likedByMe: boolean
+      commentCount: number
     }
   | {
       kind: "watched"
       id: string
       interactionId: number
+      shareUid: string | null
       at: string
       user: FollowingFeedUser
       tmdbId: number
@@ -66,16 +74,21 @@ export type FollowingFeedItem =
       filmsCount: number
       posterPath: string | null
       listPosters: string[]
+      feedVisibility: "friends" | "public"
+      fromDiscover?: boolean
     }
 
 const FEED_FETCH_LIMIT = 40
 const PUBLIC_DISCOVER_LIMIT = 12
 const STORY_NEW_MS = 72 * 60 * 60 * 1000
 
-const WATCHED_FEED_SELECT =
-  "id, user_id, tmdb_id, media_type, poster_path, movie_title, watched_date, rewatch_count, updated_at, created_at, is_watched, feed_shared, feed_image_path, feed_image_kind, feed_images, feed_title, feed_caption, feed_layout, feed_shared_at, feed_visibility"
+export const WATCHED_FEED_SELECT =
+  "id, user_id, tmdb_id, media_type, poster_path, movie_title, watched_date, rewatch_count, updated_at, created_at, is_watched, rating, review, feed_shared, feed_image_path, feed_image_kind, feed_images, feed_title, feed_caption, feed_layout, feed_shared_at, feed_visibility, feed_share_uid"
 
-type WatchedFeedRow = {
+const LIST_FEED_SELECT =
+  "id, user_id, title, slug, is_public, feed_shared, feed_shared_at, feed_visibility, updated_at, created_at"
+
+export type WatchedFeedRow = {
   id: number
   user_id: string
   tmdb_id: number
@@ -86,6 +99,9 @@ type WatchedFeedRow = {
   rewatch_count: number | null
   updated_at: string | null
   created_at: string | null
+  is_watched: boolean | null
+  rating: number | null
+  review: string | null
   feed_image_path: string | null
   feed_image_kind: string | null
   feed_images: unknown
@@ -94,6 +110,19 @@ type WatchedFeedRow = {
   feed_layout: string | null
   feed_shared_at: string | null
   feed_visibility: string | null
+  feed_share_uid: string | null
+}
+
+type ListFeedRow = {
+  id: string
+  user_id: string
+  title: string
+  slug: string | null
+  is_public: boolean
+  feed_shared_at: string | null
+  feed_visibility: string | null
+  updated_at: string | null
+  created_at: string | null
 }
 
 function parseFeedImages(raw: unknown): { filePath: string; kind: "poster" | "backdrop" }[] {
@@ -118,7 +147,15 @@ function parseFeedImages(raw: unknown): { filePath: string; kind: "poster" | "ba
     )
 }
 
-function mapWatchedRow(
+function hasFeedMedia(row: WatchedFeedRow): boolean {
+  return parseFeedImages(row.feed_images).length > 0 || Boolean(row.feed_image_path)
+}
+
+function hasReviewText(row: WatchedFeedRow): boolean {
+  return Boolean(row.review?.trim())
+}
+
+export function mapWatchedRow(
   row: WatchedFeedRow,
   u: FollowingFeedUser,
   meta: {
@@ -146,6 +183,7 @@ function mapWatchedRow(
     kind: "watched",
     id: `watched-${interactionId}`,
     interactionId,
+    shareUid: row.feed_share_uid || null,
     at,
     user: u,
     tmdbId: row.tmdb_id,
@@ -169,6 +207,75 @@ function mapWatchedRow(
     likeCount: meta.likeCount,
     likedByMe: meta.likedByMe,
     commentCount: meta.commentCount,
+  }
+}
+
+function mapReviewRow(
+  row: WatchedFeedRow,
+  u: FollowingFeedUser,
+  meta: {
+    likeCount: number
+    likedByMe: boolean
+    commentCount: number
+    fromDiscover?: boolean
+  },
+): Extract<FollowingFeedItem, { kind: "review" }> {
+  const interactionId = row.id
+  const at =
+    row.feed_shared_at ||
+    row.updated_at ||
+    row.created_at ||
+    new Date().toISOString()
+
+  return {
+    kind: "review",
+    id: `review-${interactionId}`,
+    interactionId,
+    shareUid: row.feed_share_uid || null,
+    at,
+    user: u,
+    tmdbId: row.tmdb_id,
+    mediaType: row.media_type ?? "movie",
+    title: row.movie_title || "Untitled",
+    posterPath: row.poster_path,
+    rating: row.rating,
+    review: row.review?.trim() || "",
+    feedVisibility: row.feed_visibility === "public" ? "public" : "friends",
+    fromDiscover: meta.fromDiscover,
+    likeCount: meta.likeCount,
+    likedByMe: meta.likedByMe,
+    commentCount: meta.commentCount,
+  }
+}
+
+function mapListRow(
+  row: ListFeedRow,
+  u: FollowingFeedUser,
+  meta: {
+    filmsCount: number
+    posters: string[]
+    fromDiscover?: boolean
+  },
+): Extract<FollowingFeedItem, { kind: "list" }> {
+  const at =
+    row.feed_shared_at ||
+    row.updated_at ||
+    row.created_at ||
+    new Date().toISOString()
+
+  return {
+    kind: "list",
+    id: `list-${row.id}`,
+    at,
+    user: u,
+    listId: row.id,
+    listTitle: row.title,
+    listSlug: row.slug,
+    filmsCount: meta.filmsCount,
+    posterPath: meta.posters[0] ?? null,
+    listPosters: meta.posters,
+    feedVisibility: row.feed_visibility === "public" ? "public" : "friends",
+    fromDiscover: meta.fromDiscover,
   }
 }
 
@@ -230,23 +337,55 @@ export function useFollowingFeed(limit = 20) {
 
       setFollowingCount(followingIds.length)
 
-      // Include self so your own shared posts appear in the home feed
+      const { data: followersRows, error: followersError } = await supabase
+        .from("user_followers")
+        .select("follower_id")
+        .eq("user_id", user.id)
+
+      if (followersError) throw followersError
+
+      const followerIdSet = new Set(
+        (followersRows ?? [])
+          .map((row) => row.follower_id as string)
+          .filter(Boolean),
+      )
+      const mutualIds = new Set(
+        followingIds.filter((id) => followerIdSet.has(id)),
+      )
+
       const feedAuthorIds = [...new Set([...followingIds, user.id])]
 
-      // Circle (following + self) + public discover from people you don't follow
-      const [watchedRes, publicRes, followingUsersRes] = await Promise.all([
+      const [
+        interactionsRes,
+        publicInteractionsRes,
+        listsRes,
+        publicListsRes,
+        followingUsersRes,
+      ] = await Promise.all([
         supabase
           .from("items_interactions")
           .select(WATCHED_FEED_SELECT)
           .in("user_id", feedAuthorIds)
-          .eq("is_watched", true)
           .eq("feed_shared", true)
           .order("feed_shared_at", { ascending: false, nullsFirst: false })
           .limit(FEED_FETCH_LIMIT),
         supabase
           .from("items_interactions")
           .select(WATCHED_FEED_SELECT)
-          .eq("is_watched", true)
+          .eq("feed_shared", true)
+          .eq("feed_visibility", "public")
+          .order("feed_shared_at", { ascending: false, nullsFirst: false })
+          .limit(FEED_FETCH_LIMIT),
+        supabase
+          .from("lists")
+          .select(LIST_FEED_SELECT)
+          .in("user_id", feedAuthorIds)
+          .eq("feed_shared", true)
+          .order("feed_shared_at", { ascending: false, nullsFirst: false })
+          .limit(FEED_FETCH_LIMIT),
+        supabase
+          .from("lists")
+          .select(LIST_FEED_SELECT)
           .eq("feed_shared", true)
           .eq("feed_visibility", "public")
           .order("feed_shared_at", { ascending: false, nullsFirst: false })
@@ -257,12 +396,12 @@ export function useFollowingFeed(limit = 20) {
           .in("id", feedAuthorIds),
       ])
 
-      if (watchedRes.error) throw watchedRes.error
+      if (interactionsRes.error) throw interactionsRes.error
       if (followingUsersRes.error) throw followingUsersRes.error
 
       const circleIds = new Set(feedAuthorIds)
-      const circleRows = (watchedRes.data ?? []) as WatchedFeedRow[]
-      const discoverRows = ((publicRes.error ? [] : publicRes.data) ?? [])
+      const circleRows = (interactionsRes.data ?? []) as WatchedFeedRow[]
+      const discoverRows = ((publicInteractionsRes.error ? [] : publicInteractionsRes.data) ?? [])
         .map((r) => r as WatchedFeedRow)
         .filter((r) => !circleIds.has(r.user_id as string))
         .slice(0, PUBLIC_DISCOVER_LIMIT)
@@ -277,41 +416,116 @@ export function useFollowingFeed(limit = 20) {
         uniqueRows.push(row)
       }
 
+      const circleLists = ((listsRes.error ? [] : listsRes.data) ?? []) as ListFeedRow[]
+      const discoverLists = ((publicListsRes.error ? [] : publicListsRes.data) ?? [])
+        .map((r) => r as ListFeedRow)
+        .filter((r) => !circleIds.has(r.user_id as string))
+        .slice(0, PUBLIC_DISCOVER_LIMIT)
+
+      const allLists = [...circleLists, ...discoverLists]
+      const seenListIds = new Set<string>()
+      const uniqueLists: ListFeedRow[] = []
+      for (const row of allLists) {
+        if (seenListIds.has(row.id)) continue
+        seenListIds.add(row.id)
+        uniqueLists.push(row)
+      }
+
       const interactionIds = uniqueRows.map((r) => r.id as number)
+      const listIds = uniqueLists.map((r) => r.id)
 
       const likeCountById = new Map<number, number>()
       const likedByMe = new Set<number>()
       const commentCountById = new Map<number, number>()
+      const hiddenIds = new Set<number>()
+      const hiddenListIds = new Set<string>()
+      const postersByListId = new Map<string, string[]>()
+      const countByListId = new Map<string, number>()
+
+      const metaPromises: PromiseLike<unknown>[] = []
 
       if (interactionIds.length > 0) {
-        const [likesRes, commentsRes] = await Promise.all([
-          supabase
-            .from("feed_post_likes")
-            .select("interaction_id, user_id")
-            .in("interaction_id", interactionIds),
-          supabase
-            .from("feed_post_comments")
-            .select("interaction_id")
-            .in("interaction_id", interactionIds),
-        ])
-
-        if (!likesRes.error) {
-          for (const row of likesRes.data ?? []) {
-            const iid = row.interaction_id as number
-            likeCountById.set(iid, (likeCountById.get(iid) ?? 0) + 1)
-            if ((row.user_id as string) === user.id) likedByMe.add(iid)
-          }
-        }
-        if (!commentsRes.error) {
-          for (const row of commentsRes.data ?? []) {
-            const iid = row.interaction_id as number
-            commentCountById.set(iid, (commentCountById.get(iid) ?? 0) + 1)
-          }
-        }
+        metaPromises.push(
+          Promise.all([
+            supabase
+              .from("feed_post_likes")
+              .select("interaction_id, user_id")
+              .in("interaction_id", interactionIds),
+            supabase
+              .from("feed_post_comments")
+              .select("interaction_id")
+              .in("interaction_id", interactionIds),
+            supabase
+              .from("feed_post_hides")
+              .select("interaction_id")
+              .eq("user_id", user.id)
+              .in("interaction_id", interactionIds),
+          ]).then(([likesRes, commentsRes, hidesRes]) => {
+            if (!hidesRes.error) {
+              for (const row of hidesRes.data ?? []) {
+                hiddenIds.add(row.interaction_id as number)
+              }
+            }
+            if (!likesRes.error) {
+              for (const row of likesRes.data ?? []) {
+                const iid = row.interaction_id as number
+                likeCountById.set(iid, (likeCountById.get(iid) ?? 0) + 1)
+                if ((row.user_id as string) === user.id) likedByMe.add(iid)
+              }
+            }
+            if (!commentsRes.error) {
+              for (const row of commentsRes.data ?? []) {
+                const iid = row.interaction_id as number
+                commentCountById.set(iid, (commentCountById.get(iid) ?? 0) + 1)
+              }
+            }
+          }),
+        )
       }
 
+      if (listIds.length > 0) {
+        metaPromises.push(
+          Promise.all([
+            supabase
+              .from("list_items")
+              .select("list_id, poster_path, position")
+              .in("list_id", listIds)
+              .order("position", { ascending: true }),
+            supabase
+              .from("feed_list_hides")
+              .select("list_id")
+              .eq("user_id", user.id)
+              .in("list_id", listIds),
+          ]).then(([itemsRes, listHidesRes]) => {
+            if (!listHidesRes.error) {
+              for (const row of listHidesRes.data ?? []) {
+                hiddenListIds.add(row.list_id as string)
+              }
+            }
+            if (!itemsRes.error) {
+              for (const row of itemsRes.data ?? []) {
+                const lid = row.list_id as string
+                countByListId.set(lid, (countByListId.get(lid) ?? 0) + 1)
+                const path = row.poster_path as string | null
+                if (!path) continue
+                const arr = postersByListId.get(lid) ?? []
+                if (arr.length < 5) {
+                  arr.push(path)
+                  postersByListId.set(lid, arr)
+                }
+              }
+            }
+          }),
+        )
+      }
+
+      await Promise.all(metaPromises)
+
       const activityUserIds = [
-        ...new Set(uniqueRows.map((r) => r.user_id as string)),
+        ...new Set([
+          ...uniqueRows.map((r) => r.user_id as string),
+          ...uniqueLists.map((r) => r.user_id as string),
+        ]),
       ]
 
       const missingIds = activityUserIds.filter(
@@ -346,23 +560,82 @@ export function useFollowingFeed(limit = 20) {
       }
 
       const discoverIdSet = new Set(discoverRows.map((r) => r.id as number))
+      const discoverListIdSet = new Set(discoverLists.map((r) => r.id))
+
+      const passesVisibility = (
+        visibility: "friends" | "public",
+        authorId: string,
+      ) => {
+        if (visibility === "friends" && authorId !== user.id && !mutualIds.has(authorId)) {
+          return false
+        }
+        return true
+      }
 
       for (const row of uniqueRows) {
         const u = users.get(row.user_id as string)
         if (!u?.username) continue
         const interactionId = row.id as number
+        if (hiddenIds.has(interactionId)) continue
+
+        const visibility =
+          row.feed_visibility === "public" ? "public" : "friends"
+        if (!passesVisibility(visibility, u.id)) continue
+
+        const reviewText = hasReviewText(row)
+        const media = hasFeedMedia(row)
+        const watched = Boolean(row.is_watched) || media
+
+        // Prefer media/watched card when customize photos exist; else review card
+        const asReview = reviewText && !media
+        if (!asReview && !watched && !reviewText) continue
+
         const fromDiscover = discoverIdSet.has(interactionId)
-        const item = mapWatchedRow(row, {
+        const feedUser = {
           id: u.id,
           username: u.username,
           display_name: u.display_name,
           avatar_url: u.avatar_url,
-        }, {
+        }
+        const meta = {
           likeCount: likeCountById.get(interactionId) ?? 0,
           likedByMe: likedByMe.has(interactionId),
           commentCount: commentCountById.get(interactionId) ?? 0,
           fromDiscover,
-        })
+        }
+
+        const item = asReview
+          ? mapReviewRow(row, feedUser, meta)
+          : mapWatchedRow(row, feedUser, meta)
+
+        if (!fromDiscover) bumpActivity(u.id, item.at)
+        feed.push(item)
+      }
+
+      for (const row of uniqueLists) {
+        const u = users.get(row.user_id as string)
+        if (!u?.username) continue
+        if (hiddenListIds.has(row.id)) continue
+
+        const visibility =
+          row.feed_visibility === "public" ? "public" : "friends"
+        if (!passesVisibility(visibility, u.id)) continue
+
+        const fromDiscover = discoverListIdSet.has(row.id)
+        const item = mapListRow(
+          row,
+          {
+            id: u.id,
+            username: u.username,
+            display_name: u.display_name,
+            avatar_url: u.avatar_url,
+          },
+          {
+            filmsCount: countByListId.get(row.id) ?? 0,
+            posters: postersByListId.get(row.id) ?? [],
+            fromDiscover,
+          },
+        )
         if (!fromDiscover) bumpActivity(u.id, item.at)
         feed.push(item)
       }
@@ -430,6 +703,10 @@ export function useFollowingFeed(limit = 20) {
     loadMore,
     refresh,
   }
+}
+
+export function feedPostHref(shareUid: string) {
+  return `/p/${shareUid}`
 }
 
 export function feedMediaHref(tmdbId: number, mediaType: string | null) {

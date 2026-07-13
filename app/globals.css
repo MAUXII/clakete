@@ -2,6 +2,23 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Shared-post locate highlight (WhatsApp-style flash) */
+@keyframes feed-post-locate {
+  0%,
+  15% {
+    background-color: rgba(255, 0, 72, 0.14);
+    box-shadow: inset 3px 0 0 0 rgba(255, 0, 72, 0.55);
+  }
+  100% {
+    background-color: transparent;
+    box-shadow: inset 3px 0 0 0 transparent;
+  }
+}
+
+.feed-post-locate {
+  animation: feed-post-locate 2.4s ease-out forwards;
+}
+
 .my-masonry-grid {
   display: flex;
   margin-left: -16px;

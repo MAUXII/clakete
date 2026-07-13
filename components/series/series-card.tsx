@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useEffect, useState } from "react"
+import { useEffect, useState, type ReactNode } from "react"
 import { IoEyeOutline, IoEye, IoHeartOutline, IoHeart } from "react-icons/io5"
 import { toast } from "sonner"
 
@@ -20,9 +20,16 @@ interface SeriesCardProps {
   }
   externalid?: number
   variant?: "default" | "nav-fill"
+  /** Extra buttons rendered under eye/heart on poster hover (e.g. edit menu). */
+  extraActions?: ReactNode
 }
 
-export function SeriesCard({ series: show, externalid, variant = "default" }: SeriesCardProps) {
+export function SeriesCard({
+  series: show,
+  externalid,
+  variant = "default",
+  extraActions,
+}: SeriesCardProps) {
   const seriesId = externalid ?? show?.id ?? 0
   const { isWatched, isLiked, toggleWatched, toggleLiked, updating } = useFilmInteractions(
     seriesId || 0,
@@ -118,6 +125,7 @@ export function SeriesCard({ series: show, externalid, variant = "default" }: Se
           >
             {localLiked ? <IoHeart className="h-4 w-4" /> : <IoHeartOutline className="h-4 w-4" />}
           </button>
+          {extraActions}
         </div>
       </div>
     </Link>

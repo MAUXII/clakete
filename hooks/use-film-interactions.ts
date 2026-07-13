@@ -136,7 +136,10 @@ export function useFilmInteractions(
     };
   }, [supabase, user, filmId, mediaType, posterPath, movieTitle, releaseDate]);
 
-  const updateInteractions = async (updates: Partial<FilmInteractions>) => {
+  const updateInteractions = async (
+    updates: Partial<FilmInteractions>,
+    feedShare?: { visibility: "friends" | "public" },
+  ) => {
     if (!user) {
       toast.error("Please sign in to interact with titles");
       return;
@@ -151,24 +154,39 @@ export function useFilmInteractions(
     setInteractions(newInteractions);
 
     try {
+      const title = movieTitle || newInteractions.movie_title || null;
+      const poster = posterPath || newInteractions.poster_path || null;
+      const release = releaseDate || newInteractions.release_date || null;
+
+      const payload: Database["public"]["Tables"]["items_interactions"]["Insert"] = {
+        user_id: user.id,
+        tmdb_id: filmId,
+        media_type: mediaType,
+        rating: newInteractions.rating,
+        review: newInteractions.review,
+        is_watched: newInteractions.isWatched,
+        is_liked: newInteractions.isLiked,
+        in_watchlist: newInteractions.isInWatchlist,
+        watched_date: newInteractions.isWatched ? newInteractions.watchedDate : null,
+        rewatch_count: newInteractions.isWatched ? newInteractions.rewatchCount : 0,
+        updated_at: new Date().toISOString(),
+        ...(feedShare
+          ? {
+              feed_shared: true,
+              feed_shared_at: new Date().toISOString(),
+              feed_visibility: feedShare.visibility,
+            }
+          : {}),
+      };
+
+      // Only set denormalized fields when we have values — avoid wiping existing titles/posters
+      if (title) payload.movie_title = title;
+      if (poster) payload.poster_path = poster;
+      if (release) payload.release_date = release;
+
       const { error } = await supabase
         .from("items_interactions")
-        .upsert({
-          user_id: user.id,
-          tmdb_id: filmId,
-          media_type: mediaType,
-          rating: newInteractions.rating,
-          review: newInteractions.review,
-          is_watched: newInteractions.isWatched,
-          is_liked: newInteractions.isLiked,
-          in_watchlist: newInteractions.isInWatchlist,
-          watched_date: newInteractions.isWatched ? newInteractions.watchedDate : null,
-          rewatch_count: newInteractions.isWatched ? newInteractions.rewatchCount : 0,
-          poster_path: posterPath || newInteractions.poster_path,
-          movie_title: movieTitle || newInteractions.movie_title,
-          release_date: releaseDate || newInteractions.release_date,
-          updated_at: new Date().toISOString(),
-        }, {
+        .upsert(payload, {
           onConflict: "user_id,tmdb_id,media_type",
         });
 
@@ -176,6 +194,8 @@ export function useFilmInteractions(
         console.error("Error updating film interactions:", error);
         toast.error("Could not save watch log");
         void fetchInteractions();
+      } else if (feedShare) {
+        toast.success("Review shared to feed");
       }
     } catch (error) {
       console.error("Error updating film interactions:", error);
@@ -187,7 +207,16 @@ export function useFilmInteractions(
   };
 
   const setRating = (rating: number) => updateInteractions({ rating });
-  const setReview = (review: string) => updateInteractions({ review });
+  const setReview = (
+    review: string,
+    options?: { shareToFeed?: boolean; visibility?: "friends" | "public" },
+  ) =>
+    updateInteractions(
+      { review },
+      options?.shareToFeed
+        ? { visibility: options.visibility === "public" ? "public" : "friends" }
+        : undefined,
+    );
 
   const logWatch = async (payload: { watchedDate: string; isRewatch?: boolean }) => {
     const isRewatch = Boolean(payload.isRewatch && interactions.isWatched);

@@ -1,10 +1,10 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import Image from "next/image"
 import Link from "next/link"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useSupabaseClient, useUser } from "@supabase/auth-helpers-react"
-import { Plus, ChevronLeft, ChevronRight } from "lucide-react"
+import { Plus } from "lucide-react"
 import { toast } from "sonner"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -12,27 +12,34 @@ import { CommandDialog } from "@/components/ui/command"
 import { FeedCustomizeDialog, type FeedPostPayload } from "@/components/home/feed-customize-dialog"
 import { FeedWatchedPostCard } from "@/components/home/feed-post-card"
 import {
+  FeedListPostCard,
+  FeedReviewPostCard,
+} from "@/components/home/feed-review-list-cards"
+import {
   FeedLogDialog,
   type FeedLogDraft,
 } from "@/components/home/feed-log-dialog"
+import { FeedStoriesViewer } from "@/components/home/feed-stories-viewer"
+import {
+  WatchedMediaCarousel,
+  watchedItemImages,
+} from "@/components/home/feed-watched-media"
 import { MediaSearchCommandContent } from "@/components/movies/media-search-command-content"
 import { useDebounce } from "@/hooks/use-debounce"
 import { useMediaSearch, type SeriesSearchResult } from "@/hooks/use-media-search"
 import {
   feedMediaHref,
-  feedProfileHref,
+  mapWatchedRow,
   useFollowingFeed,
+  WATCHED_FEED_SELECT,
+  type FollowingFeedItem,
   type FollowingStoryPerson,
+  type WatchedFeedRow,
 } from "@/hooks/use-following-feed"
 import { avatarDisplaySrc } from "@/lib/next-remote-image"
 import type { Movie } from "@/lib/tmdb/client"
 import { toLocalDateString } from "@/lib/watched-date"
 import { cn } from "@/lib/utils"
-
-const mediaFrameClass =
-  "group/media relative mt-3 block overflow-hidden bg-zinc-950 " +
-  "-mx-4 w-[calc(100%+2rem)] rounded-none border-y border-white/[0.06] " +
-  "lg:mx-0 lg:w-full lg:rounded-2xl lg:border lg:border-white/[0.08]"
 
 function displayName(user: { username: string; display_name?: string | null }) {
   return user.display_name?.trim() || user.username
@@ -53,202 +60,18 @@ function FeedRowSkeleton() {
   )
 }
 
-function FullBleedMedia({
-  href,
-  imagePath,
-  imageKind,
-  title,
-}: {
-  href: string
-  imagePath: string | null
-  imageKind?: "poster" | "backdrop" | null
-  title: string
-}) {
-  const isPoster = imageKind === "poster"
-  const aspectClass = isPoster ? "aspect-[2/3] max-h-[70vh]" : "aspect-[16/9]"
-  const size = isPoster ? "w780" : "w1280"
-
-  if (!imagePath) {
-    return (
-      <Link href={href} className={mediaFrameClass}>
-        <div
-          className={cn(
-            "flex w-full items-center justify-center bg-zinc-900 text-sm text-zinc-600",
-            aspectClass,
-          )}
-        >
-          {title}
-        </div>
-      </Link>
-    )
-  }
-
-  return (
-    <Link href={href} className={mediaFrameClass}>
-      <div className={cn("relative w-full overflow-hidden", aspectClass)}>
-        <Image
-          src={`https://image.tmdb.org/t/p/${size}${imagePath}`}
-          alt={title}
-          fill
-          quality={90}
-          className="object-cover transition duration-500 group-hover/media:scale-[1.02]"
-          sizes="(max-width: 1024px) 100vw, 720px"
-        />
-      </div>
-    </Link>
-  )
-}
-
-function collageTileClass(count: number, index: number) {
-  if (count === 5) {
-    return index < 2 ? "col-span-3" : "col-span-2"
-  }
-  return undefined
-}
-
-function WatchedMediaCarousel({
-  href,
-  images,
-  filmTitle,
-  layout = "slide",
-}: {
-  href: string
-  images: { filePath: string; kind: "poster" | "backdrop" }[]
-  filmTitle: string
-  layout?: "slide" | "collage"
-}) {
-  const [index, setIndex] = useState(0)
-  const safeIndex = Math.min(index, Math.max(0, images.length - 1))
-  const current = images[safeIndex]
-
-  if (!current) {
-    return <FullBleedMedia href={href} imagePath={null} title={filmTitle} />
-  }
-
-  if (images.length === 1) {
-    return (
-      <FullBleedMedia
-        href={href}
-        imagePath={current.filePath}
-        imageKind={current.kind}
-        title={filmTitle}
-      />
-    )
-  }
-
-  if (layout === "collage") {
-    const n = images.length
-    const gridClass =
-      n <= 2
-        ? "grid-cols-2"
-        : n === 3
-          ? "grid-cols-3"
-          : n === 4
-            ? "grid-cols-2"
-            : n === 5
-              ? "grid-cols-6"
-              : "grid-cols-3"
-
-    return (
-      <Link href={href} className={mediaFrameClass}>
-        <div className="relative aspect-[16/9] w-full">
-          <div className={cn("absolute inset-0 grid gap-0.5 bg-black", gridClass)}>
-            {images.map((img, i) => {
-              const size = img.kind === "poster" ? "w780" : "w1280"
-              return (
-                <div
-                  key={`${img.kind}-${img.filePath}`}
-                  className={cn(
-                    "relative min-h-0 min-w-0 overflow-hidden",
-                    collageTileClass(n, i),
-                  )}
-                >
-                  <Image
-                    src={`https://image.tmdb.org/t/p/${size}${img.filePath}`}
-                    alt=""
-                    fill
-                    quality={90}
-                    className="object-cover transition duration-500 group-hover/media:scale-[1.04]"
-                    sizes="(max-width: 1024px) 50vw, 360px"
-                  />
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      </Link>
-    )
-  }
-
-  const isPoster = current.kind === "poster"
-  const size = isPoster ? "w780" : "w1280"
-
-  return (
-    <div className={mediaFrameClass}>
-      <div
-        className={cn(
-          "relative w-full overflow-hidden",
-          isPoster ? "aspect-[2/3] max-h-[70vh]" : "aspect-[16/9]",
-        )}
-      >
-        <Link href={href} className="absolute inset-0 block">
-          <Image
-            src={`https://image.tmdb.org/t/p/${size}${current.filePath}`}
-            alt={filmTitle}
-            fill
-            quality={90}
-            className="object-cover"
-            sizes="(max-width: 1024px) 100vw, 720px"
-          />
-        </Link>
-        <button
-          type="button"
-          aria-label="Previous photo"
-          className="absolute left-2 top-1/2 z-10 flex size-8 -translate-y-1/2 items-center justify-center rounded-full bg-black/55 text-white backdrop-blur-sm"
-          onClick={(e) => {
-            e.preventDefault()
-            setIndex((i) => (i - 1 + images.length) % images.length)
-          }}
-        >
-          <ChevronLeft className="size-4" />
-        </button>
-        <button
-          type="button"
-          aria-label="Next photo"
-          className="absolute right-2 top-1/2 z-10 flex size-8 -translate-y-1/2 items-center justify-center rounded-full bg-black/55 text-white backdrop-blur-sm"
-          onClick={(e) => {
-            e.preventDefault()
-            setIndex((i) => (i + 1) % images.length)
-          }}
-        >
-          <ChevronRight className="size-4" />
-        </button>
-        <div className="absolute bottom-2 left-0 right-0 z-10 flex justify-center gap-1">
-          {images.map((img, i) => (
-            <span
-              key={`${img.kind}-${img.filePath}`}
-              className={cn(
-                "size-1.5 rounded-full",
-                i === safeIndex ? "bg-white" : "bg-white/35",
-              )}
-            />
-          ))}
-        </div>
-      </div>
-    </div>
-  )
-}
-
 function StoriesStrip({
   selfUsername,
   selfAvatar,
   stories,
   onSelfClick,
+  onStoryClick,
 }: {
   selfUsername?: string
   selfAvatar?: string | null
   stories: FollowingStoryPerson[]
   onSelfClick: () => void
+  onStoryClick: (person: FollowingStoryPerson) => void
 }) {
   return (
     <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-1 pt-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -272,9 +95,10 @@ function StoriesStrip({
       </button>
 
       {stories.map((u) => (
-        <Link
+        <button
           key={u.id}
-          href={feedProfileHref(u.username)}
+          type="button"
+          onClick={() => onStoryClick(u)}
           className="flex w-[68px] shrink-0 flex-col items-center gap-1.5"
         >
           <span
@@ -295,7 +119,7 @@ function StoriesStrip({
           <span className="w-full truncate text-center text-[10px] text-zinc-400">
             {u.username}
           </span>
-        </Link>
+        </button>
       ))}
     </div>
   )
@@ -343,6 +167,9 @@ export function SocialFeed({
 }) {
   const supabase = useSupabaseClient()
   const authUser = useUser()
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const locateShareUid = searchParams.get("p")?.trim() || null
   const { items, stories, followingCount, loading, error, hasMore, loadMore, refresh } =
     useFollowingFeed(limit)
 
@@ -359,6 +186,106 @@ export function SocialFeed({
   const [pending, setPending] = useState<PendingLog | null>(null)
   const [draft, setDraft] = useState<FeedLogDraft | null>(null)
   const [logging, setLogging] = useState(false)
+  const [storyPerson, setStoryPerson] = useState<FollowingStoryPerson | null>(null)
+  const [storiesOpen, setStoriesOpen] = useState(false)
+  const [highlightUid, setHighlightUid] = useState<string | null>(null)
+  const [pinnedItem, setPinnedItem] = useState<FollowingFeedItem | null>(null)
+  const locateDone = useRef(false)
+
+  useEffect(() => {
+    if (!locateShareUid) return
+    locateDone.current = false
+    setPinnedItem(null)
+  }, [locateShareUid])
+
+  const feedItems = useMemo(() => {
+    if (!pinnedItem) return items
+    const rest = items.filter((i) => i.id !== pinnedItem.id)
+    return [pinnedItem, ...rest]
+  }, [items, pinnedItem])
+
+  useEffect(() => {
+    if (!locateShareUid) return
+    if (loading || locateDone.current) return
+
+    const run = async () => {
+      const inFeed = items.find(
+        (i) =>
+          (i.kind === "watched" || i.kind === "review") &&
+          i.shareUid === locateShareUid,
+      )
+
+      if (inFeed) {
+        setPinnedItem(inFeed)
+      } else if (authUser?.id) {
+        try {
+          const { data: row } = await supabase
+            .from("items_interactions")
+            .select(WATCHED_FEED_SELECT)
+            .eq("feed_share_uid", locateShareUid)
+            .eq("feed_shared", true)
+            .maybeSingle()
+
+          if (row) {
+            const watched = row as WatchedFeedRow
+            const { data: author } = await supabase
+              .from("users")
+              .select("id, username, display_name, avatar_url")
+              .eq("id", watched.user_id)
+              .maybeSingle()
+
+            if (author?.username) {
+              const interactionId = watched.id as number
+              const [likesRes, commentsRes] = await Promise.all([
+                supabase
+                  .from("feed_post_likes")
+                  .select("user_id")
+                  .eq("interaction_id", interactionId),
+                supabase
+                  .from("feed_post_comments")
+                  .select("id")
+                  .eq("interaction_id", interactionId),
+              ])
+              const likeCount = likesRes.data?.length ?? 0
+              const likedByMe = Boolean(
+                likesRes.data?.some((r) => r.user_id === authUser.id),
+              )
+              const commentCount = commentsRes.data?.length ?? 0
+              setPinnedItem(
+                mapWatchedRow(
+                  watched,
+                  {
+                    id: author.id,
+                    username: author.username,
+                    display_name: author.display_name,
+                    avatar_url: author.avatar_url,
+                  },
+                  { likeCount, likedByMe, commentCount },
+                ),
+              )
+            }
+          }
+        } catch (e) {
+          console.error("[feed-locate]", e)
+        }
+      }
+
+      locateDone.current = true
+      setHighlightUid(locateShareUid)
+      router.replace("/", { scroll: false })
+
+      window.setTimeout(() => {
+        const el = document.querySelector(
+          `[data-feed-share="${CSS.escape(locateShareUid)}"]`,
+        )
+        el?.scrollIntoView({ behavior: "smooth", block: "start" })
+      }, 80)
+
+      window.setTimeout(() => setHighlightUid(null), 2600)
+    }
+
+    void run()
+  }, [authUser?.id, items, loading, locateShareUid, router, supabase])
 
   const openComposer = useCallback(() => {
     setQuery("")
@@ -530,8 +457,8 @@ export function SocialFeed({
       return (
         <div className="rounded-xl border border-dashed border-white/[0.08] bg-zinc-950/30 px-4 py-8 text-center">
           <p className="mx-auto max-w-sm text-sm leading-relaxed text-zinc-500">
-            Follow people for Friends posts, or browse Public posts from the
-            community. Shared watches only show when someone opts in.
+            Follow people for Friends posts — both of you must follow each
+            other. Public posts can still show up from the community.
           </p>
           <Link
             href="/lists"
@@ -584,6 +511,10 @@ export function SocialFeed({
         selfAvatar={selfAvatar}
         stories={stories}
         onSelfClick={openComposer}
+        onStoryClick={(person) => {
+          setStoryPerson(person)
+          setStoriesOpen(true)
+        }}
       />
       <Composer onClick={openComposer} />
 
@@ -604,16 +535,19 @@ export function SocialFeed({
             Try again
           </button>
         </div>
-      ) : items.length === 0 ? (
+      ) : feedItems.length === 0 ? (
         emptyNode
       ) : (
         <>
           <ul>
-            {items.map((item) =>
+            {feedItems.map((item) =>
               item.kind === "watched" ? (
                 <FeedWatchedPostCard
                   key={item.id}
                   item={item}
+                  highlighted={
+                    Boolean(item.shareUid && highlightUid === item.shareUid)
+                  }
                   onRemoved={() => void refresh()}
                   onUpdated={() => void refresh()}
                   media={
@@ -621,27 +555,24 @@ export function SocialFeed({
                       href={feedMediaHref(item.tmdbId, item.mediaType)}
                       filmTitle={item.title}
                       layout={item.feedLayout}
-                      images={
-                        item.feedImages.length > 0
-                          ? item.feedImages
-                          : item.feedImagePath
-                            ? [
-                                {
-                                  filePath: item.feedImagePath,
-                                  kind: item.feedImageKind ?? "backdrop",
-                                },
-                              ]
-                            : item.posterPath
-                              ? [
-                                  {
-                                    filePath: item.posterPath,
-                                    kind: "poster" as const,
-                                  },
-                                ]
-                              : []
-                      }
+                      images={watchedItemImages(item)}
                     />
                   }
+                />
+              ) : item.kind === "review" ? (
+                <FeedReviewPostCard
+                  key={item.id}
+                  item={item}
+                  highlighted={
+                    Boolean(item.shareUid && highlightUid === item.shareUid)
+                  }
+                  onRemoved={() => void refresh()}
+                />
+              ) : item.kind === "list" ? (
+                <FeedListPostCard
+                  key={item.id}
+                  item={item}
+                  onRemoved={() => void refresh()}
                 />
               ) : null,
             )}
@@ -718,6 +649,15 @@ export function SocialFeed({
           onPost={handlePostToFeed}
         />
       ) : null}
+
+      <FeedStoriesViewer
+        open={storiesOpen}
+        onOpenChange={(open) => {
+          setStoriesOpen(open)
+          if (!open) setStoryPerson(null)
+        }}
+        person={storyPerson}
+      />
     </div>
   )
 }

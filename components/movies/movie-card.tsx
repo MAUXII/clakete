@@ -6,7 +6,7 @@ import { useFilmInteractions } from '@/hooks/use-film-interactions'
 import { IoEyeOutline, IoEye } from "react-icons/io5"
 import { IoHeartOutline, IoHeart } from "react-icons/io5"
 import { toast } from 'sonner'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, type ReactNode } from 'react'
 
 interface MovieCardProps {
   movie?:{
@@ -18,11 +18,17 @@ interface MovieCardProps {
   externalid?: number
  
   variant?: 'default' | 'nav-fill'
+  /** Extra buttons rendered under eye/heart on poster hover (e.g. edit menu). */
+  extraActions?: ReactNode
 }
 
-export function MovieCard({ movie, externalid, variant = 'default' }: MovieCardProps) {
+export function MovieCard({ movie, externalid, variant = 'default', extraActions }: MovieCardProps) {
   const filmId = externalid || movie?.id
-  const { isWatched, isLiked, toggleWatched, toggleLiked, updating } = useFilmInteractions(filmId || 0, movie?.poster_path || undefined)
+  const { isWatched, isLiked, toggleWatched, toggleLiked, updating } = useFilmInteractions(
+    filmId || 0,
+    movie?.poster_path || undefined,
+    movie?.title,
+  )
   const [localWatched, setLocalWatched] = useState(isWatched)
   const [localLiked, setLocalLiked] = useState(isLiked)
 
@@ -109,6 +115,7 @@ export function MovieCard({ movie, externalid, variant = 'default' }: MovieCardP
           >
             {localLiked ? <IoHeart className="w-4 h-4" /> : <IoHeartOutline className="w-4 h-4" />}
           </button>
+          {extraActions}
         </div>
       </div>
     </Link>

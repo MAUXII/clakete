@@ -34,6 +34,7 @@ export interface Database {
           feed_caption: string | null
           feed_layout: string
           feed_shared_at: string | null
+          feed_share_uid: string | null
           created_at: string
           updated_at: string
         }
@@ -58,6 +59,7 @@ export interface Database {
           feed_caption?: string | null
           feed_layout?: string
           feed_shared_at?: string | null
+          feed_share_uid?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -82,6 +84,7 @@ export interface Database {
           feed_caption?: string | null
           feed_layout?: string
           feed_shared_at?: string | null
+          feed_share_uid?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -97,6 +100,9 @@ export interface Database {
           backdrop_path: string | null
           banner_meta: Json | null
           is_public: boolean
+          feed_shared: boolean
+          feed_shared_at: string | null
+          feed_visibility: string
           created_at: string
           updated_at: string
         }
@@ -110,6 +116,9 @@ export interface Database {
           backdrop_path?: string | null
           banner_meta?: Json | null
           is_public?: boolean
+          feed_shared?: boolean
+          feed_shared_at?: string | null
+          feed_visibility?: string
           created_at?: string
           updated_at?: string
         }
@@ -123,6 +132,9 @@ export interface Database {
           backdrop_path?: string | null
           banner_meta?: Json | null
           is_public?: boolean
+          feed_shared?: boolean
+          feed_shared_at?: string | null
+          feed_visibility?: string
           created_at?: string
           updated_at?: string
         }
@@ -225,6 +237,72 @@ export interface Database {
           interaction_id?: number
           user_id?: string
           body?: string
+          created_at?: string
+        }
+      }
+      feed_post_hides: {
+        Row: {
+          id: number
+          interaction_id: number
+          user_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: number
+          interaction_id: number
+          user_id: string
+          created_at?: string
+        }
+        Update: {
+          id?: number
+          interaction_id?: number
+          user_id?: string
+          created_at?: string
+        }
+      }
+      feed_list_hides: {
+        Row: {
+          id: number
+          list_id: string
+          user_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: number
+          list_id: string
+          user_id: string
+          created_at?: string
+        }
+        Update: {
+          id?: number
+          list_id?: string
+          user_id?: string
+          created_at?: string
+        }
+      }
+      feed_post_reports: {
+        Row: {
+          id: number
+          reporter_id: string
+          interaction_id: number | null
+          list_id: string | null
+          reason: string
+          created_at: string
+        }
+        Insert: {
+          id?: number
+          reporter_id: string
+          interaction_id?: number | null
+          list_id?: string | null
+          reason?: string
+          created_at?: string
+        }
+        Update: {
+          id?: number
+          reporter_id?: string
+          interaction_id?: number | null
+          list_id?: string | null
+          reason?: string
           created_at?: string
         }
       }

@@ -97,7 +97,7 @@ export function useLists() {
 
       const { data, error } = await supabase
         .from('lists')
-        .select('id, user_id, title, bio, is_public, slug, backdrop_path, banner_meta, created_at, updated_at')
+        .select('id, user_id, title, bio, is_public, slug, backdrop_path, banner_meta, feed_shared, feed_shared_at, feed_visibility, created_at, updated_at')
         .eq('user_id', userId)
         .order('updated_at', { ascending: false })
 
@@ -134,7 +134,7 @@ export function useLists() {
 
       const { data, error } = await supabase
         .from('lists')
-        .select('id, user_id, title, bio, is_public, slug, backdrop_path, banner_meta, created_at, updated_at')
+        .select('id, user_id, title, bio, is_public, slug, backdrop_path, banner_meta, feed_shared, feed_shared_at, feed_visibility, created_at, updated_at')
         .eq('is_public', true)
         .order('updated_at', { ascending: false })
         .limit(20)
@@ -178,6 +178,14 @@ export function useLists() {
 
     try {
       const slug = await uniqueSlugForListOwner(supabase, user.id, listData.title)
+      const shareToFeed = Boolean(listData.feed_shared)
+      const feedVisibility =
+        listData.is_public === false
+          ? "friends"
+          : listData.feed_visibility === "public"
+            ? "public"
+            : "friends"
+
       const { data, error } = await supabase
         .from('lists')
         .insert({
@@ -188,6 +196,9 @@ export function useLists() {
           is_public: listData.is_public !== false,
           slug,
           backdrop_path: listData.backdrop_path?.trim() || null,
+          feed_shared: shareToFeed,
+          feed_shared_at: shareToFeed ? new Date().toISOString() : null,
+          feed_visibility: feedVisibility,
           ...(listData.banner_meta !== undefined
             ? {
                 banner_meta:
@@ -232,6 +243,19 @@ export function useLists() {
         if (!rowErr && row?.user_id) {
           payload.slug = await uniqueSlugForListOwner(supabase, row.user_id, data.title, listId)
         }
+      }
+
+      if (data.feed_shared !== undefined) {
+        payload.feed_shared = data.feed_shared
+        payload.feed_shared_at = data.feed_shared
+          ? new Date().toISOString()
+          : null
+      }
+      if (data.is_public === false && data.feed_visibility === undefined) {
+        payload.feed_visibility = "friends"
+      } else if (data.feed_visibility !== undefined) {
+        payload.feed_visibility =
+          data.is_public === false ? "friends" : data.feed_visibility
       }
 
       const { error } = await supabase.from('lists').update(payload).eq('id', listId)

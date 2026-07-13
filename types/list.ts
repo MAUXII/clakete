@@ -14,6 +14,9 @@ export interface List {
   /** Novo: imagem TMDB + crop; se definido, tem precedência sobre backdrop_path legado. */
   banner_meta?: ListBannerMeta | null
   is_public: boolean
+  feed_shared?: boolean
+  feed_shared_at?: string | null
+  feed_visibility?: "friends" | "public"
   created_at: string
   updated_at: string
   userData?: {
@@ -52,6 +55,8 @@ export interface CreateListData {
   /** Banner TMDB/crop; mesmo formato que em `UpdateListData`. */
   banner_meta?: ListBannerMeta | null
   is_public: boolean
+  feed_shared?: boolean
+  feed_visibility?: "friends" | "public"
 }
 
 export interface UpdateListData {
@@ -62,6 +67,8 @@ export interface UpdateListData {
   banner_meta?: ListBannerMeta | null
   is_public?: boolean
   slug?: string
+  feed_shared?: boolean
+  feed_visibility?: "friends" | "public"
 }
 
 export interface AddListItemData {

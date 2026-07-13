@@ -1,14 +1,18 @@
 "use client"
 
-import { UserRecentActivity } from "@/components/profile/recent-activity"
+import { UserActivityLog } from "@/components/profile/user-activity-log"
 import { useProfileLayoutData } from "@/components/providers/profile-layout-context"
 
 export default function ActivityPage() {
-  const { userData } = useProfileLayoutData()
+  const { userData, isOwnProfile } = useProfileLayoutData()
 
   return (
     <div className="w-full">
-      <UserRecentActivity userId={userData.id} showAllWatched />
+      <UserActivityLog
+        userId={userData.id}
+        username={userData.username}
+        isOwnProfile={isOwnProfile}
+      />
     </div>
   )
 }

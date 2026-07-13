@@ -207,7 +207,9 @@ export function FeedLogDialog({
                 >
                   <Users className="size-4 text-[#FF0048]" />
                   <span className="text-xs font-medium">Friends</span>
-                  <span className="text-[10px] text-muted-foreground">Followers only</span>
+                  <span className="text-[10px] text-muted-foreground">
+                    Mutual follows only
+                  </span>
                 </button>
                 <button
                   type="button"

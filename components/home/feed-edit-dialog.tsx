@@ -42,8 +42,8 @@ const MAX_IMAGES = 6
 const TITLE_MAX = 80
 const CAPTION_MAX = 500
 
-function interleave<T>(a: T[], b: T[]): T[] {
-  const out: T[] = []
+function interleave<A, B>(a: A[], b: B[]): Array<A | B> {
+  const out: Array<A | B> = []
   const max = Math.max(a.length, b.length)
   for (let i = 0; i < max; i++) {
     if (i < a.length) out.push(a[i])
@@ -125,18 +125,26 @@ function PreviewMedia({
     return <CollagePreview images={images} />
   }
 
-  const isPoster = current.kind === "poster"
+  const useFixedSlideFrame = images.length > 1 && layout === "slide"
 
   return (
     <div className="relative overflow-hidden rounded-xl border border-white/[0.08] bg-zinc-950">
       <div
         className={cn(
           "relative w-full overflow-hidden",
-          isPoster ? "aspect-[2/3] max-h-[280px]" : "aspect-[16/9]",
+          useFixedSlideFrame
+            ? "h-[min(70vh,28rem)]"
+            : current.kind === "poster"
+              ? "aspect-[2/3] max-h-[280px]"
+              : "aspect-[16/9]",
         )}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={tmdbUrl(current)} alt="" className="h-full w-full object-cover" />
+        <img
+          src={tmdbUrl(current)}
+          alt=""
+          className="h-full w-full object-cover"
+        />
         {images.length > 1 ? (
           <>
             <button
@@ -506,7 +514,7 @@ export function FeedEditDialog({
                     <Users className="size-4 text-[#FF0048]" />
                     <span className="text-xs font-medium">Friends</span>
                     <span className="text-[10px] text-muted-foreground">
-                      Followers only
+                      Mutual follows only
                     </span>
                   </button>
                   <button

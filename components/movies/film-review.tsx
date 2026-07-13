@@ -1,15 +1,23 @@
 "use client";
 
 import { useState } from "react";
+import { Globe2, Users } from "lucide-react";
+import { IoAdd } from "react-icons/io5";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { IoAdd } from "react-icons/io5";
+import { cn } from "@/lib/utils";
+
+export type ReviewSubmitOptions = {
+  shareToFeed?: boolean;
+  visibility?: "friends" | "public";
+};
 
 interface FilmReviewProps {
   filmId: number;
   initialReview?: string;
-  onReviewSubmit?: (review: string) => void;
+  onReviewSubmit?: (review: string, options?: ReviewSubmitOptions) => void;
   existingReview?: string;
   disabled?: boolean;
 }
@@ -22,15 +30,29 @@ export function FilmReview({
 }: FilmReviewProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [review, setReview] = useState(initialReview);
+  const [shareToFeed, setShareToFeed] = useState(false);
+  const [visibility, setVisibility] = useState<"friends" | "public">("friends");
+
+  const handleOpenChange = (open: boolean) => {
+    setIsOpen(open);
+    if (open) {
+      setReview(initialReview);
+      setShareToFeed(false);
+      setVisibility("friends");
+    }
+  };
 
   const handleSubmit = () => {
-    onReviewSubmit?.(review);
+    onReviewSubmit?.(review, {
+      shareToFeed,
+      visibility: shareToFeed ? visibility : undefined,
+    });
     setIsOpen(false);
   };
 
   return (
     <div className="w-full">
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <Dialog open={isOpen} onOpenChange={handleOpenChange}>
         <DialogTrigger asChild>
           <Button
             variant="outline"
@@ -53,6 +75,61 @@ export function FilmReview({
               onChange={(e) => setReview(e.target.value)}
               disabled={disabled}
             />
+
+            <div className="space-y-3 rounded-xl border border-border/80 bg-muted/20 p-3">
+              <label className="flex cursor-pointer items-start gap-3 text-sm">
+                <Checkbox
+                  checked={shareToFeed}
+                  onCheckedChange={(v) => setShareToFeed(v === true)}
+                  disabled={disabled}
+                  className="mt-0.5"
+                />
+                <span>
+                  <span className="font-medium text-foreground">Share to feed</span>
+                  <span className="mt-0.5 block text-xs text-muted-foreground">
+                    Post this review for people who follow you.
+                  </span>
+                </span>
+              </label>
+
+              {shareToFeed ? (
+                <div className="grid grid-cols-2 gap-2 pl-7">
+                  <button
+                    type="button"
+                    disabled={disabled}
+                    onClick={() => setVisibility("friends")}
+                    className={cn(
+                      "flex flex-col items-start gap-1 rounded-lg border px-3 py-2.5 text-left transition",
+                      visibility === "friends"
+                        ? "border-[#FF0048]/40 bg-[#FF0048]/10"
+                        : "border-border/80 hover:border-border",
+                    )}
+                  >
+                    <Users className="size-4 text-[#FF0048]" />
+                    <span className="text-xs font-medium">Friends</span>
+                    <span className="text-[10px] text-muted-foreground">
+                      Mutual follows only
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    disabled={disabled}
+                    onClick={() => setVisibility("public")}
+                    className={cn(
+                      "flex flex-col items-start gap-1 rounded-lg border px-3 py-2.5 text-left transition",
+                      visibility === "public"
+                        ? "border-[#FF0048]/40 bg-[#FF0048]/10"
+                        : "border-border/80 hover:border-border",
+                    )}
+                  >
+                    <Globe2 className="size-4 text-[#FF0048]" />
+                    <span className="text-xs font-medium">Public</span>
+                    <span className="text-[10px] text-muted-foreground">Anyone on Clakete</span>
+                  </button>
+                </div>
+              ) : null}
+            </div>
+
             <div className="flex justify-end gap-2">
               <Button
                 variant="outline"
@@ -64,7 +141,7 @@ export function FilmReview({
               <Button
                 onClick={handleSubmit}
                 className="bg-[#FF0048] hover:bg-[#FF0048]/90 disabled:opacity-50"
-                disabled={disabled}
+                disabled={disabled || !review.trim()}
               >
                 {existingReview ? "Update Review" : "Post Review"}
               </Button>
