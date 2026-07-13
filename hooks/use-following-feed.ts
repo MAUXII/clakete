@@ -33,6 +33,7 @@ export type FollowingFeedItem =
   | {
       kind: "watched"
       id: string
+      interactionId: number
       at: string
       user: FollowingFeedUser
       tmdbId: number
@@ -47,6 +48,9 @@ export type FollowingFeedItem =
       feedCaption: string | null
       feedLayout: "slide" | "collage"
       rewatchCount: number
+      likeCount: number
+      likedByMe: boolean
+      commentCount: number
     }
   | {
       kind: "list"
@@ -146,6 +150,39 @@ export function useFollowingFeed(limit = 20) {
       if (watchedRes.error) throw watchedRes.error
       if (followingUsersRes.error) throw followingUsersRes.error
 
+      const interactionIds = (watchedRes.data ?? []).map((r) => r.id as number)
+
+      const likeCountById = new Map<number, number>()
+      const likedByMe = new Set<number>()
+      const commentCountById = new Map<number, number>()
+
+      if (interactionIds.length > 0) {
+        const [likesRes, commentsRes] = await Promise.all([
+          supabase
+            .from("feed_post_likes")
+            .select("interaction_id, user_id")
+            .in("interaction_id", interactionIds),
+          supabase
+            .from("feed_post_comments")
+            .select("interaction_id")
+            .in("interaction_id", interactionIds),
+        ])
+
+        if (!likesRes.error) {
+          for (const row of likesRes.data ?? []) {
+            const iid = row.interaction_id as number
+            likeCountById.set(iid, (likeCountById.get(iid) ?? 0) + 1)
+            if ((row.user_id as string) === user.id) likedByMe.add(iid)
+          }
+        }
+        if (!commentsRes.error) {
+          for (const row of commentsRes.data ?? []) {
+            const iid = row.interaction_id as number
+            commentCountById.set(iid, (commentCountById.get(iid) ?? 0) + 1)
+          }
+        }
+      }
+
       const activityUserIds = [
         ...new Set((watchedRes.data ?? []).map((r) => r.user_id as string)),
       ]
@@ -227,9 +264,11 @@ export function useFollowingFeed(limit = 20) {
           feedImageKind || feedImages[0]?.kind || null
 
         bumpActivity(u.id, at)
+        const interactionId = row.id as number
         feed.push({
           kind: "watched",
-          id: `watched-${row.id}`,
+          id: `watched-${interactionId}`,
+          interactionId,
           at,
           user: {
             id: u.id,
@@ -255,6 +294,9 @@ export function useFollowingFeed(limit = 20) {
           feedLayout:
             (row.feed_layout as string) === "collage" ? "collage" : "slide",
           rewatchCount: (row.rewatch_count as number) ?? 0,
+          likeCount: likeCountById.get(interactionId) ?? 0,
+          likedByMe: likedByMe.has(interactionId),
+          commentCount: commentCountById.get(interactionId) ?? 0,
         })
       }
 

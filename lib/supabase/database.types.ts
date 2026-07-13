@@ -185,6 +185,49 @@ export interface Database {
           created_at?: string
         }
       }
+      feed_post_likes: {
+        Row: {
+          id: number
+          interaction_id: number
+          user_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: number
+          interaction_id: number
+          user_id: string
+          created_at?: string
+        }
+        Update: {
+          id?: number
+          interaction_id?: number
+          user_id?: string
+          created_at?: string
+        }
+      }
+      feed_post_comments: {
+        Row: {
+          id: number
+          interaction_id: number
+          user_id: string
+          body: string
+          created_at: string
+        }
+        Insert: {
+          id?: number
+          interaction_id: number
+          user_id: string
+          body: string
+          created_at?: string
+        }
+        Update: {
+          id?: number
+          interaction_id?: number
+          user_id?: string
+          body?: string
+          created_at?: string
+        }
+      }
       users: {
         Row: {
           id: string

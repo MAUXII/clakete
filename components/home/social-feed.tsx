@@ -4,13 +4,13 @@ import { useCallback, useMemo, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useSupabaseClient, useUser } from "@supabase/auth-helpers-react"
-import { Heart, MessageCircle, Plus, Share, ChevronLeft, ChevronRight } from "lucide-react"
-import { FaStar } from "react-icons/fa"
+import { Plus, ChevronLeft, ChevronRight } from "lucide-react"
 import { toast } from "sonner"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Skeleton } from "@/components/ui/skeleton"
 import { CommandDialog } from "@/components/ui/command"
 import { FeedCustomizeDialog, type FeedPostPayload } from "@/components/home/feed-customize-dialog"
+import { FeedWatchedPostCard } from "@/components/home/feed-post-card"
 import {
   FeedLogDialog,
   type FeedLogDraft,
@@ -19,12 +19,9 @@ import { MediaSearchCommandContent } from "@/components/movies/media-search-comm
 import { useDebounce } from "@/hooks/use-debounce"
 import { useMediaSearch, type SeriesSearchResult } from "@/hooks/use-media-search"
 import {
-  feedListHref,
   feedMediaHref,
   feedProfileHref,
-  formatFeedRelativeTime,
   useFollowingFeed,
-  type FollowingFeedItem,
   type FollowingStoryPerson,
 } from "@/hooks/use-following-feed"
 import { avatarDisplaySrc } from "@/lib/next-remote-image"
@@ -39,24 +36,6 @@ const mediaFrameClass =
 
 function displayName(user: { username: string; display_name?: string | null }) {
   return user.display_name?.trim() || user.username
-}
-
-function Stars({ rating }: { rating: number }) {
-  const full = Math.floor(rating)
-  const half = rating - full >= 0.5
-  return (
-    <div className="flex items-center gap-0.5 text-[#FF0048]">
-      {Array.from({ length: 5 }).map((_, i) => (
-        <FaStar
-          key={i}
-          className={cn(
-            "h-2.5 w-2.5",
-            i < full ? "opacity-100" : i === full && half ? "opacity-60" : "opacity-20",
-          )}
-        />
-      ))}
-    </div>
-  )
 }
 
 function FeedRowSkeleton() {
@@ -260,53 +239,6 @@ function WatchedMediaCarousel({
   )
 }
 
-function ListFullBleed({
-  href,
-  posters,
-  title,
-  count,
-}: {
-  href: string
-  posters: string[]
-  title: string
-  count: number
-}) {
-  const tiles = posters.slice(0, 6)
-  if (tiles.length === 0) {
-    return <FullBleedMedia href={href} imagePath={null} title={title} />
-  }
-
-  return (
-    <Link href={href} className={mediaFrameClass}>
-      <div className="relative aspect-[16/9] w-full">
-        <div className="absolute inset-0 grid grid-cols-3 grid-rows-2">
-          {tiles.map((path, i) => (
-            <div key={path + i} className="relative min-h-0 min-w-0 overflow-hidden">
-              <Image
-                src={`https://image.tmdb.org/t/p/w500${path}`}
-                alt=""
-                fill
-                className="object-cover transition duration-500 group-hover/media:scale-[1.04]"
-                sizes="(max-width: 1024px) 33vw, 200px"
-              />
-            </div>
-          ))}
-        </div>
-        <div
-          className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"
-          aria-hidden
-        />
-        <div className="absolute bottom-3 left-3 right-3 sm:left-4 sm:right-4 lg:left-3 lg:right-3">
-          <p className="truncate text-sm font-semibold text-white">{title}</p>
-          <p className="text-xs text-white/70">
-            {count === 1 ? "1 title" : `${count} titles`}
-          </p>
-        </div>
-      </div>
-    </Link>
-  )
-}
-
 function StoriesStrip({
   selfUsername,
   selfAvatar,
@@ -386,175 +318,6 @@ function Composer({ onClick }: { onClick: () => void }) {
         Log
       </span>
     </button>
-  )
-}
-
-function PostCard({ item }: { item: FollowingFeedItem }) {
-  const [liked, setLiked] = useState(false)
-  const profileHref = feedProfileHref(item.user.username)
-  const name = displayName(item.user)
-  const when = formatFeedRelativeTime(item.at)
-
-  const href =
-    item.kind === "list"
-      ? feedListHref(item)
-      : feedMediaHref(item.tmdbId, item.mediaType)
-
-  const action =
-    item.kind === "review"
-      ? "reviewed"
-      : item.kind === "list"
-        ? "made a list"
-        : item.rewatchCount > 0
-          ? "rewatched"
-          : "watched"
-
-  const title = item.kind === "list" ? item.listTitle : item.title
-
-  return (
-    <article className="border-b border-white/[0.06] py-4 last:border-0">
-      <div className="flex items-start gap-3">
-        <Link href={profileHref} className="mt-0.5 shrink-0">
-          <Avatar className="size-10 border border-white/[0.08]">
-            <AvatarImage src={avatarDisplaySrc(item.user.avatar_url) ?? undefined} alt="" />
-            <AvatarFallback className="bg-zinc-900 text-xs text-zinc-300">
-              {name[0]?.toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
-        </Link>
-
-        <div className="min-w-0 flex-1">
-          <header className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5 text-[13px] leading-snug">
-            <Link href={profileHref} className="font-semibold text-zinc-100 hover:text-[#FF0048]">
-              {name}
-            </Link>
-            <span className="text-zinc-600">@{item.user.username}</span>
-            {when ? (
-              <>
-                <span className="text-zinc-600">·</span>
-                <span className="text-zinc-600">{when}</span>
-              </>
-            ) : null}
-          </header>
-
-          <p className="mt-0.5 text-[13px] text-zinc-500">
-            {action}{" "}
-            <Link
-              href={href}
-              className="font-medium text-zinc-100 transition-colors hover:text-[#FF0048]"
-            >
-              {title}
-            </Link>
-            {item.kind === "watched" && item.rewatchCount > 0 ? (
-              <span className="ml-1.5 rounded-full bg-[#FF0048]/12 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-[#ff9eb0]">
-                rewatch
-              </span>
-            ) : null}
-          </p>
-
-          {item.kind === "review" && item.rating != null && item.rating > 0 ? (
-            <div className="mt-1.5">
-              <Stars rating={item.rating} />
-            </div>
-          ) : null}
-          {item.kind === "watched" ? null : null}
-        </div>
-      </div>
-
-      {item.kind === "list" ? (
-        <ListFullBleed
-          href={href}
-          posters={item.listPosters.length ? item.listPosters : item.posterPath ? [item.posterPath] : []}
-          title={title}
-          count={item.filmsCount}
-        />
-      ) : item.kind === "watched" ? (
-        <WatchedMediaCarousel
-          href={href}
-          filmTitle={title}
-          layout={item.feedLayout}
-          images={
-            item.feedImages.length > 0
-              ? item.feedImages
-              : item.feedImagePath
-                ? [
-                    {
-                      filePath: item.feedImagePath,
-                      kind: item.feedImageKind ?? "backdrop",
-                    },
-                  ]
-                : item.posterPath
-                  ? [{ filePath: item.posterPath, kind: "poster" as const }]
-                  : []
-          }
-        />
-      ) : (
-        <FullBleedMedia
-          href={href}
-          imagePath={item.posterPath}
-          imageKind="poster"
-          title={title}
-        />
-      )}
-
-      {item.kind === "watched" && item.feedTitle ? (
-        <p className="mt-3 text-[15px] font-semibold leading-snug text-zinc-100">
-          {item.feedTitle}
-        </p>
-      ) : null}
-      {item.kind === "watched" && item.feedCaption ? (
-        <p className="mt-1.5 whitespace-pre-wrap text-[14px] leading-relaxed text-zinc-300">
-          {item.feedCaption}
-        </p>
-      ) : null}
-
-      {item.kind === "review" && item.review ? (
-        <p className="mt-3 line-clamp-3 text-[14px] leading-relaxed text-zinc-300">
-          {item.review}
-        </p>
-      ) : null}
-
-      <footer className="mt-3 flex items-center gap-1">
-        <button
-          type="button"
-          onClick={() => setLiked((v) => !v)}
-          className={cn(
-            "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs transition",
-            liked
-              ? "text-[#FF0048]"
-              : "text-zinc-500 hover:bg-white/[0.04] hover:text-zinc-300",
-          )}
-          aria-label="Like"
-        >
-          <Heart className={cn("size-3.5", liked && "fill-[#FF0048]")} strokeWidth={2} />
-        </button>
-        <button
-          type="button"
-          onClick={() => toast.message("Comments coming soon")}
-          className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs text-zinc-500 transition hover:bg-white/[0.04] hover:text-zinc-300"
-          aria-label="Comment"
-        >
-          <MessageCircle className="size-3.5" strokeWidth={2} />
-        </button>
-        <button
-          type="button"
-          onClick={async () => {
-            try {
-              await navigator.clipboard.writeText(
-                `${window.location.origin}${href}`,
-              )
-              toast.success("Link copied")
-            } catch {
-              toast.message("Could not copy link")
-            }
-          }}
-          className="ml-auto inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs text-zinc-500 transition hover:bg-white/[0.04] hover:text-zinc-300"
-          aria-label="Share"
-        >
-          <Share className="size-3.5" strokeWidth={2} />
-        </button>
-      </footer>
-    </article>
   )
 }
 
@@ -827,9 +590,41 @@ export function SocialFeed({
       ) : (
         <>
           <ul>
-            {items.map((item) => (
-              <PostCard key={item.id} item={item} />
-            ))}
+            {items.map((item) =>
+              item.kind === "watched" ? (
+                <FeedWatchedPostCard
+                  key={item.id}
+                  item={item}
+                  onRemoved={() => void refresh()}
+                  media={
+                    <WatchedMediaCarousel
+                      href={feedMediaHref(item.tmdbId, item.mediaType)}
+                      filmTitle={item.title}
+                      layout={item.feedLayout}
+                      images={
+                        item.feedImages.length > 0
+                          ? item.feedImages
+                          : item.feedImagePath
+                            ? [
+                                {
+                                  filePath: item.feedImagePath,
+                                  kind: item.feedImageKind ?? "backdrop",
+                                },
+                              ]
+                            : item.posterPath
+                              ? [
+                                  {
+                                    filePath: item.posterPath,
+                                    kind: "poster" as const,
+                                  },
+                                ]
+                              : []
+                      }
+                    />
+                  }
+                />
+              ) : null,
+            )}
           </ul>
           {hasMore ? (
             <button
