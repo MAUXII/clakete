@@ -8,6 +8,8 @@ export interface UserHomePreferences {
   show_now_showing: boolean
   show_upcoming: boolean
   show_recent_reviews: boolean
+  /** Activity from people you follow (reviews, watches, lists). */
+  show_following_feed: boolean
   /** TMDB genre ids chosen during onboarding (optional). */
   favorite_genre_ids?: number[]
 }
@@ -16,6 +18,7 @@ export const defaultUserHomePreferences: UserHomePreferences = {
   show_now_showing: true,
   show_upcoming: true,
   show_recent_reviews: true,
+  show_following_feed: true,
 }
 
 export function parseUserHomePreferences(raw: Json | null | undefined): UserHomePreferences {
@@ -26,6 +29,7 @@ export function parseUserHomePreferences(raw: Json | null | undefined): UserHome
   if (typeof o.show_now_showing === "boolean") base.show_now_showing = o.show_now_showing
   if (typeof o.show_upcoming === "boolean") base.show_upcoming = o.show_upcoming
   if (typeof o.show_recent_reviews === "boolean") base.show_recent_reviews = o.show_recent_reviews
+  if (typeof o.show_following_feed === "boolean") base.show_following_feed = o.show_following_feed
 
   if (Array.isArray(o.favorite_genre_ids)) {
     base.favorite_genre_ids = o.favorite_genre_ids.filter(
@@ -41,6 +45,7 @@ export function serializeUserHomePreferences(prefs: UserHomePreferences): Json {
     show_now_showing: prefs.show_now_showing,
     show_upcoming: prefs.show_upcoming,
     show_recent_reviews: prefs.show_recent_reviews,
+    show_following_feed: prefs.show_following_feed,
   }
   if (prefs.favorite_genre_ids?.length) {
     out.favorite_genre_ids = prefs.favorite_genre_ids

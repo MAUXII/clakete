@@ -210,36 +210,43 @@ export function ImageEditDialog({ onClose, onSelect, isOpen, onSave, type, custo
           )
           const data = await response.json();
           
-          let formattedImages = [];
+          type TmdbImage = { file_path: string; vote_average?: number }
 
-          if (type === 'avatar' || type === 'banner' || type === 'home_backdrop') {
-            const posters = (data.posters || []).map((img: { file_path: string }) => ({
-              url: `/api/proxy-image?url=${encodeURIComponent(`https://image.tmdb.org/t/p/original${img.file_path}`)}`,
-              type: "poster" as const,
-              loaded: false,
-              tmdb_file_path: img.file_path,
-            }))
-            
-            const backdrops = (data.backdrops || []).map((img: { file_path: string }) => ({
-              url: `/api/proxy-image?url=${encodeURIComponent(`https://image.tmdb.org/t/p/original${img.file_path}`)}`,
-              type: "banner" as const,
-              loaded: false,
-              tmdb_file_path: img.file_path,
-            }))
+          const byVotes = (a: TmdbImage, b: TmdbImage) =>
+            (b.vote_average ?? 0) - (a.vote_average ?? 0)
 
-            formattedImages = [...posters, ...backdrops].sort(() => Math.random() - 0.5).slice(0, 50)
-          } else {
-            formattedImages = (data.backdrops || [])
-              .map((img: { file_path: string }) => ({
-                url: `/api/proxy-image?url=${encodeURIComponent(`https://image.tmdb.org/t/p/original${img.file_path}`)}`,
-                type: "banner" as const,
-                loaded: false,
-                tmdb_file_path: img.file_path,
-              }))
-              .slice(0, 50)
+          const mapPoster = (img: TmdbImage) => ({
+            url: `/api/proxy-image?url=${encodeURIComponent(`https://image.tmdb.org/t/p/w780${img.file_path}`)}`,
+            type: "poster" as const,
+            aspectRatio: 2 / 3,
+            loaded: false,
+            tmdb_file_path: img.file_path,
+          })
+
+          const mapBackdrop = (img: TmdbImage) => ({
+            url: `/api/proxy-image?url=${encodeURIComponent(`https://image.tmdb.org/t/p/w1280${img.file_path}`)}`,
+            type: "banner" as const,
+            aspectRatio: 16 / 9,
+            loaded: false,
+            tmdb_file_path: img.file_path,
+          })
+
+          const posters = ([...(data.posters || [])] as TmdbImage[])
+            .sort(byVotes)
+            .map(mapPoster)
+
+          const backdrops = ([...(data.backdrops || [])] as TmdbImage[])
+            .sort(byVotes)
+            .map(mapBackdrop)
+
+          // Mix posters + backdrops for masonry (all images, no hard cap).
+          const mixed = [...posters, ...backdrops]
+          for (let i = mixed.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1))
+            ;[mixed[i], mixed[j]] = [mixed[j], mixed[i]]
           }
-          
-          setImages(formattedImages);
+
+          setImages(mixed);
         } catch (error) {
           console.error("Erro ao buscar imagens:", error);
         } finally {
@@ -283,8 +290,12 @@ export function ImageEditDialog({ onClose, onSelect, isOpen, onSave, type, custo
   };
 
   const handleImageSelect = (imageUrl: string, tmdbFilePath?: string | null) => {
-    setSelectedImage(imageUrl)
     const fp = typeof tmdbFilePath === "string" ? tmdbFilePath.trim() : ""
+    const cropSrc =
+      fp.length > 0
+        ? `/api/proxy-image?url=${encodeURIComponent(`https://image.tmdb.org/t/p/original${fp}`)}`
+        : imageUrl
+    setSelectedImage(cropSrc)
     setSelectedTmdbFilePath(fp.length > 0 ? fp : null)
     setListCropGeometry(null)
     setCroppedImage(null)

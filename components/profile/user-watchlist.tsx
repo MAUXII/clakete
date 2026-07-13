@@ -64,10 +64,17 @@ export function UserWatchlist({ userId }: UserWatchlistProps) {
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
-        {[...Array(12)].map((_, i) => (
-          <Skeleton key={i} className="w-full border-[1px] border-black/15 shadow-black/5 dark:border-white/15 h-full relative shadow-sm dark:shadow-white/5 aspect-[2/3] rounded-[5px] overflow-hidden" />
-        ))}
+      <div className="mt-4">
+        <h2 className="text-sm font-medium uppercase text-muted-foreground/50">Watchlist</h2>
+        <div className="mb-4 mt-1 h-[0.3px] w-full bg-muted-foreground/10" />
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4">
+          {[...Array(12)].map((_, i) => (
+            <Skeleton
+              key={i}
+              className="relative aspect-[2/3] h-full w-full overflow-hidden rounded-[5px] border border-black/15 shadow-sm shadow-black/5 dark:border-white/15 dark:shadow-white/5"
+            />
+          ))}
+        </div>
       </div>
     )
   }

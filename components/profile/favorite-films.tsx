@@ -16,6 +16,7 @@ import {
   SortableOverlay,
 } from "@/components/ui/sortable"
 import { MdDelete } from "react-icons/md"
+import { toLocalDateString } from "@/lib/watched-date"
 import {
   ContextMenu,
   ContextMenuContent,
@@ -248,13 +249,17 @@ export function UserFavoriteFilms({ userId, isEditable = false, onFilmAdded }: F
 
   if (loading) {
     return (
-      <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {[...Array(4)].map((_, i) => (
-          <Skeleton
-            key={i}
-            className="relative aspect-[2/3] h-full w-full rounded-[5px] border-[1px] border-black/15 shadow-sm shadow-black/5 dark:border-white/15 dark:shadow-white/5"
-          />
-        ))}
+      <div className="mt-0">
+        <h2 className="text-sm font-medium uppercase text-muted-foreground/50">Favorite Films</h2>
+        <div className="mt-1 mb-4 h-[0.3px] w-full bg-muted-foreground/10" />
+        <div className="grid grid-cols-4 gap-3 sm:gap-4">
+          {[...Array(4)].map((_, i) => (
+            <Skeleton
+              key={i}
+              className="relative aspect-[2/3] h-full w-full rounded-[5px] border border-black/15 shadow-sm shadow-black/5 dark:border-white/15 dark:shadow-white/5"
+            />
+          ))}
+        </div>
       </div>
     )
   }
@@ -340,6 +345,8 @@ export function UserFavoriteFilms({ userId, isEditable = false, onFilmAdded }: F
           tmdb_id: filmId,
           media_type: "movie",
           is_watched: true,
+          watched_date: toLocalDateString(),
+          rewatch_count: 0,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           poster_path: selectedMovie.poster_path,

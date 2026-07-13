@@ -5,10 +5,12 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FilmActions } from "@/components/movies/film-actions";
+import { LogWatchDialog } from "@/components/movies/log-watch-dialog";
 import { StarRating } from "@/components/movies/star-rating";
 import { FilmReview } from "@/components/movies/film-review";
 import { FilmReviewsList } from "@/components/movies/film-reviews-list";
 import { useFilmInteractions } from "@/hooks/use-film-interactions";
+import { formatRewatchLabel, formatWatchedDate } from "@/lib/watched-date";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import WatchProviders from "@/components/movies/watchproviders";
 import Trailer, { type Video } from "@/components/movies/trailer";
@@ -125,6 +127,7 @@ export default function FilmPage({ params }: { params: Promise<{ id: string }> }
   const [trailerOpen, setTrailerOpen] = useState(false);
   const [posterTrailerHover, setPosterTrailerHover] = useState(false);
   const [trailerBtnFocused, setTrailerBtnFocused] = useState(false);
+  const [logWatchOpen, setLogWatchOpen] = useState(false);
   const filmId = parseInt(id);
   const {
     rating,
@@ -132,11 +135,14 @@ export default function FilmPage({ params }: { params: Promise<{ id: string }> }
     isWatched,
     isLiked,
     isInWatchlist,
+    watchedDate,
+    rewatchCount,
     loading: interactionsLoading,
     updating,
     setRating,
     setReview,
-    toggleWatched,
+    logWatch,
+    unwatch,
     toggleLiked,
     toggleWatchlist,
   } = useFilmInteractions(filmId, movie?.poster_path, movie?.title, movie?.release_date, "movie");
@@ -405,13 +411,23 @@ export default function FilmPage({ params }: { params: Promise<{ id: string }> }
                   isWatched={isWatched}
                   isLiked={isLiked}
                   isInWatchlist={isInWatchlist}
-                  onWatchClick={toggleWatched}
+                  onWatchClick={() => setLogWatchOpen(true)}
                   onLikeClick={toggleLiked}
                   onWatchlistClick={toggleWatchlist}
                   loading={loading || interactionsLoading}
                   updating={updating}
                 />
               </div>
+              {isWatched && (watchedDate || rewatchCount > 0) ? (
+                <p className="-mt-4 text-sm text-muted-foreground">
+                  {formatWatchedDate(watchedDate)
+                    ? `Watched ${formatWatchedDate(watchedDate)}`
+                    : "Watched"}
+                  {formatRewatchLabel(rewatchCount)
+                    ? ` · ${formatRewatchLabel(rewatchCount)}`
+                    : null}
+                </p>
+              ) : null}
               <FilmReview
                 filmId={movie.id}
                 initialReview={review}
@@ -421,6 +437,18 @@ export default function FilmPage({ params }: { params: Promise<{ id: string }> }
               />
             </div>
           </section>
+
+          <LogWatchDialog
+            open={logWatchOpen}
+            onOpenChange={setLogWatchOpen}
+            title={movie.title}
+            isWatched={isWatched}
+            watchedDate={watchedDate}
+            rewatchCount={rewatchCount}
+            loading={updating}
+            onLog={logWatch}
+            onUnwatch={unwatch}
+          />
 
           <Tabs defaultValue="credits" className="w-full">
             <TabsList className={tabListClass}>

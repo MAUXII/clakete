@@ -15,6 +15,7 @@ import {
 import { cn } from '@/lib/utils'
 import { pageContainerClass } from '@/lib/page-container'
 import { UserRecentReviews } from "@/components/profile/recent-reviews";
+import { SocialFeed } from "@/components/home/social-feed";
 import CinematicBackground from '@/components/CinematicBackground'
 import { LandingSpotlight } from '@/components/landing/LandingSpotlight'
 import { LandingWhyClakete } from '@/components/landing/LandingWhyClakete'
@@ -43,34 +44,44 @@ interface UserProfile {
   home_preferences: Json | null
 }
 
-/** Padrão alinhado a `FilmsCatalogHeader`: eyebrow + título + descrição + ação. */
+/** Compact section label for logged-in home denser layout. */
 function LoggedHomeSectionHeader({
   eyebrow,
   title,
   description,
   action,
   titleId,
+  dense = false,
 }: {
   eyebrow: string
   title: string
   description?: string
   action?: ReactNode
   titleId?: string
+  dense?: boolean
 }) {
   return (
-    <header className="mb-8 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
-      <div className="min-w-0 space-y-2">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+    <header
+      className={cn(
+        "flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between",
+        dense ? "mb-4" : "mb-6",
+      )}
+    >
+      <div className="min-w-0 space-y-1">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
           {eyebrow}
         </p>
         <h2
           id={titleId}
-          className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl"
+          className={cn(
+            "font-semibold tracking-tight text-foreground",
+            dense ? "text-base sm:text-lg" : "text-lg sm:text-xl",
+          )}
         >
           {title}
         </h2>
-        {description ? (
-          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">{description}</p>
+        {description && !dense ? (
+          <p className="max-w-xl text-sm leading-relaxed text-muted-foreground">{description}</p>
         ) : null}
       </div>
       {action ? <div className="flex shrink-0 flex-wrap items-center gap-2">{action}</div> : null}
@@ -79,10 +90,10 @@ function LoggedHomeSectionHeader({
 }
 
 const loggedHomeSecondaryLink =
-  'text-sm font-medium text-muted-foreground transition-colors hover:text-foreground'
+  'text-sm font-medium text-zinc-500 transition-colors hover:text-zinc-200'
 
-/** Mesmo “letterbox” de `app/film/[id]/page.tsx` — banner full viewport width. */
-const HOME_LETTERBOX_HEIGHT = 'clamp(400px, min(60vh, 680px), 780px)' as const
+/** Shorter letterbox for logged-in home — less giant, more product. */
+const HOME_LETTERBOX_HEIGHT = 'clamp(220px, min(32vh, 360px), 400px)' as const
 
 const homeWelcomeHintStorageKey = (username: string) =>
   `clakete_home_welcome_hint_hidden:${username.trim().toLowerCase()}`
@@ -570,18 +581,13 @@ export default function HomePage() {
     },
   ] as const
 
-  const sectionShell = 'border-b border-border py-12 last:border-b-0'
+  const sectionShell = 'border-b border-white/[0.06] py-8 last:border-b-0'
   const showLowerBlock = homePrefs.show_recent_reviews || homePrefs.show_upcoming
 
-  const lowerGridClass = cn(
-    'grid gap-12 lg:gap-14',
-    homePrefs.show_recent_reviews && homePrefs.show_upcoming
-      ? 'lg:grid-cols-[1fr_minmax(0,300px)]'
-      : 'grid-cols-1',
-  )
-
   const allMainSectionsOff =
-    !homePrefs.show_now_showing && !showLowerBlock
+    !homePrefs.show_following_feed &&
+    !homePrefs.show_now_showing &&
+    !showLowerBlock
 
   /** Aviso “tudo off” ignora Hide antigo; quando há seções ligadas, respeita Hide. */
   const showWelcomeHint = allMainSectionsOff || !welcomeHintHidden
@@ -589,7 +595,7 @@ export default function HomePage() {
   const hasFilmHero = Boolean(userProfile && heroBackdrop)
 
   return (
-    <div className="w-full overflow-x-clip pb-20">
+    <div className="w-full overflow-x-clip pb-16">
       {hasFilmHero && heroBackdrop ? (
         <div
           className="pointer-events-none relative left-1/2 z-0 mt-[3.75rem] w-screen max-w-[100vw] -translate-x-1/2 overflow-hidden bg-[#09090B]"
@@ -603,15 +609,11 @@ export default function HomePage() {
             style={{ objectPosition: heroBackdrop.backgroundPosition }}
           />
           <div
-            className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(9,9,11,0.18)_0%,transparent_38%)]"
+            className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(9,9,11,0.25)_0%,transparent_40%)]"
             aria-hidden
           />
           <div
-            className="absolute inset-0 bg-gradient-to-r from-black/25 via-transparent to-black/10"
-            aria-hidden
-          />
-          <div
-            className="absolute inset-0 bg-[linear-gradient(to_top,#09090B_0%,#09090B_0%,rgba(9,9,11,0.55)_32%,transparent_62%)]"
+            className="absolute inset-0 bg-[linear-gradient(to_top,#09090B_0%,rgba(9,9,11,0.65)_40%,transparent_75%)]"
             aria-hidden
           />
           <img
@@ -626,225 +628,203 @@ export default function HomePage() {
       <div
         className={cn(
           pageContainerClass,
-          hasFilmHero ? 'relative z-10 -mt-[6rem] sm:-mt-[7.25rem]' : 'mt-20 pt-6',
+          hasFilmHero ? 'relative z-10 -mt-[3.5rem] sm:-mt-[4rem]' : 'mt-20 pt-6',
         )}
       >
       {userProfile ? (
-        <header className={cn(!hasFilmHero && 'border-b border-border', 'pb-12')}>
-          <div className="pointer-events-auto space-y-3">
-            <p
-              className={cn(
-                'text-[11px] font-semibold uppercase tracking-[0.22em]',
-                hasFilmHero ? 'text-zinc-500' : 'text-muted-foreground',
-              )}
-            >
-              Home
-            </p>
-            <h1
-              className={cn(
-                'text-3xl font-semibold tracking-tight sm:text-4xl',
-                hasFilmHero ? 'text-white' : 'text-foreground',
-              )}
-            >
-              Welcome back, {userProfile.username}
-            </h1>
-            <p
-              className={cn(
-                'max-w-2xl text-sm leading-relaxed',
-                hasFilmHero ? 'text-zinc-400' : 'text-muted-foreground',
-              )}
-            >
-              Catalog, lists, and your diary in one place.
-            </p>
-            {showWelcomeHint ? (
+        <header className="pb-6">
+          <div className="pointer-events-auto flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+            <div className="min-w-0 space-y-1.5">
               <p
                 className={cn(
-                  'text-xs',
+                  'text-[10px] font-semibold uppercase tracking-[0.22em]',
                   hasFilmHero ? 'text-zinc-500' : 'text-muted-foreground',
                 )}
               >
-                {allMainSectionsOff ? (
-                  <>
-                    Every home block is hidden.{' '}
-                  </>
-                ) : null}
-                <Link
-                  href={profileHref}
+                Home
+              </p>
+              <h1
+                className={cn(
+                  'text-2xl font-semibold tracking-tight sm:text-3xl',
+                  hasFilmHero ? 'text-white' : 'text-foreground',
+                )}
+              >
+                Hey, {userProfile.username}
+              </h1>
+              {showWelcomeHint ? (
+                <p
                   className={cn(
-                    'underline underline-offset-2',
-                    hasFilmHero ? 'hover:text-zinc-200' : 'hover:text-foreground',
+                    'text-xs',
+                    hasFilmHero ? 'text-zinc-500' : 'text-muted-foreground',
                   )}
                 >
-                  Customize this page
-                </Link>{' '}
-                under Edit profile → Preferences
-                {allMainSectionsOff ? (
-                  <>, to bring sections back.</>
-                ) : (
-                  <>
-                    , or just{' '}
-                    <button
-                      type="button"
-                      className={cn(
-                        'inline border-none bg-transparent p-0 underline underline-offset-2',
-                        'cursor-pointer font-inherit text-[length:inherit]',
-                        hasFilmHero
-                          ? 'text-zinc-500 hover:text-zinc-200'
-                          : 'text-muted-foreground hover:text-foreground',
-                      )}
-                      onClick={() => {
-                        if (!userProfile?.username) return
-                        try {
-                          localStorage.setItem(
-                            homeWelcomeHintStorageKey(userProfile.username),
-                            '1',
-                          )
-                        } catch {
-                          /* ignore */
-                        }
-                        setWelcomeHintHidden(true)
-                      }}
-                    >
-                      Hide
-                    </button>
-                    .
-                  </>
-                )}
-              </p>
-            ) : null}
+                  {allMainSectionsOff ? (
+                    <>Every home block is hidden. </>
+                  ) : null}
+                  <Link
+                    href={profileHref}
+                    className={cn(
+                      'underline underline-offset-2',
+                      hasFilmHero ? 'hover:text-zinc-200' : 'hover:text-foreground',
+                    )}
+                  >
+                    Preferences
+                  </Link>
+                  {!allMainSectionsOff ? (
+                    <>
+                      {' '}
+                      ·{' '}
+                      <button
+                        type="button"
+                        className={cn(
+                          'inline border-none bg-transparent p-0 underline underline-offset-2',
+                          'cursor-pointer font-inherit text-[length:inherit]',
+                          hasFilmHero
+                            ? 'text-zinc-500 hover:text-zinc-200'
+                            : 'text-muted-foreground hover:text-foreground',
+                        )}
+                        onClick={() => {
+                          if (!userProfile?.username) return
+                          try {
+                            localStorage.setItem(
+                              homeWelcomeHintStorageKey(userProfile.username),
+                              '1',
+                            )
+                          } catch {
+                            /* ignore */
+                          }
+                          setWelcomeHintHidden(true)
+                        }}
+                      >
+                        Hide
+                      </button>
+                    </>
+                  ) : null}
+                </p>
+              ) : null}
+            </div>
+
+            <nav aria-label="Shortcuts" className="flex flex-wrap gap-1.5">
+              {quickLinks.map(({ href, label, icon: Icon }) => (
+                <Link
+                  key={href + label}
+                  href={href}
+                  className={cn(
+                    'inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition',
+                    hasFilmHero
+                      ? 'border-white/[0.1] bg-black/40 text-zinc-200 backdrop-blur-sm hover:border-white/20 hover:bg-black/55'
+                      : 'border-border bg-background text-foreground hover:bg-muted',
+                  )}
+                >
+                  <Icon className="size-3.5 opacity-70" aria-hidden />
+                  {label}
+                </Link>
+              ))}
+            </nav>
           </div>
         </header>
       ) : (
-        <header className="border-b border-border pb-12">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+        <header className="border-b border-white/[0.06] pb-8">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
             Home
           </p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+          <h1 className="mt-2 text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
             Welcome back
           </h1>
-          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+          <p className="mt-2 max-w-xl text-sm text-muted-foreground">
             Finish your profile for a public page and the shortcuts below.
           </p>
           <Link
             href="/profile/setup"
-            className="mt-6 inline-flex rounded-md bg-[#FF0048] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#e60042]"
+            className="mt-5 inline-flex rounded-md bg-[#FF0048] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#e60042]"
           >
             Complete profile
           </Link>
         </header>
       )}
 
-      <nav aria-label="Shortcuts" className={sectionShell}>
-        <LoggedHomeSectionHeader
-          eyebrow="Navigate"
-          title="Shortcuts"
-          description="Movies, TV, lists, profile, and your activity timeline."
-        />
-        <ul className="flex flex-wrap gap-2">
-          {quickLinks.map(({ href, label, icon: Icon }) => (
-            <li key={href + label}>
-              <Link
-                href={href}
-                className="inline-flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm font-medium text-foreground transition hover:bg-muted"
-              >
-                <Icon className="size-4 text-muted-foreground" aria-hidden />
-                {label}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </nav>
+      {/* Feed + catalog rail */}
+      <div
+        className={cn(
+          'grid gap-10 lg:gap-12',
+          homePrefs.show_following_feed &&
+            (homePrefs.show_now_showing || homePrefs.show_upcoming)
+            ? 'lg:grid-cols-[minmax(0,1fr)_minmax(240px,300px)]'
+            : 'grid-cols-1',
+          sectionShell,
+        )}
+      >
+        {homePrefs.show_following_feed ? (
+          <section aria-labelledby="home-following-feed" className="min-w-0">
+            <LoggedHomeSectionHeader
+              dense
+              eyebrow="Following"
+              title="Activity"
+              titleId="home-following-feed"
+            />
+            <SocialFeed
+              selfUsername={userProfile?.username}
+              selfAvatar={userProfile?.avatar_url}
+              limit={12}
+            />
+          </section>
+        ) : null}
 
-      {homePrefs.show_now_showing ? (
-        <section aria-labelledby="home-now-showing" className={sectionShell}>
-          <LoggedHomeSectionHeader
-            eyebrow="In theaters"
-            title="Now showing"
-            titleId="home-now-showing"
-            description="Open a film to rate, mark watched, or add to a list."
-            action={
-              <Link href="/films/discover" className={loggedHomeSecondaryLink}>
-                Full catalog →
-              </Link>
-            }
-          />
-          <Carousel opts={{ align: 'start', loop: false }} className="w-full">
-            <CarouselContent className="-ml-3 sm:-ml-2">
-              {featuredMovies.map((movie) => (
-                <CarouselItem key={movie.id} className="basis-2/5 pl-3 sm:basis-1/5 sm:pl-2">
-                  <Link href={`/film/${movie.id}`} className="group block">
-                    <div className="relative aspect-[2/3] overflow-hidden rounded-md border border-border bg-muted">
-                      <img
-                        src={
-                          movie.poster_path
-                            ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
-                            : '/placeholder.png'
-                        }
-                        alt={movie.title || 'Poster'}
-                        className="h-full w-full object-cover opacity-95 transition group-hover:opacity-100"
-                      />
-                    </div>
-                  </Link>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious className="h-8 w-8 border border-border bg-background text-foreground hover:bg-muted" />
-            <CarouselNext className="h-8 w-8 border border-border bg-background text-foreground hover:bg-muted" />
-          </Carousel>
-        </section>
-      ) : null}
-
-      {showLowerBlock ? (
-        <div className={cn(lowerGridClass, sectionShell)}>
-          {homePrefs.show_recent_reviews ? (
-            <section className="min-w-0">
-              <LoggedHomeSectionHeader
-                eyebrow="Diary"
-                title="Recent reviews"
-                description="Written notes on films you’ve logged."
-              />
-              <UserRecentReviews
-                limit={4}
-                onLandingPage={false}
-                hideSectionTitle
-                emptyFallback={
-                  <div className="rounded-md border border-border bg-muted/30 px-5 py-8 text-center">
-                    <p className="text-sm leading-relaxed text-muted-foreground">
-                      No reviews yet. Open any film page to write one.
-                    </p>
-                    <Link
-                      href="/films/discover"
-                      className="mt-5 inline-flex rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition hover:bg-muted"
-                    >
-                      Find a film
+        {(homePrefs.show_now_showing || homePrefs.show_upcoming) ? (
+          <aside className="min-w-0 space-y-8 lg:border-l lg:border-white/[0.06] lg:pl-8">
+            {homePrefs.show_now_showing ? (
+              <section aria-labelledby="home-now-showing">
+                <LoggedHomeSectionHeader
+                  dense
+                  eyebrow="In theaters"
+                  title="Now showing"
+                  titleId="home-now-showing"
+                  action={
+                    <Link href="/films/discover" className={loggedHomeSecondaryLink}>
+                      Catalog →
                     </Link>
-                  </div>
-                }
-              />
-            </section>
-          ) : null}
+                  }
+                />
+                <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-2">
+                  {featuredMovies.slice(0, 6).map((movie) => (
+                    <Link key={movie.id} href={`/film/${movie.id}`} className="group block">
+                      <div className="relative aspect-[2/3] overflow-hidden rounded-md border border-white/[0.08] bg-zinc-900">
+                        <img
+                          src={
+                            movie.poster_path
+                              ? `https://image.tmdb.org/t/p/w342${movie.poster_path}`
+                              : '/placeholder.png'
+                          }
+                          alt={movie.title || 'Poster'}
+                          className="h-full w-full object-cover opacity-90 transition duration-300 group-hover:scale-[1.03] group-hover:opacity-100"
+                        />
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            ) : null}
 
-          {homePrefs.show_upcoming ? (
-            <aside className={cn(!homePrefs.show_recent_reviews && 'min-w-0')}>
+            {homePrefs.show_upcoming ? (
               <section>
                 <LoggedHomeSectionHeader
+                  dense
                   eyebrow="Coming soon"
                   title="Upcoming"
-                  description="Opens from the TMDB calendar."
                   action={
                     <Link href="/films/upcoming" className={loggedHomeSecondaryLink}>
                       See all →
                     </Link>
                   }
                 />
-                <div className="flex gap-3 overflow-x-auto pb-1 [scrollbar-width:thin]">
-                  {upcomingMovies.map((movie) => (
-                    <Link key={movie.id} href={`/film/${movie.id}`} className="shrink-0">
-                      <div className="w-[100px] overflow-hidden rounded-md border border-border bg-muted aspect-[2/3] sm:w-[108px]">
+                <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:thin] lg:grid lg:grid-cols-3 lg:overflow-visible">
+                  {upcomingMovies.slice(0, 6).map((movie) => (
+                    <Link key={movie.id} href={`/film/${movie.id}`} className="shrink-0 lg:shrink">
+                      <div className="aspect-[2/3] w-[72px] overflow-hidden rounded-md border border-white/[0.08] bg-zinc-900 lg:w-full">
                         <img
                           src={
                             movie.poster_path
-                              ? `https://image.tmdb.org/t/p/w342${movie.poster_path}`
+                              ? `https://image.tmdb.org/t/p/w185${movie.poster_path}`
                               : '/placeholder.png'
                           }
                           alt={movie.title || ''}
@@ -855,9 +835,38 @@ export default function HomePage() {
                   ))}
                 </div>
               </section>
-            </aside>
-          ) : null}
-        </div>
+            ) : null}
+          </aside>
+        ) : null}
+      </div>
+
+      {homePrefs.show_recent_reviews ? (
+        <section className={cn(sectionShell, 'min-w-0')}>
+          <LoggedHomeSectionHeader
+            dense
+            eyebrow="Diary"
+            title="Your reviews"
+            description="Notes you’ve written on films and series."
+          />
+          <UserRecentReviews
+            limit={3}
+            onLandingPage={false}
+            hideSectionTitle
+            emptyFallback={
+              <div className="rounded-xl border border-dashed border-white/[0.08] bg-zinc-950/30 px-4 py-8 text-center">
+                <p className="text-sm text-zinc-500">
+                  No reviews yet. Open any film page to write one.
+                </p>
+                <Link
+                  href="/films/discover"
+                  className="mt-4 inline-flex text-sm font-medium text-[#ff9eb0] transition hover:text-[#FF0048]"
+                >
+                  Find a film →
+                </Link>
+              </div>
+            }
+          />
+        </section>
       ) : null}
       </div>
     </div>

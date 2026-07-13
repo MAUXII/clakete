@@ -48,16 +48,21 @@ export async function getMovieDetails(id: number) {
 }
 
 export const createTMDBClient = () => {
+  // `include_image_language` is required to pull more than the default language subset.
+  const imageLangs = "null,en,pt,pt-BR,es,fr,de,it,ja,ko,zh,ru"
+
   return {
     getMovieImages: async (movieId: string) => {
       const response = await fetch(
-        `https://api.themoviedb.org/3/movie/${movieId}/images?api_key=${TMDB_API_KEY}`
+        `https://api.themoviedb.org/3/movie/${movieId}/images?api_key=${TMDB_API_KEY}&include_image_language=${imageLangs}`,
+        { cache: "no-store" },
       )
       return response.json()
     },
     getTvImages: async (tvId: string) => {
       const response = await fetch(
-        `https://api.themoviedb.org/3/tv/${tvId}/images?api_key=${TMDB_API_KEY}`
+        `https://api.themoviedb.org/3/tv/${tvId}/images?api_key=${TMDB_API_KEY}&include_image_language=${imageLangs}`,
+        { cache: "no-store" },
       )
       return response.json()
     },

@@ -22,6 +22,7 @@ import type { Json } from "@/lib/supabase/database.types"
 import { playListFinishConfetti } from "@/lib/list-finish-confetti"
 import { setFavoriteGenresInsidePreferences } from "@/lib/user-home-preferences"
 import { ONBOARDING_SWIPE_COPY } from "@/lib/onboarding-swipe-copy"
+import { toLocalDateString } from "@/lib/watched-date"
 
 type OnboardingStep = 1 | 2 | 3 | 4
 
@@ -153,6 +154,7 @@ export default function OnboardingPage() {
 
       if (watchedMovies.length > 0) {
         const now = new Date().toISOString()
+        const today = toLocalDateString()
         for (const film of watchedMovies) {
           const { error: interactionError } = await supabase.from("items_interactions").upsert(
             {
@@ -160,6 +162,8 @@ export default function OnboardingPage() {
               tmdb_id: film.tmdb_id,
               media_type: film.media_type ?? "movie",
               is_watched: true,
+              watched_date: today,
+              rewatch_count: 0,
               poster_path: film.poster_path ?? null,
               release_date: film.release_date ?? null,
               movie_title: film.title,

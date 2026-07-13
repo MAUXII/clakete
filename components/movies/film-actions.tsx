@@ -57,7 +57,7 @@ export function FilmActions({
             </Button>
           </TooltipTrigger>
           <TooltipContent>
-            <p>{isWatched ? "Watched" : "Mark as watched"}</p>
+            <p>{isWatched ? "Edit watch log" : "Log as watched"}</p>
           </TooltipContent>
         </Tooltip>
 

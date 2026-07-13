@@ -16,6 +16,8 @@ interface WatchedItem {
   release_date: string | null
   media_type: string | null
   created_at: string
+  watched_date: string | null
+  rewatch_count: number | null
 }
 
 interface RecentActivityProps {
@@ -49,10 +51,11 @@ export function UserRecentActivity({ userId, showAllWatched }: RecentActivityPro
         const { data: interactions, error } = await supabase
           .from("items_interactions")
           .select(
-            "id, tmdb_id, poster_path, movie_title, release_date, media_type, created_at",
+            "id, tmdb_id, poster_path, movie_title, release_date, media_type, created_at, watched_date, rewatch_count",
           )
           .eq("user_id", userId)
           .eq("is_watched", true)
+          .order("watched_date", { ascending: false, nullsFirst: false })
           .order("created_at", { ascending: false })
 
         if (error) {
@@ -79,13 +82,17 @@ export function UserRecentActivity({ userId, showAllWatched }: RecentActivityPro
 
   if (loading) {
     return (
-      <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-4">
-        {[...Array(12)].map((_, i) => (
-          <Skeleton
-            key={i}
-            className="relative aspect-[2/3] h-full w-full overflow-hidden rounded-[5px] border border-black/15 shadow-sm shadow-black/5 dark:border-white/15 dark:shadow-white/5"
-          />
-        ))}
+      <div className="mt-4">
+        <h2 className="text-sm font-medium uppercase text-muted-foreground/50">{pageTitle}</h2>
+        <div className="mb-4 mt-1 h-[0.3px] w-full bg-muted-foreground/10" />
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-4">
+          {[...Array(12)].map((_, i) => (
+            <Skeleton
+              key={i}
+              className="relative aspect-[2/3] h-full w-full overflow-hidden rounded-[5px] border border-black/15 shadow-sm shadow-black/5 dark:border-white/15 dark:shadow-white/5"
+            />
+          ))}
+        </div>
       </div>
     )
   }

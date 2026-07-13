@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { useSupabaseClient, useUser } from "@supabase/auth-helpers-react";
 import { Database } from "@/lib/supabase/database.types";
+import { toLocalDateString } from "@/lib/watched-date";
 import { toast } from "sonner";
-import { RealtimeChannel } from '@supabase/supabase-js'
 
 interface FilmInteractions {
   rating: number;
@@ -12,6 +12,8 @@ interface FilmInteractions {
   isWatched: boolean;
   isLiked: boolean;
   isInWatchlist: boolean;
+  watchedDate: string | null;
+  rewatchCount: number;
   poster_path?: string;
   movie_title?: string;
   release_date?: string | null;
@@ -20,6 +22,41 @@ interface FilmInteractions {
 type FilmInteractionRow = Database["public"]["Tables"]["items_interactions"]["Row"];
 
 export type FilmInteractionMediaType = "movie" | "tv";
+
+function rowToState(
+  data: FilmInteractionRow | null,
+  posterPath?: string,
+  movieTitle?: string,
+  releaseDate?: string,
+): FilmInteractions {
+  if (!data) {
+    return {
+      rating: 0,
+      review: "",
+      isWatched: false,
+      isLiked: false,
+      isInWatchlist: false,
+      watchedDate: null,
+      rewatchCount: 0,
+      poster_path: posterPath,
+      movie_title: movieTitle,
+      release_date: releaseDate,
+    };
+  }
+
+  return {
+    rating: data.rating || 0,
+    review: data.review || "",
+    isWatched: data.is_watched,
+    isLiked: data.is_liked,
+    isInWatchlist: data.in_watchlist,
+    watchedDate: data.watched_date,
+    rewatchCount: data.rewatch_count ?? 0,
+    poster_path: data.poster_path,
+    movie_title: data.movie_title,
+    release_date: data.release_date,
+  };
+}
 
 export function useFilmInteractions(
   filmId: number,
@@ -36,6 +73,8 @@ export function useFilmInteractions(
     isWatched: false,
     isLiked: false,
     isInWatchlist: false,
+    watchedDate: null,
+    rewatchCount: 0,
     poster_path: posterPath,
     movie_title: movieTitle,
     release_date: releaseDate,
@@ -43,7 +82,6 @@ export function useFilmInteractions(
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
 
-  // Fetch all interactions for this film
   const fetchInteractions = useCallback(async () => {
     if (!user) {
       setLoading(false);
@@ -59,41 +97,19 @@ export function useFilmInteractions(
         .eq("media_type", mediaType)
         .maybeSingle();
 
-      // Se não houver dados, é normal - significa que o usuário ainda não interagiu com o filme
-      if (!data) {
-        setInteractions({
-          rating: 0,
-          review: "",
-          isWatched: false,
-          isLiked: false,
-          isInWatchlist: false,
-          poster_path: posterPath,
-          movie_title: movieTitle,
-          release_date: releaseDate,
-        });
+      if (error) {
+        console.error("Error fetching film interactions:", error);
         return;
       }
 
-      // Se tiver dados, atualiza o estado
-      setInteractions({
-        rating: data.rating || 0,
-        review: data.review || "",
-        isWatched: data.is_watched,
-        isLiked: data.is_liked,
-        isInWatchlist: data.in_watchlist,
-        poster_path: data.poster_path,
-        movie_title: data.movie_title,
-        release_date: data.release_date
-      });
+      setInteractions(rowToState(data, posterPath, movieTitle, releaseDate));
     } catch (error) {
-      // Só loga o erro, sem mostrar toast
       console.error("Error fetching film interactions:", error);
     } finally {
       setLoading(false);
     }
   }, [supabase, user, filmId, posterPath, movieTitle, releaseDate, mediaType]);
 
-  // Subscribe to realtime changes
   useEffect(() => {
     if (!user) return;
 
@@ -109,16 +125,7 @@ export function useFilmInteractions(
         },
         (payload: { new: FilmInteractionRow }) => {
           if (payload.new) {
-            setInteractions({
-              rating: payload.new.rating || 0,
-              review: payload.new.review || "",
-              isWatched: payload.new.is_watched,
-              isLiked: payload.new.is_liked,
-              isInWatchlist: payload.new.in_watchlist,
-              poster_path: payload.new.poster_path,
-              movie_title: payload.new.movie_title,
-              release_date: payload.new.release_date
-            });
+            setInteractions(rowToState(payload.new, posterPath, movieTitle, releaseDate));
           }
         }
       )
@@ -127,21 +134,19 @@ export function useFilmInteractions(
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [supabase, user, filmId, mediaType]);
+  }, [supabase, user, filmId, mediaType, posterPath, movieTitle, releaseDate]);
 
-  // Update interactions in Supabase
   const updateInteractions = async (updates: Partial<FilmInteractions>) => {
     if (!user) {
-      toast.error("Por favor, faça login para interagir com filmes");
+      toast.error("Please sign in to interact with titles");
       return;
     }
 
     setUpdating(true);
-    
-    // Optimistically update local state first
+
     const newInteractions = {
       ...interactions,
-      ...updates
+      ...updates,
     };
     setInteractions(newInteractions);
 
@@ -157,6 +162,8 @@ export function useFilmInteractions(
           is_watched: newInteractions.isWatched,
           is_liked: newInteractions.isLiked,
           in_watchlist: newInteractions.isInWatchlist,
+          watched_date: newInteractions.isWatched ? newInteractions.watchedDate : null,
+          rewatch_count: newInteractions.isWatched ? newInteractions.rewatchCount : 0,
           poster_path: posterPath || newInteractions.poster_path,
           movie_title: movieTitle || newInteractions.movie_title,
           release_date: releaseDate || newInteractions.release_date,
@@ -167,29 +174,58 @@ export function useFilmInteractions(
 
       if (error) {
         console.error("Error updating film interactions:", error);
-        // Revert optimistic update on error
-        fetchInteractions();
+        toast.error("Could not save watch log");
+        void fetchInteractions();
       }
     } catch (error) {
       console.error("Error updating film interactions:", error);
-      // Revert optimistic update on error
-      fetchInteractions();
+      toast.error("Could not save watch log");
+      void fetchInteractions();
     } finally {
       setUpdating(false);
     }
   };
 
-  // Individual update functions
   const setRating = (rating: number) => updateInteractions({ rating });
   const setReview = (review: string) => updateInteractions({ review });
-  const toggleWatched = () => updateInteractions({ isWatched: !interactions.isWatched });
+
+  const logWatch = async (payload: { watchedDate: string; isRewatch?: boolean }) => {
+    const isRewatch = Boolean(payload.isRewatch && interactions.isWatched);
+    await updateInteractions({
+      isWatched: true,
+      watchedDate: payload.watchedDate,
+      rewatchCount: isRewatch
+        ? interactions.rewatchCount + 1
+        : interactions.isWatched
+          ? interactions.rewatchCount
+          : 0,
+      isInWatchlist: false,
+    });
+  };
+
+  const unwatch = async () => {
+    await updateInteractions({
+      isWatched: false,
+      watchedDate: null,
+      rewatchCount: 0,
+    });
+  };
+
+  /** Quick toggle for cards: today / clear. Detail pages should use logWatch dialog. */
+  const toggleWatched = async () => {
+    if (interactions.isWatched) {
+      await unwatch();
+      return;
+    }
+    await logWatch({ watchedDate: toLocalDateString(), isRewatch: false });
+  };
+
   const toggleLiked = () => updateInteractions({ isLiked: !interactions.isLiked });
   const toggleWatchlist = () =>
     updateInteractions({ isInWatchlist: !interactions.isInWatchlist });
 
-  // Fetch interactions on mount and when user/filmId changes
   useEffect(() => {
-    fetchInteractions();
+    void fetchInteractions();
   }, [fetchInteractions]);
 
   return {
@@ -198,6 +234,8 @@ export function useFilmInteractions(
     updating,
     setRating,
     setReview,
+    logWatch,
+    unwatch,
     toggleWatched,
     toggleLiked,
     toggleWatchlist,

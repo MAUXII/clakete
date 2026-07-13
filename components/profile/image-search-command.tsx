@@ -76,9 +76,16 @@ export function ImageSearchCommand({ onSelect, type, isOpen, onOpenChange }: Ima
       try {
         const response = await fetch(`/api/movies/${selectedMovie.id}/images`)
         const data = await response.json()
-        const imageUrls = type === 'banner' 
-          ? data.backdrops.map((img: any) => `https://image.tmdb.org/t/p/original${img.file_path}`)
-          : data.posters.map((img: any) => `https://image.tmdb.org/t/p/original${img.file_path}`)
+        const imageUrls =
+          type === "banner"
+            ? (data.backdrops || []).map(
+                (img: { file_path: string }) =>
+                  `https://image.tmdb.org/t/p/w1280${img.file_path}`,
+              )
+            : (data.posters || []).map(
+                (img: { file_path: string }) =>
+                  `https://image.tmdb.org/t/p/w780${img.file_path}`,
+              )
         setImages(imageUrls)
       } catch (error) {
         console.error("Erro ao buscar imagens:", error)

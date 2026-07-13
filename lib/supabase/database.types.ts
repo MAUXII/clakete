@@ -23,6 +23,17 @@ export interface Database {
           is_watched: boolean
           is_liked: boolean
           in_watchlist: boolean
+          watched_date: string | null
+          rewatch_count: number
+          feed_shared: boolean
+          feed_visibility: string
+          feed_image_path: string | null
+          feed_image_kind: string | null
+          feed_images: Json
+          feed_title: string | null
+          feed_caption: string | null
+          feed_layout: string
+          feed_shared_at: string | null
           created_at: string
           updated_at: string
         }
@@ -36,6 +47,17 @@ export interface Database {
           is_watched?: boolean
           is_liked?: boolean
           in_watchlist?: boolean
+          watched_date?: string | null
+          rewatch_count?: number
+          feed_shared?: boolean
+          feed_visibility?: string
+          feed_image_path?: string | null
+          feed_image_kind?: string | null
+          feed_images?: Json
+          feed_title?: string | null
+          feed_caption?: string | null
+          feed_layout?: string
+          feed_shared_at?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -49,6 +71,17 @@ export interface Database {
           is_watched?: boolean
           is_liked?: boolean
           in_watchlist?: boolean
+          watched_date?: string | null
+          rewatch_count?: number
+          feed_shared?: boolean
+          feed_visibility?: string
+          feed_image_path?: string | null
+          feed_image_kind?: string | null
+          feed_images?: Json
+          feed_title?: string | null
+          feed_caption?: string | null
+          feed_layout?: string
+          feed_shared_at?: string | null
           created_at?: string
           updated_at?: string
         }

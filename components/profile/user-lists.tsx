@@ -91,17 +91,44 @@ export function UserLists({
   }
 
   if (loading) {
+    const listsTitle = alwaysShowThree ? "Your lists" : "Lists"
     return (
-      <div className="animate-pulse space-y-4">
-        {Array.from({ length: gridColumns }).map((_, i) => (
-          <div key={i} className="flex gap-4 rounded-lg border p-4">
-            <div className="h-16 w-16 rounded bg-muted" />
-            <div className="flex-1 space-y-2">
-              <div className="h-4 w-3/4 rounded bg-muted" />
-              <div className="h-3 w-1/2 rounded bg-muted" />
-            </div>
+      <div className="">
+        {!hideSectionHeading && (
+          <div className="flex flex-col">
+            <h2
+              className={cn(
+                "text-sm font-medium uppercase",
+                alwaysShowThree
+                  ? "text-start text-muted-foreground/80"
+                  : "text-muted-foreground/80",
+              )}
+            >
+              {listsTitle}
+            </h2>
+            <div className="mt-1 mb-4 h-px w-full bg-border" />
           </div>
-        ))}
+        )}
+        <div className={listsGridClassName(singleColumn, gridColumns)}>
+          {Array.from({ length: alwaysShowThree ? gridCols : Math.min(gridColumns * 2, 6) }).map(
+            (_, i) => (
+              <div
+                key={i}
+                className={cn(
+                  "animate-pulse overflow-hidden rounded-2xl border border-border bg-card",
+                  compactCards ? "rounded-xl" : null,
+                  compactCards ? listCardCompactMinHeightClassName : listCardMinHeightClassName,
+                )}
+              >
+                <div className="flex h-full flex-col gap-3 p-4">
+                  <div className="aspect-[16/9] w-full rounded-lg bg-muted" />
+                  <div className="h-4 w-3/4 rounded bg-muted" />
+                  <div className="h-3 w-1/2 rounded bg-muted" />
+                </div>
+              </div>
+            ),
+          )}
+        </div>
       </div>
     )
   }

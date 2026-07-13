@@ -108,6 +108,17 @@ export function HomePreferencesEditor({
           />
         </div>
         <div className="flex items-center justify-between gap-4 rounded-md border border-border/80 bg-background/50 px-4 py-3">
+          <Label htmlFor="home-feed" className="cursor-pointer text-sm font-normal">
+            Following feed
+          </Label>
+          <Switch
+            id="home-feed"
+            checked={prefs.show_following_feed}
+            onCheckedChange={(v) => update({ ...prefs, show_following_feed: v })}
+            className="data-[state=checked]:bg-[#FF0048]"
+          />
+        </div>
+        <div className="flex items-center justify-between gap-4 rounded-md border border-border/80 bg-background/50 px-4 py-3">
           <Label htmlFor="home-rev" className="cursor-pointer text-sm font-normal">
             Recent reviews
           </Label>
