@@ -47,6 +47,9 @@ export type FollowingFeedItem =
       feedTitle: string | null
       feedCaption: string | null
       feedLayout: "slide" | "collage"
+      feedVisibility: "friends" | "public"
+      /** Shown because visibility=public from someone you don't follow */
+      fromDiscover?: boolean
       rewatchCount: number
       likeCount: number
       likedByMe: boolean
@@ -66,7 +69,108 @@ export type FollowingFeedItem =
     }
 
 const FEED_FETCH_LIMIT = 40
+const PUBLIC_DISCOVER_LIMIT = 12
 const STORY_NEW_MS = 72 * 60 * 60 * 1000
+
+const WATCHED_FEED_SELECT =
+  "id, user_id, tmdb_id, media_type, poster_path, movie_title, watched_date, rewatch_count, updated_at, created_at, is_watched, feed_shared, feed_image_path, feed_image_kind, feed_images, feed_title, feed_caption, feed_layout, feed_shared_at, feed_visibility"
+
+type WatchedFeedRow = {
+  id: number
+  user_id: string
+  tmdb_id: number
+  media_type: string | null
+  poster_path: string | null
+  movie_title: string | null
+  watched_date: string | null
+  rewatch_count: number | null
+  updated_at: string | null
+  created_at: string | null
+  feed_image_path: string | null
+  feed_image_kind: string | null
+  feed_images: unknown
+  feed_title: string | null
+  feed_caption: string | null
+  feed_layout: string | null
+  feed_shared_at: string | null
+  feed_visibility: string | null
+}
+
+function parseFeedImages(raw: unknown): { filePath: string; kind: "poster" | "backdrop" }[] {
+  if (!Array.isArray(raw)) return []
+  return raw
+    .map((entry) => {
+      if (!entry || typeof entry !== "object") return null
+      const rec = entry as Record<string, unknown>
+      const filePath =
+        typeof rec.filePath === "string"
+          ? rec.filePath
+          : typeof rec.path === "string"
+            ? rec.path
+            : null
+      const kind =
+        rec.kind === "poster" || rec.kind === "backdrop" ? rec.kind : null
+      if (!filePath || !kind) return null
+      return { filePath, kind }
+    })
+    .filter(
+      (x): x is { filePath: string; kind: "poster" | "backdrop" } => Boolean(x),
+    )
+}
+
+function mapWatchedRow(
+  row: WatchedFeedRow,
+  u: FollowingFeedUser,
+  meta: {
+    likeCount: number
+    likedByMe: boolean
+    commentCount: number
+    fromDiscover?: boolean
+  },
+): Extract<FollowingFeedItem, { kind: "watched" }> {
+  const at =
+    row.feed_shared_at ||
+    row.watched_date ||
+    row.updated_at ||
+    row.created_at ||
+    new Date().toISOString()
+  const kindRaw = row.feed_image_kind
+  const feedImageKind =
+    kindRaw === "poster" || kindRaw === "backdrop" ? kindRaw : null
+  const feedImages = parseFeedImages(row.feed_images)
+  const primaryPath = row.feed_image_path || feedImages[0]?.filePath || null
+  const primaryKind = feedImageKind || feedImages[0]?.kind || null
+  const interactionId = row.id
+
+  return {
+    kind: "watched",
+    id: `watched-${interactionId}`,
+    interactionId,
+    at,
+    user: u,
+    tmdbId: row.tmdb_id,
+    mediaType: row.media_type ?? "movie",
+    title: row.movie_title || "Untitled",
+    posterPath: row.poster_path,
+    feedImagePath: primaryPath,
+    feedImageKind: primaryKind,
+    feedImages:
+      feedImages.length > 0
+        ? feedImages
+        : primaryPath && primaryKind
+          ? [{ filePath: primaryPath, kind: primaryKind }]
+          : [],
+    feedTitle: row.feed_title?.trim() || null,
+    feedCaption: row.feed_caption?.trim() || null,
+    feedLayout: row.feed_layout === "collage" ? "collage" : "slide",
+    feedVisibility: row.feed_visibility === "public" ? "public" : "friends",
+    fromDiscover: meta.fromDiscover,
+    rewatchCount: row.rewatch_count ?? 0,
+    likeCount: meta.likeCount,
+    likedByMe: meta.likedByMe,
+    commentCount: meta.commentCount,
+  }
+}
 
 function toUserMap(
   rows: { id: string; username: string; display_name?: string | null; avatar_url?: string | null }[],
@@ -129,16 +233,22 @@ export function useFollowingFeed(limit = 20) {
       // Include self so your own shared posts appear in the home feed
       const feedAuthorIds = [...new Set([...followingIds, user.id])]
 
-      // Only opt-in shared watches — reviews/lists no longer auto-appear
-      const [watchedRes, followingUsersRes] = await Promise.all([
+      // Circle (following + self) + public discover from people you don't follow
+      const [watchedRes, publicRes, followingUsersRes] = await Promise.all([
         supabase
           .from("items_interactions")
-          .select(
-            "id, user_id, tmdb_id, media_type, poster_path, movie_title, watched_date, rewatch_count, updated_at, created_at, is_watched, feed_shared, feed_image_path, feed_image_kind, feed_images, feed_title, feed_caption, feed_layout, feed_shared_at, feed_visibility",
-          )
+          .select(WATCHED_FEED_SELECT)
           .in("user_id", feedAuthorIds)
           .eq("is_watched", true)
           .eq("feed_shared", true)
+          .order("feed_shared_at", { ascending: false, nullsFirst: false })
+          .limit(FEED_FETCH_LIMIT),
+        supabase
+          .from("items_interactions")
+          .select(WATCHED_FEED_SELECT)
+          .eq("is_watched", true)
+          .eq("feed_shared", true)
+          .eq("feed_visibility", "public")
           .order("feed_shared_at", { ascending: false, nullsFirst: false })
           .limit(FEED_FETCH_LIMIT),
         supabase
@@ -150,7 +260,24 @@ export function useFollowingFeed(limit = 20) {
       if (watchedRes.error) throw watchedRes.error
       if (followingUsersRes.error) throw followingUsersRes.error
 
-      const interactionIds = (watchedRes.data ?? []).map((r) => r.id as number)
+      const circleIds = new Set(feedAuthorIds)
+      const circleRows = (watchedRes.data ?? []) as WatchedFeedRow[]
+      const discoverRows = ((publicRes.error ? [] : publicRes.data) ?? [])
+        .map((r) => r as WatchedFeedRow)
+        .filter((r) => !circleIds.has(r.user_id as string))
+        .slice(0, PUBLIC_DISCOVER_LIMIT)
+
+      const allRows = [...circleRows, ...discoverRows]
+      const seenIds = new Set<number>()
+      const uniqueRows: WatchedFeedRow[] = []
+      for (const row of allRows) {
+        const id = row.id as number
+        if (seenIds.has(id)) continue
+        seenIds.add(id)
+        uniqueRows.push(row)
+      }
+
+      const interactionIds = uniqueRows.map((r) => r.id as number)
 
       const likeCountById = new Map<number, number>()
       const likedByMe = new Set<number>()
@@ -184,7 +311,7 @@ export function useFollowingFeed(limit = 20) {
       }
 
       const activityUserIds = [
-        ...new Set((watchedRes.data ?? []).map((r) => r.user_id as string)),
+        ...new Set(uniqueRows.map((r) => r.user_id as string)),
       ]
 
       const missingIds = activityUserIds.filter(
@@ -218,86 +345,26 @@ export function useFollowingFeed(limit = 20) {
         }
       }
 
-      for (const row of watchedRes.data ?? []) {
+      const discoverIdSet = new Set(discoverRows.map((r) => r.id as number))
+
+      for (const row of uniqueRows) {
         const u = users.get(row.user_id as string)
         if (!u?.username) continue
-        const at =
-          (row.feed_shared_at as string | null) ||
-          (row.watched_date as string | null) ||
-          (row.updated_at as string) ||
-          (row.created_at as string)
-        const kindRaw = row.feed_image_kind as string | null
-        const feedImageKind =
-          kindRaw === "poster" || kindRaw === "backdrop" ? kindRaw : null
-
-        const feedImagesRaw = row.feed_images
-        const feedImages: { filePath: string; kind: "poster" | "backdrop" }[] =
-          Array.isArray(feedImagesRaw)
-            ? feedImagesRaw
-                .map((entry) => {
-                  if (!entry || typeof entry !== "object") return null
-                  const rec = entry as Record<string, unknown>
-                  const filePath =
-                    typeof rec.filePath === "string"
-                      ? rec.filePath
-                      : typeof rec.path === "string"
-                        ? rec.path
-                        : null
-                  const kind =
-                    rec.kind === "poster" || rec.kind === "backdrop"
-                      ? rec.kind
-                      : null
-                  if (!filePath || !kind) return null
-                  return { filePath, kind }
-                })
-                .filter(
-                  (x): x is { filePath: string; kind: "poster" | "backdrop" } =>
-                    Boolean(x),
-                )
-            : []
-
-        const primaryPath =
-          (row.feed_image_path as string | null) ||
-          feedImages[0]?.filePath ||
-          null
-        const primaryKind =
-          feedImageKind || feedImages[0]?.kind || null
-
-        bumpActivity(u.id, at)
         const interactionId = row.id as number
-        feed.push({
-          kind: "watched",
-          id: `watched-${interactionId}`,
-          interactionId,
-          at,
-          user: {
-            id: u.id,
-            username: u.username,
-            display_name: u.display_name,
-            avatar_url: u.avatar_url,
-          },
-          tmdbId: row.tmdb_id as number,
-          mediaType: (row.media_type as string | null) ?? "movie",
-          title: (row.movie_title as string) || "Untitled",
-          posterPath: (row.poster_path as string | null) ?? null,
-          feedImagePath: primaryPath,
-          feedImageKind: primaryKind,
-          feedImages:
-            feedImages.length > 0
-              ? feedImages
-              : primaryPath && primaryKind
-                ? [{ filePath: primaryPath, kind: primaryKind }]
-                : [],
-          feedTitle: ((row.feed_title as string | null) ?? null)?.trim() || null,
-          feedCaption:
-            ((row.feed_caption as string | null) ?? null)?.trim() || null,
-          feedLayout:
-            (row.feed_layout as string) === "collage" ? "collage" : "slide",
-          rewatchCount: (row.rewatch_count as number) ?? 0,
+        const fromDiscover = discoverIdSet.has(interactionId)
+        const item = mapWatchedRow(row, {
+          id: u.id,
+          username: u.username,
+          display_name: u.display_name,
+          avatar_url: u.avatar_url,
+        }, {
           likeCount: likeCountById.get(interactionId) ?? 0,
           likedByMe: likedByMe.has(interactionId),
           commentCount: commentCountById.get(interactionId) ?? 0,
+          fromDiscover,
         })
+        if (!fromDiscover) bumpActivity(u.id, item.at)
+        feed.push(item)
       }
 
       feed.sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime())

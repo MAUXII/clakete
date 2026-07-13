@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useSupabaseClient, useUser } from "@supabase/auth-helpers-react"
@@ -530,8 +530,8 @@ export function SocialFeed({
       return (
         <div className="rounded-xl border border-dashed border-white/[0.08] bg-zinc-950/30 px-4 py-8 text-center">
           <p className="mx-auto max-w-sm text-sm leading-relaxed text-zinc-500">
-            Follow people to fill this feed with watches, reviews, and lists.
-            Shared watches only show when someone opts in.
+            Follow people for Friends posts, or browse Public posts from the
+            community. Shared watches only show when someone opts in.
           </p>
           <Link
             href="/lists"
@@ -557,6 +557,25 @@ export function SocialFeed({
       </div>
     )
   }, [followingCount, openComposer])
+
+  const loadMoreRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    if (!hasMore || loading) return
+    const node = loadMoreRef.current
+    if (!node) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          loadMore()
+        }
+      },
+      { rootMargin: "240px 0px" },
+    )
+    observer.observe(node)
+    return () => observer.disconnect()
+  }, [hasMore, loading, loadMore, items.length])
 
   return (
     <div className="space-y-4">
@@ -596,6 +615,7 @@ export function SocialFeed({
                   key={item.id}
                   item={item}
                   onRemoved={() => void refresh()}
+                  onUpdated={() => void refresh()}
                   media={
                     <WatchedMediaCarousel
                       href={feedMediaHref(item.tmdbId, item.mediaType)}
@@ -627,14 +647,18 @@ export function SocialFeed({
             )}
           </ul>
           {hasMore ? (
-            <button
-              type="button"
-              onClick={loadMore}
-              className="w-full rounded-xl border border-white/[0.08] py-2.5 text-sm text-zinc-500 transition hover:border-white/[0.14] hover:text-zinc-300"
+            <div
+              ref={loadMoreRef}
+              className="flex items-center justify-center py-4 text-xs text-zinc-600"
+              aria-hidden
             >
-              Load more
-            </button>
-          ) : null}
+              Loading more…
+            </div>
+          ) : (
+            <p className="py-3 text-center text-[11px] text-zinc-600">
+              You&apos;re all caught up
+            </p>
+          )}
         </>
       )}
 

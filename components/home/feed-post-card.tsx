@@ -4,12 +4,15 @@ import { useCallback, useEffect, useState } from "react"
 import Link from "next/link"
 import { useSupabaseClient, useUser } from "@supabase/auth-helpers-react"
 import {
+  Globe2,
   Heart,
   Loader2,
   MessageCircle,
   MoreHorizontal,
+  Pencil,
   Share,
   Trash2,
+  Users,
 } from "lucide-react"
 import { toast } from "sonner"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -18,9 +21,14 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Textarea } from "@/components/ui/textarea"
+import {
+  FeedEditDialog,
+  type FeedEditPayload,
+} from "@/components/home/feed-edit-dialog"
 import {
   feedMediaHref,
   feedProfileHref,
@@ -55,10 +63,12 @@ export function FeedWatchedPostCard({
   item,
   media,
   onRemoved,
+  onUpdated,
 }: {
   item: WatchedItem
   media: React.ReactNode
   onRemoved?: (interactionId: number) => void
+  onUpdated?: () => void
 }) {
   const supabase = useSupabaseClient()
   const authUser = useUser()
@@ -74,12 +84,29 @@ export function FeedWatchedPostCard({
   const [commentDraft, setCommentDraft] = useState("")
   const [postingComment, setPostingComment] = useState(false)
   const [removing, setRemoving] = useState(false)
+  const [editOpen, setEditOpen] = useState(false)
+  const [editing, setEditing] = useState(false)
+
+  const [localTitle, setLocalTitle] = useState(item.feedTitle)
+  const [localCaption, setLocalCaption] = useState(item.feedCaption)
+  const [localVisibility, setLocalVisibility] = useState(item.feedVisibility)
 
   useEffect(() => {
     setLiked(item.likedByMe)
     setLikeCount(item.likeCount)
     setCommentCount(item.commentCount)
-  }, [item.likedByMe, item.likeCount, item.commentCount, item.interactionId])
+    setLocalTitle(item.feedTitle)
+    setLocalCaption(item.feedCaption)
+    setLocalVisibility(item.feedVisibility)
+  }, [
+    item.likedByMe,
+    item.likeCount,
+    item.commentCount,
+    item.interactionId,
+    item.feedTitle,
+    item.feedCaption,
+    item.feedVisibility,
+  ])
 
   const profileHref = feedProfileHref(item.user.username)
   const href = feedMediaHref(item.tmdbId, item.mediaType)
@@ -293,6 +320,51 @@ export function FeedWatchedPostCard({
     }
   }, [authUser?.id, isOwner, item.interactionId, onRemoved, supabase])
 
+  const saveEdit = useCallback(
+    async (payload: FeedEditPayload) => {
+      if (!authUser?.id || !isOwner) return
+      if (!payload.images.length) {
+        toast.error("Pick at least one photo")
+        return
+      }
+      setEditing(true)
+      try {
+        const primary = payload.images[0]
+        const { error } = await supabase
+          .from("items_interactions")
+          .update({
+            feed_title: payload.title || null,
+            feed_caption: payload.caption || null,
+            feed_layout: payload.layout,
+            feed_visibility: payload.visibility,
+            feed_images: payload.images.map((img) => ({
+              filePath: img.filePath,
+              kind: img.kind,
+            })),
+            feed_image_path: primary.filePath,
+            feed_image_kind: primary.kind,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", item.interactionId)
+          .eq("user_id", authUser.id)
+
+        if (error) throw error
+        setLocalTitle(payload.title || null)
+        setLocalCaption(payload.caption || null)
+        setLocalVisibility(payload.visibility)
+        toast.success("Post updated")
+        onUpdated?.()
+      } catch (e) {
+        console.error(e)
+        toast.error("Could not update post")
+        throw e
+      } finally {
+        setEditing(false)
+      }
+    },
+    [authUser?.id, isOwner, item.interactionId, onUpdated, supabase],
+  )
+
   return (
     <article className="border-b border-white/[0.06] py-4 last:border-0">
       <div className="flex items-start gap-3">
@@ -336,6 +408,17 @@ export function FeedWatchedPostCard({
                     rewatch
                   </span>
                 ) : null}
+                {item.fromDiscover || localVisibility === "public" ? (
+                  <span className="ml-1.5 inline-flex items-center gap-0.5 rounded-full bg-white/[0.06] px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-zinc-400">
+                    <Globe2 className="size-2.5" />
+                    Public
+                  </span>
+                ) : (
+                  <span className="ml-1.5 inline-flex items-center gap-0.5 rounded-full bg-white/[0.06] px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-zinc-500">
+                    <Users className="size-2.5" />
+                    Friends
+                  </span>
+                )}
               </p>
             </div>
 
@@ -346,9 +429,9 @@ export function FeedWatchedPostCard({
                     type="button"
                     className="rounded-full p-1.5 text-zinc-500 transition hover:bg-white/[0.04] hover:text-zinc-300"
                     aria-label="Post options"
-                    disabled={removing}
+                    disabled={removing || editing}
                   >
-                    {removing ? (
+                    {removing || editing ? (
                       <Loader2 className="size-4 animate-spin" />
                     ) : (
                       <MoreHorizontal className="size-4" />
@@ -356,6 +439,11 @@ export function FeedWatchedPostCard({
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem onClick={() => setEditOpen(true)}>
+                    <Pencil className="mr-2 size-3.5" />
+                    Edit post
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem
                     className="text-red-400 focus:text-red-300"
                     onClick={() => void removeFromFeed()}
@@ -372,14 +460,14 @@ export function FeedWatchedPostCard({
 
       {media}
 
-      {item.feedTitle ? (
+      {localTitle ? (
         <p className="mt-3 text-[15px] font-semibold leading-snug text-zinc-100">
-          {item.feedTitle}
+          {localTitle}
         </p>
       ) : null}
-      {item.feedCaption ? (
+      {localCaption ? (
         <p className="mt-1.5 whitespace-pre-wrap text-[14px] leading-relaxed text-zinc-300">
-          {item.feedCaption}
+          {localCaption}
         </p>
       ) : null}
 
@@ -527,6 +615,34 @@ export function FeedWatchedPostCard({
           </div>
         </div>
       ) : null}
+
+      <FeedEditDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        filmTitle={item.title}
+        tmdbId={item.tmdbId}
+        mediaType={item.mediaType === "tv" ? "tv" : "movie"}
+        loading={editing}
+        initial={{
+          images: item.feedImages.length
+            ? item.feedImages
+            : item.feedImagePath
+              ? [
+                  {
+                    filePath: item.feedImagePath,
+                    kind: item.feedImageKind ?? "backdrop",
+                  },
+                ]
+              : item.posterPath
+                ? [{ filePath: item.posterPath, kind: "poster" as const }]
+                : [],
+          title: localTitle ?? "",
+          caption: localCaption ?? "",
+          layout: item.feedLayout,
+          visibility: localVisibility,
+        }}
+        onSave={saveEdit}
+      />
     </article>
   )
 }
