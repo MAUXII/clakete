@@ -88,6 +88,7 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
       if (pathname.endsWith('/reviews')) return 'reviews';
       if (pathname.endsWith('/activity')) return 'activity';
       if (pathname.endsWith('/watchlist')) return 'watchlist';
+      if (pathname.endsWith('/followers') || pathname.endsWith('/following')) return 'profile';
       // Se for só /[username] ou /[username]/profile, retorna 'profile'
       if (
         pathname === `/${username}` ||
@@ -621,17 +622,17 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
                   
                   <div className="text-muted-foreground text-sm w-[1px] h-[61%] bg-muted-foreground/40"/>
 
-                  <div className="flex flex-col">
+                  <Link href={`/${userData.username}/followers`} className="flex flex-col transition hover:opacity-80">
                     <span className="dark:text-white text-xl font-semibold text-black">{stats.followersCount}</span>
                     <span className="text-muted-foreground text-sm">Followers</span>
-                  </div>
+                  </Link>
 
                   <div className="text-muted-foreground text-sm w-[1px] h-[61%] bg-muted-foreground/40"/>
 
-                  <div className="flex flex-col">
+                  <Link href={`/${userData.username}/following`} className="flex flex-col transition hover:opacity-80">
                     <span className="dark:text-white text-xl font-semibold text-black">{stats.followingCount}</span>
                     <span className="text-muted-foreground text-sm">Following</span>
-                  </div>
+                  </Link>
 
                   <div className="text-muted-foreground text-sm w-[1px] h-[61%] bg-muted-foreground/40"/>
 

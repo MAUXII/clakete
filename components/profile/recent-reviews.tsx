@@ -9,6 +9,7 @@ import { FaStar } from "react-icons/fa"
 import Image from "next/image"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
+import { ReviewLikeButton } from "@/hooks/use-review-like"
 
 interface FilmReview {
   id: number
@@ -247,6 +248,9 @@ export function UserRecentReviews({
                   <p className="mt-3 text-sm leading-relaxed whitespace-pre-wrap text-muted-foreground">
                     {review.review}
                   </p>
+                  <div className="mt-2">
+                    <ReviewLikeButton interactionId={review.id} />
+                  </div>
                 </div>
               </div>
             </li>

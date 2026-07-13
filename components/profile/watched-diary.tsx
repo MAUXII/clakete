@@ -9,6 +9,7 @@ import { useRive } from "@rive-app/react-canvas"
 import {
   CalendarDays,
   Download,
+  Heart,
   LayoutGrid,
   Pencil,
   Upload,
@@ -57,6 +58,7 @@ type WatchedItem = {
   watched_date: string | null
   rewatch_count: number | null
   rating: number | null
+  is_liked: boolean | null
 }
 
 type ViewMode = "grid" | "calendar"
@@ -93,6 +95,7 @@ export function WatchedDiary({
   const [view, setView] = useState<ViewMode>("grid")
   const [yearFilter, setYearFilter] = useState<string>("all")
   const [monthFilter, setMonthFilter] = useState<string>("all")
+  const [likedOnly, setLikedOnly] = useState(false)
   const [calYear, setCalYear] = useState(() => new Date().getFullYear())
   const [calMonth, setCalMonth] = useState(() => new Date().getMonth())
   const [editing, setEditing] = useState<WatchedItem | null>(null)
@@ -120,7 +123,7 @@ export function WatchedDiary({
       const { data, error } = await supabase
         .from("items_interactions")
         .select(
-          "id, tmdb_id, poster_path, movie_title, release_date, media_type, created_at, watched_date, rewatch_count, rating",
+          "id, tmdb_id, poster_path, movie_title, release_date, media_type, created_at, watched_date, rewatch_count, rating, is_liked",
         )
         .eq("user_id", userId)
         .eq("is_watched", true)
@@ -158,6 +161,7 @@ export function WatchedDiary({
 
   const filtered = useMemo(() => {
     return items.filter((item) => {
+      if (likedOnly && !item.is_liked) return false
       const key = diaryMonthKey(item.watched_date)
       if (!key) {
         // Undated: only show when no year/month filter
@@ -168,10 +172,11 @@ export function WatchedDiary({
       if (monthFilter !== "all" && m !== monthFilter) return false
       return true
     })
-  }, [items, yearFilter, monthFilter])
+  }, [items, yearFilter, monthFilter, likedOnly])
 
   const calendarItems = useMemo((): CalendarWatchItem[] => {
-    return items.map((item) => ({
+    const source = likedOnly ? items.filter((i) => i.is_liked) : items
+    return source.map((item) => ({
       id: item.id,
       tmdb_id: item.tmdb_id,
       poster_path: item.poster_path,
@@ -179,7 +184,7 @@ export function WatchedDiary({
       media_type: item.media_type,
       watched_date: item.watched_date,
     }))
-  }, [items])
+  }, [items, likedOnly])
 
   // Sync calendar month when year/month filters change
   useEffect(() => {
@@ -310,40 +315,42 @@ export function WatchedDiary({
     ) : null
 
   const toolbar = (
-    <div className="mb-4 flex flex-wrap items-center gap-2">
-      <div className="flex items-center rounded-md border border-white/[0.08] p-0.5">
+    <div className="mb-4 flex flex-nowrap items-center gap-1.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="flex shrink-0 items-center rounded-md border border-white/[0.08] p-0.5">
         <button
           type="button"
           onClick={() => setView("grid")}
           className={cn(
-            "inline-flex items-center gap-1.5 rounded-[5px] px-2.5 py-1.5 text-xs transition",
+            "inline-flex items-center gap-1 rounded-[5px] px-2 py-1.5 text-xs transition",
             view === "grid"
               ? "bg-white/[0.08] text-zinc-100"
               : "text-zinc-500 hover:text-zinc-300",
           )}
           aria-pressed={view === "grid"}
+          title="Grid"
         >
           <LayoutGrid className="size-3.5" />
-          Grid
+          <span className="hidden sm:inline">Grid</span>
         </button>
         <button
           type="button"
           onClick={() => setView("calendar")}
           className={cn(
-            "inline-flex items-center gap-1.5 rounded-[5px] px-2.5 py-1.5 text-xs transition",
+            "inline-flex items-center gap-1 rounded-[5px] px-2 py-1.5 text-xs transition",
             view === "calendar"
               ? "bg-white/[0.08] text-zinc-100"
               : "text-zinc-500 hover:text-zinc-300",
           )}
           aria-pressed={view === "calendar"}
+          title="Calendar"
         >
           <CalendarDays className="size-3.5" />
-          Calendar
+          <span className="hidden sm:inline">Calendar</span>
         </button>
       </div>
 
       <Select value={yearFilter} onValueChange={setYear}>
-        <SelectTrigger className="h-8 w-[110px] border-white/[0.08] bg-transparent text-xs">
+        <SelectTrigger className="h-8 w-[92px] shrink-0 border-white/[0.08] bg-transparent text-xs">
           <SelectValue placeholder="Year" />
         </SelectTrigger>
         <SelectContent>
@@ -361,7 +368,7 @@ export function WatchedDiary({
         onValueChange={(v) => setMonthFilter(v)}
         disabled={yearFilter === "all"}
       >
-        <SelectTrigger className="h-8 w-[130px] border-white/[0.08] bg-transparent text-xs disabled:opacity-40">
+        <SelectTrigger className="h-8 w-[108px] shrink-0 border-white/[0.08] bg-transparent text-xs disabled:opacity-40">
           <SelectValue placeholder="Month" />
         </SelectTrigger>
         <SelectContent>
@@ -373,23 +380,41 @@ export function WatchedDiary({
         </SelectContent>
       </Select>
 
+      <button
+        type="button"
+        onClick={() => setLikedOnly((v) => !v)}
+        aria-pressed={likedOnly}
+        title="Liked"
+        className={cn(
+          "inline-flex h-8 shrink-0 items-center gap-1 rounded-md border px-2 text-xs transition",
+          likedOnly
+            ? "border-[#FF0048]/30 bg-[#FF0048]/10 text-[#FF0048]"
+            : "border-white/[0.08] text-zinc-400 hover:border-white/[0.14] hover:text-zinc-100",
+        )}
+      >
+        <Heart className={cn("size-3.5", likedOnly && "fill-current")} />
+        <span className="hidden sm:inline">Liked</span>
+      </button>
+
       {isOwnProfile ? (
-        <div className="ml-auto flex items-center gap-1.5">
+        <div className="ml-auto flex shrink-0 items-center gap-1.5 pl-1">
           <button
             type="button"
             onClick={() => setImportOpen(true)}
-            className="inline-flex h-8 items-center gap-1.5 rounded-md border border-white/[0.08] px-2.5 text-xs text-zinc-400 transition hover:border-white/[0.14] hover:text-zinc-100"
+            title="Import"
+            className="inline-flex h-8 items-center gap-1 rounded-md border border-white/[0.08] px-2 text-xs text-zinc-400 transition hover:border-white/[0.14] hover:text-zinc-100"
           >
             <Upload className="size-3.5" />
-            Import
+            <span className="hidden md:inline">Import</span>
           </button>
           <button
             type="button"
             onClick={handleExport}
-            className="inline-flex h-8 items-center gap-1.5 rounded-md border border-white/[0.08] px-2.5 text-xs text-zinc-400 transition hover:border-white/[0.14] hover:text-zinc-100"
+            title="Export CSV"
+            className="inline-flex h-8 items-center gap-1 rounded-md border border-white/[0.08] px-2 text-xs text-zinc-400 transition hover:border-white/[0.14] hover:text-zinc-100"
           >
             <Download className="size-3.5" />
-            Export CSV
+            <span className="hidden md:inline">Export</span>
           </button>
         </div>
       ) : null}

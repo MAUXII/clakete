@@ -6,9 +6,10 @@ import { FaStar } from "react-icons/fa";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { avatarDisplaySrc } from "@/lib/next-remote-image";
 import Link from "next/link";
+import { ReviewLikeButton } from "@/hooks/use-review-like";
 
 interface Review {
-  id: string;
+  id: number;
   rating: number;
   review: string;
   createdAt: string;
@@ -64,7 +65,7 @@ export function FilmReviewsList({ filmId, mediaType = "movie" }: FilmReviewsList
           const reviewsWithUserData = data.map((review) => {
             const user = userById.get(review.user_id);
             return {
-              id: review.id,
+              id: review.id as number,
               rating: review.rating || 0,
               review: review.review || '',
               createdAt: review.created_at,
@@ -146,6 +147,9 @@ export function FilmReviewsList({ filmId, mediaType = "movie" }: FilmReviewsList
                 <p className="text-muted-foreground text-sm leading-relaxed whitespace-pre-wrap mt-2">
                   {review.review}
                 </p>
+                <div className="pt-1">
+                  <ReviewLikeButton interactionId={review.id} />
+                </div>
               </div>
             </div>
           </div>

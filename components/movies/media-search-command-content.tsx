@@ -12,6 +12,9 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/h
 import { DialogTitle } from "@/components/ui/dialog"
 import { Plus } from "lucide-react"
 import type { SeriesSearchResult } from "@/hooks/use-media-search"
+import type { UserSearchResult } from "@/hooks/use-user-search"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { avatarDisplaySrc } from "@/lib/next-remote-image"
 
 export type { SeriesSearchResult }
 
@@ -33,6 +36,9 @@ export interface MediaSearchCommandContentProps {
   seriesRowMode?: SeriesRowMode
   /** Quando true, não renderiza `DialogTitle` (use dentro de outro `Dialog` com título próprio). */
   suppressDialogTitle?: boolean
+  peopleResults?: UserSearchResult[]
+  peopleLoading?: boolean
+  onSelectPerson?: (person: UserSearchResult) => void
 }
 
 export function MediaSearchCommandContent({
@@ -49,9 +55,21 @@ export function MediaSearchCommandContent({
   filmRowMode = "navigate",
   seriesRowMode = "navigate",
   suppressDialogTitle = false,
+  peopleResults = [],
+  peopleLoading = false,
+  onSelectPerson,
 }: MediaSearchCommandContentProps) {
   const pickFilms = filmRowMode === "pick"
   const pickSeries = seriesRowMode === "pick"
+  const showPeople = Boolean(onSelectPerson)
+  const anyLoading = loading || (showPeople && peopleLoading)
+  const hasMedia = filmResults.length > 0 || seriesResults.length > 0
+  const hasPeople = showPeople && peopleResults.length > 0
+  const showPeopleGroup =
+    showPeople &&
+    query.trim().length >= 2 &&
+    (peopleResults.length > 0 || query.trim().startsWith("@"))
+  const hasAny = hasMedia || hasPeople
 
   return (
     <>
@@ -65,12 +83,48 @@ export function MediaSearchCommandContent({
         className={commandInputClassName}
       />
       <CommandList className={commandListClassName ?? "custom-scrollbar max-h-[460px]"}>
-        {loading && <CommandEmpty>Searching...</CommandEmpty>}
-        {!loading && filmResults.length === 0 && seriesResults.length === 0 && query && (
+        {anyLoading && <CommandEmpty>Searching...</CommandEmpty>}
+        {!anyLoading && !hasAny && query && (
           <CommandEmpty>No results found.</CommandEmpty>
         )}
-        {!loading && (filmResults.length > 0 || seriesResults.length > 0) && (
+        {!anyLoading && hasAny && (
           <>
+            {showPeopleGroup ? (
+              <CommandGroup heading="People" data-cmdk-no-filter>
+                {peopleResults.length === 0 ? (
+                  <CommandItem disabled className="mx-2 h-9 px-3 text-xs text-muted-foreground">
+                    No people found
+                  </CommandItem>
+                ) : (
+                  peopleResults.map((person) => (
+                    <CommandItem
+                      key={`user-${person.id}`}
+                      value={`${person.username} ${person.display_name || ""}`}
+                      data-cmdk-no-filter
+                      onSelect={() => onSelectPerson?.(person)}
+                      className="mx-2 flex h-11 items-center gap-2.5 rounded-md px-3 text-sm font-medium"
+                    >
+                      <Avatar className="size-7 rounded-md border border-white/[0.08]">
+                        <AvatarImage
+                          src={avatarDisplaySrc(person.avatar_url) ?? undefined}
+                          alt=""
+                        />
+                        <AvatarFallback className="rounded-md text-[10px]">
+                          {(person.display_name?.[0] || person.username[0] || "?").toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="min-w-0 flex-1 truncate">
+                        {person.display_name || person.username}
+                      </span>
+                      <span className="shrink-0 text-xs text-muted-foreground">
+                        @{person.username}
+                      </span>
+                    </CommandItem>
+                  ))
+                )}
+              </CommandGroup>
+            ) : null}
+
             <CommandGroup heading="Films" data-cmdk-no-filter>
               {filmResults.length === 0 ? (
                 <CommandItem disabled className="mx-2 h-9 px-3 text-xs text-muted-foreground">

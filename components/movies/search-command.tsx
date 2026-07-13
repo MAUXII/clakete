@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useDebounce } from "@/hooks/use-debounce"
 import { useMediaSearch } from "@/hooks/use-media-search"
+import { useUserSearch } from "@/hooks/use-user-search"
 import { CommandDialog } from "@/components/ui/command"
 import { Search } from "lucide-react"
 import { Button } from "../ui/button"
@@ -15,6 +16,10 @@ export function SearchCommand() {
   const [query, setQuery] = useState("")
   const debouncedQuery = useDebounce(query, 300)
   const { filmResults, seriesResults, loading } = useMediaSearch(debouncedQuery, open)
+  const { results: peopleResults, loading: peopleLoading } = useUserSearch(
+    debouncedQuery,
+    open,
+  )
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -36,7 +41,7 @@ export function SearchCommand() {
       >
         <Search className="h-4 w-4 xl:mr-2" />
         <span className="hidden xl:inline-flex">Search</span>
-        <span className="sr-only">Buscar filmes</span>
+        <span className="sr-only">Search films and people</span>
         <kbd className="pointer-events-none absolute right-1.5 top-2 hidden h-6 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 xl:flex">
           <span className="text-xs">⌘</span>K
         </kbd>
@@ -48,12 +53,19 @@ export function SearchCommand() {
           filmResults={filmResults}
           seriesResults={seriesResults}
           loading={loading}
+          peopleResults={peopleResults}
+          peopleLoading={peopleLoading}
+          inputPlaceholder="Search films, series, people…"
           onSelectFilm={(movie) => {
             router.push(`/film/${movie.id}`)
             setOpen(false)
           }}
           onSelectSeries={(series) => {
             router.push(`/series/${series.id}`)
+            setOpen(false)
+          }}
+          onSelectPerson={(person) => {
+            router.push(`/${person.username}`)
             setOpen(false)
           }}
         />

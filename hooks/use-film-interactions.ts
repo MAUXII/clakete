@@ -249,7 +249,21 @@ export function useFilmInteractions(
     await logWatch({ watchedDate: toLocalDateString(), isRewatch: false });
   };
 
-  const toggleLiked = () => updateInteractions({ isLiked: !interactions.isLiked });
+  const toggleLiked = async () => {
+    const nextLiked = !interactions.isLiked;
+    // Liking a title also logs it as watched (same diary row)
+    if (nextLiked && !interactions.isWatched) {
+      await updateInteractions({
+        isLiked: true,
+        isWatched: true,
+        watchedDate: interactions.watchedDate || toLocalDateString(),
+        rewatchCount: 0,
+        isInWatchlist: false,
+      });
+      return;
+    }
+    await updateInteractions({ isLiked: nextLiked });
+  };
   const toggleWatchlist = () =>
     updateInteractions({ isInWatchlist: !interactions.isInWatchlist });
 
