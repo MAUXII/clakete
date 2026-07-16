@@ -93,6 +93,51 @@ body {
   );
 }
 
+.profile--theme-overlook {
+  --shining-accent: #8b4513;
+  --shining-glow: #c9a227;
+}
+
+.profile--theme-overlook .shining-banner-overlay {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 14px,
+    rgba(201, 162, 39, 0.45) 14px,
+    rgba(201, 162, 39, 0.45) 15px
+  );
+}
+
+.profile--theme-noir {
+  --shining-accent: #a8b0b8;
+  --shining-glow: #6b7a8f;
+}
+
+.profile--theme-noir .shining-banner-overlay {
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 10px,
+    rgba(168, 176, 184, 0.28) 10px,
+    rgba(168, 176, 184, 0.28) 11px
+  );
+}
+
+.profile--theme-rose {
+  --shining-accent: #9b2335;
+  --shining-glow: #e8a0b0;
+}
+
+.profile--theme-rose .shining-banner-overlay {
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 12px,
+    rgba(232, 160, 176, 0.32) 12px,
+    rgba(232, 160, 176, 0.32) 13px
+  );
+}
+
 /* Scrollbar fina, quadrada, sem setas — página + `.custom-scrollbar` */
 html,
 body,

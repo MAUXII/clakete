@@ -12,6 +12,7 @@ import {
   filmsPosterSkeletonClassName,
 } from "@/components/films/films-catalog-shell";
 import { cn } from "@/lib/utils";
+import { useLocalePrefs } from "@/hooks/use-locale-prefs";
 
 interface Movie {
   id: number;
@@ -38,6 +39,7 @@ export default function FilmsPopularPage() {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const { withLocale, loading: localeLoading, tmdbLanguage, watchRegion } = useLocalePrefs();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -59,13 +61,14 @@ export default function FilmsPopularPage() {
   };
 
   useEffect(() => {
+    if (localeLoading) return;
     fetchMovies();
-  }, []);
+  }, [localeLoading, tmdbLanguage, watchRegion]);
 
   async function fetchMovies() {
     setLoading(true);
     try {
-      const params = new URLSearchParams();
+      const params = withLocale();
       params.set("page", "1");
       params.set("type", "popular");
       const response = await fetch(`/api/movies?${params.toString()}`);
@@ -86,7 +89,7 @@ export default function FilmsPopularPage() {
     setLoadingMore(true);
     try {
       const nextPage = page + 1;
-      const params = new URLSearchParams();
+      const params = withLocale();
       params.set("page", nextPage.toString());
       params.set("type", "popular");
       const response = await fetch(`/api/movies?${params.toString()}`);

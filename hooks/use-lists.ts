@@ -1,10 +1,56 @@
 import { useState, useCallback } from 'react'
 import { useSupabaseClient, useUser } from '@supabase/auth-helpers-react'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { toast } from 'sonner'
 import { Database } from '@/lib/supabase/database.types'
 import { List, ListItem, CreateListData, UpdateListData, AddListItemData, ListMediaType } from '@/types/list'
 import { slugify } from '@/lib/list-slug'
 import { parseListBannerMeta } from '@/lib/list-banner'
+import { FREE_PRIVATE_LIST_LIMIT, hasShiningAccess } from '@/lib/plans'
+
+async function assertCanHavePrivateList(
+  supabase: SupabaseClient<Database>,
+  userId: string,
+  opts?: { excludeListId?: string },
+): Promise<boolean> {
+  const { data: profile } = await supabase
+    .from('users')
+    .select('plan, plan_status, plan_current_period_end')
+    .eq('id', userId)
+    .maybeSingle()
+
+  if (
+    hasShiningAccess({
+      plan: profile?.plan,
+      plan_status: profile?.plan_status,
+      plan_current_period_end: profile?.plan_current_period_end,
+    })
+  ) {
+    return true
+  }
+
+  let q = supabase
+    .from('lists')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', userId)
+    .eq('is_public', false)
+
+  if (opts?.excludeListId) {
+    q = q.neq('id', opts.excludeListId)
+  }
+
+  const { count, error } = await q
+  if (error) throw error
+
+  if ((count ?? 0) >= FREE_PRIVATE_LIST_LIMIT) {
+    toast.error(
+      `Free plan allows ${FREE_PRIVATE_LIST_LIMIT} private lists. Upgrade to The Shining for unlimited.`,
+    )
+    return false
+  }
+
+  return true
+}
 
 async function uniqueSlugForListOwner(
   supabase: SupabaseClient<Database>,
@@ -177,6 +223,11 @@ export function useLists() {
     if (!user) return null
 
     try {
+      if (listData.is_public === false) {
+        const ok = await assertCanHavePrivateList(supabase, user.id)
+        if (!ok) return null
+      }
+
       const slug = await uniqueSlugForListOwner(supabase, user.id, listData.title)
       const shareToFeed = Boolean(listData.feed_shared)
       const feedVisibility =
@@ -234,15 +285,25 @@ export function useLists() {
   const updateList = useCallback(async (listId: string, data: UpdateListData): Promise<boolean> => {
     try {
       const payload: Record<string, unknown> = { ...data }
+      const { data: row, error: rowErr } = await supabase
+        .from('lists')
+        .select('user_id, is_public')
+        .eq('id', listId)
+        .single()
+
+      if (rowErr || !row?.user_id) {
+        throw rowErr ?? new Error('Lista não encontrada')
+      }
+
+      if (data.is_public === false && row.is_public !== false) {
+        const ok = await assertCanHavePrivateList(supabase, row.user_id, {
+          excludeListId: listId,
+        })
+        if (!ok) return false
+      }
+
       if (data.title !== undefined && data.slug === undefined) {
-        const { data: row, error: rowErr } = await supabase
-          .from('lists')
-          .select('user_id')
-          .eq('id', listId)
-          .single()
-        if (!rowErr && row?.user_id) {
-          payload.slug = await uniqueSlugForListOwner(supabase, row.user_id, data.title, listId)
-        }
+        payload.slug = await uniqueSlugForListOwner(supabase, row.user_id, data.title, listId)
       }
 
       if (data.feed_shared !== undefined) {

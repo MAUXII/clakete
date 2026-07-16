@@ -41,3 +41,38 @@ export function hasShiningAccess(fields: PlanFields): boolean {
 }
 
 export const SHINING_PRODUCT_NAME = "The Shining"
+
+/** Free accounts can keep this many private lists; Shining is unlimited. */
+export const FREE_PRIVATE_LIST_LIMIT = 3
+
+export const PROFILE_THEMES = [
+  { id: "default", label: "Default", hint: "Clakete classic" },
+  { id: "overlook", label: "Overlook", hint: "Warm carpet gold" },
+  { id: "noir", label: "Noir", hint: "Cool silver dark" },
+  { id: "rose", label: "Rose", hint: "Soft crimson glow" },
+] as const
+
+export type ProfileThemeId = (typeof PROFILE_THEMES)[number]["id"]
+
+export function isProfileThemeId(value: unknown): value is ProfileThemeId {
+  return (
+    typeof value === "string" &&
+    PROFILE_THEMES.some((t) => t.id === value)
+  )
+}
+
+/** Marketing bullets for The Shining (pricing + landing). */
+export const SHINING_FEATURE_BULLETS = [
+  "Everything in Free",
+  "Premium badge on your profile and feed",
+  "Profile themes (Overlook, Noir, Rose)",
+  `Unlimited private lists (Free: ${FREE_PRIVATE_LIST_LIMIT})`,
+  "Early access to new features",
+] as const
+
+export const FREE_FEATURE_BULLETS = [
+  "Diary: watched, ratings, and dates",
+  "Reviews and public lists",
+  `Up to ${FREE_PRIVATE_LIST_LIMIT} private lists`,
+  "Full public profile",
+] as const

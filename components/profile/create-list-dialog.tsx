@@ -23,7 +23,9 @@ import { MediaSearchCommandContent } from "@/components/movies/media-search-comm
 import { useDebounce } from "@/hooks/use-debounce"
 import { useMediaSearch, type SeriesSearchResult } from "@/hooks/use-media-search"
 import { useLists } from "@/hooks/use-lists"
+import { useSubscription } from "@/hooks/use-subscription"
 import type { CreateListData, ListMediaType } from "@/types/list"
+import { FREE_PRIVATE_LIST_LIMIT } from "@/lib/plans"
 import { cn } from "@/lib/utils"
 
 const MIN_REQUIRED_TITLES = 5
@@ -56,6 +58,7 @@ function normalizeTag(raw: string) {
 export function CreateListDialog({ open, onOpenChange, onListCreated }: CreateListDialogProps) {
   const user = useUser()
   const { createList, addItemToList } = useLists()
+  const { isShining } = useSubscription()
 
   const [step, setStep] = useState<CreateListStep>(1)
   const [title, setTitle] = useState("")
@@ -313,7 +316,12 @@ export function CreateListDialog({ open, onOpenChange, onListCreated }: CreateLi
                     />
                     <span>
                       <span className="block text-sm font-medium text-foreground">Privada</span>
-                      <span className="block text-xs text-muted-foreground">Só você pode acessar.</span>
+                      <span className="block text-xs text-muted-foreground">
+                        Só você pode acessar.
+                        {isShining
+                          ? " The Shining: unlimited private lists."
+                          : ` Free: up to ${FREE_PRIVATE_LIST_LIMIT} private lists.`}
+                      </span>
                     </span>
                   </label>
                 </fieldset>

@@ -7,26 +7,27 @@ import { usePathname } from "next/navigation"
 import { MdOutlineKeyboardDoubleArrowUp } from "react-icons/md"
 import { cn } from "@/lib/utils"
 import { pageContainerClass } from "@/lib/page-container"
+import { useT } from "@/components/providers/i18n-provider"
 
-const FILMS_NAV = [
-  { href: "/films/discover", label: "Discover" },
-  { href: "/films/popular", label: "Popular" },
-  { href: "/films/top-rated", label: "Top rated" },
-  { href: "/films/upcoming", label: "Upcoming" },
+const FILMS_NAV_HREF = [
+  "/films/discover",
+  "/films/popular",
+  "/films/top-rated",
+  "/films/upcoming",
 ] as const
 
-const SERIES_NAV = [
-  { href: "/series/discover", label: "Discover" },
-  { href: "/series/popular", label: "Popular" },
-  { href: "/series/top-rated", label: "Top rated" },
-  { href: "/series/upcoming", label: "Upcoming" },
+const SERIES_NAV_HREF = [
+  "/series/discover",
+  "/series/popular",
+  "/series/top-rated",
+  "/series/upcoming",
 ] as const
 
 /** Nestas rotas o conteúdo do shell fica abaixo da navbar fixa (`mt-28`). */
 const CATALOG_NAVBAR_OFFSET_ROUTES = new Set<string>([
   "/lists",
-  ...FILMS_NAV.map((x) => x.href),
-  ...SERIES_NAV.map((x) => x.href),
+  ...FILMS_NAV_HREF,
+  ...SERIES_NAV_HREF,
 ])
 
 function CatalogPillNav({
@@ -61,11 +62,25 @@ function CatalogPillNav({
 }
 
 export function FilmsSubNav() {
-  return <CatalogPillNav items={FILMS_NAV} ariaLabel="Films catalog" />
+  const { t } = useT()
+  const items = [
+    { href: "/films/discover", label: t("nav.discover") },
+    { href: "/films/popular", label: t("nav.popular") },
+    { href: "/films/top-rated", label: t("nav.topRated") },
+    { href: "/films/upcoming", label: t("nav.upcoming") },
+  ] as const
+  return <CatalogPillNav items={items} ariaLabel={t("nav.filmsCatalog")} />
 }
 
 export function SeriesSubNav() {
-  return <CatalogPillNav items={SERIES_NAV} ariaLabel="TV series catalog" />
+  const { t } = useT()
+  const items = [
+    { href: "/series/discover", label: t("nav.discover") },
+    { href: "/series/popular", label: t("nav.popular") },
+    { href: "/series/top-rated", label: t("nav.topRated") },
+    { href: "/series/upcoming", label: t("nav.upcomingSeries") },
+  ] as const
+  return <CatalogPillNav items={items} ariaLabel={t("nav.seriesCatalog")} />
 }
 
 export type ListsFilter = "all" | "yours" | "public"
@@ -88,6 +103,7 @@ export function ListsSubNav({
   value: ListsFilter
   onChange: (next: ListsFilter) => void
 }) {
+  const { t } = useT()
   const pill = (key: ListsFilter, label: string) => (
     <button
       key={key}
@@ -101,10 +117,10 @@ export function ListsSubNav({
   )
 
   return (
-    <nav aria-label="Lists filter" className="mb-8 flex flex-wrap gap-2">
-      {pill("all", "All")}
-      {showYoursTab ? pill("yours", "Yours") : null}
-      {pill("public", "Public")}
+    <nav aria-label={t("nav.lists")} className="mb-8 flex flex-wrap gap-2">
+      {pill("all", t("lists.all"))}
+      {showYoursTab ? pill("yours", t("lists.yours")) : null}
+      {pill("public", t("lists.public"))}
     </nav>
   )
 }

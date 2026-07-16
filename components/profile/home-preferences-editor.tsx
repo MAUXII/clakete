@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { useEffect, useState } from "react"
 import { useSupabaseClient, useUser } from "@supabase/auth-helpers-react"
 import type { Json } from "@/lib/supabase/database.types"
@@ -14,6 +15,16 @@ import {
 import { ImageEditDialog } from "@/components/profile/avatar-edit-dialog"
 import { useProfile } from "@/components/providers/profile-provider"
 import { profileHomeBackdropPresentation } from "@/lib/profile-media"
+import { useSubscription } from "@/hooks/use-subscription"
+import { PROFILE_THEMES, type ProfileThemeId } from "@/lib/plans"
+import {
+  TMDB_LANGUAGE_OPTIONS,
+  WATCH_REGION_OPTIONS,
+  type TmdbLanguageId,
+  type WatchRegionId,
+} from "@/lib/locale-prefs"
+import { cn } from "@/lib/utils"
+import { useT } from "@/components/providers/i18n-provider"
 
 export function HomePreferencesEditor({
   initialJson,
@@ -29,6 +40,7 @@ export function HomePreferencesEditor({
   /** After saving/removing backdrop in the dialog — refreshes profile layout `userData`. */
   onHomeBackdropUpdated?: () => void | Promise<void>
 }) {
+  const { t } = useT()
   const [prefs, setPrefs] = useState<UserHomePreferences>(() =>
     parseUserHomePreferences(initialJson),
   )
@@ -36,6 +48,7 @@ export function HomePreferencesEditor({
   const user = useUser()
   const supabase = useSupabaseClient()
   const { refreshProfile } = useProfile()
+  const { isShining } = useSubscription()
 
   useEffect(() => {
     setPrefs(parseUserHomePreferences(initialJson))
@@ -49,6 +62,11 @@ export function HomePreferencesEditor({
   const update = (next: UserHomePreferences) => {
     setPrefs(next)
     onChange(next)
+  }
+
+  const setTheme = (id: ProfileThemeId) => {
+    if (!isShining && id !== "default") return
+    update({ ...prefs, profile_theme: id })
   }
 
   const clearBackdrop = async () => {
@@ -80,14 +98,12 @@ export function HomePreferencesEditor({
     <div className="space-y-10">
       <div className="space-y-4">
         <div className="border-b border-border/60 pb-4">
-          <h3 className="text-sm font-semibold text-foreground">Home sections</h3>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Choose what appears on your logged-in home page.
-          </p>
+          <h3 className="text-sm font-semibold text-foreground">{t("prefs.homeSections")}</h3>
+          <p className="mt-1 text-sm text-muted-foreground">{t("prefs.homeSectionsHint")}</p>
         </div>
         <div className="flex items-center justify-between gap-4 rounded-md border border-border/80 bg-background/50 px-4 py-3">
           <Label htmlFor="home-now" className="cursor-pointer text-sm font-normal">
-            Now showing carousel
+            {t("prefs.nowShowing")}
           </Label>
           <Switch
             id="home-now"
@@ -98,7 +114,7 @@ export function HomePreferencesEditor({
         </div>
         <div className="flex items-center justify-between gap-4 rounded-md border border-border/80 bg-background/50 px-4 py-3">
           <Label htmlFor="home-up" className="cursor-pointer text-sm font-normal">
-            Upcoming strip
+            {t("prefs.upcoming")}
           </Label>
           <Switch
             id="home-up"
@@ -109,7 +125,7 @@ export function HomePreferencesEditor({
         </div>
         <div className="flex items-center justify-between gap-4 rounded-md border border-border/80 bg-background/50 px-4 py-3">
           <Label htmlFor="home-feed" className="cursor-pointer text-sm font-normal">
-            Following feed
+            {t("prefs.followingFeed")}
           </Label>
           <Switch
             id="home-feed"
@@ -120,7 +136,7 @@ export function HomePreferencesEditor({
         </div>
         <div className="flex items-center justify-between gap-4 rounded-md border border-border/80 bg-background/50 px-4 py-3">
           <Label htmlFor="home-rev" className="cursor-pointer text-sm font-normal">
-            Recent reviews
+            {t("prefs.recentReviews")}
           </Label>
           <Switch
             id="home-rev"
@@ -133,11 +149,102 @@ export function HomePreferencesEditor({
 
       <div className="space-y-4">
         <div className="border-b border-border/60 pb-4">
-          <h3 className="text-sm font-semibold text-foreground">Home backdrop</h3>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Same flow as profile banner: pick a film from TMDB, choose a backdrop, crop. Stored as
-            path + crop (no title or TMDB id in the database).
+          <h3 className="text-sm font-semibold text-foreground">{t("prefs.regionLanguage")}</h3>
+          <p className="mt-1 text-sm text-muted-foreground">{t("prefs.regionLanguageHint")}</p>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="watch-region" className="text-sm font-normal">
+            {t("prefs.watchRegion")}
+          </Label>
+          <select
+            id="watch-region"
+            value={prefs.watch_region ?? "BR"}
+            onChange={(e) =>
+              update({ ...prefs, watch_region: e.target.value as WatchRegionId })
+            }
+            className="flex h-10 w-full rounded-md border border-border/80 bg-background px-3 text-sm text-foreground outline-none focus-visible:ring-1 focus-visible:ring-[#FF0048]/40"
+          >
+            {WATCH_REGION_OPTIONS.map((region) => (
+              <option key={region.id} value={region.id}>
+                {region.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="tmdb-language" className="text-sm font-normal">
+            {t("prefs.contentLanguage")}
+          </Label>
+          <select
+            id="tmdb-language"
+            value={prefs.tmdb_language ?? "pt-BR"}
+            onChange={(e) =>
+              update({ ...prefs, tmdb_language: e.target.value as TmdbLanguageId })
+            }
+            className="flex h-10 w-full rounded-md border border-border/80 bg-background px-3 text-sm text-foreground outline-none focus-visible:ring-1 focus-visible:ring-[#FF0048]/40"
+          >
+            {TMDB_LANGUAGE_OPTIONS.map((lang) => (
+              <option key={lang.id} value={lang.id}>
+                {lang.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <div className="border-b border-border/60 pb-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="text-sm font-semibold text-foreground">{t("prefs.profileTheme")}</h3>
+            <span className="rounded-md bg-[#FF0048]/12 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#FF0048]">
+              {t("prefs.earlyAccess")}
+            </span>
+          </div>
+          <p className="mt-1 text-sm text-muted-foreground">{t("prefs.themeHint")}</p>
+        </div>
+
+        {!isShining ? (
+          <p className="rounded-md border border-border/80 bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
+            {t("prefs.unlockShiningBefore")}
+            <Link href="/account/billing" className="font-medium text-[#FF0048] underline-offset-2 hover:underline">
+              The Shining
+            </Link>
+            {t("prefs.unlockShiningAfter")}
           </p>
+        ) : null}
+
+        <div className="grid gap-2 sm:grid-cols-2">
+          {PROFILE_THEMES.map((theme) => {
+            const selected = (prefs.profile_theme ?? "default") === theme.id
+            const locked = !isShining && theme.id !== "default"
+            return (
+              <button
+                key={theme.id}
+                type="button"
+                disabled={locked}
+                onClick={() => setTheme(theme.id)}
+                className={cn(
+                  "rounded-md border px-4 py-3 text-left transition",
+                  selected
+                    ? "border-[#FF0048]/50 bg-[#FF0048]/10"
+                    : "border-border/80 bg-background/50 hover:border-border",
+                  locked && "cursor-not-allowed opacity-50",
+                )}
+              >
+                <span className="block text-sm font-medium text-foreground">{theme.label}</span>
+                <span className="mt-0.5 block text-xs text-muted-foreground">{theme.hint}</span>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <div className="border-b border-border/60 pb-4">
+          <h3 className="text-sm font-semibold text-foreground">{t("prefs.homeBackdrop")}</h3>
+          <p className="mt-1 text-sm text-muted-foreground">{t("prefs.backdropHint")}</p>
         </div>
 
         <div className="overflow-hidden rounded-md border border-border/80 bg-muted/20">
@@ -155,7 +262,7 @@ export function HomePreferencesEditor({
           >
             {!backdropPreview ? (
               <div className="flex h-full min-h-[100px] items-center justify-center text-xs text-muted-foreground">
-                No backdrop
+                {t("prefs.noBackdrop")}
               </div>
             ) : null}
           </div>
@@ -163,11 +270,11 @@ export function HomePreferencesEditor({
 
         <div className="flex flex-wrap gap-2">
           <Button type="button" variant="outline" size="sm" onClick={() => setBackdropPickerOpen(true)}>
-            Choose backdrop…
+            {t("prefs.chooseBackdrop")}
           </Button>
           {backdropPreview ? (
             <Button type="button" variant="ghost" size="sm" onClick={() => void clearBackdrop()}>
-              Remove backdrop
+              {t("prefs.removeBackdrop")}
             </Button>
           ) : null}
         </div>

@@ -1,54 +1,32 @@
 import { NextResponse } from "next/server"
-
-interface TMDBSeries {
-  id: number
-  name: string
-  backdrop_path: string | null
-  poster_path: string | null
-  first_air_date: string
-  overview: string
-  vote_average: number
-}
-
-const TMDB_API_KEY = process.env.NEXT_TMDB_API_KEY
-const TMDB_BASE_URL = process.env.NEXT_PUBLIC_TMDB_BASE_URL
+import { resolveTmdbLanguage } from "@/lib/locale-prefs"
+import { searchTvWithAliases } from "@/lib/tmdb-search"
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
     const query = searchParams.get("q") || searchParams.get("query")
+    const language = resolveTmdbLanguage(searchParams.get("language"))
 
     if (!query) {
       return NextResponse.json({ results: [] })
     }
 
-    const response = await fetch(
-      `${TMDB_BASE_URL}/search/tv?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(query)}&language=en-US&include_adult=false`,
-      { next: { revalidate: 60 } }
-    )
+    const rows = await searchTvWithAliases({
+      query,
+      preferredLanguage: language,
+    })
 
-    if (!response.ok) {
-      throw new Error("Falha ao buscar series")
-    }
-
-    const data = await response.json()
-
-    if (!data.results || !Array.isArray(data.results)) {
-      return NextResponse.json({ results: [] })
-    }
-
-    const formattedResults = data.results
-      .filter((series: TMDBSeries) => series.name || series.backdrop_path || series.poster_path)
-      .map((series: TMDBSeries) => ({
-        id: series.id,
-        name: series.name,
-        backdrop_path: series.backdrop_path,
-        poster_path: series.poster_path,
-        first_air_date: series.first_air_date,
-        overview: series.overview,
-        vote_average: series.vote_average,
-      }))
-      .sort((a: TMDBSeries, b: TMDBSeries) => b.vote_average - a.vote_average)
+    const formattedResults = rows.map((series) => ({
+      id: series.id,
+      name: series.name,
+      original_name: series.original_name ?? null,
+      backdrop_path: series.backdrop_path,
+      poster_path: series.poster_path,
+      first_air_date: series.first_air_date,
+      overview: series.overview,
+      vote_average: series.vote_average,
+    }))
 
     return NextResponse.json({ results: formattedResults })
   } catch (error) {

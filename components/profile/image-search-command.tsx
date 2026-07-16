@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/command"
 import { Search } from "lucide-react"
 import { Button } from "../ui/button"
+import { useLocalePrefs } from "@/hooks/use-locale-prefs"
 
 interface ImageSearchCommandProps {
   onSelect: (image: string) => void;
@@ -32,17 +33,19 @@ export function ImageSearchCommand({ onSelect, type, isOpen, onOpenChange }: Ima
   const [images, setImages] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
   const debouncedQuery = useDebounce(query, 300)
+  const { localeQs, loading: localeLoading } = useLocalePrefs()
 
   useEffect(() => {
+    if (localeLoading) return
     const fetchMovies = async () => {
       setLoading(true)
       try {
         let endpoint = ""
         if (debouncedQuery.trim().length === 0) {
           // Se não tiver buscado nada, exibe filmes populares
-          endpoint = "/api/movies"
+          endpoint = `/api/movies?${localeQs}`
         } else {
-          endpoint = `/api/movies/search?q=${encodeURIComponent(debouncedQuery)}`
+          endpoint = `/api/movies/search?q=${encodeURIComponent(debouncedQuery)}&${localeQs}`
         }
         const response = await fetch(endpoint)
         const data = await response.json()
@@ -56,7 +59,7 @@ export function ImageSearchCommand({ onSelect, type, isOpen, onOpenChange }: Ima
       }
     }
     fetchMovies()
-  }, [debouncedQuery])
+  }, [debouncedQuery, localeQs, localeLoading])
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {

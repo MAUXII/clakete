@@ -10,6 +10,9 @@ export type FollowingFeedUser = {
   username: string
   display_name?: string | null
   avatar_url?: string | null
+  plan?: string | null
+  plan_status?: string | null
+  plan_current_period_end?: string | null
 }
 
 export type FollowingStoryPerson = FollowingFeedUser & {
@@ -280,7 +283,15 @@ function mapListRow(
 }
 
 function toUserMap(
-  rows: { id: string; username: string; display_name?: string | null; avatar_url?: string | null }[],
+  rows: {
+    id: string
+    username: string
+    display_name?: string | null
+    avatar_url?: string | null
+    plan?: string | null
+    plan_status?: string | null
+    plan_current_period_end?: string | null
+  }[],
 ) {
   return new Map(rows.map((u) => [u.id, u]))
 }
@@ -392,7 +403,7 @@ export function useFollowingFeed(limit = 20) {
           .limit(FEED_FETCH_LIMIT),
         supabase
           .from("users")
-          .select("id, username, display_name, avatar_url")
+          .select("id, username, display_name, avatar_url, plan, plan_status, plan_current_period_end")
           .in("id", feedAuthorIds),
       ])
 
@@ -537,12 +548,15 @@ export function useFollowingFeed(limit = 20) {
         username: string
         display_name?: string | null
         avatar_url?: string | null
+        plan?: string | null
+        plan_status?: string | null
+        plan_current_period_end?: string | null
       }[] = []
 
       if (missingIds.length > 0) {
         const { data } = await supabase
           .from("users")
-          .select("id, username, display_name, avatar_url")
+          .select("id, username, display_name, avatar_url, plan, plan_status, plan_current_period_end")
           .in("id", missingIds)
         extraUsers = data ?? []
       }
@@ -596,6 +610,9 @@ export function useFollowingFeed(limit = 20) {
           username: u.username,
           display_name: u.display_name,
           avatar_url: u.avatar_url,
+          plan: u.plan,
+          plan_status: u.plan_status,
+          plan_current_period_end: u.plan_current_period_end,
         }
         const meta = {
           likeCount: likeCountById.get(interactionId) ?? 0,
@@ -629,6 +646,9 @@ export function useFollowingFeed(limit = 20) {
             username: u.username,
             display_name: u.display_name,
             avatar_url: u.avatar_url,
+            plan: u.plan,
+            plan_status: u.plan_status,
+            plan_current_period_end: u.plan_current_period_end,
           },
           {
             filmsCount: countByListId.get(row.id) ?? 0,

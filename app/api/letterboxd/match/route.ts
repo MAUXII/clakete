@@ -1,8 +1,5 @@
 import { NextResponse } from "next/server"
-
-const TMDB_API_KEY = process.env.NEXT_TMDB_API_KEY
-const TMDB_BASE_URL =
-  process.env.NEXT_PUBLIC_TMDB_BASE_URL || "https://api.themoviedb.org/3"
+import { searchMoviesWithAliases } from "@/lib/tmdb-search"
 
 type MatchRequestItem = {
   name: string
@@ -12,6 +9,7 @@ type MatchRequestItem = {
 type TmdbHit = {
   id: number
   title: string
+  original_title?: string | null
   poster_path: string | null
   release_date: string
   vote_average: number
@@ -34,11 +32,21 @@ function pickBest(
 
   const scored = results.map((r) => {
     const title = (r.title || "").toLowerCase()
+    const original = (r.original_title || "").toLowerCase()
     const y = yearOf(r.release_date)
     let score = r.vote_average || 0
 
-    if (title === needle) score += 100
-    else if (title.startsWith(needle) || needle.startsWith(title)) score += 40
+    if (title === needle || original === needle) score += 100
+    else if (
+      title.startsWith(needle) ||
+      needle.startsWith(title) ||
+      original.startsWith(needle) ||
+      needle.startsWith(original)
+    ) {
+      score += 40
+    } else if (title.includes(needle) || original.includes(needle)) {
+      score += 20
+    }
 
     if (year != null && y != null) {
       if (y === year) score += 80
@@ -54,34 +62,21 @@ function pickBest(
 }
 
 async function searchMovie(query: string): Promise<TmdbHit[]> {
-  const url =
-    `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}` +
-    `&query=${encodeURIComponent(query)}` +
-    `&language=en-US&include_adult=false&page=1&region=US`
-
-  const res = await fetch(url, { next: { revalidate: 0 } })
-  if (!res.ok) throw new Error(`TMDB search failed (${res.status})`)
-  const data = await res.json()
-  const rows = Array.isArray(data.results) ? data.results : []
-
-  return rows
-    .filter((m: { title?: string }) => Boolean(m.title))
-    .map(
-      (m: {
-        id: number
-        title: string
-        poster_path: string | null
-        release_date?: string
-        vote_average?: number
-      }) => ({
-        id: m.id,
-        title: m.title,
-        poster_path: m.poster_path ?? null,
-        release_date: m.release_date ?? "",
-        vote_average: m.vote_average ?? 0,
-        media_type: "movie" as const,
-      }),
-    )
+  const rows = await searchMoviesWithAliases({
+    query,
+    preferredLanguage: "en-US",
+    region: "US",
+    page: "1",
+  })
+  return rows.map((m) => ({
+    id: m.id,
+    title: m.title,
+    original_title: m.original_title ?? null,
+    poster_path: m.poster_path ?? null,
+    release_date: m.release_date ?? "",
+    vote_average: m.vote_average ?? 0,
+    media_type: "movie" as const,
+  }))
 }
 
 /**
@@ -91,7 +86,7 @@ async function searchMovie(query: string): Promise<TmdbHit[]> {
  */
 export async function POST(request: Request) {
   try {
-    if (!TMDB_API_KEY) {
+    if (!process.env.NEXT_TMDB_API_KEY) {
       return NextResponse.json(
         { error: "TMDB API key not configured" },
         { status: 500 },
@@ -171,9 +166,9 @@ export async function POST(request: Request) {
         matches.push(null)
       }
 
-      // soft throttle between TMDB calls
+      // soft throttle between TMDB calls (each item fans out to ~3 langs)
       if (i < items.length - 1) {
-        await new Promise((r) => setTimeout(r, 120))
+        await new Promise((r) => setTimeout(r, 160))
       }
     }
 

@@ -26,6 +26,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Textarea } from "@/components/ui/textarea"
+import { ShiningBadge } from "@/components/premium/shining-badge"
+import { hasShiningAccess } from "@/lib/plans"
 import {
   FeedEditDialog,
   type FeedEditPayload,
@@ -478,6 +480,13 @@ export function FeedWatchedPostCard({
                 >
                   {name}
                 </Link>
+                {hasShiningAccess({
+                  plan: item.user.plan,
+                  plan_status: item.user.plan_status,
+                  plan_current_period_end: item.user.plan_current_period_end,
+                }) ? (
+                  <ShiningBadge size="sm" className="translate-y-[-1px]" />
+                ) : null}
                 <span className="text-zinc-600">@{item.user.username}</span>
                 {when ? (
                   <>

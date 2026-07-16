@@ -24,6 +24,9 @@ import { FilmsCatalogShell } from "@/components/films/films-catalog-shell";
 import type { Movie } from "@/app/film/[id]/page";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
+import { useLocalePrefs } from "@/hooks/use-locale-prefs";
+import type { TmdbRegionProviders } from "@/lib/locale-prefs";
+import { useT } from "@/components/providers/i18n-provider";
 
 interface SeriesDetail {
   id: number;
@@ -59,14 +62,7 @@ interface SeriesDetail {
   genres: { id: number; name: string }[];
   videos: { results: Video[] } | null;
   watchProviders: {
-    results: {
-      US?: {
-        link: string;
-        flatrate?: Array<{ logo_path: string; provider_name: string; provider_id: number }>;
-        rent?: Array<{ logo_path: string; provider_name: string; provider_id: number }>;
-        buy?: Array<{ logo_path: string; provider_name: string; provider_id: number }>;
-      };
-    };
+    results: Record<string, TmdbRegionProviders>;
   };
 }
 
@@ -93,6 +89,7 @@ const SERIES_POSTER_ALIGN_MARGIN = `max(-5rem, calc(min(92vw, 304px) * 0.75 + 8r
 
 export default function SeriesDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+  const { t } = useT();
   const [series, setSeries] = useState<SeriesDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [trailerOpen, setTrailerOpen] = useState(false);
@@ -100,6 +97,7 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ id: str
   const [trailerBtnFocused, setTrailerBtnFocused] = useState(false);
   const [logWatchOpen, setLogWatchOpen] = useState(false);
   const seriesId = parseInt(id);
+  const { tmdbLanguage, loading: localeLoading } = useLocalePrefs();
   const displayTitle = series?.title || series?.name || "";
   const {
     rating,
@@ -126,20 +124,30 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ id: str
   );
 
   useEffect(() => {
+    if (localeLoading) return;
+
+    let cancelled = false;
     async function fetchSeries() {
+      setLoading(true);
       try {
-        const response = await fetch(`/api/series/${id}`);
+        const response = await fetch(
+          `/api/series/${id}?language=${encodeURIComponent(tmdbLanguage)}`,
+        );
         const data = await response.json();
+        if (cancelled) return;
         if (response.ok) {
           setSeries(data);
         }
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     }
 
-    fetchSeries();
-  }, [id]);
+    void fetchSeries();
+    return () => {
+      cancelled = true;
+    };
+  }, [id, tmdbLanguage, localeLoading]);
 
   if (loading) {
     return (
@@ -175,13 +183,13 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ id: str
     return (
       <div className="min-h-screen w-full overflow-x-clip bg-[#09090B]">
         <FilmsCatalogShell>
-          <h1 className="text-2xl font-semibold tracking-tight">Series not found</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">{t("film.seriesNotFound")}</h1>
           <Link
             href="/series/discover"
             className="-mt-10 inline-flex items-center gap-2 text-sm font-medium text-zinc-400 transition-colors hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4 shrink-0" aria-hidden />
-            Back to catalog
+            {t("film.backToCatalog")}
           </Link>
         </FilmsCatalogShell>
       </div>
@@ -262,7 +270,7 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ id: str
                 className="pointer-events-auto inline-flex w-fit items-center gap-2 text-sm font-medium text-zinc-300 transition-colors hover:text-white"
               >
                 <ArrowLeft className="h-4 w-4 shrink-0" aria-hidden />
-                Back to catalog
+                {t("film.backToCatalog")}
               </Link>
               <div className="-mt-36 overflow-hidden rounded-2xl border border-white/[0.1] bg-zinc-950">
                 <div
@@ -314,13 +322,15 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ id: str
                         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#FF0048] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.15)]">
                           <FaPlay className="ml-0.5 h-3.5 w-3.5" aria-hidden />
                         </span>
-                        <span className="pr-4 text-sm font-medium tracking-tight text-white/95">Trailer</span>
+                        <span className="pr-4 text-sm font-medium tracking-tight text-white/95">
+                          {t("film.trailer")}
+                        </span>
                       </motion.span>
                     </motion.button>
                   ) : null}
                 </div>
                 <Trailer trailerOpen={trailerOpen} setTrailerOpen={setTrailerOpen} movie={movieCompat} />
-                <WatchProviders movie={movieCompat} hideHeading omitTrailerButton />
+                <WatchProviders movie={movieCompat} hideHeading omitTrailerButton mediaType="tv" />
               </div>
             </div>
           </aside>
@@ -336,7 +346,7 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ id: str
                 ) : null}
                 {series.director ? (
                   <p className="text-sm text-zinc-500">
-                    <span className="text-foreground">Created by</span> {series.director}
+                    <span className="text-foreground">{t("film.createdBy")}</span> {series.director}
                   </p>
                 ) : null}
               </header>
@@ -352,7 +362,7 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ id: str
               <div className="-mt-2 flex flex-col gap-4">
                 {series.overview ? (
                   <div>
-                    <SectionLabel>Overview</SectionLabel>
+                    <SectionLabel>{t("film.overview")}</SectionLabel>
                     <p className="mt-4 max-w-3xl text-pretty text-sm leading-relaxed text-zinc-500 sm:text-[0.9375rem] lg:max-w-4xl">
                       {series.overview}
                     </p>
@@ -397,8 +407,8 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ id: str
                 {isWatched && (watchedDate || rewatchCount > 0) ? (
                   <p className="-mt-4 text-sm text-muted-foreground">
                     {formatWatchedDate(watchedDate)
-                      ? `Watched ${formatWatchedDate(watchedDate)}`
-                      : "Watched"}
+                      ? t("film.watchedOn", { date: formatWatchedDate(watchedDate)! })
+                      : t("film.watched")}
                     {formatRewatchLabel(rewatchCount)
                       ? ` · ${formatRewatchLabel(rewatchCount)}`
                       : null}
@@ -429,19 +439,19 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ id: str
             <Tabs defaultValue="credits" className="w-full">
               <TabsList className={tabListClass}>
                 <TabsTrigger className={tabTriggerClass} value="credits">
-                  Credits
+                  {t("film.credits")}
                 </TabsTrigger>
                 <TabsTrigger className={tabTriggerClass} value="seasons">
-                  Seasons
+                  {t("film.seasons")}
                 </TabsTrigger>
                 <TabsTrigger className={tabTriggerClass} value="similar">
-                  Similar
+                  {t("film.similar")}
                 </TabsTrigger>
                 <TabsTrigger className={tabTriggerClass} value="recommended">
-                  Recommended
+                  {t("film.recommended")}
                 </TabsTrigger>
                 <TabsTrigger className={tabTriggerClass} value="images">
-                  Images
+                  {t("film.images")}
                 </TabsTrigger>
               </TabsList>
               <TabsContent className="mt-6 w-full outline-none" value="credits">
@@ -462,7 +472,7 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ id: str
             </Tabs>
 
             <div>
-              <SectionLabel>Recent reviews</SectionLabel>
+              <SectionLabel>{t("film.recentReviews")}</SectionLabel>
               <div className="mt-6">
                 <FilmReviewsList filmId={series.id} mediaType="tv" />
               </div>

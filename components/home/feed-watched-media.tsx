@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
+import { createPortal } from "react-dom"
 import Image from "next/image"
 import { animate, motion, useMotionValue } from "framer-motion"
 import { ChevronLeft, ChevronRight, X } from "lucide-react"
@@ -198,16 +199,20 @@ function MediaLightbox({
     springHome()
   }
 
-  if (!open) return null
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
 
+  if (!open || !mounted) return null
+
+  // Slightly under full viewport so tall posters don’t kiss the edges.
   const imgClass =
     kind === "poster"
-      ? "max-h-[min(88vh,920px)] max-w-[min(92vw,560px)] select-none rounded-sm object-contain shadow-2xl"
-      : "max-h-[min(88vh,920px)] w-[min(96vw,1280px)] max-w-[96vw] select-none rounded-sm object-contain shadow-2xl"
+      ? "max-h-[min(calc(100dvh-5rem),720px)] max-w-[min(86vw,440px)] select-none rounded-sm object-contain shadow-2xl"
+      : "max-h-[min(calc(100dvh-4.5rem),860px)] w-[min(94vw,1200px)] max-w-[94vw] select-none rounded-sm object-contain shadow-2xl"
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-[100] overflow-hidden"
+      className="fixed inset-0 z-[200] overflow-hidden"
       role="dialog"
       aria-modal="true"
       aria-label={alt}
@@ -253,7 +258,7 @@ function MediaLightbox({
         </>
       ) : null}
 
-      <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center p-5">
+      <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center p-5 sm:p-8">
         <motion.div
           className="pointer-events-auto relative cursor-grab touch-none will-change-transform active:cursor-grabbing"
           style={{ x, y, rotate, scale }}
@@ -271,7 +276,8 @@ function MediaLightbox({
           />
         </motion.div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
 

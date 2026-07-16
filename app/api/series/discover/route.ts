@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import axios from 'axios'
+import { resolveTmdbLanguage, resolveWatchRegion } from '@/lib/locale-prefs'
 
 const TMDB_API_KEY = process.env.NEXT_TMDB_API_KEY
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3'
@@ -7,6 +8,7 @@ const TMDB_BASE_URL = 'https://api.themoviedb.org/3'
 const LOCKED_PARAM_KEYS = new Set([
   'api_key',
   'language',
+  'region',
   'include_adult',
   'type',
 ])
@@ -19,10 +21,13 @@ export async function GET(req: NextRequest) {
     const vote_average_lte = searchParams.get('vote_average.lte') || undefined
     const sort_by = searchParams.get('sort_by') || 'popularity.desc'
     const type = searchParams.get('type') || undefined
+    const language = resolveTmdbLanguage(searchParams.get('language'))
+    const region = resolveWatchRegion(searchParams.get('region'))
 
     const params: Record<string, string | number | boolean> = {
       api_key: TMDB_API_KEY || '',
-      language: 'en-US',
+      language,
+      region,
       sort_by,
       include_adult: false,
       page,

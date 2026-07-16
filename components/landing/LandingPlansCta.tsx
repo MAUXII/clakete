@@ -1,18 +1,10 @@
 import Link from "next/link"
 import { Check } from "lucide-react"
+import { FREE_FEATURE_BULLETS, SHINING_FEATURE_BULLETS } from "@/lib/plans"
 import { cn } from "@/lib/utils"
 
-const freeFeatures = [
-  "Diary: watched, rating, and dates",
-  "Reviews and lists",
-  "Public profile",
-]
-
-const iluminadoFeatures = [
-  "Everything from the Free plan",
-  "Visual highlight on your profile",
-  "Extra features coming soon",
-]
+const freeFeatures = [...FREE_FEATURE_BULLETS]
+const iluminadoFeatures = [...SHINING_FEATURE_BULLETS]
 
 export function LandingPlansCta() {
   return (

@@ -5,12 +5,15 @@ import { GenrePickerGrid } from "@/components/list-new/genre-picker-grid"
 import { OnboardingStepShell } from "@/components/onboarding/onboarding-step-shell"
 import { onboardingContinueButtonClass } from "@/components/onboarding/onboarding-step-actions"
 import { cn } from "@/lib/utils"
+import { useLocalePrefs } from "@/hooks/use-locale-prefs"
 
 interface OnboardingGenresStepProps {
   selectedIds: number[]
   onChangeSelected: (ids: number[]) => void
   canContinue: boolean
   onContinue: () => void
+  /** Override while onboarding before prefs are saved. */
+  language?: string
 }
 
 export function OnboardingGenresStep({
@@ -18,7 +21,11 @@ export function OnboardingGenresStep({
   onChangeSelected,
   canContinue,
   onContinue,
+  language,
 }: OnboardingGenresStepProps) {
+  const { tmdbLanguage } = useLocalePrefs()
+  const genreLanguage = language || tmdbLanguage
+
   return (
     <OnboardingStepShell
       pinFooter
@@ -42,7 +49,7 @@ export function OnboardingGenresStep({
         <GenrePickerGrid
           selectedIds={selectedIds}
           onChangeSelected={onChangeSelected}
-          language="en-US"
+          language={genreLanguage}
           variant="list"
           className="w-full pb-2"
         />

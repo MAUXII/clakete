@@ -20,6 +20,7 @@ import { Hand, Plus, SkipForward } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { onboardingContinueButtonClass } from "@/components/onboarding/onboarding-step-actions"
 import { cn } from "@/lib/utils"
+import { useLocalePrefs } from "@/hooks/use-locale-prefs"
 import type { ListMediaType } from "@/types/list"
 
 const POSTER = (path: string | null) =>
@@ -63,6 +64,7 @@ async function discoverGenrePage(
   genreId: number,
   page: number,
   sortBy: string,
+  localeQs: string,
 ): Promise<{ rows: DeckMovie[]; totalPages: number }> {
   const qs = new URLSearchParams({
     with_genres: String(genreId),
@@ -70,7 +72,7 @@ async function discoverGenrePage(
     page: String(page),
     "vote_count.gte": "40",
   })
-  const res = await fetch(`/api/movies/discover?${qs.toString()}`)
+  const res = await fetch(`/api/movies/discover?${qs.toString()}&${localeQs}`)
   if (!res.ok) throw new Error("discover")
   const data = await res.json()
   const tp = Math.max(1, Number(data.total_pages) || 1)
@@ -156,6 +158,7 @@ export function NewListSwipeStep({
   copy: copyOverrides,
 }: NewListSwipeStepProps) {
   const copy = { ...DEFAULT_SWIPE_COPY, ...copyOverrides }
+  const { localeQs } = useLocalePrefs()
   const [deck, setDeck] = useState<DeckMovie[]>([])
   const [loading, setLoading] = useState(true)
   const [fetchError, setFetchError] = useState<string | null>(null)
@@ -196,7 +199,7 @@ export function NewListSwipeStep({
         let page = genreNextPageRef.current.get(gid) ?? 1
         const totalPages = totalPagesStored ?? 500
         if (page > totalPages) page = 1
-        const { rows, totalPages: tp } = await discoverGenrePage(gid, page, sortBy)
+        const { rows, totalPages: tp } = await discoverGenrePage(gid, page, sortBy, localeQs)
         genreTotalPagesRef.current.set(gid, tp)
         const nextPage = page >= tp ? 1 : page + 1
         genreNextPageRef.current.set(gid, nextPage)
@@ -204,7 +207,7 @@ export function NewListSwipeStep({
       }
       return shuffleMovies(batch)
     },
-    [],
+    [localeQs],
   )
 
   const pullDiscoverChunk = useCallback(async (genreIdList: number[]): Promise<DeckMovie[]> => {

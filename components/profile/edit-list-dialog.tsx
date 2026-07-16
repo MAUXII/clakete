@@ -16,7 +16,9 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { useLists } from "@/hooks/use-lists"
+import { useSubscription } from "@/hooks/use-subscription"
 import { List, UpdateListData } from "@/types/list"
+import { FREE_PRIVATE_LIST_LIMIT } from "@/lib/plans"
 import { cn } from "@/lib/utils"
 
 interface EditListDialogProps {
@@ -28,6 +30,7 @@ interface EditListDialogProps {
 
 export function EditListDialog({ list, open, onOpenChange, onListUpdated }: EditListDialogProps) {
   const { updateList } = useLists()
+  const { isShining } = useSubscription()
   const [title, setTitle] = useState(list.title)
   const [bio, setBio] = useState(list.bio || "")
   const [isPublic, setIsPublic] = useState(list.is_public)
@@ -120,7 +123,12 @@ export function EditListDialog({ list, open, onOpenChange, onListUpdated }: Edit
             <div className="space-y-0.5">
               <Label htmlFor="public">Lista Pública</Label>
               <p className="text-sm text-muted-foreground">
-                Outros usuários podem ver listas públicas
+                Outros usuários podem ver listas públicas.
+                {!isPublic
+                  ? isShining
+                    ? " The Shining: unlimited private lists."
+                    : ` Free: up to ${FREE_PRIVATE_LIST_LIMIT} private lists.`
+                  : null}
               </p>
             </div>
             <Switch

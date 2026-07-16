@@ -40,11 +40,13 @@ import { useProfile } from "@/components/providers/profile-provider"
 import { profileAvatarPresentation } from "@/lib/profile-media"
 import { avatarDisplaySrc, remoteImageSrcLooksLikeGif } from "@/lib/next-remote-image"
 import React from "react"
+import { useT } from "@/components/providers/i18n-provider"
 import { cn } from "@/lib/utils"
 import { pageContainerClass } from "@/lib/page-container"
 import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "./sheet"
 
 export function Navbar() {
+  const { t } = useT()
   const { movies, loading: moviesLoading } = useMovies()
   const featuredMovie = movies?.[0]
   const { series, loading: seriesLoading } = useSeries()
@@ -65,26 +67,26 @@ export function Navbar() {
   const movieNavLinks = [
     {
       href: "/films/discover",
-      title: "Discover",
-      description: "Genres & filters",
+      title: t("nav.discover"),
+      description: t("nav.discoverDesc"),
       Icon: Compass,
     },
     {
       href: "/films/popular",
-      title: "Popular",
-      description: "Trending worldwide",
+      title: t("nav.popular"),
+      description: t("nav.popularDesc"),
       Icon: TrendingUp,
     },
     {
       href: "/films/top-rated",
-      title: "Top rated",
-      description: "Critically acclaimed",
+      title: t("nav.topRated"),
+      description: t("nav.topRatedDesc"),
       Icon: Star,
     },
     {
       href: "/films/upcoming",
-      title: "Upcoming",
-      description: "Coming soon",
+      title: t("nav.upcoming"),
+      description: t("nav.upcomingDesc"),
       Icon: CalendarClock,
     },
   ] as const
@@ -92,26 +94,26 @@ export function Navbar() {
   const seriesNavLinks = [
     {
       href: "/series/discover",
-      title: "Discover",
-      description: "Genres & filters",
+      title: t("nav.discover"),
+      description: t("nav.discoverDesc"),
       Icon: Compass,
     },
     {
       href: "/series/popular",
-      title: "Popular",
-      description: "Trending worldwide",
+      title: t("nav.popular"),
+      description: t("nav.popularDesc"),
       Icon: TrendingUp,
     },
     {
       href: "/series/top-rated",
-      title: "Top rated",
-      description: "Critically acclaimed",
+      title: t("nav.topRated"),
+      description: t("nav.topRatedDesc"),
       Icon: Star,
     },
     {
       href: "/series/upcoming",
-      title: "Upcoming",
-      description: "On the air",
+      title: t("nav.upcomingSeries"),
+      description: t("nav.upcomingSeriesDesc"),
       Icon: CalendarClock,
     },
   ] as const
@@ -166,7 +168,7 @@ export function Navbar() {
             <Link href="/" legacyBehavior passHref>
               <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                 <BiHomeAlt />
-                Home
+                {t("nav.home")}
               </NavigationMenuLink >
             </Link>
           </NavigationMenuItem >
@@ -175,7 +177,7 @@ export function Navbar() {
             <Link href="/lists" legacyBehavior passHref>
               <NavigationMenuLink className={navigationMenuTriggerStyle()}>
                 <List className="h-4 w-4" />
-                Lists
+                {t("nav.lists")}
               </NavigationMenuLink >
             </Link>
           </NavigationMenuItem >
@@ -183,7 +185,7 @@ export function Navbar() {
           <NavigationMenuItem className="py-2  ">
             <NavigationMenuTrigger active={isMoviesNavActive(pathname)}>
             <LuClapperboard />
-            Movies
+            {t("nav.movies")}
             </NavigationMenuTrigger >
             <NavigationMenuContent className="rounded-2xl p-4 text-zinc-50 backdrop-blur-xl md:w-[420px] lg:w-[620px]">
               <div className="grid min-h-[min(320px,42vh)] grid-cols-[minmax(9rem,12.5rem)_1fr] grid-rows-1 items-stretch gap-4">
@@ -267,7 +269,7 @@ export function Navbar() {
           <NavigationMenuItem className="py-2  ">
             <NavigationMenuTrigger active={isSeriesNavActive(pathname)}>
             <LuTv />
-            Series
+            {t("nav.series")}
             </NavigationMenuTrigger >
             <NavigationMenuContent className="rounded-2xl p-4 text-zinc-50 backdrop-blur-xl md:w-[420px] lg:w-[620px]">
               <div className="grid min-h-[min(320px,42vh)] grid-cols-[minmax(9rem,12.5rem)_1fr] grid-rows-1 items-stretch gap-4">
@@ -375,7 +377,7 @@ export function Navbar() {
               className="h-[min(82dvh,44rem)] w-full rounded-t-2xl border-t border-white/[0.1] bg-zinc-950/95 text-zinc-100 backdrop-blur-xl"
             >
               <SheetHeader className="pr-8">
-                <SheetTitle>Menu</SheetTitle>
+                <SheetTitle>{t("nav.menu")}</SheetTitle>
               </SheetHeader>
 
               <div className="mt-6 flex flex-col gap-6">
@@ -388,7 +390,7 @@ export function Navbar() {
                         isNavHrefActive(pathname, "/") ? navMegaLinkAccent : cn("text-zinc-200", navLinkHover),
                       )}
                     >
-                      Home
+                      {t("nav.home")}
                     </Link>
                   </SheetClose>
                   <SheetClose asChild>
@@ -399,13 +401,13 @@ export function Navbar() {
                         isNavHrefActive(pathname, "/lists") ? navMegaLinkAccent : cn("text-zinc-200", navLinkHover),
                       )}
                     >
-                      Lists
+                      {t("nav.lists")}
                     </Link>
                   </SheetClose>
                 </nav>
 
                 <div className="space-y-2">
-                  <p className="px-3 text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">Movies</p>
+                  <p className="px-3 text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">{t("nav.movies")}</p>
                   <div className="flex flex-col gap-1">
                     {movieNavLinks.map(({ href, title, Icon }) => {
                       const isActive = isNavHrefActive(pathname, href)
@@ -435,7 +437,7 @@ export function Navbar() {
                 </div>
 
                 <div className="space-y-2">
-                  <p className="px-3 text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">Series</p>
+                  <p className="px-3 text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">{t("nav.series")}</p>
                   <div className="flex flex-col gap-1">
                     {seriesNavLinks.map(({ href, title, Icon }) => {
                       const isActive = isNavHrefActive(pathname, href)
@@ -510,26 +512,26 @@ export function Navbar() {
         <>
         <DropdownMenuItem asChild className={profileMenuItemClass}>
           <Link href={`/${profile.username}`}>
-            Profile
+            {t("common.profile")}
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild className={profileMenuItemClass}>
           <Link href={`/${profile.username}/watched`}>
-            Watched
+            {t("nav.watched")}
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild className={profileMenuItemClass}>
           <Link href={`/${profile.username}/watchlist`}>
-            Watchlist
+            {t("nav.watchlist")}
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild className={profileMenuItemClass}>
           <Link href="/lists">
-            Lists
+            {t("nav.lists")}
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={handleSignOut} className={profileMenuItemClass}>
-          Sign Out
+          {t("common.signOut")}
         </DropdownMenuItem>
       </>
         ) : (
@@ -537,7 +539,7 @@ export function Navbar() {
         <DropdownMenuItem asChild className={profileMenuItemClass}>
           <Link href="/sign-in">
             <RiLoginBoxLine className="mr-2 h-4 w-4" />
-            Sign In
+            {t("common.signIn")}
           </Link>
         </DropdownMenuItem>
           </>

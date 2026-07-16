@@ -6,7 +6,9 @@ import { useState } from "react"
 import { Check, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
+  FREE_FEATURE_BULLETS,
   hasShiningAccess,
+  SHINING_FEATURE_BULLETS,
   SHINING_PRODUCT_NAME,
   type PlanFields,
 } from "@/lib/plans"
@@ -14,32 +16,23 @@ import { cn } from "@/lib/utils"
 
 const PLANS = [
   {
-    id: "free",
+    id: "free" as const,
     name: "Free",
     description: "your movie diary",
     priceLabel: "$0",
     period: "forever",
-    features: [
-      "Diary: watched, ratings, and dates",
-      "Reviews and public lists",
-      "Full public profile",
-    ],
+    features: [...FREE_FEATURE_BULLETS],
   },
   {
-    id: "shining",
+    id: "shining" as const,
     name: SHINING_PRODUCT_NAME,
     description: "premium member",
     priceLabel: null as string | null,
     monthlyPrice: 4.99,
     period: "month",
-    features: [
-      "Everything in Free",
-      "Visual highlight on your profile",
-      "Premium badge and styling",
-      "More features coming soon",
-    ],
+    features: [...SHINING_FEATURE_BULLETS],
   },
-] as const
+]
 
 type PlanId = (typeof PLANS)[number]["id"]
 

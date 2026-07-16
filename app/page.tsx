@@ -37,6 +37,8 @@ import {
 } from '@/lib/user-home-preferences'
 import { profileHomeBackdropPresentation } from '@/lib/profile-media'
 import { useProfile } from '@/components/providers/profile-provider'
+import { useLocalePrefs } from '@/hooks/use-locale-prefs'
+import { useT } from '@/components/providers/i18n-provider'
 
 interface UserProfile {
   username: string
@@ -99,6 +101,7 @@ const homeWelcomeHintStorageKey = (username: string) =>
   `clakete_home_welcome_hint_hidden:${username.trim().toLowerCase()}`
 
 export default function HomePage() {
+  const { t } = useT()
   const [welcomeHintHidden, setWelcomeHintHidden] = useState(false)
   const [featuredMovies, setFeaturedMovies] = useState<Movie[]>([])
   const [upcomingMovies, setUpcomingMovies] = useState<Movie[]>([])
@@ -106,6 +109,7 @@ export default function HomePage() {
   const [catalogMovieTotal, setCatalogMovieTotal] = useState<number | null>(null)
   const user = useUser()
   const { profile: ctxProfile, loading: profileLoading } = useProfile()
+  const { localeQs, loading: localeLoading } = useLocalePrefs()
 
   const userProfile = useMemo((): UserProfile | null => {
     if (!user || !ctxProfile) return null
@@ -144,10 +148,11 @@ export default function HomePage() {
   }, [userProfile])
 
   useEffect(() => {
+    if (localeLoading) return
     let cancelled = false
     async function fetchFeaturedMovie() {
       try {
-        const response = await fetch('/api/movies?type=now_playing&page=1')
+        const response = await fetch(`/api/movies?type=now_playing&page=1&${localeQs}`)
         const data = await response.json()
         if (cancelled) return
         if (data.results && data.results.length > 0) {
@@ -161,9 +166,10 @@ export default function HomePage() {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [localeQs, localeLoading])
 
   useEffect(() => {
+    if (localeLoading) return
     let cancelled = false
 
     type DiscoverMovie = Movie & {
@@ -206,9 +212,9 @@ export default function HomePage() {
 
         /** Pool “em alta”: dia (agora) + semana (mais opções), deduplicado por id. */
         const [dayRes, weekP1, weekP2] = await Promise.all([
-          fetch('/api/movies?type=trending_day&page=1'),
-          fetch('/api/movies?type=trending_week&page=1'),
-          fetch('/api/movies?type=trending_week&page=2'),
+          fetch(`/api/movies?type=trending_day&page=1&${localeQs}`),
+          fetch(`/api/movies?type=trending_week&page=1&${localeQs}`),
+          fetch(`/api/movies?type=trending_week&page=2&${localeQs}`),
         ])
         const [dayData, w1Data, w2Data] = await Promise.all([
           dayRes.json(),
@@ -255,7 +261,7 @@ export default function HomePage() {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [localeQs, localeLoading])
 
   useEffect(() => {
     let cancelled = false
@@ -277,20 +283,21 @@ export default function HomePage() {
     }
   }, [])
 
-  useEffect(() => { 
+  useEffect(() => {
+    if (localeLoading) return
     async function fetchUpcomingMovies() {
       try {
-        const response = await fetch('/api/movies?type=upcoming&page=1')
+        const response = await fetch(`/api/movies?type=upcoming&page=1&${localeQs}`)
         const data = await response.json()
         if (data.results && data.results.length > 0) {
-          setUpcomingMovies(data.results.slice(0, 6)) 
+          setUpcomingMovies(data.results.slice(0, 6))
         }
       } catch (error) {
         console.error('Erro ao buscar filmes populares:', error)
       }
     }
     fetchUpcomingMovies()
-  }, [])
+  }, [localeQs, localeLoading])
 
   if (loading) {
     return (
@@ -329,21 +336,20 @@ export default function HomePage() {
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-zinc-500">
-                  In theaters
+                  {t("home.inTheaters")}
                 </p>
                 <h2 className="mt-2 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
-                  Now showing
+                  {t("home.nowShowing")}
                 </h2>
                 <p className="mt-2 max-w-lg text-sm text-zinc-400">
-                  Pick a movie and open its page - rate it, mark it as watched, or save it to your
-                  watchlist.
+                  {t("home.nowShowingHint")}
                 </p>
               </div>
               <Link
                 href="/films/discover"
                 className="shrink-0 text-sm font-medium text-zinc-400 transition hover:text-white"
               >
-                View catalog →
+                {t("home.viewCatalog")}
               </Link>
             </div>
 
@@ -758,8 +764,8 @@ export default function HomePage() {
           <section aria-labelledby="home-following-feed" className="min-w-0">
             <LoggedHomeSectionHeader
               dense
-              eyebrow="Following"
-              title="Activity"
+              eyebrow={t("home.following")}
+              title={t("home.activity")}
               titleId="home-following-feed"
             />
             <Suspense fallback={null}>
@@ -778,12 +784,12 @@ export default function HomePage() {
               <section aria-labelledby="home-now-showing">
                 <LoggedHomeSectionHeader
                   dense
-                  eyebrow="In theaters"
-                  title="Now showing"
+                  eyebrow={t("home.inTheaters")}
+                  title={t("home.nowShowing")}
                   titleId="home-now-showing"
                   action={
                     <Link href="/films/discover" className={loggedHomeSecondaryLink}>
-                      Catalog →
+                      {t("home.catalogLink")}
                     </Link>
                   }
                 />
@@ -811,11 +817,11 @@ export default function HomePage() {
               <section>
                 <LoggedHomeSectionHeader
                   dense
-                  eyebrow="Coming soon"
-                  title="Upcoming"
+                  eyebrow={t("home.comingSoon")}
+                  title={t("home.upcoming")}
                   action={
                     <Link href="/films/upcoming" className={loggedHomeSecondaryLink}>
-                      See all →
+                      {t("home.seeAll")}
                     </Link>
                   }
                 />

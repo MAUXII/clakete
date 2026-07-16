@@ -15,6 +15,7 @@ import { useSupabaseClient } from "@supabase/auth-helpers-react";
 import { useDebounce } from "@/hooks/use-debounce";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useProfile } from "@/components/providers/profile-provider";
+import { useLocalePrefs } from "@/hooks/use-locale-prefs";
 import ReactMasonryCss from "react-masonry-css";
 import type { Area } from "react-easy-crop";
 
@@ -110,6 +111,7 @@ export function ImageEditDialog({ onClose, onSelect, isOpen, onSave, type, custo
   const [open, setOpen] = useState(false)
   const [results, setResults] = useState<Movie[]>([])
   const { refreshProfile } = useProfile()
+  const { localeQs, loading: localeLoading } = useLocalePrefs()
 
   const handleListCropGeometry = useCallback(
     (geo: { pixelCrop: Area; imageWidth: number; imageHeight: number }) => {
@@ -135,17 +137,18 @@ export function ImageEditDialog({ onClose, onSelect, isOpen, onSave, type, custo
     }
 
     const fetchMovies = async () => {
+      if (localeLoading) return
       setLoading(true)
       try {
         const q = debouncedQuery.trim()
         if (q.length === 0) {
           const movieUrls = Array.from(
             { length: MOVIE_PICKER_PAGES },
-            (_, i) => `/api/movies?type=top_rated&page=${String(i + 1)}`,
+            (_, i) => `/api/movies?type=top_rated&page=${String(i + 1)}&${localeQs}`,
           )
           const tvUrls = Array.from(
             { length: MOVIE_PICKER_PAGES },
-            (_, i) => `/api/tv?type=top_rated&page=${String(i + 1)}`,
+            (_, i) => `/api/tv?type=top_rated&page=${String(i + 1)}&${localeQs}`,
           )
           const specs = [
             ...movieUrls.map((u) => ({ u, kind: "movie" as const })),
@@ -170,7 +173,7 @@ export function ImageEditDialog({ onClose, onSelect, isOpen, onSave, type, custo
           setResults(dedupeByMedia(merged))
         } else {
           const res = await fetch(
-            `/api/movies/search?q=${encodeURIComponent(q)}&page=1&include_tv=1`,
+            `/api/movies/search?q=${encodeURIComponent(q)}&page=1&include_tv=1&${localeQs}`,
           )
           const data = await res.json()
           const rows = Array.isArray(data?.results) ? data.results : []
@@ -184,7 +187,7 @@ export function ImageEditDialog({ onClose, onSelect, isOpen, onSave, type, custo
       }
     }
     void fetchMovies()
-  }, [debouncedQuery])
+  }, [debouncedQuery, localeQs, localeLoading])
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {

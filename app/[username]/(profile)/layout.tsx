@@ -29,6 +29,7 @@ import type { Json } from "@/lib/supabase/database.types"
 import { cn } from "@/lib/utils"
 import { pageContainerClass } from "@/lib/page-container"
 import { hasShiningAccess } from "@/lib/plans"
+import { parseUserHomePreferences } from "@/lib/user-home-preferences"
 import { ShiningBadge } from "@/components/premium/shining-badge"
 
 interface UserData extends ProfileLayoutUser {
@@ -518,12 +519,18 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
     plan_status: userData.plan_status,
     plan_current_period_end: userData.plan_current_period_end,
   })
+  const profileTheme = parseUserHomePreferences(userData.home_preferences).profile_theme
+  const themeClass =
+    isShiningProfile && profileTheme && profileTheme !== "default"
+      ? `profile--theme-${profileTheme}`
+      : null
 
   return (
     <section
       className={cn(
         "relative z-10 mt-[3.75rem] w-full",
         isShiningProfile && "profile--shining",
+        themeClass,
       )}
     >
         {/* Banner */}

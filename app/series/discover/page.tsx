@@ -20,6 +20,7 @@ import {
   filmsPosterSkeletonClassName,
 } from "@/components/films/films-catalog-shell"
 import { cn } from "@/lib/utils"
+import { useLocalePrefs } from "@/hooks/use-locale-prefs"
 
 interface TvShow {
   id: number
@@ -49,6 +50,7 @@ function SeriesDiscoverContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { genres, loading: genresLoading } = useTvGenres()
+  const { withLocale, localeQs, loading: localeLoading, tmdbLanguage, watchRegion } = useLocalePrefs()
   const genre = searchParams.get("genres") || ""
   const voteAverageLte = Number(searchParams.get("vote_average.lte") || 10)
   const sortBy = searchParams.get("sort_by") || "popularity.desc"
@@ -85,14 +87,15 @@ function SeriesDiscoverContent() {
   }
 
   useEffect(() => {
+    if (localeLoading) return
     fetchShows()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [genre, voteAverageLte, sortBy])
+  }, [genre, voteAverageLte, sortBy, localeLoading, tmdbLanguage, watchRegion])
 
   async function fetchShows() {
     setLoading(true)
     try {
-      const params = new URLSearchParams()
+      const params = withLocale()
       params.set("page", "1")
       if (genre) params.set("with_genres", genre)
       if (voteAverageLte < 10) params.set("vote_average.lte", voteAverageLte.toString())
@@ -115,7 +118,7 @@ function SeriesDiscoverContent() {
     setLoadingMore(true)
     try {
       const nextPage = page + 1
-      const params = new URLSearchParams()
+      const params = withLocale()
       params.set("page", nextPage.toString())
       if (genre) params.set("with_genres", genre)
       if (voteAverageLte < 10) params.set("vote_average.lte", voteAverageLte.toString())
@@ -155,7 +158,7 @@ function SeriesDiscoverContent() {
 
   async function handleFeelingLucky() {
     try {
-      const response = await fetch("/api/series/discover?sort_by=popularity.desc&page=1")
+      const response = await fetch(`/api/series/discover?sort_by=popularity.desc&page=1&${localeQs}`)
       const data = await response.json()
       if (data.results?.length) {
         const pick = data.results[Math.floor(Math.random() * data.results.length)]

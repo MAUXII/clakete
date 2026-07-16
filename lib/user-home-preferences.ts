@@ -1,4 +1,13 @@
 import type { Json } from "@/lib/supabase/database.types"
+import { isProfileThemeId, type ProfileThemeId } from "@/lib/plans"
+import {
+  DEFAULT_TMDB_LANGUAGE,
+  DEFAULT_WATCH_REGION,
+  isTmdbLanguageId,
+  isWatchRegionId,
+  type TmdbLanguageId,
+  type WatchRegionId,
+} from "@/lib/locale-prefs"
 
 /**
  * Coluna `users.home_preferences` (JSON): toggles de seções + opcional
@@ -12,6 +21,12 @@ export interface UserHomePreferences {
   show_following_feed: boolean
   /** TMDB genre ids chosen during onboarding (optional). */
   favorite_genre_ids?: number[]
+  /** Profile visual theme — Shining perk (ignored for free unless default). */
+  profile_theme?: ProfileThemeId
+  /** ISO country for JustWatch / TMDB watch providers (default BR). */
+  watch_region?: WatchRegionId
+  /** TMDB API `language` for titles & overviews (default pt-BR). */
+  tmdb_language?: TmdbLanguageId
 }
 
 export const defaultUserHomePreferences: UserHomePreferences = {
@@ -19,6 +34,9 @@ export const defaultUserHomePreferences: UserHomePreferences = {
   show_upcoming: true,
   show_recent_reviews: true,
   show_following_feed: true,
+  profile_theme: "default",
+  watch_region: DEFAULT_WATCH_REGION,
+  tmdb_language: DEFAULT_TMDB_LANGUAGE,
 }
 
 export function parseUserHomePreferences(raw: Json | null | undefined): UserHomePreferences {
@@ -37,6 +55,18 @@ export function parseUserHomePreferences(raw: Json | null | undefined): UserHome
     )
   }
 
+  if (isProfileThemeId(o.profile_theme)) {
+    base.profile_theme = o.profile_theme
+  }
+
+  if (isWatchRegionId(o.watch_region)) {
+    base.watch_region = o.watch_region
+  }
+
+  if (isTmdbLanguageId(o.tmdb_language)) {
+    base.tmdb_language = o.tmdb_language
+  }
+
   return base
 }
 
@@ -46,9 +76,14 @@ export function serializeUserHomePreferences(prefs: UserHomePreferences): Json {
     show_upcoming: prefs.show_upcoming,
     show_recent_reviews: prefs.show_recent_reviews,
     show_following_feed: prefs.show_following_feed,
+    watch_region: prefs.watch_region ?? DEFAULT_WATCH_REGION,
+    tmdb_language: prefs.tmdb_language ?? DEFAULT_TMDB_LANGUAGE,
   }
   if (prefs.favorite_genre_ids?.length) {
     out.favorite_genre_ids = prefs.favorite_genre_ids
+  }
+  if (prefs.profile_theme && prefs.profile_theme !== "default") {
+    out.profile_theme = prefs.profile_theme
   }
   return out as Json
 }
@@ -60,6 +95,18 @@ export function setFavoriteGenresInsidePreferences(
 ): Json {
   const prefs = parseUserHomePreferences(raw)
   prefs.favorite_genre_ids = genreIds.length > 0 ? [...genreIds] : undefined
+  const backdrop = extractHomeBackdropFromPreferences(raw)
+  return setHomeBackdropInsidePreferences(serializeUserHomePreferences(prefs), backdrop)
+}
+
+/** Merge watch region + TMDB language into existing `home_preferences` JSON. */
+export function setLocaleInsidePreferences(
+  raw: Json | null | undefined,
+  locale: { watch_region?: WatchRegionId; tmdb_language?: TmdbLanguageId },
+): Json {
+  const prefs = parseUserHomePreferences(raw)
+  if (locale.watch_region) prefs.watch_region = locale.watch_region
+  if (locale.tmdb_language) prefs.tmdb_language = locale.tmdb_language
   const backdrop = extractHomeBackdropFromPreferences(raw)
   return setHomeBackdropInsidePreferences(serializeUserHomePreferences(prefs), backdrop)
 }

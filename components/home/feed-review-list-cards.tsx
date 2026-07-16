@@ -26,6 +26,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Textarea } from "@/components/ui/textarea"
+import { ShiningBadge } from "@/components/premium/shining-badge"
 import { feedMediaFrameClass } from "@/components/home/feed-watched-media"
 import {
   feedListHref,
@@ -34,9 +35,24 @@ import {
   feedProfileHref,
   formatFeedRelativeTime,
   type FollowingFeedItem,
+  type FollowingFeedUser,
 } from "@/hooks/use-following-feed"
 import { avatarDisplaySrc } from "@/lib/next-remote-image"
+import { hasShiningAccess } from "@/lib/plans"
 import { cn } from "@/lib/utils"
+
+function FeedShiningMark({ user }: { user: FollowingFeedUser }) {
+  if (
+    !hasShiningAccess({
+      plan: user.plan,
+      plan_status: user.plan_status,
+      plan_current_period_end: user.plan_current_period_end,
+    })
+  ) {
+    return null
+  }
+  return <ShiningBadge size="sm" className="translate-y-[-1px]" />
+}
 
 const COMMENT_MAX = 500
 
@@ -334,6 +350,7 @@ export function FeedReviewPostCard({
                 >
                   {name}
                 </Link>
+                <FeedShiningMark user={item.user} />
                 <span className="text-zinc-600">@{item.user.username}</span>
                 {when ? (
                   <>
@@ -706,6 +723,7 @@ export function FeedListPostCard({
                 >
                   {name}
                 </Link>
+                <FeedShiningMark user={item.user} />
                 <span className="text-zinc-600">@{item.user.username}</span>
                 {when ? (
                   <>

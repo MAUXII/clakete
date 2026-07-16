@@ -20,6 +20,7 @@ import {
   filmsPosterSkeletonClassName,
 } from "@/components/films/films-catalog-shell";
 import { cn } from "@/lib/utils";
+import { useLocalePrefs } from "@/hooks/use-locale-prefs";
 
 interface Movie {
   id: number;
@@ -49,6 +50,7 @@ function FilmsDiscoverContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { genres, loading: genresLoading } = useGenres();
+  const { withLocale, localeQs, loading: localeLoading, tmdbLanguage, watchRegion } = useLocalePrefs();
   const genre = searchParams.get("genres") || "";
   const voteAverageLte = Number(searchParams.get("vote_average.lte") || 10);
   const sortBy = searchParams.get("sort_by") || "popularity.desc";
@@ -86,14 +88,15 @@ function FilmsDiscoverContent() {
   };
 
   useEffect(() => {
+    if (localeLoading) return;
     fetchMovies();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [genre, voteAverageLte, sortBy]);
+  }, [genre, voteAverageLte, sortBy, localeLoading, tmdbLanguage, watchRegion]);
 
   async function fetchMovies() {
     setLoading(true);
     try {
-      const params = new URLSearchParams();
+      const params = withLocale();
       params.set("page", "1");
       if (genre) params.set("with_genres", genre);
       if (voteAverageLte < 10) params.set("vote_average.lte", voteAverageLte.toString());
@@ -116,7 +119,7 @@ function FilmsDiscoverContent() {
     setLoadingMore(true);
     try {
       const nextPage = page + 1;
-      const params = new URLSearchParams();
+      const params = withLocale();
       params.set("page", nextPage.toString());
       if (genre) params.set("with_genres", genre);
       if (voteAverageLte < 10) params.set("vote_average.lte", voteAverageLte.toString());
@@ -158,7 +161,7 @@ function FilmsDiscoverContent() {
   async function handleFeelingLucky() {
     try {
       // Busca filmes populares (primeira página)
-      const response = await fetch("/api/movies/discover?sort_by=popularity.desc&page=1");
+      const response = await fetch(`/api/movies/discover?sort_by=popularity.desc&page=1&${localeQs}`);
       const data = await response.json();
       if (data.results && data.results.length > 0) {
         // Escolhe um filme aleatório da lista

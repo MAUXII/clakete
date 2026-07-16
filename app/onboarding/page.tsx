@@ -20,9 +20,18 @@ import { useProfile } from "@/components/providers/profile-provider"
 import type { TmdbStoredImageMeta } from "@/types/tmdb-stored-image"
 import type { Json } from "@/lib/supabase/database.types"
 import { playListFinishConfetti } from "@/lib/list-finish-confetti"
-import { setFavoriteGenresInsidePreferences } from "@/lib/user-home-preferences"
+import {
+  setFavoriteGenresInsidePreferences,
+  setLocaleInsidePreferences,
+} from "@/lib/user-home-preferences"
 import { ONBOARDING_SWIPE_COPY } from "@/lib/onboarding-swipe-copy"
 import { toLocalDateString } from "@/lib/watched-date"
+import {
+  DEFAULT_TMDB_LANGUAGE,
+  DEFAULT_WATCH_REGION,
+  type TmdbLanguageId,
+  type WatchRegionId,
+} from "@/lib/locale-prefs"
 
 type OnboardingStep = 1 | 2 | 3 | 4
 
@@ -41,6 +50,8 @@ export default function OnboardingPage() {
   const [avatarMeta, setAvatarMeta] = useState<TmdbStoredImageMeta | null>(null)
   const [bannerMeta, setBannerMeta] = useState<TmdbStoredImageMeta | null>(null)
   const [selectedGenreIds, setSelectedGenreIds] = useState<number[]>([])
+  const [watchRegion, setWatchRegion] = useState<WatchRegionId>(DEFAULT_WATCH_REGION)
+  const [tmdbLanguage, setTmdbLanguage] = useState<TmdbLanguageId>(DEFAULT_TMDB_LANGUAGE)
   const [watchedMovies, setWatchedMovies] = useState<PickedMovie[]>([])
   const [canFinishSwipe, setCanFinishSwipe] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -133,10 +144,14 @@ export default function OnboardingPage() {
         .eq("id", authUser.id)
         .maybeSingle()
 
-      const homePreferences = setFavoriteGenresInsidePreferences(
+      const withGenres = setFavoriteGenresInsidePreferences(
         existing?.home_preferences ?? null,
         selectedGenreIds,
       )
+      const homePreferences = setLocaleInsidePreferences(withGenres, {
+        watch_region: watchRegion,
+        tmdb_language: tmdbLanguage,
+      })
 
       const { error: profileError } = await supabase
         .from("users")
@@ -196,8 +211,10 @@ export default function OnboardingPage() {
     router,
     selectedGenreIds,
     supabase,
+    tmdbLanguage,
     user,
     watchedMovies,
+    watchRegion,
   ])
 
   if (!ready) {
@@ -239,7 +256,11 @@ export default function OnboardingPage() {
                 <OnboardingDisplayNameStep
                   displayName={displayName}
                   username={savedUsername}
+                  watchRegion={watchRegion}
+                  tmdbLanguage={tmdbLanguage}
                   onDisplayNameChange={setDisplayName}
+                  onWatchRegionChange={setWatchRegion}
+                  onTmdbLanguageChange={setTmdbLanguage}
                   onContinue={() => setStep(2)}
                 />
               </div>
@@ -267,6 +288,7 @@ export default function OnboardingPage() {
                   onChangeSelected={setSelectedGenreIds}
                   canContinue={canContinueStep3}
                   onContinue={() => setStep(4)}
+                  language={tmdbLanguage}
                 />
               </div>
             ) : null}

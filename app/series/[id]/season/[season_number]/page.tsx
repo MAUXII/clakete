@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import EpisodesList, { type SeasonEpisode } from "@/components/series/episodes";
 import { FilmsCatalogShell } from "@/components/films/films-catalog-shell";
 import { cn } from "@/lib/utils";
+import { useLocalePrefs } from "@/hooks/use-locale-prefs";
 
 interface SeasonDetail {
   id: number;
@@ -40,11 +41,16 @@ export default function SeriesSeasonPage({
   const { id, season_number } = use(params);
   const [season, setSeason] = useState<SeasonDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const { tmdbLanguage, loading: localeLoading } = useLocalePrefs();
 
   useEffect(() => {
+    if (localeLoading) return;
     async function fetchSeason() {
+      setLoading(true);
       try {
-        const response = await fetch(`/api/series/${id}/season/${season_number}`);
+        const response = await fetch(
+          `/api/series/${id}/season/${season_number}?language=${encodeURIComponent(tmdbLanguage)}`,
+        );
         const data = await response.json();
         if (response.ok) {
           setSeason(data);
@@ -55,7 +61,7 @@ export default function SeriesSeasonPage({
     }
 
     fetchSeason();
-  }, [id, season_number]);
+  }, [id, season_number, tmdbLanguage, localeLoading]);
 
   if (loading) {
     return (

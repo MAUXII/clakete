@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
 import Link from "next/link";
@@ -9,6 +9,11 @@ import type { Movie } from "@/app/film/[id]/page";
 import { FaPlay } from "react-icons/fa6";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useLocalePrefs } from "@/hooks/use-locale-prefs";
+import { pickRegionProviders, watchRegionLabel } from "@/lib/locale-prefs";
+import { getProviderWatchHref } from "@/lib/provider-links";
+import { justWatchLocaleForRegion } from "@/lib/justwatch";
+import { useT } from "@/components/providers/i18n-provider";
 
 interface WatchProvider {
   logo_path: string;
@@ -23,14 +28,71 @@ export default function WatchProviders({
   movie,
   hideHeading = false,
   omitTrailerButton = false,
+  mediaType = "movie",
 }: {
   movie: Movie;
   hideHeading?: boolean;
   omitTrailerButton?: boolean;
+  /** Used to resolve JustWatch deep links (title page on Netflix etc.). */
+  mediaType?: "movie" | "tv";
 }) {
   const [trailerOpen, setTrailerOpen] = useState(false);
   const [providersDialogOpen, setProvidersDialogOpen] = useState(false);
-  const providers = movie.watchProviders?.results?.US;
+  const [deepLinks, setDeepLinks] = useState<Record<number, string>>({});
+  const { t } = useT();
+  const { watchRegion } = useLocalePrefs();
+  const providers = pickRegionProviders(movie.watchProviders?.results, watchRegion);
+  const regionName = watchRegionLabel(watchRegion);
+  const title = movie.title?.trim() || "";
+  const jwCountry = justWatchLocaleForRegion(watchRegion).country.toLowerCase();
+  const justWatchHref = title
+    ? `https://www.justwatch.com/${jwCountry}/search?q=${encodeURIComponent(title)}`
+    : `https://www.justwatch.com/${jwCountry}`;
+  const typeLabel = (type: string) => {
+    if (type === "Stream") return t("catalog.stream");
+    if (type === "Rent") return t("catalog.rent");
+    if (type === "Buy") return t("catalog.buy");
+    return type;
+  };
+
+  useEffect(() => {
+    if (!movie.id) return;
+    let cancelled = false;
+    const qs = new URLSearchParams({
+      tmdbId: String(movie.id),
+      mediaType,
+      region: watchRegion,
+      ...(title ? { title } : {}),
+    });
+
+    void fetch(`/api/watch-links?${qs.toString()}`)
+      .then(async (res) => {
+        if (!res.ok) return;
+        const data = (await res.json()) as { links?: Record<string, string> };
+        if (cancelled || !data.links) return;
+        const mapped: Record<number, string> = {};
+        for (const [k, v] of Object.entries(data.links)) {
+          const id = Number(k);
+          if (Number.isFinite(id) && v) mapped[id] = v;
+        }
+        setDeepLinks(mapped);
+      })
+      .catch(() => {
+        /* keep search fallbacks */
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [movie.id, mediaType, watchRegion, title]);
+
+  const providerHref = (providerId: number) =>
+    deepLinks[providerId] ||
+    getProviderWatchHref({
+      providerId,
+      title,
+      fallbackLink: providers?.link,
+    });
   const trailer = movie.videos?.results?.find((video) => video.type === "Trailer" && video.site === "YouTube");
   const hasTrailer = !!trailer;
   const showTrailerStripButton = hasTrailer && !omitTrailerButton;
@@ -67,18 +129,21 @@ export default function WatchProviders({
               )}
             >
               <FaPlay className="h-3.5 w-3.5 shrink-0" aria-hidden />
-              Watch trailer
+              {t("catalog.watchTrailer")}
             </button>
           ) : null}
 
           {providers ? (
             <>
-              <div className={cn("space-y-2 px-2 pb-2 pt-2.5", showTrailerStripButton ? "pt-2" : "pt-3")}>
+              <p className="px-3 pt-2.5 text-[10px] font-medium uppercase tracking-[0.14em] text-zinc-500">
+                {t("catalog.regionLabel", { region: regionName })}
+              </p>
+              <div className={cn("space-y-2 px-2 pb-2", showTrailerStripButton ? "pt-2" : "pt-1.5")}>
                 {Array.from(allProviders.values())
                   .slice(0, 2)
                   .map((provider) => (
                     <Link
-                      href={providers.link}
+                      href={providerHref(provider.provider_id)}
                       target="_blank"
                       rel="noopener noreferrer"
                       key={provider.provider_id}
@@ -102,7 +167,7 @@ export default function WatchProviders({
                               key={type}
                               className="rounded-full bg-white/[0.05] px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.08em] text-zinc-400"
                             >
-                              {type}
+                              {typeLabel(type)}
                             </span>
                           ))}
                         </div>
@@ -111,7 +176,7 @@ export default function WatchProviders({
                   ))}
               </div>
 
-              <div className="px-3 pb-3 pt-1">
+              <div className="space-y-2 px-3 pb-3 pt-1">
                 <button
                   type="button"
                   onClick={() => setProvidersDialogOpen(true)}
@@ -121,30 +186,48 @@ export default function WatchProviders({
                     "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-white/25",
                   )}
                 >
-                  All watch providers
+                  {t("catalog.allProviders")}
                 </button>
+                <a
+                  href={justWatchHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block text-center text-[10px] text-zinc-500 underline-offset-2 hover:text-zinc-300 hover:underline"
+                >
+                  {t("catalog.justWatchAttr")}
+                </a>
               </div>
             </>
           ) : (
-            <p className="border-t-0 border-white/[0.1] px-4 py-5 text-center text-sm leading-relaxed text-zinc-500">
-              Not streaming in this region.
-            </p>
+            <div className="space-y-2 px-4 py-5 text-center">
+              <p className="text-sm leading-relaxed text-zinc-500">
+                {t("catalog.notStreamingIn", { region: regionName })}
+              </p>
+              <a
+                href={justWatchHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block text-[10px] text-zinc-500 underline-offset-2 hover:text-zinc-300 hover:underline"
+              >
+                {t("catalog.justWatchAttr")}
+              </a>
+            </div>
           )}
         </div>
 
         <Dialog open={providersDialogOpen} onOpenChange={setProvidersDialogOpen}>
           <DialogContent className="max-h-[82vh] overflow-hidden border-white/[0.12] bg-zinc-950 p-0 text-zinc-100 sm:max-w-lg">
             <DialogHeader className="border-b border-white/[0.08] px-5 py-4">
-              <DialogTitle>All watch providers</DialogTitle>
+              <DialogTitle>{t("catalog.allProviders")}</DialogTitle>
               <DialogDescription className="text-zinc-400">
-                Streaming options for your selected region.
+                {t("catalog.opensOnService", { region: regionName })}
               </DialogDescription>
             </DialogHeader>
             <div className="max-h-[60vh] overflow-y-auto p-3">
               <div className="flex flex-col divide-y divide-white/[0.08] overflow-hidden rounded-lg border border-white/[0.08]">
                 {Array.from(allProviders.values()).map((provider) => (
                   <Link
-                    href={providers?.link || "#"}
+                    href={providerHref(provider.provider_id)}
                     target="_blank"
                     rel="noopener noreferrer"
                     key={provider.provider_id}
@@ -168,7 +251,7 @@ export default function WatchProviders({
                             key={type}
                             className="rounded-md border border-white/[0.06] px-2 py-0.5 text-[11px] font-medium text-zinc-500"
                           >
-                            {type}
+                            {typeLabel(type)}
                           </span>
                         ))}
                       </div>
@@ -194,14 +277,23 @@ export default function WatchProviders({
       <>
         <Card className={cardClassName}>
           <CardHeader className="flex-row items-center justify-between border-b px-6 py-3">
-            <CardTitle className="text-muted-foreground uppercase tracking-wide">Where to watch</CardTitle>
+            <CardTitle className="text-muted-foreground uppercase tracking-wide">
+              {t("catalog.whereToWatch")}
+            </CardTitle>
             {hasTrailer ? (
-              <button type="button" onClick={() => setTrailerOpen(true)} className={trailerIconBtnClass} title="Watch trailer">
+              <button
+                type="button"
+                onClick={() => setTrailerOpen(true)}
+                className={trailerIconBtnClass}
+                title={t("catalog.watchTrailer")}
+              >
                 <FaPlay className="h-4 w-auto" />
               </button>
             ) : null}
           </CardHeader>
-          <CardContent className="mt-4 space-y-4 text-muted-foreground">Not streaming.</CardContent>
+          <CardContent className="mt-4 space-y-4 text-muted-foreground">
+            {t("catalog.notStreamingIn", { region: regionName })}
+          </CardContent>
         </Card>
 
         <Trailer trailerOpen={trailerOpen} setTrailerOpen={setTrailerOpen} movie={movie} />
@@ -227,9 +319,16 @@ export default function WatchProviders({
     <>
       <Card className={cardClassName}>
         <CardHeader className="flex-row items-center justify-between border-b px-6 py-3">
-          <CardTitle className="text-muted-foreground uppercase tracking-wide">Where to watch</CardTitle>
+          <CardTitle className="text-muted-foreground uppercase tracking-wide">
+            {t("catalog.whereToWatch")}
+          </CardTitle>
           {hasTrailer ? (
-            <button type="button" onClick={() => setTrailerOpen(true)} className={trailerIconBtnClass} title="Watch trailer">
+            <button
+              type="button"
+              onClick={() => setTrailerOpen(true)}
+              className={trailerIconBtnClass}
+              title={t("catalog.watchTrailer")}
+            >
               <FaPlay className="h-4 w-auto" />
             </button>
           ) : null}
@@ -240,7 +339,7 @@ export default function WatchProviders({
               .slice(0, 2)
               .map((provider) => (
                 <Link
-                  href={providers.link}
+                  href={providerHref(provider.provider_id)}
                   target="_blank"
                   rel="noopener noreferrer"
                   key={provider.provider_id}
@@ -264,7 +363,7 @@ export default function WatchProviders({
                           key={type}
                           className="rounded bg-muted-foreground/10 px-2 py-0.5 text-xs text-muted-foreground"
                         >
-                          {type}
+                          {typeLabel(type)}
                         </span>
                       ))}
                     </div>
@@ -279,7 +378,7 @@ export default function WatchProviders({
             onClick={() => setProvidersDialogOpen(true)}
             className="flex h-12 w-full items-center justify-center rounded-md border border-black/10 bg-[#FF0048]/10 p-3 text-[#FF0048] transition-colors hover:bg-[#FF0048]/20 hover:text-[#FF0048]/90 dark:border-white/10"
           >
-            + All watch providers
+            + {t("catalog.allProviders")}
           </button>
         </CardFooter>
       </Card>
@@ -287,16 +386,16 @@ export default function WatchProviders({
       <Dialog open={providersDialogOpen} onOpenChange={setProvidersDialogOpen}>
         <DialogContent className="max-h-[82vh] overflow-hidden border-white/[0.12] bg-zinc-950 p-0 text-zinc-100 sm:max-w-lg">
           <DialogHeader className="border-b border-white/[0.08] px-5 py-4">
-            <DialogTitle>All watch providers</DialogTitle>
+            <DialogTitle>{t("catalog.allProviders")}</DialogTitle>
             <DialogDescription className="text-zinc-400">
-              Streaming options for your selected region.
+              {t("catalog.opensOnService", { region: regionName })}
             </DialogDescription>
           </DialogHeader>
           <div className="max-h-[60vh] overflow-y-auto p-3">
             <div className="flex flex-col divide-y divide-white/[0.08] overflow-hidden rounded-lg border border-white/[0.08]">
               {Array.from(allProviders.values()).map((provider) => (
                 <Link
-                  href={providers.link}
+                  href={providerHref(provider.provider_id)}
                   target="_blank"
                   rel="noopener noreferrer"
                   key={provider.provider_id}
@@ -320,7 +419,7 @@ export default function WatchProviders({
                           key={type}
                           className="rounded-md border border-white/[0.06] px-2 py-0.5 text-[11px] font-medium text-zinc-500"
                         >
-                          {type}
+                          {typeLabel(type)}
                         </span>
                       ))}
                     </div>
@@ -328,6 +427,16 @@ export default function WatchProviders({
                 </Link>
               ))}
             </div>
+          </div>
+          <div className="border-t border-white/[0.08] px-5 py-3 text-center">
+            <a
+              href={justWatchHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[11px] text-zinc-500 underline-offset-2 hover:text-zinc-300 hover:underline"
+            >
+              {t("catalog.justWatchAttr")}
+            </a>
           </div>
         </DialogContent>
       </Dialog>

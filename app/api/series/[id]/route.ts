@@ -1,21 +1,23 @@
 import { NextResponse } from 'next/server'
 import axios from 'axios'
+import { resolveTmdbLanguage } from '@/lib/locale-prefs'
 
 const TMDB_API_KEY = process.env.NEXT_TMDB_API_KEY
 const TMDB_BASE_URL = process.env.NEXT_PUBLIC_TMDB_BASE_URL
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await params
+    const language = resolveTmdbLanguage(new URL(request.url).searchParams.get('language'))
 
     const [seriesResponse, watchProvidersResponse, videosResponse, similarResponse, recommendationsResponse, imagesResponse] = await Promise.all([
       axios.get(`${TMDB_BASE_URL}/tv/${id}`, {
         params: {
           api_key: TMDB_API_KEY,
-          language: 'en-US',
+          language,
           append_to_response: 'credits',
         },
       }),
@@ -23,18 +25,18 @@ export async function GET(
         params: { api_key: TMDB_API_KEY },
       }),
       axios.get(`${TMDB_BASE_URL}/tv/${id}/videos`, {
-        params: { api_key: TMDB_API_KEY },
+        params: { api_key: TMDB_API_KEY, language },
       }),
       axios.get(`${TMDB_BASE_URL}/tv/${id}/similar`, {
         params: {
           api_key: TMDB_API_KEY,
-          language: 'en-US',
+          language,
         },
       }),
       axios.get(`${TMDB_BASE_URL}/tv/${id}/recommendations`, {
         params: {
           api_key: TMDB_API_KEY,
-          language: 'en-US',
+          language,
         },
       }),
       axios.get(`${TMDB_BASE_URL}/tv/${id}/images`, {
