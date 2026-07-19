@@ -91,7 +91,6 @@ function SeriesDiscoverContent() {
   useEffect(() => {
     if (localeLoading) return
     fetchShows()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [genre, voteAverageLte, sortBy, localeLoading, tmdbLanguage, watchRegion])
 
   async function fetchShows() {

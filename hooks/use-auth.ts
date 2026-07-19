@@ -2,7 +2,6 @@ import { useRouter } from 'next/navigation'
 import { useSupabaseClient } from '@supabase/auth-helpers-react'
 import { useEffect, useState } from 'react'
 import { User } from '@supabase/supabase-js'
-import { Database } from '@/lib/supabase/database.types'
 import { parseTmdbStoredImageMeta } from '@/lib/tmdb-stored-image'
 import type { TmdbStoredImageMeta } from '@/types/tmdb-stored-image'
 
@@ -16,7 +15,6 @@ type Profile = {
   banner_meta?: TmdbStoredImageMeta | null
   bio?: string
   created_at: string
-  updated_at: string
 }
 
 export function useAuth() {
@@ -34,7 +32,9 @@ export function useAuth() {
         if (session?.user) {
           const { data: profile } = await supabase
             .from('users')
-            .select('*')
+            .select(
+              'id, username, display_name, avatar_url, banner_url, avatar_meta, banner_meta, bio, created_at',
+            )
             .eq('id', session.user.id)
             .single()
             

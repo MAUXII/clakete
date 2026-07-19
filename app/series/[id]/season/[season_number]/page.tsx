@@ -82,7 +82,7 @@ export default function SeriesSeasonPage({
     return () => {
       cancelled = true
     }
-  }, [rawParam]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [rawParam]);
 
   useEffect(() => {
     if (localeLoading || seriesId == null) return;

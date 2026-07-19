@@ -55,7 +55,7 @@ export function FeedStoriesViewer({
     setProgress(0)
     try {
       const since = new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString()
-      let { data, error } = await supabase
+      const recent = await supabase
         .from("items_interactions")
         .select(WATCHED_FEED_SELECT)
         .eq("user_id", person.id)
@@ -64,8 +64,9 @@ export function FeedStoriesViewer({
         .order("feed_shared_at", { ascending: false })
         .limit(8)
 
-      if (error) throw error
+      if (recent.error) throw recent.error
 
+      let data = recent.data
       if (!data?.length) {
         const fallback = await supabase
           .from("items_interactions")

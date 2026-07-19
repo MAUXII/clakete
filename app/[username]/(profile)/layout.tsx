@@ -48,7 +48,6 @@ interface UserData extends ProfileLayoutUser {
   plan?: string;
   plan_status?: string | null;
   plan_current_period_end?: string | null;
-  stripe_customer_id?: string | null;
 }
 
 
@@ -77,7 +76,7 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
     const supabase = useSupabaseClient()
     const currentUser = useUser()
     const { username } = use(params)
-    const { refreshProfile } = useProfile()
+    const { refreshProfile, profile: sessionProfile } = useProfile()
     const pathname = usePathname()
     const usernameRef = useRef(username)
     useEffect(() => {
@@ -249,7 +248,7 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
         const { data, error } = await supabase
           .from('users')
           .select(
-            'id, username, display_name, bio, avatar_url, banner_url, avatar_meta, banner_meta, website_url, twitter_url, instagram_url, spotify_url, discord_url, youtube_url, github_url, soundcloud_url, pinterest_url, telegram_url, ethereum_url, home_preferences, plan, plan_status, plan_current_period_end, stripe_customer_id',
+            'id, username, display_name, bio, avatar_url, banner_url, avatar_meta, banner_meta, website_url, twitter_url, instagram_url, spotify_url, discord_url, youtube_url, github_url, soundcloud_url, pinterest_url, telegram_url, ethereum_url, home_preferences, plan, plan_status, plan_current_period_end',
           )
           .eq('username', targetUsername)
           .maybeSingle()
@@ -453,50 +452,101 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
       }
     }
   
-    if (loading) return (
-      <section className="relative z-10 mt-20 w-full py-8">
-       <Skeleton 
-        className="relative h-[485px] w-full min-w-0 overflow-hidden rounded-none border-0 bg-cover bg-center ring-1 ring-white/[0.06]"
+    if (loading) {
+      return (
+        <section className="relative z-10 mt-[3.75rem] w-full" aria-busy aria-label="Loading profile">
+          <div
+            className="relative h-[567px] w-full min-w-0 overflow-hidden rounded-none border-0 ring-1 ring-white/[0.06]"
+            aria-hidden
+          >
+            <Skeleton className="absolute inset-0 h-full w-full rounded-none" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+          </div>
 
-      />
-      <div className={pageContainerClass}>
-        <div className="relative z-10">
-          <div className="flex gap-6">
-          <div className="flex flex-col w-full  gap-6">
-      {/* Avatar */}
-      <div className="relative bg-black -mt-24 aspect-square border-4  dark:border-[#090909] border-white  shadow-sm  overflow-clip h-36 group rounded-2xl max-w-36">
-      <Skeleton className="w-full h-full rounded-md shadow-none ">
-        
-      </Skeleton>
-  
-      </div>
+          <div className={pageContainerClass}>
+            <div className="w-full">
+              <div className="relative z-10">
+                <div className="flex flex-wrap gap-6 lg:flex-nowrap lg:items-stretch">
+                  <div className="flex w-full flex-col gap-6">
+                    <div className="z-20 flex flex-col gap-6 self-start">
+                      <div className="relative -mt-24 aspect-square h-36 max-w-36 overflow-clip rounded-2xl shadow-sm ring-2 ring-white dark:ring-[#090909]">
+                        <Skeleton className="h-full w-full rounded-md" />
+                      </div>
 
-      {/* Info */}
-      <div className="flex-1 flex-col gap-2 flex w-full max-w-[370px]">
-        <Skeleton className="text-3xl w-32 font-bold dark:text-white">
-        ㅤㅤ
-        </Skeleton>
-        <Skeleton className="text-lg w-16 -mt-1 text-muted-foreground">
-        ㅤㅤ
-        </Skeleton>
-        
-        <div className='flex'>
-          
-        <Skeleton className='flex w-full h-12 items-center mt-2 gap-4'> 
-           
-         
-          </Skeleton>
-        </div>
-       
-          <Skeleton className="mt-2 text-muted-foreground">ㅤㅤ</Skeleton>
+                      <div className="flex w-full max-w-[370px] flex-col">
+                        <Skeleton className="h-9 w-48" />
+                        <Skeleton className="-mt-1 h-6 w-32" />
+
+                        <div className="mt-2 flex items-center gap-4">
+                          {[0, 1, 2, 3].map((i) => (
+                            <div key={i} className="flex items-center gap-4">
+                              {i > 0 ? (
+                                <div
+                                  className="h-[61%] min-h-8 w-px bg-muted-foreground/40"
+                                  aria-hidden
+                                />
+                              ) : null}
+                              <div className="flex flex-col gap-1">
+                                <Skeleton className="h-6 w-7" />
+                                <Skeleton className="h-3.5 w-12" />
+                              </div>
+                            </div>
+                          ))}
+                          <Skeleton className="ml-4 h-9 w-24 shrink-0 rounded-md" />
+                        </div>
+
+                        <div className="mt-4 flex gap-2">
+                          <Skeleton className="size-8 rounded-full" />
+                          <Skeleton className="size-8 rounded-full" />
+                          <Skeleton className="size-8 rounded-full" />
+                        </div>
+
+                        <div className="mt-4 space-y-2">
+                          <Skeleton className="h-4 w-full" />
+                          <Skeleton className="h-4 w-[88%]" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="w-full">
+                    <div className="mt-6 w-full">
+                      <Skeleton className="h-12 w-full rounded-md border border-white/[0.08] bg-[#09090B]" />
+
+                      <div className="mt-4 w-full">
+                        <Skeleton className="h-3.5 w-28" />
+                        <div className="mb-4 mt-1 h-[0.3px] w-full bg-muted-foreground/10" />
+                        <div className="grid grid-cols-4 gap-3 sm:gap-4">
+                          {Array.from({ length: 4 }).map((_, i) => (
+                            <Skeleton
+                              key={`fav-${i}`}
+                              className="aspect-[2/3] w-full rounded-[5px] border border-white/15"
+                            />
+                          ))}
+                        </div>
+
+                        <div className="mt-4">
+                          <Skeleton className="h-3.5 w-36" />
+                          <div className="mb-4 mt-1 h-[0.3px] w-full bg-muted-foreground/10" />
+                          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4">
+                            {Array.from({ length: 8 }).map((_, i) => (
+                              <Skeleton
+                                key={`act-${i}`}
+                                className="aspect-[2/3] w-full rounded-[5px] border border-white/15"
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-        </div>
-        </div>
-        </div>
-        </div>
+          </div>
         </section>
-
-    )
+      )
+    }
     if (!userData && !loading) {
       return (
         <section className={cn(pageContainerClass, "mt-16 py-16 text-center")}>
@@ -666,7 +716,7 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
                           plan_status: userData.plan_status,
                           plan_current_period_end: userData.plan_current_period_end,
                         }}
-                        stripeCustomerId={userData.stripe_customer_id}
+                        stripeCustomerId={sessionProfile?.stripe_customer_id}
                         onHomeBackdropUpdated={() =>
                           fetchProfile(usernameRef.current.toLowerCase())
                         }

@@ -67,7 +67,6 @@ function FilmsDiscoverContent() {
       setLocalVoteAverageLte(voteAverageLte);
       setLocalSortBy(sortBy);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   useEffect(() => {
@@ -92,7 +91,6 @@ function FilmsDiscoverContent() {
   useEffect(() => {
     if (localeLoading) return;
     fetchMovies();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [genre, voteAverageLte, sortBy, localeLoading, tmdbLanguage, watchRegion]);
 
   async function fetchMovies() {

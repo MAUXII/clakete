@@ -48,9 +48,12 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
         return
       }
 
+      const PUBLIC_USER_COLS =
+        'username, display_name, bio, avatar_url, banner_url, avatar_meta, banner_meta, home_preferences, plan, plan_status, plan_current_period_end'
+
       const { data, error } = await supabase
         .from('users')
-        .select('*')
+        .select(PUBLIC_USER_COLS)
         .eq('id', user.id)
         .maybeSingle()
 
@@ -65,8 +68,23 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
         return
       }
 
+      // Stripe IDs are not selectable on public.users for clients — own row via RPC.
+      let stripe_customer_id: string | null = null
+      let stripe_subscription_id: string | null = null
+      const { data: billing, error: billingError } = await supabase.rpc('get_my_billing')
+      if (!billingError && billing && typeof billing === 'object') {
+        const row = billing as {
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+        }
+        stripe_customer_id = row.stripe_customer_id ?? null
+        stripe_subscription_id = row.stripe_subscription_id ?? null
+      }
+
       setProfile({
         ...data,
+        stripe_customer_id,
+        stripe_subscription_id,
         avatar_meta: parseTmdbStoredImageMeta(data.avatar_meta),
         banner_meta: parseTmdbStoredImageMeta(data.banner_meta),
         home_preferences: data.home_preferences ?? null,

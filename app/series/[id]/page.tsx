@@ -167,7 +167,7 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ id: str
     return () => {
       cancelled = true
     }
-  }, [rawParam]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [rawParam]);
 
   useEffect(() => {
     if (localeLoading || seriesId == null) return;
@@ -234,24 +234,100 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ id: str
       <div className="min-h-screen w-full overflow-x-clip bg-[#09090B]">
         <FilmsCatalogShell>
           <div
-            className="relative left-1/2 z-0 w-screen max-w-[100vw] -translate-x-1/2 overflow-hidden bg-[#09090B]"
+            className="pointer-events-none relative left-1/2 z-0 mt-[3.75rem] w-screen max-w-[100vw] -translate-x-1/2 overflow-hidden bg-[#09090B]"
             style={{ height: SERIES_LETTERBOX_HEIGHT }}
             aria-hidden
-          />
-          <div className="relative z-10 mt-0 flex flex-col gap-12 px-5 pt-2 sm:px-8 lg:flex-row lg:items-start lg:gap-16 lg:px-10 xl:gap-20">
+          >
+            <Skeleton className="absolute inset-0 h-full w-full rounded-none" />
             <div
-              className="mx-auto flex w-full max-w-[260px] shrink-0 flex-col gap-3 self-start sm:max-w-[280px] lg:mx-0 lg:max-w-[304px]"
-              style={{ marginTop: SERIES_POSTER_ALIGN_MARGIN }}
+              className="absolute inset-0 bg-[linear-gradient(to_top,#09090B_0%,#09090B_0%,rgba(9,9,11,0.55)_32%,transparent_62%)]"
+              aria-hidden
+            />
+          </div>
+
+          <div className="relative z-10 flex flex-col gap-12 pt-2 lg:flex-row lg:items-start lg:gap-16 xl:gap-20">
+            <aside
+              className="z-20 w-full shrink-0 self-start -mt-20 sm:-mt-24 lg:mx-0 lg:max-w-[304px] lg:[margin-top:var(--poster-mt)]"
+              style={{ "--poster-mt": SERIES_POSTER_ALIGN_MARGIN } as CSSProperties}
             >
-              <Skeleton className="h-4 w-32 rounded-md" />
-              <Skeleton className="-mt-36 aspect-[2/3] w-full rounded-2xl" />
-            </div>
-            <div className="min-w-0 flex-1 space-y-6 pt-1">
-              <div className="space-y-3">
-                <Skeleton className="h-9 w-[min(100%,420px)]" />
-                <Skeleton className="h-4 w-48" />
+              <div className="flex flex-col gap-3">
+                <div className="flex items-end gap-4 lg:block">
+                  <div className="w-[44%] max-w-[210px] shrink-0 lg:w-full lg:max-w-none">
+                    <div className="overflow-hidden rounded-2xl border border-white/[0.1] bg-zinc-950 lg:-mt-36">
+                      <Skeleton className="aspect-[2/3] w-full rounded-none" />
+                      <div className="hidden space-y-2 border-t border-white/[0.08] p-3 lg:block">
+                        <Skeleton className="h-3 w-20" />
+                        <div className="flex gap-2">
+                          <Skeleton className="size-9 rounded-full" />
+                          <Skeleton className="size-9 rounded-full" />
+                          <Skeleton className="size-9 rounded-full" />
+                          <Skeleton className="size-9 rounded-full" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="min-w-0 flex-1 space-y-2 pb-1 lg:hidden">
+                    <Skeleton className="h-7 w-[92%]" />
+                    <Skeleton className="h-3 w-[70%]" />
+                    <Skeleton className="h-3 w-[55%]" />
+                    <Skeleton className="h-3 w-24" />
+                  </div>
+                </div>
               </div>
-              <Skeleton className="h-24 w-full rounded-lg" />
+            </aside>
+
+            <div className="mt-6 flex min-w-0 flex-1 flex-col gap-12 sm:mt-8 lg:mt-8 lg:max-w-none">
+              <div className="hidden flex-col gap-8 lg:flex lg:flex-row lg:items-start lg:justify-between lg:gap-12 xl:gap-16">
+                <div className="min-w-0 max-w-xl space-y-4">
+                  <Skeleton className="h-10 w-[min(100%,420px)]" />
+                  <Skeleton className="h-4 w-64" />
+                  <Skeleton className="h-4 w-40" />
+                </div>
+                <Skeleton className="mt-1 h-4 w-28" />
+              </div>
+
+              <div className="-mt-2 flex flex-col gap-4">
+                <div>
+                  <div className="flex items-center gap-4">
+                    <Skeleton className="h-2.5 w-16 shrink-0" />
+                    <div className="h-px min-w-0 flex-1 bg-white/[0.08]" aria-hidden />
+                  </div>
+                  <div className="mt-4 max-w-3xl space-y-2 lg:max-w-4xl">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-[72%]" />
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Skeleton className="h-7 w-16 rounded-full" />
+                  <Skeleton className="h-7 w-20 rounded-full" />
+                  <Skeleton className="h-7 w-14 rounded-full" />
+                </div>
+              </div>
+
+              <section className="flex flex-col gap-8" aria-hidden>
+                <div className="flex w-full flex-wrap items-center justify-between gap-x-4 gap-y-3">
+                  <Skeleton className="h-8 w-40" />
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="h-10 w-10 rounded-full" />
+                    <Skeleton className="h-10 w-10 rounded-full" />
+                    <Skeleton className="h-10 w-10 rounded-full" />
+                    <Skeleton className="h-10 w-10 rounded-full" />
+                  </div>
+                </div>
+                <Skeleton className="h-24 w-full rounded-lg" />
+              </section>
+
+              <div className="w-full space-y-4">
+                <Skeleton className="h-12 w-full rounded-lg" />
+                <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
+                  <Skeleton className="aspect-[2/3] w-full rounded-md" />
+                  <Skeleton className="aspect-[2/3] w-full rounded-md" />
+                  <Skeleton className="aspect-[2/3] w-full rounded-md" />
+                  <Skeleton className="hidden aspect-[2/3] w-full rounded-md sm:block" />
+                  <Skeleton className="hidden aspect-[2/3] w-full rounded-md md:block" />
+                </div>
+              </div>
             </div>
           </div>
         </FilmsCatalogShell>

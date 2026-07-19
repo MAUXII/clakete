@@ -63,7 +63,6 @@ export function ProfileDialog({ isOpen, onClose }: ProfileDialogProps) {
       const { error: userError } = await supabase.from('users').insert({
         id: user.id,
         username: values.username,
-        email: user.email!,
         avatar_url: null,
       })
 

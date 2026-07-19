@@ -43,6 +43,9 @@ export interface Database {
           user_id: string
           tmdb_id: number
           media_type?: string
+          movie_title?: string | null
+          poster_path?: string | null
+          release_date?: string | null
           rating?: number | null
           review?: string | null
           is_watched?: boolean
@@ -68,6 +71,9 @@ export interface Database {
           user_id?: string
           tmdb_id?: number
           media_type?: string
+          movie_title?: string | null
+          poster_path?: string | null
+          release_date?: string | null
           rating?: number | null
           review?: string | null
           is_watched?: boolean
@@ -330,7 +336,6 @@ export interface Database {
         Row: {
           id: string
           username: string
-          email: string | null
           display_name: string | null
           bio: string | null
           avatar_url: string | null
@@ -361,7 +366,6 @@ export interface Database {
         Insert: {
           id: string
           username: string
-          email?: string | null
           display_name?: string | null
           bio?: string | null
           avatar_url?: string | null
@@ -392,7 +396,6 @@ export interface Database {
         Update: {
           id?: string
           username?: string
-          email?: string | null
           display_name?: string | null
           bio?: string | null
           avatar_url?: string | null
@@ -426,7 +429,10 @@ export interface Database {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_my_billing: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never

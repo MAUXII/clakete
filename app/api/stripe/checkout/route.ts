@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { getRouteAuthUser } from "@/lib/supabase/route-auth"
+import { createSupabaseAdmin } from "@/lib/supabase-admin"
 import { getSiteUrl, getStripe, getStripePriceId } from "@/lib/stripe-server"
 
 export const runtime = "nodejs"
@@ -7,13 +8,15 @@ export const dynamic = "force-dynamic"
 
 export async function POST(request: Request) {
   try {
-    const { user, supabase } = await getRouteAuthUser(request)
+    const { user } = await getRouteAuthUser(request)
 
-    if (!user || !supabase) {
+    if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const { data: profile, error: profileError } = await supabase
+    // Stripe IDs are revoked from client roles; read via service role after auth.
+    const admin = createSupabaseAdmin()
+    const { data: profile, error: profileError } = await admin
       .from("users")
       .select("stripe_customer_id, username")
       .eq("id", user.id)
