@@ -620,9 +620,9 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ id: str
             <ShareCardDialog
               open={shareOpen}
               onOpenChange={setShareOpen}
-              fileBase={`clakete-${displayTitle.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "series"}`}
+              fileBase={`clakete-${(series.original_name || displayTitle).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "series"}`}
               data={{
-                title: displayTitle,
+                title: series.original_name || displayTitle,
                 year: (series.first_air_date || series.release_date)
                   ? (series.first_air_date || series.release_date).slice(0, 4)
                   : null,

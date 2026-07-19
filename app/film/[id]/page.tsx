@@ -645,9 +645,9 @@ export default function FilmPage({ params }: { params: Promise<{ id: string }> }
           <ShareCardDialog
             open={shareOpen}
             onOpenChange={setShareOpen}
-            fileBase={`clakete-${movie.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "film"}`}
+            fileBase={`clakete-${(movie.original_title || movie.title).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "film"}`}
             data={{
-              title: movie.title,
+              title: movie.original_title || movie.title,
               year: movie.release_date ? movie.release_date.slice(0, 4) : null,
               posterUrl: movie.poster_path
                 ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
