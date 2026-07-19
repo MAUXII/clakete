@@ -61,6 +61,13 @@ const TICKET_W: Record<TicketOrientation, number> = {
   horizontal: 640,
 }
 
+/** Same-origin proxy so TMDB images render with CORS (preview + html-to-image). */
+function proxiedMediaUrl(url: string | null | undefined): string | null {
+  if (!url) return null
+  if (url.startsWith("/") || url.startsWith("data:")) return url
+  return `/api/proxy-image?url=${encodeURIComponent(url)}`
+}
+
 export function ShareCardDialog({
   open,
   onOpenChange,
@@ -84,6 +91,8 @@ export function ShareCardDialog({
   const showRating = hasRating && includeRating
   const hasWatched = Boolean(data.watchedLabel)
   const ticketW = TICKET_W[ticketOrientation]
+  const posterSrc = proxiedMediaUrl(data.posterUrl)
+  const backdropSrc = proxiedMediaUrl(data.backdropUrl)
 
   useEffect(() => {
     if (!open) {
@@ -119,7 +128,7 @@ export function ShareCardDialog({
       ro.disconnect()
       window.clearTimeout(id)
     }
-  }, [open, model, ticketOrientation, ticketW, showRating, data.posterUrl, data.backdropUrl])
+  }, [open, model, ticketOrientation, ticketW, showRating, posterSrc, backdropSrc])
 
   /** Ticket PNG = ticket only (transparent). Poster = full Stories frame. */
   const exportOptions = useCallback(() => {
@@ -370,10 +379,10 @@ export function ShareCardDialog({
                 >
                   <div className="flex min-h-0 flex-1 flex-col items-center justify-center px-8 pt-10">
                     <div className="w-full max-w-[248px] overflow-hidden rounded-xl shadow-2xl shadow-black/50 ring-1 ring-white/10">
-                      {data.posterUrl ? (
+                      {posterSrc ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
-                          src={data.posterUrl}
+                          src={posterSrc}
                           alt=""
                           crossOrigin="anonymous"
                           className="aspect-[2/3] w-full object-cover"
@@ -453,7 +462,7 @@ export function ShareCardDialog({
                     timeValue={showRating ? `${rating}/5` : undefined}
                     seatLabel=""
                     seatValue={undefined}
-                    backdropUrl={data.backdropUrl}
+                    backdropUrl={backdropSrc}
                     logoSrc="/claketelogov2.svg"
                   />
                 </div>
