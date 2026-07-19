@@ -24,6 +24,7 @@ import { AuthClaketeWordmark } from '@/components/auth/auth-clakete-wordmark'
 import { AuthGoogleIcon } from '@/components/auth/auth-google-icon'
 import { AuthMarketingPanel } from '@/components/auth/auth-marketing-panel'
 import { userProfilePath } from '@/lib/list-href'
+import { getClientOrigin } from '@/lib/app-url'
 
 const formSchema = z.object({
   email: z.string().email('Invalid email'),
@@ -35,7 +36,6 @@ export default function SignUp() {
   const [loading, setLoading] = useState(false)
   const [showProfileDialog, setShowProfileDialog] = useState(false)
   const supabase = useSupabaseClient()
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
 
   const { rive, RiveComponent } = useRive({
     src: '/cat_password.riv',
@@ -63,7 +63,7 @@ export default function SignUp() {
         email: values.email,
         password: values.password,
         options: {
-          emailRedirectTo: `${siteUrl}/auth/callback`,
+          emailRedirectTo: `${getClientOrigin()}/auth/callback`,
         },
       })
 
@@ -89,7 +89,7 @@ export default function SignUp() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${siteUrl}/auth/callback`,
+          redirectTo: `${getClientOrigin()}/auth/callback`,
           queryParams: {
             access_type: 'offline',
             prompt: 'select_account',
