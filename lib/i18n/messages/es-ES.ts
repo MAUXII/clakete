@@ -167,7 +167,8 @@ export const esES = {
     hintTicket: "El PNG es solo el ticket, con fondo transparente.",
     hintTicketBg: "El PNG queda en tamaño Stories (9:16), con el ticket centrado en el fondo.",
     includeRating: "Incluir mi valoración",
-    instagramHint: "Si Instagram abre sin la imagen, usa Descargar y comparte desde la galería.",
+    instagramHint:
+      "Si Instagram muestra la imagen pequeña, usa Descargar y añádela desde la galería (Stories a pantalla completa).",
     format: {
       story: "Stories",
       square: "Feed",

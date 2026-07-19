@@ -57,6 +57,8 @@ type BgStyle = "transparent" | "dark" | "brand"
 /** Instagram Stories base size (DOM). × pixelRatio 3 → 1080×1920. */
 const STORIES_W = 360
 const STORIES_H = 640
+const STORIES_EXPORT_W = 1080
+const STORIES_EXPORT_H = 1920
 const TICKET_W: Record<TicketOrientation, number> = {
   vertical: 320,
   horizontal: 640,
@@ -93,6 +95,31 @@ function proxiedMediaUrl(url: string | null | undefined): string | null {
   if (!url) return null
   if (url.startsWith("/") || url.startsWith("data:")) return url
   return `/api/proxy-image?url=${encodeURIComponent(url)}`
+}
+
+/** Flatten PNG → opaque JPEG so Instagram Stories uses full-bleed, not a tiny sticker. */
+async function pngBlobToJpeg(
+  blob: Blob,
+  fillColor = "#0b0b0e",
+): Promise<Blob> {
+  const bitmap = await createImageBitmap(blob)
+  const canvas = document.createElement("canvas")
+  canvas.width = bitmap.width
+  canvas.height = bitmap.height
+  const ctx = canvas.getContext("2d")
+  if (!ctx) {
+    bitmap.close()
+    throw new Error("canvas unsupported")
+  }
+  ctx.fillStyle = fillColor
+  ctx.fillRect(0, 0, canvas.width, canvas.height)
+  ctx.drawImage(bitmap, 0, 0)
+  bitmap.close()
+  const jpeg = await new Promise<Blob | null>((resolve) =>
+    canvas.toBlob(resolve, "image/jpeg", 0.92),
+  )
+  if (!jpeg) throw new Error("jpeg encode failed")
+  return jpeg
 }
 
 export function ShareCardDialog({
@@ -183,57 +210,75 @@ export function ShareCardDialog({
   ])
 
   const exportOptions = useCallback(() => {
-    const { w, h } = exportSize
-    const transparent = bgStyle === "transparent"
+    const stories = model === "poster" || ticketInStories
+    // Always pin Stories canvas size — measured DOM size can go wrong with CSS
+    // scale/overflow and Instagram then shows a tiny centered sticker.
+    const w = stories ? STORIES_W : Math.max(1, exportSize.w)
+    const h = stories ? STORIES_H : Math.max(1, exportSize.h)
+    const transparent =
+      bgStyle === "transparent" && !(model === "poster" || ticketInStories)
+    const solidFill = bg.exportColor ?? "#0b0b0e"
     return {
-      pixelRatio: 3,
-      backgroundColor: bg.exportColor,
+      pixelRatio: stories ? 1 : 3,
+      backgroundColor: transparent ? undefined : solidFill,
       cacheBust: true,
       width: w,
       height: h,
+      ...(stories
+        ? { canvasWidth: STORIES_EXPORT_W, canvasHeight: STORIES_EXPORT_H }
+        : {}),
       style: {
         transform: "none",
         width: `${w}px`,
         height: `${h}px`,
-        background: transparent ? "transparent" : bg.preview,
+        background: transparent
+          ? "transparent"
+          : bgStyle === "transparent"
+            ? solidFill
+            : bg.preview,
       },
     }
-  }, [exportSize, bgStyle, bg.exportColor, bg.preview])
+  }, [
+    exportSize.w,
+    exportSize.h,
+    model,
+    ticketInStories,
+    bgStyle,
+    bg.exportColor,
+    bg.preview,
+  ])
+
+  const waitForImages = useCallback(async (root: HTMLElement) => {
+    const imgs = Array.from(root.querySelectorAll("img"))
+    await Promise.all(
+      imgs.map((img) =>
+        img.decode
+          ? img.decode().catch(() => undefined)
+          : Promise.resolve(undefined),
+      ),
+    )
+  }, [])
 
   const renderPngDataUrl = useCallback(async () => {
     if (!exportRef.current) throw new Error("no export node")
-    const imgs = Array.from(exportRef.current.querySelectorAll("img"))
-    await Promise.all(
-      imgs.map((img) =>
-        img.decode
-          ? img.decode().catch(() => undefined)
-          : Promise.resolve(undefined),
-      ),
-    )
+    await waitForImages(exportRef.current)
     return toPng(exportRef.current, exportOptions())
-  }, [exportOptions])
+  }, [exportOptions, waitForImages])
 
   const getBlob = useCallback(async () => {
     if (!exportRef.current) return null
-    const imgs = Array.from(exportRef.current.querySelectorAll("img"))
-    await Promise.all(
-      imgs.map((img) =>
-        img.decode
-          ? img.decode().catch(() => undefined)
-          : Promise.resolve(undefined),
-      ),
-    )
+    await waitForImages(exportRef.current)
     const blob = await toBlob(exportRef.current, exportOptions())
     if (!blob) return null
     if (blob.type === "image/png") return blob
     return new Blob([await blob.arrayBuffer()], { type: "image/png" })
-  }, [exportOptions])
+  }, [exportOptions, waitForImages])
 
   const triggerDownload = useCallback(
-    async (dataUrl: string) => {
+    async (dataUrl: string, ext = "png") => {
       const a = document.createElement("a")
       a.href = dataUrl
-      a.download = `${fileBase}-${model}.png`
+      a.download = `${fileBase}-${model}.${ext}`
       document.body.appendChild(a)
       a.click()
       a.remove()
@@ -245,7 +290,7 @@ export function ShareCardDialog({
     setBusy(true)
     try {
       const dataUrl = await renderPngDataUrl()
-      await triggerDownload(dataUrl)
+      await triggerDownload(dataUrl, "png")
       toast.success(t("share.downloaded"))
     } catch {
       toast.error(t("share.errorRender"))
@@ -257,10 +302,19 @@ export function ShareCardDialog({
   const handleShare = useCallback(async () => {
     setBusy(true)
     try {
-      const blob = await getBlob()
-      if (!blob) throw new Error("no blob")
-      const file = new File([blob], `${fileBase}-${model}.png`, {
-        type: "image/png",
+      const pngBlob = await getBlob()
+      if (!pngBlob) throw new Error("no blob")
+
+      // Opaque JPEG at exact 1080×1920 — Instagram Stories treats PNG/wrong
+      // ratios as a small sticker over its own background.
+      const stories = model === "poster" || ticketInStories
+      const shareBlob = stories
+        ? await pngBlobToJpeg(pngBlob, bg.exportColor ?? "#0b0b0e")
+        : pngBlob
+      const ext = stories ? "jpg" : "png"
+      const mime = stories ? "image/jpeg" : "image/png"
+      const file = new File([shareBlob], `${fileBase}-${model}.${ext}`, {
+        type: mime,
         lastModified: Date.now(),
       })
       const nav = navigator as Navigator & {
@@ -268,7 +322,7 @@ export function ShareCardDialog({
       }
       if (!nav.share) {
         const dataUrl = await renderPngDataUrl()
-        await triggerDownload(dataUrl)
+        await triggerDownload(dataUrl, "png")
         toast.success(t("share.downloaded"))
         toast.message(t("share.instagramHint"))
         return
@@ -284,7 +338,7 @@ export function ShareCardDialog({
         await nav.share(withEmptyTitle)
       } else {
         const dataUrl = await renderPngDataUrl()
-        await triggerDownload(dataUrl)
+        await triggerDownload(dataUrl, "png")
         toast.success(t("share.downloaded"))
         toast.message(t("share.instagramHint"))
       }
@@ -292,7 +346,7 @@ export function ShareCardDialog({
       if ((err as Error)?.name === "AbortError") return
       try {
         const dataUrl = await renderPngDataUrl()
-        await triggerDownload(dataUrl)
+        await triggerDownload(dataUrl, "png")
         toast.success(t("share.downloaded"))
         toast.message(t("share.instagramHint"))
       } catch {
@@ -301,7 +355,16 @@ export function ShareCardDialog({
     } finally {
       setBusy(false)
     }
-  }, [getBlob, fileBase, model, renderPngDataUrl, triggerDownload, t])
+  }, [
+    getBlob,
+    fileBase,
+    model,
+    ticketInStories,
+    bg.exportColor,
+    renderPngDataUrl,
+    triggerDownload,
+    t,
+  ])
 
   const handleCopy = useCallback(async () => {
     setBusy(true)
