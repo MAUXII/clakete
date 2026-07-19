@@ -166,6 +166,7 @@ export const enUS = {
     hintTicket: "PNG is just the ticket, with a transparent background.",
     hintTicketBg: "PNG is Stories size (9:16) with the ticket centered on the background.",
     includeRating: "Include my rating",
+    instagramHint: "If Instagram opens without the image, use Download and share from your gallery.",
     format: {
       story: "Stories",
       square: "Feed",

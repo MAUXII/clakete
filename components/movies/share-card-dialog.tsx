@@ -200,29 +200,59 @@ export function ShareCardDialog({
     }
   }, [exportSize, bgStyle, bg.exportColor, bg.preview])
 
-  const getBlob = useCallback(async () => {
-    if (!exportRef.current) return null
-    return toBlob(exportRef.current, exportOptions())
+  const renderPngDataUrl = useCallback(async () => {
+    if (!exportRef.current) throw new Error("no export node")
+    const imgs = Array.from(exportRef.current.querySelectorAll("img"))
+    await Promise.all(
+      imgs.map((img) =>
+        img.decode
+          ? img.decode().catch(() => undefined)
+          : Promise.resolve(undefined),
+      ),
+    )
+    return toPng(exportRef.current, exportOptions())
   }, [exportOptions])
 
-  const handleDownload = useCallback(async () => {
-    if (!exportRef.current) return
-    setBusy(true)
-    try {
-      const dataUrl = await toPng(exportRef.current, exportOptions())
+  const getBlob = useCallback(async () => {
+    if (!exportRef.current) return null
+    const imgs = Array.from(exportRef.current.querySelectorAll("img"))
+    await Promise.all(
+      imgs.map((img) =>
+        img.decode
+          ? img.decode().catch(() => undefined)
+          : Promise.resolve(undefined),
+      ),
+    )
+    const blob = await toBlob(exportRef.current, exportOptions())
+    if (!blob) return null
+    if (blob.type === "image/png") return blob
+    return new Blob([await blob.arrayBuffer()], { type: "image/png" })
+  }, [exportOptions])
+
+  const triggerDownload = useCallback(
+    async (dataUrl: string) => {
       const a = document.createElement("a")
       a.href = dataUrl
       a.download = `${fileBase}-${model}.png`
       document.body.appendChild(a)
       a.click()
       a.remove()
+    },
+    [fileBase, model],
+  )
+
+  const handleDownload = useCallback(async () => {
+    setBusy(true)
+    try {
+      const dataUrl = await renderPngDataUrl()
+      await triggerDownload(dataUrl)
       toast.success(t("share.downloaded"))
     } catch {
       toast.error(t("share.errorRender"))
     } finally {
       setBusy(false)
     }
-  }, [exportOptions, fileBase, model, t])
+  }, [renderPngDataUrl, triggerDownload, t])
 
   const handleShare = useCallback(async () => {
     setBusy(true)
@@ -231,23 +261,47 @@ export function ShareCardDialog({
       if (!blob) throw new Error("no blob")
       const file = new File([blob], `${fileBase}-${model}.png`, {
         type: "image/png",
+        lastModified: Date.now(),
       })
       const nav = navigator as Navigator & {
         canShare?: (data?: ShareData) => boolean
       }
-      if (nav.canShare?.({ files: [file] }) && nav.share) {
-        await nav.share({ files: [file], title: data.title })
+      if (!nav.share) {
+        const dataUrl = await renderPngDataUrl()
+        await triggerDownload(dataUrl)
+        toast.success(t("share.downloaded"))
+        toast.message(t("share.instagramHint"))
+        return
+      }
+
+      // Instagram drops the image when title/text/url are present.
+      const filesOnly: ShareData = { files: [file] }
+      const withEmptyTitle: ShareData = { files: [file], title: "" }
+
+      if (nav.canShare?.(filesOnly)) {
+        await nav.share(filesOnly)
+      } else if (nav.canShare?.(withEmptyTitle)) {
+        await nav.share(withEmptyTitle)
       } else {
-        await handleDownload()
+        const dataUrl = await renderPngDataUrl()
+        await triggerDownload(dataUrl)
+        toast.success(t("share.downloaded"))
+        toast.message(t("share.instagramHint"))
       }
     } catch (err) {
-      if ((err as Error)?.name !== "AbortError") {
-        await handleDownload()
+      if ((err as Error)?.name === "AbortError") return
+      try {
+        const dataUrl = await renderPngDataUrl()
+        await triggerDownload(dataUrl)
+        toast.success(t("share.downloaded"))
+        toast.message(t("share.instagramHint"))
+      } catch {
+        toast.error(t("share.errorRender"))
       }
     } finally {
       setBusy(false)
     }
-  }, [getBlob, fileBase, model, data.title, handleDownload])
+  }, [getBlob, fileBase, model, renderPngDataUrl, triggerDownload, t])
 
   const handleCopy = useCallback(async () => {
     setBusy(true)
