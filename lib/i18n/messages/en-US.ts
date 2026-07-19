@@ -164,6 +164,7 @@ export const enUS = {
     on: "ON",
     hintPoster: "Stories size (9:16) — ready to post.",
     hintTicket: "PNG is just the ticket, with a transparent background.",
+    hintTicketBg: "PNG is Stories size (9:16) with the ticket centered on the background.",
     includeRating: "Include my rating",
     format: {
       story: "Stories",

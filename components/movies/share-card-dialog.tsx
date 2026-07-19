@@ -52,6 +52,7 @@ export interface ShareCardDialogProps {
 
 type ShareModel = "ticket" | "poster"
 type TicketOrientation = "vertical" | "horizontal"
+type BgStyle = "transparent" | "dark" | "brand"
 
 /** Instagram Stories base size (DOM). × pixelRatio 3 → 1080×1920. */
 const STORIES_W = 360
@@ -59,6 +60,32 @@ const STORIES_H = 640
 const TICKET_W: Record<TicketOrientation, number> = {
   vertical: 320,
   horizontal: 640,
+}
+/** Approximate natural height used to fit tickets inside Stories 9:16. */
+const TICKET_H_EST: Record<TicketOrientation, number> = {
+  vertical: 520,
+  horizontal: 300,
+}
+
+const BG_STYLES: Record<
+  BgStyle,
+  { preview: string; exportColor: string | undefined }
+> = {
+  transparent: {
+    preview:
+      "repeating-conic-gradient(#1a1a1e 0% 25%, #0e0e12 0% 50%) 50% / 16px 16px",
+    exportColor: undefined,
+  },
+  dark: {
+    preview:
+      "radial-gradient(120% 75% at 50% 0%, rgba(255,0,72,0.16), transparent 55%), linear-gradient(160deg, #1a1320 0%, #0e0e12 55%, #0b0b0e 100%)",
+    exportColor: "#0b0b0e",
+  },
+  brand: {
+    preview:
+      "radial-gradient(90% 70% at 50% 20%, #ff4d7a 0%, #FF0048 45%, #b80034 100%)",
+    exportColor: "#FF0048",
+  },
 }
 
 /** Same-origin proxy so TMDB images render with CORS (preview + html-to-image). */
@@ -82,6 +109,7 @@ export function ShareCardDialog({
   const [model, setModel] = useState<ShareModel>("poster")
   const [ticketOrientation, setTicketOrientation] =
     useState<TicketOrientation>("vertical")
+  const [bgStyle, setBgStyle] = useState<BgStyle>("dark")
   const [includeRating, setIncludeRating] = useState(true)
   const [scale, setScale] = useState(1)
   const [exportSize, setExportSize] = useState({ w: STORIES_W, h: STORIES_H })
@@ -90,9 +118,22 @@ export function ShareCardDialog({
   const hasRating = rating > 0
   const showRating = hasRating && includeRating
   const hasWatched = Boolean(data.watchedLabel)
-  const ticketW = TICKET_W[ticketOrientation]
   const posterSrc = proxiedMediaUrl(data.posterUrl)
   const backdropSrc = proxiedMediaUrl(data.backdropUrl)
+  const bg = BG_STYLES[bgStyle]
+  /** Ticket + fundo ≠ transparente → sempre Stories 9:16. */
+  const ticketInStories = model === "ticket" && bgStyle !== "transparent"
+  /** Always lay out the ticket at its natural size (never squeeze). */
+  const ticketW = TICKET_W[ticketOrientation]
+  const ticketHEst = TICKET_H_EST[ticketOrientation]
+  /** Uniform scale so a full-size ticket fits inside the Stories frame. */
+  const storiesTicketFit = ticketInStories
+    ? Math.min(1, (STORIES_W - 40) / ticketW, (STORIES_H - 40) / ticketHEst)
+    : 1
+  const frameW =
+    model === "poster" || ticketInStories ? STORIES_W : ticketW
+  const frameH =
+    model === "poster" || ticketInStories ? STORIES_H : undefined
 
   useEffect(() => {
     if (!open) {
@@ -108,14 +149,14 @@ export function ShareCardDialog({
     if (!open) return
     const measure = () => {
       const avail = measureRef.current?.clientWidth ?? STORIES_W
-      const naturalW = model === "poster" ? STORIES_W : ticketW
-      setScale(Math.min(1, avail / naturalW))
+      setScale(Math.min(1, avail / frameW))
       if (exportRef.current) {
         setExportSize({
-          w: exportRef.current.offsetWidth || naturalW,
+          w: exportRef.current.offsetWidth || frameW,
           h:
             exportRef.current.offsetHeight ||
-            (model === "poster" ? STORIES_H : ticketOrientation === "horizontal" ? 280 : 480),
+            frameH ||
+            (ticketOrientation === "horizontal" ? 280 : 480),
         })
       }
     }
@@ -128,15 +169,25 @@ export function ShareCardDialog({
       ro.disconnect()
       window.clearTimeout(id)
     }
-  }, [open, model, ticketOrientation, ticketW, showRating, posterSrc, backdropSrc])
+  }, [
+    open,
+    model,
+    ticketOrientation,
+    ticketInStories,
+    frameW,
+    frameH,
+    bgStyle,
+    showRating,
+    posterSrc,
+    backdropSrc,
+  ])
 
-  /** Ticket PNG = ticket only (transparent). Poster = full Stories frame. */
   const exportOptions = useCallback(() => {
     const { w, h } = exportSize
-    const transparent = model === "ticket"
+    const transparent = bgStyle === "transparent"
     return {
       pixelRatio: 3,
-      backgroundColor: transparent ? undefined : "#141414",
+      backgroundColor: bg.exportColor,
       cacheBust: true,
       width: w,
       height: h,
@@ -144,10 +195,10 @@ export function ShareCardDialog({
         transform: "none",
         width: `${w}px`,
         height: `${h}px`,
-        background: transparent ? "transparent" : "#141414",
+        background: transparent ? "transparent" : bg.preview,
       },
     }
-  }, [exportSize, model])
+  }, [exportSize, bgStyle, bg.exportColor, bg.preview])
 
   const getBlob = useCallback(async () => {
     if (!exportRef.current) return null
@@ -250,8 +301,49 @@ export function ShareCardDialog({
     },
   ]
 
-  const previewW = (model === "poster" ? STORIES_W : ticketW) * scale
-  const previewH = exportSize.h * scale
+  const bgOptions: { value: BgStyle; label: string; swatch: string }[] = [
+    {
+      value: "transparent",
+      label: t("share.bgTransparent"),
+      swatch:
+        "repeating-conic-gradient(#c4c4c8 0% 25%, #fff 0% 50%) 50% / 8px 8px",
+    },
+    {
+      value: "dark",
+      label: t("share.bgDark"),
+      swatch: "linear-gradient(135deg, #1a1320, #0b0b0e)",
+    },
+    {
+      value: "brand",
+      label: t("share.bgBrand"),
+      swatch: "linear-gradient(135deg, #ff4d7a, #FF0048)",
+    },
+  ]
+
+  const previewW = frameW * scale
+  const previewH = (exportSize.h || frameH || 480) * scale
+  const shellPreviewBg =
+    bgStyle === "transparent" ? BG_STYLES.transparent.preview : bg.preview
+  const exportNodeBg = bgStyle === "transparent" ? "transparent" : bg.preview
+
+  const ticketNode = (
+    <TheaterTicket
+      bare
+      orientation={ticketOrientation}
+      badge={(data.caption || t("share.stub")).toUpperCase()}
+      title={data.title.toUpperCase()}
+      titleAccent=""
+      venue={data.director || data.handle || t("share.handle")}
+      dateLabel={t("share.ticketDate")}
+      dateValue={hasWatched ? data.watchedLabel! : undefined}
+      timeLabel={t("share.ticketRating")}
+      timeValue={showRating ? `${rating}/5` : undefined}
+      seatLabel=""
+      seatValue={undefined}
+      backdropUrl={backdropSrc}
+      logoSrc="/claketelogov2.svg"
+    />
+  )
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -327,6 +419,40 @@ export function ShareCardDialog({
             </div>
           ) : null}
 
+          <div className="mb-4 flex items-center justify-center">
+            <div
+              className="inline-flex items-center gap-1 rounded-full border border-border/70 bg-muted/40 p-1"
+              role="group"
+              aria-label={t("share.background")}
+            >
+              {bgOptions.map(({ value, label, swatch }) => {
+                const active = bgStyle === value
+                return (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setBgStyle(value)}
+                    className={cn(
+                      "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
+                      active
+                        ? "bg-background text-foreground shadow-sm ring-1 ring-border"
+                        : "text-muted-foreground hover:text-foreground",
+                    )}
+                    aria-pressed={active}
+                    title={label}
+                  >
+                    <span
+                      className="h-3.5 w-3.5 shrink-0 rounded-full border border-black/10 dark:border-white/15"
+                      style={{ background: swatch }}
+                      aria-hidden
+                    />
+                    {label}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
           {hasRating ? (
             <div className="mb-4 flex items-center justify-center">
               <label
@@ -356,12 +482,8 @@ export function ShareCardDialog({
 
           <div
             ref={measureRef}
-            className={cn(
-              "flex w-full justify-center overflow-hidden rounded-2xl border border-border/50",
-              model === "ticket"
-                ? "bg-[repeating-conic-gradient(#1a1a1e_0%_25%,#0e0e12_0%_50%)_50%/16px_16px] py-6"
-                : "bg-[#0a0a0a]",
-            )}
+            className="flex w-full justify-center overflow-hidden rounded-2xl border border-border/50 py-6"
+            style={{ background: shellPreviewBg }}
           >
             <div style={{ width: previewW, height: previewH }}>
               {model === "poster" ? (
@@ -373,8 +495,7 @@ export function ShareCardDialog({
                     height: STORIES_H,
                     transform: `scale(${scale})`,
                     transformOrigin: "top left",
-                    background:
-                      "linear-gradient(180deg, #1a1a1e 0%, #121214 45%, #0e0e10 100%)",
+                    background: exportNodeBg,
                   }}
                 >
                   <div className="flex min-h-0 flex-1 flex-col items-center justify-center px-8 pt-10">
@@ -396,11 +517,11 @@ export function ShareCardDialog({
                   </div>
 
                   <div className="flex shrink-0 flex-col items-center px-7 pb-10 pt-6 text-center">
-                    <h2 className="text-[1.65rem] font-bold leading-tight tracking-tight text-white">
+                    <h2 className="text-[1.65rem] font-bold leading-tight tracking-tight text-white drop-shadow-sm">
                       {data.title}
                     </h2>
                     {data.director ? (
-                      <p className="mt-2 text-[13px] font-normal text-white/85">
+                      <p className="mt-2 text-[13px] font-normal text-white/85 drop-shadow-sm">
                         {t("share.directedBy")}{" "}
                         <span className="font-semibold">{data.director}</span>
                       </p>
@@ -434,44 +555,71 @@ export function ShareCardDialog({
                         alt=""
                         className="h-6 w-6"
                       />
-                      <span className="text-[15px] font-bold tracking-wide text-white">
+                      <span className="text-[15px] font-bold tracking-wide text-white drop-shadow-sm">
                         Clakete
                       </span>
                     </div>
                   </div>
                 </div>
+              ) : ticketInStories ? (
+                <div
+                  ref={exportRef}
+                  className="flex items-center justify-center"
+                  style={{
+                    width: STORIES_W,
+                    height: STORIES_H,
+                    transform: `scale(${scale})`,
+                    transformOrigin: "top left",
+                    background: exportNodeBg,
+                    boxSizing: "border-box",
+                    padding: 20,
+                  }}
+                >
+                  {/*
+                    Ticket keeps its natural layout width; we only scale it down
+                    to fit Stories — never shrink the CSS width (that clipped titles).
+                  */}
+                  <div
+                    style={{
+                      width: ticketW * storiesTicketFit,
+                      height: ticketHEst * storiesTicketFit,
+                      position: "relative",
+                      flexShrink: 0,
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: ticketW,
+                        transform: `scale(${storiesTicketFit})`,
+                        transformOrigin: "top left",
+                      }}
+                    >
+                      {ticketNode}
+                    </div>
+                  </div>
+                </div>
               ) : (
                 <div
+                  ref={exportRef}
                   style={{
                     width: ticketW,
                     transform: `scale(${scale})`,
                     transformOrigin: "top left",
+                    background: "transparent",
                   }}
                 >
-                  <TheaterTicket
-                    ref={exportRef}
-                    bare
-                    orientation={ticketOrientation}
-                    badge={(data.caption || t("share.stub")).toUpperCase()}
-                    title={data.title.toUpperCase()}
-                    titleAccent=""
-                    venue={data.director || data.handle || t("share.handle")}
-                    dateLabel={t("share.ticketDate")}
-                    dateValue={hasWatched ? data.watchedLabel! : undefined}
-                    timeLabel={t("share.ticketRating")}
-                    timeValue={showRating ? `${rating}/5` : undefined}
-                    seatLabel=""
-                    seatValue={undefined}
-                    backdropUrl={backdropSrc}
-                    logoSrc="/claketelogov2.svg"
-                  />
+                  {ticketNode}
                 </div>
               )}
             </div>
           </div>
 
           <p className="mt-3 text-center text-[11px] text-muted-foreground">
-            {model === "poster" ? t("share.hintPoster") : t("share.hintTicket")}
+            {model === "poster"
+              ? t("share.hintPoster")
+              : bgStyle === "transparent"
+                ? t("share.hintTicket")
+                : t("share.hintTicketBg")}
           </p>
         </div>
 

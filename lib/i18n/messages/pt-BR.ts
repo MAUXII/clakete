@@ -165,6 +165,7 @@ export const ptBR = {
     on: "ON",
     hintPoster: "Tamanho de Stories (9:16) — pronto pra postar.",
     hintTicket: "O PNG é só o ticket, com fundo transparente.",
+    hintTicketBg: "O PNG fica no tamanho Stories (9:16), com o ticket no centro do fundo.",
     includeRating: "Incluir minha avaliação",
     format: {
       story: "Stories",

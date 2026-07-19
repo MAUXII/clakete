@@ -139,7 +139,7 @@ export const TheaterTicket = forwardRef<HTMLDivElement, TheaterTicketProps>(
 
             <div className="space-y-2">
               <motion.h2
-                className={`${titleSize} font-serif font-bold tracking-wide text-card-foreground`}
+                className={`${titleSize} break-words font-serif font-bold tracking-wide text-card-foreground`}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.2 }}

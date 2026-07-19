@@ -165,6 +165,7 @@ export const esES = {
     on: "ON",
     hintPoster: "Tamaño Stories (9:16) — listo para publicar.",
     hintTicket: "El PNG es solo el ticket, con fondo transparente.",
+    hintTicketBg: "El PNG queda en tamaño Stories (9:16), con el ticket centrado en el fondo.",
     includeRating: "Incluir mi valoración",
     format: {
       story: "Stories",
