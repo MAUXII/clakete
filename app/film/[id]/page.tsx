@@ -47,15 +47,19 @@ export interface Movie {
   similar: {
     results: Array<{
       title: string;
+      original_title?: string | null;
       poster_path: string;
       id: number;
+      release_date?: string | null;
     }>;
   };
   recommendations: {
     results: Array<{
       title: string;
+      original_title?: string | null;
       poster_path: string;
       id: number;
+      release_date?: string | null;
     }>;
   };
   cast: {

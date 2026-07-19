@@ -3,13 +3,11 @@
  * - `/film/the-iron-giant` when the title is unique / is the primary namesake
  * - `/film/dune-2021` / `/film/film-2000` when another title shares the slug
  *
- * Letterboxd stores fixed LID↔slug mappings. We approximate that on TMDB by:
- * resolving exact Latin title matches and giving the short slug to the most
- * popular one; others keep `-YYYY`.
+ * Slugs always prefer TMDB `original_title` / `original_name` (Obsession),
+ * never the UI-localized title (Obsessão). When original is missing (diary
+ * rows etc.), fall back to `/film/{id}` so the detail page can canonicalize.
  *
- * Slugs use Latin characters only. CJK / non-latin `original_title` falls back
- * to the localized English title so we never collapse everything to a broken
- * placeholder slug.
+ * CJK originals with no Latin chars may fall back to a localized Latin title.
  *
  * Legacy still works and redirects:
  * - `/film/10386`
@@ -31,8 +29,9 @@ export function mediaSlugify(title: string): string {
 
 export type MediaHrefInput = {
   id: number | string
-  /** Prefer original/English title; falls back to localized title. */
+  /** TMDB original title — source of truth for URL slugs. */
   original_title?: string | null
+  /** Localized display title — slug only when original has no Latin chars. */
   title?: string | null
   name?: string | null
   original_name?: string | null
@@ -59,21 +58,29 @@ export function pickSlugTitle(
   return cleaned[0] || ""
 }
 
+/**
+ * Title used to build the URL slug.
+ * Prefer original_* always. If original is missing, return "" (numeric id).
+ * If original has no Latin chars (CJK), allow localized Latin fallback.
+ */
 function resolveTitle(input: MediaHrefInput, kind: "movie" | "tv"): string {
-  if (kind === "tv") {
-    return pickSlugTitle(
-      input.original_name,
-      input.name,
-      input.original_title,
-      input.title,
-    )
+  const originals =
+    kind === "tv"
+      ? [input.original_name, input.original_title]
+      : [input.original_title, input.original_name]
+  const localized =
+    kind === "tv"
+      ? [input.name, input.title]
+      : [input.title, input.name]
+
+  const originalRaw = originals.map((c) => c?.trim() || "").find(Boolean) || ""
+  if (!originalRaw) return ""
+
+  if (mediaSlugify(originalRaw)) {
+    return pickSlugTitle(...originals)
   }
-  return pickSlugTitle(
-    input.original_title,
-    input.title,
-    input.original_name,
-    input.name,
-  )
+
+  return pickSlugTitle(...localized)
 }
 
 /** Extract YYYY from `2001-01-01` / `2001`. */

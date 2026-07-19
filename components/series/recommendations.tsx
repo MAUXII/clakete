@@ -2,8 +2,10 @@ import { SeriesCard } from './series-card'
 
 interface RecommendedSeries {
   name: string
+  original_name?: string | null
   poster_path: string
   id: number
+  first_air_date?: string | null
   vote_average?: number
 }
 

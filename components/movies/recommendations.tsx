@@ -3,8 +3,10 @@ import { MovieCard } from './movie-card';
 
 interface RecommendedMovie {
     title: string;
+    original_title?: string | null;
     poster_path: string;
     id: number;
+    release_date?: string | null;
 }
 
 export default function RecommendationsList({ movie }: { movie: Movie }) {
