@@ -24,8 +24,8 @@ interface FilmActionsProps {
 
 const actionBtnClass = (active: boolean) =>
   active
-    ? "bg-[#FF0048]/10 text-[#FF0048] border-[#FF0048]/20 hover:bg-[#FF0048]/20"
-    : "hover:bg-[#FF0048]/10 hover:text-[#FF0048] hover:border-[#FF0048]/20";
+    ? "bg-brand/10 text-brand border-brand/20 hover:bg-brand/20"
+    : "hover:bg-brand/10 hover:text-brand hover:border-brand/20";
 
 export function FilmActions({
   onWatchClick,
@@ -114,7 +114,7 @@ export function FilmActions({
           </Tooltip>
           {!isInWatchlist && !updating && !loading && (
             <div className="absolute -top-1.5 -right-1.5">
-              <IoAdd className="h-3 w-3 text-[#FF0048]" />
+              <IoAdd className="h-3 w-3 text-brand" />
             </div>
           )}
         </div>

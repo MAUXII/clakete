@@ -383,7 +383,7 @@ export function NewListSwipeStep({
           className={cn(
             onboardingContinueButtonClass,
             (!canFinalize || finalizeBusy) &&
-              "cursor-not-allowed opacity-40 hover:bg-[#FF0048]",
+              "cursor-not-allowed opacity-40 hover:bg-brand",
           )}
         >
           {finalizeBusy ? "Saving…" : copy.finishLabel}
@@ -401,7 +401,7 @@ export function NewListSwipeStep({
           className={cn(
             "flex h-11 w-full shrink-0 items-center justify-center rounded-full px-5 text-sm font-semibold transition-colors",
             canFinalize && !finalizeBusy
-              ? "bg-[#FF0048] text-white hover:bg-[#e60042]"
+              ? "bg-brand text-white hover:bg-brand-hover"
               : "cursor-not-allowed bg-white/[0.08] text-zinc-600",
           )}
         >
@@ -428,7 +428,7 @@ export function NewListSwipeStep({
         <button
           type="button"
           onClick={() => addAndAdvance(movie)}
-          className="flex h-11 min-h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-full bg-[#FF0048] text-sm font-semibold text-white shadow-lg shadow-black/35 transition-colors hover:bg-[#e60042] active:bg-[#d4003c]"
+          className="flex h-11 min-h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-full bg-brand text-sm font-semibold text-white shadow-lg shadow-black/35 transition-colors hover:bg-brand-hover active:bg-brand-hover"
         >
           <Plus className="h-4 w-4 shrink-0" strokeWidth={2.5} />
           {copy.addLabel}
@@ -756,7 +756,7 @@ function SwipeCard({
           draggable={false}
         />
         <motion.span
-          className="pointer-events-none absolute left-6 top-8 rotate-[-12deg] rounded-lg border-4 border-[#FF0048]/80 bg-[#0a0a0c]/85 px-3 py-1.5 text-lg font-black uppercase text-[#FF0048] shadow-lg backdrop-blur-sm"
+          className="pointer-events-none absolute left-6 top-8 rotate-[-12deg] rounded-lg border-4 border-brand/80 bg-[#0a0a0c]/85 px-3 py-1.5 text-lg font-black uppercase text-brand shadow-lg backdrop-blur-sm"
           style={{ opacity: likeOpacity }}
         >
           {rightOverlay}

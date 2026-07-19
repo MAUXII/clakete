@@ -157,7 +157,7 @@ export function UserRecentActivity({ userId, showAllWatched }: RecentActivityPro
           <button
             type="button"
             onClick={() => setVisibleCount(watchedItems.length)}
-            className="flex h-12 w-full items-center justify-center rounded-md border border-black/10 bg-[#FF0048]/10 p-3 text-[#FF0048] transition-all hover:bg-[#FF0048]/20 hover:text-[#FF0048]/90 dark:border-white/10"
+            className="flex h-12 w-full items-center justify-center rounded-md border border-black/10 bg-brand/10 p-3 text-brand transition-all hover:bg-brand/20 hover:text-brand/90 dark:border-white/10"
           >
             + See more
           </button>

@@ -101,7 +101,7 @@ export function ReviewLikeButton({
       className={cn(
         "inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs transition",
         liked
-          ? "text-[#FF0048]"
+          ? "text-brand"
           : "text-zinc-500 hover:text-zinc-300",
         className,
       )}

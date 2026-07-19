@@ -22,7 +22,7 @@ interface WatchProvider {
 }
 
 const trailerIconBtnClass =
-  "inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-[#FF0048]/12 text-[#FF0048] transition-colors hover:bg-[#FF0048]/22";
+  "inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-brand/12 text-brand transition-colors hover:bg-brand/22";
 
 export default function WatchProviders({
   movie,
@@ -124,7 +124,7 @@ export default function WatchProviders({
               onClick={() => setTrailerOpen(true)}
               className={cn(
                 "flex rounded-b-lg w-full items-center justify-center gap-2.5 px-4 py-3.5 text-sm font-medium text-white transition-colors",
-                "-mt-px bg-[#FF0048] hover:bg-[#e60042]",
+                "-mt-px bg-brand hover:bg-brand-hover",
                 "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-white/40",
               )}
             >
@@ -334,7 +334,7 @@ export default function WatchProviders({
                   target="_blank"
                   rel="noopener noreferrer"
                   key={provider.provider_id}
-                  className="flex w-full items-center gap-3 rounded-lg p-2 transition-colors hover:bg-[#FF0048]/10 group"
+                  className="flex w-full items-center gap-3 rounded-lg p-2 transition-colors hover:bg-brand/10 group"
                 >
                   <div className="relative aspect-square h-10 overflow-hidden rounded-lg border border-border">
                     <Image
@@ -345,7 +345,7 @@ export default function WatchProviders({
                     />
                   </div>
                   <div className="flex flex-col overflow-hidden">
-                    <h4 className="truncate text-nowrap font-medium transition-colors group-hover:text-[#FF0048] w-[10.5rem]">
+                    <h4 className="truncate text-nowrap font-medium transition-colors group-hover:text-brand w-[10.5rem]">
                       {provider.provider_name}
                     </h4>
                     <div className="mt-1 flex gap-2">
@@ -367,7 +367,7 @@ export default function WatchProviders({
           <button
             type="button"
             onClick={() => setProvidersDialogOpen(true)}
-            className="flex h-12 w-full items-center justify-center rounded-md border border-black/10 bg-[#FF0048]/10 p-3 text-[#FF0048] transition-colors hover:bg-[#FF0048]/20 hover:text-[#FF0048]/90 dark:border-white/10"
+            className="flex h-12 w-full items-center justify-center rounded-md border border-black/10 bg-brand/10 p-3 text-brand transition-colors hover:bg-brand/20 hover:text-brand/90 dark:border-white/10"
           >
             + {t("catalog.allProviders")}
           </button>

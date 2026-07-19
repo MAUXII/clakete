@@ -434,7 +434,7 @@ export function UserActivityLog({
       <div className="relative">
         <div
           aria-hidden
-          className="absolute bottom-2 left-[19px] top-2 w-px bg-gradient-to-b from-[#FF0048]/50 via-white/[0.08] to-transparent"
+          className="absolute bottom-2 left-[19px] top-2 w-px bg-gradient-to-b from-brand/50 via-white/[0.08] to-transparent"
         />
 
         <ol className="space-y-6">
@@ -461,7 +461,7 @@ export function UserActivityLog({
         <button
           type="button"
           onClick={() => setVisible((v) => Math.min(v + 80, events.length))}
-          className="mt-6 flex h-11 w-full items-center justify-center rounded-md border border-white/[0.08] bg-[#FF0048]/10 text-sm text-[#FF0048] transition hover:bg-[#FF0048]/20"
+          className="mt-6 flex h-11 w-full items-center justify-center rounded-md border border-white/[0.08] bg-brand/10 text-sm text-brand transition hover:bg-brand/20"
         >
           Load earlier · {events.length - visible} remaining
         </button>
@@ -480,9 +480,9 @@ function ActivityRow({ event }: { event: ActivityEvent }) {
         <span
           className={cn(
             "flex size-8 items-center justify-center rounded-full border border-white/[0.08] bg-[#0c0c0e] text-zinc-400",
-            event.kind === "joined" && "border-[#FF0048]/30 text-[#FF0048]",
-            event.kind === "watched" && "text-[#ff9eb0]",
-            event.kind === "liked" && "text-[#FF0048]",
+            event.kind === "joined" && "border-brand/30 text-brand",
+            event.kind === "watched" && "text-brand-light",
+            event.kind === "liked" && "text-brand",
           )}
         >
           <Icon className="size-3.5" />
@@ -493,7 +493,7 @@ function ActivityRow({ event }: { event: ActivityEvent }) {
         <div className="flex items-start justify-between gap-3">
           <p className="text-[13px] leading-snug text-zinc-300">
             <span className="text-zinc-500">{verb}</span>{" "}
-            <span className="font-medium text-zinc-100 group-hover:text-[#ff9eb0]">
+            <span className="font-medium text-zinc-100 group-hover:text-brand-light">
               {event.title}
             </span>
             {event.kind === "watched" &&

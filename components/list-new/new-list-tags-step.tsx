@@ -112,7 +112,7 @@ export function NewListTagsStep({ selectedTags, onChangeSelected }: NewListTagsS
           placeholder="Add a tag (optional)…"
           maxLength={200}
           autoComplete="off"
-          className="w-full border-0 border-b border-white/10 bg-transparent py-3 text-[15px] text-zinc-100 outline-none transition-colors placeholder:text-zinc-600 focus:border-[#FF0048]/60"
+          className="w-full border-0 border-b border-white/10 bg-transparent py-3 text-[15px] text-zinc-100 outline-none transition-colors placeholder:text-zinc-600 focus:border-brand/60"
         />
       </div>
     </div>

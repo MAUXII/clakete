@@ -49,7 +49,7 @@ function CatalogPillNav({
             className={cn(
               "rounded-full px-4 py-2 text-sm font-medium transition-colors",
               isActive
-                ? "bg-[#FF0048]/10 text-[#e8486b] ring-1 ring-[#e8486b]/35"
+                ? "bg-brand/10 text-brand-muted ring-1 ring-brand-muted/35"
                 : "text-zinc-400 hover:bg-white/[0.05] hover:text-zinc-100",
             )}
           >
@@ -89,7 +89,7 @@ const listsPillClass = (active: boolean) =>
   cn(
     "rounded-full px-4 py-2 text-sm font-medium transition-colors",
     active
-      ? "bg-[#FF0048]/10 text-[#e8486b] ring-1 ring-[#e8486b]/35"
+      ? "bg-brand/10 text-brand-muted ring-1 ring-brand-muted/35"
       : "text-zinc-400 hover:bg-white/[0.05] hover:text-zinc-100",
   )
 
@@ -200,8 +200,8 @@ export const FilmsToolbarIconButton = React.forwardRef<
       type="button"
       className={cn(
         "inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.03] text-zinc-300 transition-colors",
-        "hover:border-[#FF0048]/35 hover:bg-[#FF0048]/10 hover:text-[#FF0048]",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0048]/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+        "hover:border-brand/35 hover:bg-brand/10 hover:text-brand",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
         className,
       )}
       {...props}
@@ -229,7 +229,7 @@ export function FilmsScrollToTopFab({ visible, onClick }: { visible: boolean; on
       className={cn(
         "fixed bottom-8 right-5 z-40 flex h-12 w-12 items-center justify-center rounded-full",
         "border border-white/[0.1] bg-zinc-950/90 text-zinc-300 shadow-lg shadow-black/35 backdrop-blur-md",
-        "transition-colors hover:border-[#FF0048]/45 hover:text-[#FF0048] sm:right-8",
+        "transition-colors hover:border-brand/45 hover:text-brand sm:right-8",
       )}
     >
       <MdOutlineKeyboardDoubleArrowUp className="h-5 w-5" />

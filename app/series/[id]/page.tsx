@@ -374,7 +374,7 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ id: str
   const tabTriggerClass = cn(
     "min-w-0 flex-1 rounded-md px-2 py-2.5 text-center text-sm font-medium text-zinc-500 transition-colors sm:px-3",
     "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/25 focus-visible:ring-offset-1 focus-visible:ring-offset-background",
-    "data-[state=active]:bg-[#FF0048]/10 data-[state=active]:text-[#e8486b]",
+    "data-[state=active]:bg-brand/10 data-[state=active]:text-brand-muted",
     "hover:text-zinc-300",
   );
 
@@ -456,7 +456,7 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ id: str
                       style={{ pointerEvents: trailerPosterUiActive ? "auto" : "none" }}
                       className={cn(
                         "absolute inset-0 z-10 flex cursor-pointer items-center justify-center bg-black/10",
-                        "outline-none focus-visible:ring-2 focus-visible:ring-[#FF0048]/40 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950",
+                        "outline-none focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950",
                       )}
                       onClick={() => setTrailerOpen(true)}
                       onFocus={() => setTrailerBtnFocused(true)}
@@ -478,7 +478,7 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ id: str
                         }}
                         whileTap={{ scale: 0.94 }}
                       >
-                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#FF0048] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.15)]">
+                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.15)]">
                           <FaPlay className="ml-0.5 h-3.5 w-3.5" aria-hidden />
                         </span>
                         <span className="pr-4 text-sm font-medium tracking-tight text-white/95">
@@ -554,7 +554,7 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ id: str
                       <Link
                         key={genre.id}
                         href={`/series/discover?genres=${genre.id}`}
-                        className="rounded-full bg-[#FF0048]/10 px-3 py-1 text-xs font-medium text-[#e8486b] ring-1 ring-[#e8486b]/35 transition-colors hover:bg-[#FF0048]/18 hover:ring-[#FF0048]/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0048]/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#09090B]"
+                        className="rounded-full bg-brand/10 px-3 py-1 text-xs font-medium text-brand-muted ring-1 ring-brand-muted/35 transition-colors hover:bg-brand/18 hover:ring-brand/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#09090B]"
                       >
                         {genre.name}
                       </Link>

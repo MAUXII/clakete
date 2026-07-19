@@ -164,11 +164,11 @@ export function EditListDialog({ list, open, onOpenChange, onListUpdated }: Edit
                   className={cn(
                     "flex flex-col items-start gap-1 rounded-lg border px-3 py-2.5 text-left transition",
                     feedVisibility === "friends"
-                      ? "border-[#FF0048]/40 bg-[#FF0048]/10"
+                      ? "border-brand/40 bg-brand/10"
                       : "border-border/80 hover:border-border",
                   )}
                 >
-                  <Users className="size-4 text-[#FF0048]" />
+                  <Users className="size-4 text-brand" />
                   <span className="text-xs font-medium">Friends</span>
                 </button>
                 <button
@@ -179,11 +179,11 @@ export function EditListDialog({ list, open, onOpenChange, onListUpdated }: Edit
                     "flex flex-col items-start gap-1 rounded-lg border px-3 py-2.5 text-left transition",
                     !isPublic && "cursor-not-allowed opacity-40",
                     feedVisibility === "public"
-                      ? "border-[#FF0048]/40 bg-[#FF0048]/10"
+                      ? "border-brand/40 bg-brand/10"
                       : "border-border/80 hover:border-border",
                   )}
                 >
-                  <Globe2 className="size-4 text-[#FF0048]" />
+                  <Globe2 className="size-4 text-brand" />
                   <span className="text-xs font-medium">Public</span>
                 </button>
               </div>

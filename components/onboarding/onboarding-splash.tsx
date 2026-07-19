@@ -40,7 +40,7 @@ export function OnboardingSplash({ visible, onComplete }: OnboardingSplashProps)
           <button
             type="button"
             onClick={onComplete}
-            className="relative z-10 flex h-dvh min-h-dvh w-full cursor-pointer flex-col items-center border-0 bg-transparent px-6 pb-10 pt-8 outline-none focus-visible:ring-2 focus-visible:ring-[#FF0048]/50"
+            className="relative z-10 flex h-dvh min-h-dvh w-full cursor-pointer flex-col items-center border-0 bg-transparent px-6 pb-10 pt-8 outline-none focus-visible:ring-2 focus-visible:ring-brand/50"
             aria-label="Continue to onboarding"
           >
             <div className="flex flex-1 flex-col items-center justify-center">

@@ -23,7 +23,7 @@ function Star({
           className="absolute inset-0 overflow-hidden"
           style={{ width: `${clamped * 100}%` }}
         >
-          <FaStar className={cn(starClassName, "text-[#FF0048]")} />
+          <FaStar className={cn(starClassName, "text-brand")} />
         </span>
       ) : null}
     </span>

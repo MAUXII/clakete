@@ -680,7 +680,7 @@ export default function UserListDetailPage() {
                   disabled={reorderMode}
                   className={`rounded-full p-1.5 transition-colors ${
                     viewMode === "grid"
-                      ? "border border-[#FF0048]/20 bg-[#280F16] text-[#FF0048] hover:bg-[#280F16]"
+                      ? "border border-brand/20 bg-[#280F16] text-brand hover:bg-[#280F16]"
                       : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
                   }`}
                 >
@@ -694,7 +694,7 @@ export default function UserListDetailPage() {
                   disabled={reorderMode}
                   className={`rounded-full p-1.5 transition-colors ${
                     viewMode === "list"
-                      ? "border border-[#FF0048]/20 bg-[#280F16] text-[#FF0048] hover:bg-[#280F16]"
+                      ? "border border-brand/20 bg-[#280F16] text-brand hover:bg-[#280F16]"
                       : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
                   }`}
                 >
@@ -718,7 +718,7 @@ export default function UserListDetailPage() {
                       <Button
                         type="button"
                         size="sm"
-                        className="h-8 rounded-full bg-[#FF0048] px-3 text-xs text-white hover:bg-[#e60042]"
+                        className="h-8 rounded-full bg-brand px-3 text-xs text-white hover:bg-brand-hover"
                         onClick={() => void confirmReorder()}
                         disabled={reorderSaving}
                       >
@@ -934,7 +934,7 @@ export default function UserListDetailPage() {
                               variant="ghost"
                               size="sm"
                               onClick={() => handleRemoveFilm(film)}
-                              className="rounded-md border border-transparent bg-black/60 p-2 text-white opacity-0 backdrop-blur-sm transition-opacity duration-300 hover:border-[#FF0048]/30 hover:text-[#FF0048] group-hover:opacity-100"
+                              className="rounded-md border border-transparent bg-black/60 p-2 text-white opacity-0 backdrop-blur-sm transition-opacity duration-300 hover:border-brand/30 hover:text-brand group-hover:opacity-100"
                               title="Remove film"
                             >
                               <IoTrashOutline className="h-4 w-4" />
@@ -947,11 +947,11 @@ export default function UserListDetailPage() {
                       <button
                         type="button"
                         onClick={() => setShowSearchDialog(true)}
-                        className="group relative aspect-[2/3] w-full overflow-hidden rounded-md border border-dashed border-white/15 transition-colors hover:border-[#FF0048]/40"
+                        className="group relative aspect-[2/3] w-full overflow-hidden rounded-md border border-dashed border-white/15 transition-colors hover:border-brand/40"
                         
                       >
                         <div className="absolute inset-0 flex items-center justify-center">
-                          <Plus className="h-5 w-5 text-white transition-colors group-hover:text-[#FF0048]" />
+                          <Plus className="h-5 w-5 text-white transition-colors group-hover:text-brand" />
                         </div>
                       </button>
                     )}
@@ -962,7 +962,7 @@ export default function UserListDetailPage() {
                       <button
                         type="button"
                         onClick={() => setShowSearchDialog(true)}
-                        className="flex w-full items-center justify-center rounded-xl border border-dashed border-border/60 bg-card/40 py-3 text-sm text-muted-foreground transition-colors hover:border-[#FF0048]/40 hover:text-[#FF0048]"
+                        className="flex w-full items-center justify-center rounded-xl border border-dashed border-border/60 bg-card/40 py-3 text-sm text-muted-foreground transition-colors hover:border-brand/40 hover:text-brand"
                       >
                         <Plus className="mr-2 h-4 w-4" />
                         Add films
@@ -1032,7 +1032,7 @@ export default function UserListDetailPage() {
                             variant="ghost"
                             size="sm"
                             onClick={() => handleRemoveFilm(film)}
-                            className="h-8 w-8 p-0 text-muted-foreground transition-colors hover:text-[#FF0048]"
+                            className="h-8 w-8 p-0 text-muted-foreground transition-colors hover:text-brand"
                             title="Remove film"
                           >
                             <IoTrashOutline className="h-4 w-4" />
@@ -1070,13 +1070,13 @@ export default function UserListDetailPage() {
             className={cn(
               "flex h-10 w-full items-center justify-center rounded-md border px-3 text-sm transition-colors disabled:opacity-60",
               userLiked
-                ? "border-[#FF0048]/30 bg-[#FF0048]/10 text-[#FF0048] hover:bg-[#FF0048]/15"
+                ? "border-brand/30 bg-brand/10 text-brand hover:bg-brand/15"
                 : "border-border/50 bg-muted/30 text-muted-foreground hover:bg-muted/50",
             )}
           >
             <span className="inline-flex items-center gap-2">
               <Heart
-                className={cn("h-4 w-4 shrink-0 transition-colors", userLiked && "fill-[#FF0048] text-[#FF0048]")}
+                className={cn("h-4 w-4 shrink-0 transition-colors", userLiked && "fill-brand text-brand")}
               />
               {userLiked ? "Liked" : "Like"}
               <span className="tabular-nums">{likeCount}</span>
@@ -1100,7 +1100,7 @@ export default function UserListDetailPage() {
               Share
             </span>
           </button>
-          <div className="rounded-md border border-black/10 bg-[#FF0048]/5 p-3 text-sm dark:border-white/10">
+          <div className="rounded-md border border-black/10 bg-brand/5 p-3 text-sm dark:border-white/10">
             <div className="mb-2 flex items-center justify-between gap-2">
               <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 Progress
@@ -1121,7 +1121,7 @@ export default function UserListDetailPage() {
             </p>
             <div className="h-2 overflow-hidden rounded-full bg-muted/80 ring-1 ring-black/5 dark:ring-white/10">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-[#FF0048]/85 to-[#FF0048] shadow-[0_0_12px_rgba(255,0,72,0.35)] transition-[width] duration-300 ease-out"
+                className="h-full rounded-full bg-gradient-to-r from-brand/85 to-brand shadow-[0_0_12px_hsl(var(--brand) / 0.35)] transition-[width] duration-300 ease-out"
                 style={{
                   width: totalListItems === 0 ? "0%" : `${progressPercent}%`,
                 }}

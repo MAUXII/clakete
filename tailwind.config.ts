@@ -43,6 +43,13 @@ export default {
   			border: 'hsl(var(--border))',
   			input: 'hsl(var(--input))',
   			ring: 'hsl(var(--ring))',
+  			brand: {
+  				DEFAULT: 'hsl(var(--brand) / <alpha-value>)',
+  				hover: 'hsl(var(--brand-hover) / <alpha-value>)',
+  				muted: 'hsl(var(--brand-muted) / <alpha-value>)',
+  				light: 'hsl(var(--brand-light) / <alpha-value>)',
+  				foreground: 'var(--brand-foreground)',
+  			},
   			chart: {
   				'1': 'hsl(var(--chart-1))',
   				'2': 'hsl(var(--chart-2))',

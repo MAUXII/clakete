@@ -119,18 +119,18 @@ export function Navbar() {
   ] as const
 
   const navLinkHover =
-    "transition-colors hover:bg-[#FF0048]/10 hover:text-[#e8486b] dark:hover:bg-[#FF0048]/14 dark:hover:text-[#ff9eb0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0048]/25"
+    "transition-colors hover:bg-brand/10 hover:text-brand-muted dark:hover:bg-brand/14 dark:hover:text-brand-light focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/25"
 
   const navMegaLinkAccent =
-    "bg-[#FF0048]/10 text-[#e8486b] dark:bg-[#FF0048]/14 dark:text-[#ff9eb0]"
+    "bg-brand/10 text-brand-muted dark:bg-brand/14 dark:text-brand-light"
 
   const profileMenuItemClass = cn(
     "cursor-pointer rounded-md text-zinc-200 outline-none transition-colors",
     "focus:bg-transparent focus:text-zinc-200",
-    "data-[highlighted]:bg-[#FF0048]/10 data-[highlighted]:text-[#e8486b]",
-    "dark:data-[highlighted]:bg-[#FF0048]/14 dark:data-[highlighted]:text-[#ff9eb0]",
-    "focus-visible:bg-[#FF0048]/10 focus-visible:text-[#e8486b]",
-    "dark:focus-visible:bg-[#FF0048]/14 dark:focus-visible:text-[#ff9eb0]",
+    "data-[highlighted]:bg-brand/10 data-[highlighted]:text-brand-muted",
+    "dark:data-[highlighted]:bg-brand/14 dark:data-[highlighted]:text-brand-light",
+    "focus-visible:bg-brand/10 focus-visible:text-brand-muted",
+    "dark:focus-visible:bg-brand/14 dark:focus-visible:text-brand-light",
   )
 
   return (
@@ -219,10 +219,10 @@ export function Navbar() {
                         className={cn(
                           "group flex h-full w-full min-h-0 items-center gap-3 px-3 py-2 sm:px-4",
                           "transition-[background-color,color,transform] duration-200 active:scale-[0.99]",
-                          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#FF0048]/25",
+                          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand/25",
                           isActive
                             ? navMegaLinkAccent
-                            : "hover:bg-[#FF0048]/10 dark:hover:bg-[#FF0048]/14",
+                            : "hover:bg-brand/10 dark:hover:bg-brand/14",
                         )}
                       >
                         <span
@@ -230,7 +230,7 @@ export function Navbar() {
                             "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-zinc-800/70 text-zinc-400 transition-colors",
                             isActive
                               ? navMegaLinkAccent
-                              : "group-hover:bg-[#FF0048]/10 group-hover:text-[#e8486b] dark:group-hover:bg-[#FF0048]/14 dark:group-hover:text-[#ff9eb0]",
+                              : "group-hover:bg-brand/10 group-hover:text-brand-muted dark:group-hover:bg-brand/14 dark:group-hover:text-brand-light",
                           )}
                         >
                           <Icon className="h-4 w-4" aria-hidden />
@@ -240,8 +240,8 @@ export function Navbar() {
                             className={cn(
                               "block text-sm font-semibold tracking-tight transition-colors",
                               isActive
-                                ? "text-[#e8486b] dark:text-[#ff9eb0]"
-                                : "text-zinc-100 group-hover:text-[#e8486b] dark:group-hover:text-[#ff9eb0]",
+                                ? "text-brand-muted dark:text-brand-light"
+                                : "text-zinc-100 group-hover:text-brand-muted dark:group-hover:text-brand-light",
                             )}
                           >
                             {title}
@@ -250,8 +250,8 @@ export function Navbar() {
                             className={cn(
                               "mt-0.5 block text-[11px] transition-colors sm:text-xs",
                               isActive
-                                ? "text-[#e8486b]/80 dark:text-[#ff9eb0]/75"
-                                : "text-zinc-500 group-hover:text-[#e8486b]/80 dark:group-hover:text-[#ff9eb0]/75",
+                                ? "text-brand-muted/80 dark:text-brand-light/75"
+                                : "text-zinc-500 group-hover:text-brand-muted/80 dark:group-hover:text-brand-light/75",
                             )}
                           >
                             {description}
@@ -303,10 +303,10 @@ export function Navbar() {
                         className={cn(
                           "group flex h-full w-full min-h-0 items-center gap-3 px-3 py-2 sm:px-4",
                           "transition-[background-color,color,transform] duration-200 active:scale-[0.99]",
-                          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#FF0048]/25",
+                          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand/25",
                           isActive
                             ? navMegaLinkAccent
-                            : "hover:bg-[#FF0048]/10 dark:hover:bg-[#FF0048]/14",
+                            : "hover:bg-brand/10 dark:hover:bg-brand/14",
                         )}
                       >
                         <span
@@ -314,7 +314,7 @@ export function Navbar() {
                             "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-zinc-800/70 text-zinc-400 transition-colors",
                             isActive
                               ? navMegaLinkAccent
-                              : "group-hover:bg-[#FF0048]/10 group-hover:text-[#e8486b] dark:group-hover:bg-[#FF0048]/14 dark:group-hover:text-[#ff9eb0]",
+                              : "group-hover:bg-brand/10 group-hover:text-brand-muted dark:group-hover:bg-brand/14 dark:group-hover:text-brand-light",
                           )}
                         >
                           <Icon className="h-4 w-4" aria-hidden />
@@ -324,8 +324,8 @@ export function Navbar() {
                             className={cn(
                               "block text-sm font-semibold tracking-tight transition-colors",
                               isActive
-                                ? "text-[#e8486b] dark:text-[#ff9eb0]"
-                                : "text-zinc-100 group-hover:text-[#e8486b] dark:group-hover:text-[#ff9eb0]",
+                                ? "text-brand-muted dark:text-brand-light"
+                                : "text-zinc-100 group-hover:text-brand-muted dark:group-hover:text-brand-light",
                             )}
                           >
                             {title}
@@ -334,8 +334,8 @@ export function Navbar() {
                             className={cn(
                               "mt-0.5 block text-[11px] transition-colors sm:text-xs",
                               isActive
-                                ? "text-[#e8486b]/80 dark:text-[#ff9eb0]/75"
-                                : "text-zinc-500 group-hover:text-[#e8486b]/80 dark:group-hover:text-[#ff9eb0]/75",
+                                ? "text-brand-muted/80 dark:text-brand-light/75"
+                                : "text-zinc-500 group-hover:text-brand-muted/80 dark:group-hover:text-brand-light/75",
                             )}
                           >
                             {description}
@@ -365,8 +365,8 @@ export function Navbar() {
                   "flex size-11 items-center justify-center rounded-xl md:hidden",
                   "border border-white/[0.08] bg-white/[0.04] text-zinc-200",
                   "ring-1 ring-inset ring-white/[0.04]",
-                  "transition hover:border-[#FF0048]/25 hover:bg-[#FF0048]/10 hover:text-[#e8486b] dark:hover:bg-[#FF0048]/14 dark:hover:text-[#ff9eb0]",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0048]/50",
+                  "transition hover:border-brand/25 hover:bg-brand/10 hover:text-brand-muted dark:hover:bg-brand/14 dark:hover:text-brand-light",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50",
                 )}
               >
                 <Menu className="h-5 w-5" />
@@ -424,8 +424,8 @@ export function Navbar() {
                             className={cn(
                               "h-4 w-4 transition-colors",
                               isActive
-                                ? "text-[#e8486b] dark:text-[#ff9eb0]"
-                                : "text-zinc-400 group-hover:text-[#e8486b] dark:group-hover:text-[#ff9eb0]",
+                                ? "text-brand-muted dark:text-brand-light"
+                                : "text-zinc-400 group-hover:text-brand-muted dark:group-hover:text-brand-light",
                             )}
                           />
                           {title}
@@ -454,8 +454,8 @@ export function Navbar() {
                             className={cn(
                               "h-4 w-4 transition-colors",
                               isActive
-                                ? "text-[#e8486b] dark:text-[#ff9eb0]"
-                                : "text-zinc-400 group-hover:text-[#e8486b] dark:group-hover:text-[#ff9eb0]",
+                                ? "text-brand-muted dark:text-brand-light"
+                                : "text-zinc-400 group-hover:text-brand-muted dark:group-hover:text-brand-light",
                             )}
                           />
                           {title}
@@ -475,8 +475,8 @@ export function Navbar() {
               "flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-xl sm:size-12",
               "border border-white/[0.08] bg-white/[0.04] text-zinc-200",
               "ring-1 ring-inset ring-white/[0.04]",
-              "transition hover:border-[#FF0048]/25 hover:bg-[#FF0048]/10 hover:text-[#e8486b] dark:hover:bg-[#FF0048]/14 dark:hover:text-[#ff9eb0]",
-              "outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0048]/50",
+              "transition hover:border-brand/25 hover:bg-brand/10 hover:text-brand-muted dark:hover:bg-brand/14 dark:hover:text-brand-light",
+              "outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50",
               "data-[state=open]:border-white/[0.12] data-[state=open]:ring-1 data-[state=open]:ring-inset data-[state=open]:ring-white/[0.08]",
             )}
           >

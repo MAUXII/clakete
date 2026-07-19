@@ -272,7 +272,7 @@ export function FeedStoriesViewer({
               {person ? (
                 <Link
                   href={feedProfileHref(person.username)}
-                  className="text-sm text-[#ff9eb0]"
+                  className="text-sm text-brand-light"
                   onClick={() => onOpenChange(false)}
                 >
                   View profile →

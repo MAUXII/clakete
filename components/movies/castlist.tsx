@@ -15,7 +15,7 @@ export default function CastList({ movie }: { movie: Movie }) {
         {movie.cast.slice(0, visibleCount).map((actor, index) => (
       <div
         key={index}
-        className="group flex flex-col w-full rounded-md border dark:border-white/20 border-black/20 overflow-hidden bg-muted-foreground/10 transition-all hover:border-[#FF0048]/35 hover:bg-[#FF0048]/5"
+        className="group flex flex-col w-full rounded-md border dark:border-white/20 border-black/20 overflow-hidden bg-muted-foreground/10 transition-all hover:border-brand/35 hover:bg-brand/5"
       >
           <div className="relative w-full aspect-square">
             {actor.profile_path ? (
@@ -44,7 +44,7 @@ export default function CastList({ movie }: { movie: Movie }) {
           <div className="mt-2 items-center justify-center w-full flex">
             <button
               onClick={handleSeeMore}
-              className="bg-[#FF0048]/10 text-[#FF0048] p-3 w-full rounded-md border border-black/10 dark:border-white/10  hover:bg-[#FF0048]/20 hover:text-[#FF0048]/90 transition-all h-12 aspect-square flex items-center justify-center"
+              className="bg-brand/10 text-brand p-3 w-full rounded-md border border-black/10 dark:border-white/10  hover:bg-brand/20 hover:text-brand/90 transition-all h-12 aspect-square flex items-center justify-center"
             >
               + See more
             </button>

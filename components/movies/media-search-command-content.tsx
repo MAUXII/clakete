@@ -165,7 +165,7 @@ export function MediaSearchCommandContent({
                         {pickFilms && (
                           <button
                             type="button"
-                            className="ml-2 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border/60 text-muted-foreground transition-colors hover:border-[#FF0048]/40 hover:bg-[#FF0048]/10 hover:text-[#FF0048]"
+                            className="ml-2 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border/60 text-muted-foreground transition-colors hover:border-brand/40 hover:bg-brand/10 hover:text-brand"
                             onClick={(e) => {
                               e.preventDefault()
                               e.stopPropagation()
@@ -265,7 +265,7 @@ export function MediaSearchCommandContent({
                         {pickSeries && (
                           <button
                             type="button"
-                            className="ml-2 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border/60 text-muted-foreground transition-colors hover:border-[#FF0048]/40 hover:bg-[#FF0048]/10 hover:text-[#FF0048]"
+                            className="ml-2 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border/60 text-muted-foreground transition-colors hover:border-brand/40 hover:bg-brand/10 hover:text-brand"
                             onClick={(e) => {
                               e.preventDefault()
                               e.stopPropagation()

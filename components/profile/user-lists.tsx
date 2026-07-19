@@ -209,7 +209,7 @@ export function UserLists({
                   aria-label="Create new list"
                   className={cn(
                     "group relative flex w-full min-w-0 flex-col items-center rounded-xl pb-2 pt-1 text-left outline-none transition-colors",
-                    "focus-visible:ring-2 focus-visible:ring-[#FF0048]/45 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                    "focus-visible:ring-2 focus-visible:ring-brand/45 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                     listCardCompactMinHeightClassName,
                     createListTileGridClass(cappedLists.length, gridColumns),
                   )}
@@ -223,14 +223,14 @@ export function UserLists({
                         <div
                           className={cn(
                             "absolute inset-0 flex flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-muted-foreground/30 bg-transparent",
-                            "transition-colors group-hover:border-[#FF0048]/50 group-hover:bg-[#FF0048]/10",
+                            "transition-colors group-hover:border-brand/50 group-hover:bg-brand/10",
                           )}
                         >
-                          <Plus className="h-5 w-5 shrink-0 text-muted-foreground opacity-80 transition-colors group-hover:text-[#FF0048]" />
+                          <Plus className="h-5 w-5 shrink-0 text-muted-foreground opacity-80 transition-colors group-hover:text-brand" />
                         </div>
                       </div>
                     </div>
-                    <h3 className="line-clamp-2 w-full px-1  text-sm font-normal leading-snug tracking-tight text-muted-foreground transition-colors group-hover:text-[#FF0048] sm:text-[0.95rem]">
+                    <h3 className="line-clamp-2 w-full px-1  text-sm font-normal leading-snug tracking-tight text-muted-foreground transition-colors group-hover:text-brand sm:text-[0.95rem]">
                       Create new list
                     </h3>
                   </div>
@@ -243,7 +243,7 @@ export function UserLists({
                   className={cn(
                     listCardMinHeightClassName,
                     "flex h-full min-h-0 w-full min-w-0 flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-muted-foreground/30 bg-transparent px-4 py-6 text-sm font-medium text-muted-foreground shadow-none transition-colors",
-                    "hover:border-[#FF0048]/50 hover:bg-[#FF0048]/10 hover:text-[#FF0048]",
+                    "hover:border-brand/50 hover:bg-brand/10 hover:text-brand",
                     createListTileGridClass(cappedLists.length, gridColumns),
                   )}
                   onClick={() => router.push("/list/new")}

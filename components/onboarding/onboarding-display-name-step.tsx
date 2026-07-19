@@ -72,7 +72,7 @@ export function OnboardingDisplayNameStep({
             id="onboarding-watch-region"
             value={watchRegion}
             onChange={(e) => onWatchRegionChange(e.target.value as WatchRegionId)}
-            className="flex h-11 w-full rounded-md border border-white/10 bg-white/[0.03] px-3 text-sm text-white outline-none focus-visible:ring-1 focus-visible:ring-[#FF0048]/40"
+            className="flex h-11 w-full rounded-md border border-white/10 bg-white/[0.03] px-3 text-sm text-white outline-none focus-visible:ring-1 focus-visible:ring-brand/40"
           >
             {WATCH_REGION_OPTIONS.map((region) => (
               <option key={region.id} value={region.id} className="bg-zinc-950 text-white">
@@ -91,7 +91,7 @@ export function OnboardingDisplayNameStep({
             id="onboarding-tmdb-language"
             value={tmdbLanguage}
             onChange={(e) => onTmdbLanguageChange(e.target.value as TmdbLanguageId)}
-            className="flex h-11 w-full rounded-md border border-white/10 bg-white/[0.03] px-3 text-sm text-white outline-none focus-visible:ring-1 focus-visible:ring-[#FF0048]/40"
+            className="flex h-11 w-full rounded-md border border-white/10 bg-white/[0.03] px-3 text-sm text-white outline-none focus-visible:ring-1 focus-visible:ring-brand/40"
           >
             {TMDB_LANGUAGE_OPTIONS.map((lang) => (
               <option key={lang.id} value={lang.id} className="bg-zinc-950 text-white">

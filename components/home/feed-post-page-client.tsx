@@ -208,7 +208,7 @@ export function FeedPostPageClient() {
     <div className="mx-auto w-full max-w-xl px-4 py-6">
       <Link
         href="/"
-        className="mb-4 inline-flex items-center gap-1.5 text-sm text-zinc-500 transition hover:text-[#FF0048]"
+        className="mb-4 inline-flex items-center gap-1.5 text-sm text-zinc-500 transition hover:text-brand"
       >
         <ArrowLeft className="size-3.5" />
         Back to feed
@@ -224,7 +224,7 @@ export function FeedPostPageClient() {
           <p className="text-sm text-zinc-500">{error}</p>
           <Link
             href="/"
-            className="mt-4 inline-flex text-sm font-medium text-[#ff9eb0] hover:text-[#FF0048]"
+            className="mt-4 inline-flex text-sm font-medium text-brand-light hover:text-brand"
           >
             Go home →
           </Link>

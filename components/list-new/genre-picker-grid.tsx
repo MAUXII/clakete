@@ -83,7 +83,7 @@ export function GenrePickerGrid({
                   ? "border-white bg-white text-black"
                   : "border-white/10 bg-white/[0.08] text-zinc-200 hover:bg-white/[0.12]"
                 : on
-                  ? "border-[#FF0048] bg-[#FF0048]/15 text-white"
+                  ? "border-brand bg-brand/15 text-white"
                   : "border-white/15 bg-white/[0.06] text-zinc-300 hover:border-white/25 hover:bg-white/[0.09]",
             )}
           >

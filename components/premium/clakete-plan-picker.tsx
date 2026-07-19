@@ -117,13 +117,13 @@ export function ClaketePlanPicker({
                   setSelectedPlan(plan.id)
                 }
               }}
-              className="relative cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-[#FF0048]/40"
+              className="relative cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
             >
               <div
                 className={cn(
                   "relative rounded-xl border bg-[#09090B] transition-colors duration-300",
                   isSelected
-                    ? "z-10 border-2 border-[#FF0048] shadow-[0_0_24px_-8px_rgba(255,0,72,0.45)]"
+                    ? "z-10 border-2 border-brand shadow-[0_0_24px_-8px_hsl(var(--brand) / 0.45)]"
                     : "border-white/[0.08]",
                 )}
               >
@@ -135,7 +135,7 @@ export function ClaketePlanPicker({
                           className={cn(
                             "flex h-6 w-6 items-center justify-center rounded-full border-2 transition-all duration-300",
                             isSelected
-                              ? "border-[#FF0048]"
+                              ? "border-brand"
                               : "border-zinc-600/50",
                           )}
                         >
@@ -145,7 +145,7 @@ export function ClaketePlanPicker({
                                 initial={{ scale: 0 }}
                                 animate={{ scale: 1 }}
                                 exit={{ scale: 0 }}
-                                className="h-3.5 w-3.5 rounded-full bg-[#FF0048]"
+                                className="h-3.5 w-3.5 rounded-full bg-brand"
                                 transition={{
                                   type: "spring",
                                   stiffness: 300,
@@ -167,7 +167,7 @@ export function ClaketePlanPicker({
                     </div>
                     <div className="flex shrink-0 flex-col items-end gap-1 text-right">
                       {isCurrent ? (
-                        <span className="rounded-full bg-[#FF0048]/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#ff9eb0]">
+                        <span className="rounded-full bg-brand/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-brand-light">
                           Current
                         </span>
                       ) : null}
@@ -223,7 +223,7 @@ export function ClaketePlanPicker({
                                 className="flex items-center gap-3 text-sm text-zinc-300"
                               >
                                 <Check
-                                  className="h-4 w-4 shrink-0 text-[#FF0048]"
+                                  className="h-4 w-4 shrink-0 text-brand"
                                   strokeWidth={2.5}
                                   aria-hidden
                                 />
@@ -248,7 +248,7 @@ export function ClaketePlanPicker({
             type="button"
             onClick={() => void onCheckout()}
             disabled={checkoutLoading || portalLoading}
-            className="w-full rounded-full bg-[#FF0048] text-white hover:bg-[#e60042] sm:flex-1"
+            className="w-full rounded-full bg-brand text-white hover:bg-brand-hover sm:flex-1"
           >
             {checkoutLoading ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -262,7 +262,7 @@ export function ClaketePlanPicker({
             variant="outline"
             onClick={() => void onPortal()}
             disabled={checkoutLoading || portalLoading}
-            className="w-full rounded-full border-white/10 bg-transparent text-zinc-200 hover:border-[#FF0048]/30 hover:bg-[#FF0048]/10 hover:text-white sm:flex-1"
+            className="w-full rounded-full border-white/10 bg-transparent text-zinc-200 hover:border-brand/30 hover:bg-brand/10 hover:text-white sm:flex-1"
           >
             {portalLoading ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />

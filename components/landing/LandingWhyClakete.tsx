@@ -28,13 +28,13 @@ export function LandingWhyClakete() {
       className={cn(
         "relative left-1/2 w-screen max-w-[100vw] -translate-x-1/2",
         "bg-black",
-        "bg-[radial-gradient(ellipse_90%_60%_at_100%_-10%,rgba(255,0,72,0.14),transparent_52%)]",
+        "bg-[radial-gradient(ellipse_90%_60%_at_100%_-10%,hsl(var(--brand) / 0.14),transparent_52%)]",
         "py-20 sm:py-24 lg:py-28",
       )}
     >
       <div className="mx-auto max-w-6xl sm:px-6 lg:px-8">
         <div className="max-w-2xl">
-          <p className="text-[10px] font-medium uppercase tracking-[0.35em] text-[#FF0048]/90">
+          <p className="text-[10px] font-medium uppercase tracking-[0.35em] text-brand/90">
             Why
           </p>
           <h2 className="mt-3 text-3xl font-semibold leading-tight tracking-tight text-white sm:text-4xl lg:text-5xl">
@@ -50,9 +50,9 @@ export function LandingWhyClakete() {
           {highlights.map(({ Icon, title, body }) => (
             <li
               key={title}
-              className="rounded-2xl border border-white/[0.06] bg-black/40 p-5 backdrop-blur-sm transition hover:border-[#FF0048]/25"
+              className="rounded-2xl border border-white/[0.06] bg-black/40 p-5 backdrop-blur-sm transition hover:border-brand/25"
             >
-              <Icon className="h-5 w-5 text-[#FF0048]" strokeWidth={1.75} aria-hidden />
+              <Icon className="h-5 w-5 text-brand" strokeWidth={1.75} aria-hidden />
               <h3 className="mt-3 text-sm font-semibold text-white">{title}</h3>
               <p className="mt-2 text-xs leading-relaxed text-neutral-500 sm:text-sm">{body}</p>
             </li>
@@ -61,7 +61,7 @@ export function LandingWhyClakete() {
 
         <div className="mt-16 grid gap-10 lg:mt-20 lg:grid-cols-2 lg:items-center lg:gap-14">
           <div className="order-2 lg:order-1">
-            <p className="text-[10px] font-medium uppercase tracking-[0.28em] text-[#FF0048]/90">
+            <p className="text-[10px] font-medium uppercase tracking-[0.28em] text-brand/90">
               Reviews
             </p>
             <h3 className="mt-2 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
@@ -72,7 +72,7 @@ export function LandingWhyClakete() {
             </p>
             <Link
               href="/sign-in"
-              className="mt-6 inline-flex text-sm font-medium text-[#FF0048] transition hover:text-[#ff335f]"
+              className="mt-6 inline-flex text-sm font-medium text-brand transition hover:text-brand-muted"
             >
               Start reviewing →
             </Link>
@@ -104,7 +104,7 @@ export function LandingWhyClakete() {
             />
           </div>
           <div>
-            <p className="text-[10px] font-medium uppercase tracking-[0.28em] text-[#FF0048]/90">
+            <p className="text-[10px] font-medium uppercase tracking-[0.28em] text-brand/90">
               Lists
             </p>
             <h3 className="mt-2 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
@@ -115,7 +115,7 @@ export function LandingWhyClakete() {
             </p>
             <Link
               href="/lists"
-              className="mt-6 inline-flex text-sm font-medium text-[#FF0048] transition hover:text-[#ff335f]"
+              className="mt-6 inline-flex text-sm font-medium text-brand transition hover:text-brand-muted"
             >
               View lists →
             </Link>

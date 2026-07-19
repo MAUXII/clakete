@@ -1,22 +1,18 @@
 import * as React from "react";
 
-type PossibleRef<T> = React.LegacyRef<T> | undefined;
+type PossibleRef<T> = React.Ref<T> | React.LegacyRef<T> | undefined;
 
 /**
  * Set a given ref to a given value
  * This utility takes care of different types of refs: callback refs and RefObject(s)
  */
 function setRef<T>(ref: PossibleRef<T>, value: T) {
-  if (typeof ref === "string" || ref == null) {
-    return;
-  }
-
   if (typeof ref === "function") {
     return ref(value);
   }
 
-  if (typeof ref === "object" && "current" in ref) {
-    (ref as React.MutableRefObject<T>).current = value;
+  if (ref && typeof ref === "object") {
+    ;(ref as React.MutableRefObject<T>).current = value
   }
 }
 
@@ -46,7 +42,7 @@ function composeRefs<T>(...refs: PossibleRef<T>[]): React.RefCallback<T> {
           if (typeof cleanup === "function") {
             cleanup();
           } else {
-            setRef(refs[i], null);
+            setRef(refs[i], null as T);
           }
         }
       };
@@ -64,3 +60,4 @@ function useComposedRefs<T>(...refs: PossibleRef<T>[]): React.RefCallback<T> {
 }
 
 export { composeRefs, useComposedRefs };
+export type { PossibleRef };

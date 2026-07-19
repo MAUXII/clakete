@@ -25,6 +25,9 @@ import {
 } from "@/lib/locale-prefs"
 import { cn } from "@/lib/utils"
 import { useT } from "@/components/providers/i18n-provider"
+import { AppearancePreferences } from "@/components/profile/appearance-preferences"
+import type { ColorModePreference } from "@/lib/user-home-preferences"
+import { useAppearance } from "@/components/providers/appearance-provider"
 
 export function HomePreferencesEditor({
   initialJson,
@@ -41,6 +44,7 @@ export function HomePreferencesEditor({
   onHomeBackdropUpdated?: () => void | Promise<void>
 }) {
   const { t } = useT()
+  const { accentHex, colorModePreference } = useAppearance()
   const [prefs, setPrefs] = useState<UserHomePreferences>(() =>
     parseUserHomePreferences(initialJson),
   )
@@ -51,7 +55,15 @@ export function HomePreferencesEditor({
   const { isShining } = useSubscription()
 
   useEffect(() => {
-    setPrefs(parseUserHomePreferences(initialJson))
+    const parsed = parseUserHomePreferences(initialJson)
+    setPrefs({
+      ...parsed,
+      // Seed from live appearance so saving other prefs doesn't reset accent.
+      accent_color: accentHex,
+      color_mode: colorModePreference ?? parsed.color_mode ?? "dark",
+    })
+    // Only re-seed when the dialog source prefs change (open / refresh).
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional
   }, [initialJson])
 
   const backdropPreview = profileHomeBackdropPresentation({
@@ -96,6 +108,13 @@ export function HomePreferencesEditor({
 
   return (
     <div className="space-y-10">
+      <AppearancePreferences
+        onAccentChange={(hex) => update({ ...prefs, accent_color: hex })}
+        onColorModeChange={(mode: ColorModePreference) =>
+          update({ ...prefs, color_mode: mode })
+        }
+      />
+
       <div className="space-y-4">
         <div className="border-b border-border/60 pb-4">
           <h3 className="text-sm font-semibold text-foreground">{t("prefs.homeSections")}</h3>
@@ -109,7 +128,7 @@ export function HomePreferencesEditor({
             id="home-now"
             checked={prefs.show_now_showing}
             onCheckedChange={(v) => update({ ...prefs, show_now_showing: v })}
-            className="data-[state=checked]:bg-[#FF0048]"
+            className="data-[state=checked]:bg-brand"
           />
         </div>
         <div className="flex items-center justify-between gap-4 rounded-md border border-border/80 bg-background/50 px-4 py-3">
@@ -120,7 +139,7 @@ export function HomePreferencesEditor({
             id="home-up"
             checked={prefs.show_upcoming}
             onCheckedChange={(v) => update({ ...prefs, show_upcoming: v })}
-            className="data-[state=checked]:bg-[#FF0048]"
+            className="data-[state=checked]:bg-brand"
           />
         </div>
         <div className="flex items-center justify-between gap-4 rounded-md border border-border/80 bg-background/50 px-4 py-3">
@@ -131,7 +150,7 @@ export function HomePreferencesEditor({
             id="home-feed"
             checked={prefs.show_following_feed}
             onCheckedChange={(v) => update({ ...prefs, show_following_feed: v })}
-            className="data-[state=checked]:bg-[#FF0048]"
+            className="data-[state=checked]:bg-brand"
           />
         </div>
         <div className="flex items-center justify-between gap-4 rounded-md border border-border/80 bg-background/50 px-4 py-3">
@@ -142,7 +161,7 @@ export function HomePreferencesEditor({
             id="home-rev"
             checked={prefs.show_recent_reviews}
             onCheckedChange={(v) => update({ ...prefs, show_recent_reviews: v })}
-            className="data-[state=checked]:bg-[#FF0048]"
+            className="data-[state=checked]:bg-brand"
           />
         </div>
       </div>
@@ -163,7 +182,7 @@ export function HomePreferencesEditor({
             onChange={(e) =>
               update({ ...prefs, watch_region: e.target.value as WatchRegionId })
             }
-            className="flex h-10 w-full rounded-md border border-border/80 bg-background px-3 text-sm text-foreground outline-none focus-visible:ring-1 focus-visible:ring-[#FF0048]/40"
+            className="flex h-10 w-full rounded-md border border-border/80 bg-background px-3 text-sm text-foreground outline-none focus-visible:ring-1 focus-visible:ring-brand/40"
           >
             {WATCH_REGION_OPTIONS.map((region) => (
               <option key={region.id} value={region.id}>
@@ -183,7 +202,7 @@ export function HomePreferencesEditor({
             onChange={(e) =>
               update({ ...prefs, tmdb_language: e.target.value as TmdbLanguageId })
             }
-            className="flex h-10 w-full rounded-md border border-border/80 bg-background px-3 text-sm text-foreground outline-none focus-visible:ring-1 focus-visible:ring-[#FF0048]/40"
+            className="flex h-10 w-full rounded-md border border-border/80 bg-background px-3 text-sm text-foreground outline-none focus-visible:ring-1 focus-visible:ring-brand/40"
           >
             {TMDB_LANGUAGE_OPTIONS.map((lang) => (
               <option key={lang.id} value={lang.id}>
@@ -198,7 +217,7 @@ export function HomePreferencesEditor({
         <div className="border-b border-border/60 pb-4">
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="text-sm font-semibold text-foreground">{t("prefs.profileTheme")}</h3>
-            <span className="rounded-md bg-[#FF0048]/12 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#FF0048]">
+            <span className="rounded-md bg-brand/12 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-brand">
               {t("prefs.earlyAccess")}
             </span>
           </div>
@@ -208,7 +227,7 @@ export function HomePreferencesEditor({
         {!isShining ? (
           <p className="rounded-md border border-border/80 bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
             {t("prefs.unlockShiningBefore")}
-            <Link href="/account/billing" className="font-medium text-[#FF0048] underline-offset-2 hover:underline">
+            <Link href="/account/billing" className="font-medium text-brand underline-offset-2 hover:underline">
               The Shining
             </Link>
             {t("prefs.unlockShiningAfter")}
@@ -228,7 +247,7 @@ export function HomePreferencesEditor({
                 className={cn(
                   "rounded-md border px-4 py-3 text-left transition",
                   selected
-                    ? "border-[#FF0048]/50 bg-[#FF0048]/10"
+                    ? "border-brand/50 bg-brand/10"
                     : "border-border/80 bg-background/50 hover:border-border",
                   locked && "cursor-not-allowed opacity-50",
                 )}

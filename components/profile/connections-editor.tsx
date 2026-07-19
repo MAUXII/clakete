@@ -189,7 +189,7 @@ export function ConnectionsEditor({
                     <Switch
                       checked={showOnProfile}
                       onCheckedChange={(checked) => setDisplayFor(platform, checked)}
-                      className="data-[state=checked]:bg-[#FF0048]"
+                      className="data-[state=checked]:bg-brand"
                     />
                   </div>
                 </article>
@@ -254,7 +254,7 @@ export function ConnectionsEditor({
                 </Button>
                 <Button
                   type="button"
-                  className="bg-[#FF0048] text-white hover:bg-[#e60042]"
+                  className="bg-brand text-white hover:bg-brand-hover"
                   onClick={saveHandle}
                 >
                   Save

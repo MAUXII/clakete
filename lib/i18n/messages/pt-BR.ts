@@ -73,6 +73,16 @@ export const ptBR = {
     chooseBackdrop: "Escolher backdrop…",
     removeBackdrop: "Remover backdrop",
     noBackdrop: "Sem backdrop",
+    appearance: "Aparência",
+    appearanceHint:
+      "Cor de destaque e modo claro/escuro do app. Aplicam na hora; salve as preferências para sincronizar entre dispositivos.",
+    colorMode: "Tema",
+    modeLight: "Claro",
+    modeDark: "Escuro",
+    modeSystem: "Sistema",
+    accentColor: "Cor de destaque",
+    resetAccent: "Redefinir",
+    accentPresetsHint: "Presets rápidos ou escolha qualquer cor com o seletor.",
   },
   catalog: {
     whereToWatch: "Onde assistir",

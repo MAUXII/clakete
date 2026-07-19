@@ -80,14 +80,28 @@ const BG_STYLES: Record<
   },
   dark: {
     preview:
-      "radial-gradient(120% 75% at 50% 0%, rgba(255,0,72,0.16), transparent 55%), linear-gradient(160deg, #1a1320 0%, #0e0e12 55%, #0b0b0e 100%)",
+      "radial-gradient(120% 75% at 50% 0%, hsl(var(--brand) / 0.16), transparent 55%), linear-gradient(160deg, #1a1320 0%, #0e0e12 55%, #0b0b0e 100%)",
     exportColor: "#0b0b0e",
   },
   brand: {
     preview:
-      "radial-gradient(90% 70% at 50% 20%, #ff4d7a 0%, #FF0048 45%, #b80034 100%)",
-    exportColor: "#FF0048",
+      "radial-gradient(90% 70% at 50% 20%, hsl(var(--brand-light)) 0%, hsl(var(--brand)) 45%, hsl(var(--brand-hover)) 100%)",
+    exportColor: "brand",
   },
+}
+
+function resolveBgExportFill(exportColor: string | undefined): string {
+  if (!exportColor) return "#0b0b0e"
+  if (exportColor === "brand") {
+    if (typeof document !== "undefined") {
+      const hex = getComputedStyle(document.documentElement)
+        .getPropertyValue("--brand-hex")
+        .trim()
+      if (hex) return hex
+    }
+    return "#FF0048"
+  }
+  return exportColor
 }
 
 /** Same-origin proxy so TMDB images render with CORS (preview + html-to-image). */
@@ -217,7 +231,7 @@ export function ShareCardDialog({
     const h = stories ? STORIES_H : Math.max(1, exportSize.h)
     const transparent =
       bgStyle === "transparent" && !(model === "poster" || ticketInStories)
-    const solidFill = bg.exportColor ?? "#0b0b0e"
+    const solidFill = resolveBgExportFill(bg.exportColor)
     return {
       pixelRatio: stories ? 1 : 3,
       backgroundColor: transparent ? undefined : solidFill,
@@ -309,7 +323,7 @@ export function ShareCardDialog({
       // ratios as a small sticker over its own background.
       const stories = model === "poster" || ticketInStories
       const shareBlob = stories
-        ? await pngBlobToJpeg(pngBlob, bg.exportColor ?? "#0b0b0e")
+        ? await pngBlobToJpeg(pngBlob, resolveBgExportFill(bg.exportColor))
         : pngBlob
       const ext = stories ? "jpg" : "png"
       const mime = stories ? "image/jpeg" : "image/png"
@@ -433,7 +447,7 @@ export function ShareCardDialog({
     {
       value: "brand",
       label: t("share.bgBrand"),
-      swatch: "linear-gradient(135deg, #ff4d7a, #FF0048)",
+      swatch: "linear-gradient(135deg, hsl(var(--brand-light)), hsl(var(--brand)))",
     },
   ]
 
@@ -467,7 +481,7 @@ export function ShareCardDialog({
       <DialogContent className="flex max-h-[92vh] w-[calc(100vw-1.5rem)] max-w-[calc(100vw-1.5rem)] flex-col gap-0 overflow-hidden rounded-2xl p-0 sm:max-w-xl">
         <DialogHeader className="space-y-1 border-b border-border/60 px-5 py-4 text-left sm:px-6">
           <DialogTitle className="flex items-center gap-2 text-base">
-            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#FF0048]/12 text-[#e8486b]">
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-brand/12 text-brand-muted">
               <Share2 className="h-3.5 w-3.5" />
             </span>
             {t("share.title")}
@@ -492,7 +506,7 @@ export function ShareCardDialog({
                     className={cn(
                       "inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors",
                       active
-                        ? "bg-[#FF0048] text-white shadow-sm"
+                        ? "bg-brand text-white shadow-sm"
                         : "text-muted-foreground hover:text-foreground",
                     )}
                     aria-pressed={active}
@@ -743,7 +757,7 @@ export function ShareCardDialog({
         <div className="flex flex-col gap-2 border-t border-border/60 px-5 py-4 sm:flex-row sm:px-6">
           <Button
             type="button"
-            className="flex-1 bg-[#FF0048] text-white shadow-sm shadow-[#FF0048]/20 hover:bg-[#e60042]"
+            className="flex-1 bg-brand text-white shadow-sm shadow-brand/20 hover:bg-brand-hover"
             onClick={() => void (canWebShare ? handleShare() : handleDownload())}
             disabled={busy}
           >
@@ -773,7 +787,7 @@ export function ShareCardDialog({
             aria-label={t("share.copy")}
           >
             {copied ? (
-              <Check className="h-4 w-4 text-[#FF0048]" />
+              <Check className="h-4 w-4 text-brand" />
             ) : (
               <Copy className="h-4 w-4" />
             )}

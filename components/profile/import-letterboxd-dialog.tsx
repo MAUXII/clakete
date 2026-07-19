@@ -273,7 +273,7 @@ export function ImportLetterboxdDialog({
 
         <div className="space-y-4 py-1">
           {phase === "pick" ? (
-            <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-white/[0.12] bg-zinc-950/40 px-4 py-10 text-center transition hover:border-[#FF0048]/40 hover:bg-[#FF0048]/5">
+            <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-white/[0.12] bg-zinc-950/40 px-4 py-10 text-center transition hover:border-brand/40 hover:bg-brand/5">
               <FileUp className="size-6 text-zinc-500" />
               <span className="text-sm text-zinc-300">Choose Letterboxd CSV</span>
               <span className="text-xs text-zinc-600">diary.csv recommended</span>
@@ -293,14 +293,14 @@ export function ImportLetterboxdDialog({
           {phase === "matching" || phase === "importing" ? (
             <div className="space-y-2 rounded-lg border border-white/[0.08] bg-zinc-950/50 p-4">
               <div className="flex items-center gap-2 text-sm text-zinc-300">
-                <Loader2 className="size-4 animate-spin text-[#FF0048]" />
+                <Loader2 className="size-4 animate-spin text-brand" />
                 {phase === "matching"
                   ? `Matching to TMDB… ${progress.done}/${progress.total}`
                   : `Saving… ${progress.done}/${progress.total}`}
               </div>
               <div className="h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
                 <div
-                  className="h-full bg-[#FF0048] transition-all"
+                  className="h-full bg-brand transition-all"
                   style={{ width: `${pct}%` }}
                 />
               </div>
@@ -367,7 +367,7 @@ export function ImportLetterboxdDialog({
               </Button>
               <Button
                 type="button"
-                className="bg-[#FF0048] text-white hover:bg-[#e60042]"
+                className="bg-brand text-white hover:bg-brand-hover"
                 onClick={() => void runImport()}
                 disabled={matchedCount === 0}
               >
@@ -378,7 +378,7 @@ export function ImportLetterboxdDialog({
           ) : phase === "done" ? (
             <Button
               type="button"
-              className="bg-[#FF0048] text-white hover:bg-[#e60042]"
+              className="bg-brand text-white hover:bg-brand-hover"
               onClick={() => handleClose(false)}
             >
               Done

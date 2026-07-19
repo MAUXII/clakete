@@ -95,7 +95,7 @@ export function MovieCard({ movie, externalid, variant = 'default', extraActions
         
         {movie?.vote_average && (
           <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            <Badge variant="secondary" className="font-medium text-[#FF0048] rounded-sm">
+            <Badge variant="secondary" className="font-medium text-brand rounded-sm">
               {movie.vote_average.toFixed(1)} ★
             </Badge>
           </div>
@@ -105,8 +105,8 @@ export function MovieCard({ movie, externalid, variant = 'default', extraActions
             onClick={(e) => handleAction('watch', e)}
             className={`p-2 rounded-md border transition-colors ${
               localWatched 
-                ? "bg-[#280F16] text-[#FF0048] border-[#FF0048]/20 hover:bg-[#280F16]" 
-                : "bg-secondary text-white border-transparent hover:bg-[#280F16] hover:text-[#FF0048] hover:border-[#FF0048]/20"
+                ? "bg-[#280F16] text-brand border-brand/20 hover:bg-[#280F16]" 
+                : "bg-secondary text-white border-transparent hover:bg-[#280F16] hover:text-brand hover:border-brand/20"
             }`}
             title={localWatched ? 'Remover dos assistidos' : 'Marcar como assistido'}
           >
@@ -116,8 +116,8 @@ export function MovieCard({ movie, externalid, variant = 'default', extraActions
             onClick={(e) => handleAction('like', e)}
             className={`p-2 rounded-md border transition-colors ${
               localLiked 
-                ? "bg-[#280F16] text-[#FF0048] border-[#FF0048]/20 hover:bg-[#280F16]" 
-                : "bg-secondary text-white border-transparent hover:bg-[#280F16] hover:text-[#FF0048] hover:border-[#FF0048]/20"
+                ? "bg-[#280F16] text-brand border-brand/20 hover:bg-[#280F16]" 
+                : "bg-secondary text-white border-transparent hover:bg-[#280F16] hover:text-brand hover:border-brand/20"
             }`}
             title={localLiked ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
           >

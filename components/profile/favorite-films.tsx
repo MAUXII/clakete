@@ -110,7 +110,7 @@ function FavoriteSlot({
           {canEdit && (
             <ContextMenuContent className="w-full">
               <ContextMenuItem
-                className="flex items-center gap-2 px-6 py-3 hover:bg-[#ff0048]/10 hover:text-[#ff0048] hover:dark:bg-[#ff0048]/10 hover:dark:text-[#ff0048]"
+                className="flex items-center gap-2 px-6 py-3 hover:bg-brand/10 hover:text-brand hover:dark:bg-brand/10 hover:dark:text-brand"
                 onClick={handleRemoveClick}
                 onPointerUp={(e) => e.stopPropagation()}
                 onPointerDown={(e) => e.stopPropagation()}

@@ -137,7 +137,7 @@ export default function SignUp() {
       <section className="flex h-full w-full flex-col items-center justify-center lg:w-1/2">
         <div className="flex w-full max-w-[400px] flex-col gap-5">
           <div className="flex flex-col">
-            <h1 className="text-4xl font-bold text-[#FF0048]">Join Clakete</h1>
+            <h1 className="text-4xl font-bold text-brand">Join Clakete</h1>
             <span className="text-sm text-muted-foreground">Create your free account</span>
             <AuthClaketeWordmark className="absolute left-12 top-12" />
           </div>
@@ -146,7 +146,7 @@ export default function SignUp() {
             type="button"
             onClick={handleGoogleSignUp}
             disabled={loading}
-            className="mt-4 w-full border border-black/10 bg-transparent p-[22px] font-semibold text-black hover:bg-[#FF0048]/10 hover:text-[#FF0048] dark:border-white/10 dark:text-white dark:hover:text-[#FF0048]"
+            className="mt-4 w-full border border-black/10 bg-transparent p-[22px] font-semibold text-black hover:bg-brand/10 hover:text-brand dark:border-white/10 dark:text-white dark:hover:text-brand"
           >
             <AuthGoogleIcon className="mr-2 h-4 w-4" />
             Google
@@ -201,7 +201,7 @@ export default function SignUp() {
               />
               <Button
                 type="submit"
-                className="w-full border border-black/10 bg-[#FF0048] p-[22px] font-semibold text-white hover:bg-[#FF0048]/80 dark:border-white/10"
+                className="w-full border border-black/10 bg-brand p-[22px] font-semibold text-white hover:bg-brand/80 dark:border-white/10"
                 disabled={loading}
               >
                 {loading ? 'Creating account…' : 'Create account'}
@@ -211,7 +211,7 @@ export default function SignUp() {
 
           <p className="mt-4 text-center text-sm text-muted-foreground">
             Already have an account?{' '}
-            <Link href="/sign-in" className="text-[#FF0048] hover:underline">
+            <Link href="/sign-in" className="text-brand hover:underline">
               Sign in
             </Link>
           </p>

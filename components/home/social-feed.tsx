@@ -87,7 +87,7 @@ function StoriesStrip({
               {(selfUsername?.[0] || "Y").toUpperCase()}
             </AvatarFallback>
           </Avatar>
-          <span className="absolute -bottom-0.5 -right-0.5 flex size-5 items-center justify-center rounded-full bg-[#FF0048] text-white ring-2 ring-[#09090B]">
+          <span className="absolute -bottom-0.5 -right-0.5 flex size-5 items-center justify-center rounded-full bg-brand text-white ring-2 ring-[#09090B]">
             <Plus className="size-3" strokeWidth={3} />
           </span>
         </span>
@@ -105,7 +105,7 @@ function StoriesStrip({
             className={cn(
               "flex size-[58px] items-center justify-center rounded-full p-[2px]",
               u.hasNew
-                ? "bg-gradient-to-br from-[#FF0048] via-[#ff4d7a] to-[#ff9eb0]"
+                ? "bg-gradient-to-br from-brand via-brand-muted to-brand-light"
                 : "bg-white/[0.12]",
             )}
           >
@@ -132,7 +132,7 @@ function Composer({ onClick }: { onClick: () => void }) {
       onClick={onClick}
       className="flex w-full items-center gap-3 rounded-2xl border border-white/[0.08] bg-zinc-950/60 px-3.5 py-3 text-left transition hover:border-white/[0.14] hover:bg-zinc-950"
     >
-      <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#FF0048]/15 text-[#FF0048]">
+      <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand/15 text-brand">
         <Plus className="size-4" strokeWidth={2.5} />
       </span>
       <span className="min-w-0 flex-1 text-sm text-zinc-500">
@@ -462,7 +462,7 @@ export function SocialFeed({
           </p>
           <Link
             href="/lists"
-            className="mt-4 inline-flex text-sm font-medium text-[#ff9eb0] transition hover:text-[#FF0048]"
+            className="mt-4 inline-flex text-sm font-medium text-brand-light transition hover:text-brand"
           >
             Browse public lists →
           </Link>
@@ -477,7 +477,7 @@ export function SocialFeed({
         <button
           type="button"
           onClick={openComposer}
-          className="mt-4 inline-flex text-sm font-medium text-[#ff9eb0] transition hover:text-[#FF0048]"
+          className="mt-4 inline-flex text-sm font-medium text-brand-light transition hover:text-brand"
         >
           Log something yourself →
         </button>
@@ -530,7 +530,7 @@ export function SocialFeed({
           <button
             type="button"
             onClick={() => void refresh()}
-            className="mt-3 text-sm text-[#ff9eb0] hover:text-[#FF0048]"
+            className="mt-3 text-sm text-brand-light hover:text-brand"
           >
             Try again
           </button>

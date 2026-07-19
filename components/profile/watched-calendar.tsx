@@ -125,7 +125,7 @@ export function WatchedCalendar({
             <div
               className={cn(
                 "relative aspect-square overflow-hidden rounded-md border border-white/[0.06] bg-zinc-950/80",
-                isToday && "ring-1 ring-[#FF0048]/50",
+                isToday && "ring-1 ring-brand/50",
                 dayItems.length === 0 && "opacity-40",
               )}
             >

@@ -189,7 +189,7 @@ export function EditWatchLogDialog({
             </Button>
             <Button
               type="button"
-              className="flex-1 bg-[#FF0048] text-white hover:bg-[#e60042] sm:flex-none"
+              className="flex-1 bg-brand text-white hover:bg-brand-hover sm:flex-none"
               onClick={() => void handleSave()}
               disabled={busy || !date}
             >

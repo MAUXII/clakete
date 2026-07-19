@@ -200,7 +200,7 @@ export function UserRecentReviews({
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div className="min-w-0">
                       <Link href={href} className="group inline-flex flex-wrap items-baseline gap-2">
-                        <h3 className="text-lg font-medium text-zinc-100 transition-colors group-hover:text-[#FF0048] sm:text-xl">
+                        <h3 className="text-lg font-medium text-zinc-100 transition-colors group-hover:text-brand sm:text-xl">
                           {review.movie_title}
                         </h3>
                         {year ? (

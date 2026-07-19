@@ -29,7 +29,6 @@ import { FREE_PRIVATE_LIST_LIMIT } from "@/lib/plans"
 import { cn } from "@/lib/utils"
 
 const MIN_REQUIRED_TITLES = 5
-const CLAKETE = "#FF0048"
 
 interface CreateListDialogProps {
   open: boolean
@@ -231,10 +230,10 @@ export function CreateListDialog({ open, onOpenChange, onListCreated }: CreateLi
         <div
           className="relative shrink-0 overflow-hidden border-b border-zinc-800/80 px-6 py-3.5"
           style={{
-            background: `linear-gradient(120deg, #09090b 0%, #18181b 45%, color-mix(in srgb, ${CLAKETE} 22%, #09090b) 100%)`,
+            background: `linear-gradient(120deg, #09090b 0%, #18181b 45%, color-mix(in srgb, var(--brand-hex, #FF0048) 22%, #09090b) 100%)`,
           }}
         >
-          <div className="pointer-events-none absolute -right-10 -top-14 h-40 w-40 rounded-full bg-[#FF0048]/20 blur-3xl" />
+          <div className="pointer-events-none absolute -right-10 -top-14 h-40 w-40 rounded-full bg-brand/20 blur-3xl" />
           <div className="relative min-w-0">
             <h2 className="text-base font-semibold tracking-tight text-white">Nova lista</h2>
             <p className="mt-0.5 text-xs text-zinc-400">Etapa {step} de 3</p>
@@ -248,7 +247,7 @@ export function CreateListDialog({ open, onOpenChange, onListCreated }: CreateLi
                 key={n}
                 className={cn(
                   "h-1.5 flex-1 rounded-full",
-                  step >= n ? "bg-[#FF0048]" : "bg-zinc-700/40",
+                  step >= n ? "bg-brand" : "bg-zinc-700/40",
                 )}
               />
             ))}
@@ -332,7 +331,7 @@ export function CreateListDialog({ open, onOpenChange, onListCreated }: CreateLi
                       type="checkbox"
                       checked={shareToFeed}
                       onChange={(e) => setShareToFeed(e.target.checked)}
-                      className="mt-1 h-4 w-4 accent-[#FF0048]"
+                      className="mt-1 h-4 w-4 accent-brand"
                     />
                     <span>
                       <span className="font-medium text-foreground">Share to feed</span>
@@ -350,11 +349,11 @@ export function CreateListDialog({ open, onOpenChange, onListCreated }: CreateLi
                         className={cn(
                           "flex flex-col items-start gap-1 rounded-lg border px-3 py-2.5 text-left transition",
                           feedVisibility === "friends"
-                            ? "border-[#FF0048]/40 bg-[#FF0048]/10"
+                            ? "border-brand/40 bg-brand/10"
                             : "border-border/80 hover:border-border",
                         )}
                       >
-                        <Users className="size-4 text-[#FF0048]" />
+                        <Users className="size-4 text-brand" />
                         <span className="text-xs font-medium">Friends</span>
                         <span className="text-[10px] text-muted-foreground">
                           Mutual follows only
@@ -368,11 +367,11 @@ export function CreateListDialog({ open, onOpenChange, onListCreated }: CreateLi
                           "flex flex-col items-start gap-1 rounded-lg border px-3 py-2.5 text-left transition",
                           !isPublic && "cursor-not-allowed opacity-40",
                           feedVisibility === "public"
-                            ? "border-[#FF0048]/40 bg-[#FF0048]/10"
+                            ? "border-brand/40 bg-brand/10"
                             : "border-border/80 hover:border-border",
                         )}
                       >
-                        <Globe2 className="size-4 text-[#FF0048]" />
+                        <Globe2 className="size-4 text-brand" />
                         <span className="text-xs font-medium">Public</span>
                         <span className="text-[10px] text-muted-foreground">
                           {isPublic ? "Anyone on Clakete" : "Lista precisa ser pública"}
@@ -551,7 +550,7 @@ export function CreateListDialog({ open, onOpenChange, onListCreated }: CreateLi
                 <Button
                   type="submit"
                   disabled={!canSubmit}
-                  className="rounded-xl bg-[#FF0048] text-white hover:bg-[#e60042]"
+                  className="rounded-xl bg-brand text-white hover:bg-brand-hover"
                 >
                   {loading ? (
                     <>

@@ -13,8 +13,8 @@ export const profileBioEditorTheme: EditorThemeClasses = {
     h6: "text-sm font-medium",
   },
   paragraph: "leading-relaxed [&:not(:first-child)]:mt-3",
-  quote: "border-l-2 border-l-[#FF0048]/45 pl-4 italic text-muted-foreground",
-  link: "text-[#FF0048] hover:text-[#e60042] hover:underline cursor-pointer",
+  quote: "border-l-2 border-l-brand/45 pl-4 italic text-muted-foreground",
+  link: "text-brand hover:text-brand-hover hover:underline cursor-pointer",
   list: {
     listitem: "my-1",
     nested: { listitem: "list-none" },

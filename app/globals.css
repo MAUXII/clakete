@@ -6,8 +6,8 @@
 @keyframes feed-post-locate {
   0%,
   15% {
-    background-color: rgba(255, 0, 72, 0.14);
-    box-shadow: inset 3px 0 0 0 rgba(255, 0, 72, 0.55);
+    background-color: hsl(var(--brand) / 0.14);
+    box-shadow: inset 3px 0 0 0 hsl(var(--brand) / 0.55);
   }
   100% {
     background-color: transparent;
@@ -414,7 +414,18 @@ input:-webkit-autofill:active {
     --destructive-foreground: 0 0% 98%;
     --border: 240 5.9% 90%;
     --input: 240 5.9% 90%;
-    --ring: 240 10% 3.9%;
+    --ring: 347 100% 50%;
+    /* Clakete brand accent (Discord-style; overridden by AppearanceProvider) */
+    --brand: 347 100% 50%;
+    --brand-hover: 347 100% 44%;
+    --brand-muted: 347 70% 64%;
+    --brand-light: 347 100% 81%;
+    --brand-hex: #ff0048;
+    --brand-foreground: #ffffff;
+    /* Profile tabs follow accent unless a Shining profile theme overrides */
+    --profile-tab-active: hsl(var(--brand-muted));
+    --profile-tab-active-dark: hsl(var(--brand-light));
+    --profile-indicator: hsl(var(--brand) / 0.12);
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
@@ -441,7 +452,16 @@ input:-webkit-autofill:active {
     --destructive-foreground: 0 0% 98%;
     --border: 240 3.7% 15.9%;
     --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
+    --ring: 347 100% 50%;
+    --brand: 347 100% 50%;
+    --brand-hover: 347 100% 44%;
+    --brand-muted: 347 70% 64%;
+    --brand-light: 347 100% 81%;
+    --brand-hex: #ff0048;
+    --brand-foreground: #ffffff;
+    --profile-tab-active: hsl(var(--brand-muted));
+    --profile-tab-active-dark: hsl(var(--brand-light));
+    --profile-indicator: hsl(var(--brand) / 0.14);
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;

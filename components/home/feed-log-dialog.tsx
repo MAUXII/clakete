@@ -201,11 +201,11 @@ export function FeedLogDialog({
                   className={cn(
                     "flex flex-col items-start gap-1 rounded-lg border px-3 py-2.5 text-left transition",
                     visibility === "friends"
-                      ? "border-[#FF0048]/40 bg-[#FF0048]/10"
+                      ? "border-brand/40 bg-brand/10"
                       : "border-border/80 hover:border-border",
                   )}
                 >
-                  <Users className="size-4 text-[#FF0048]" />
+                  <Users className="size-4 text-brand" />
                   <span className="text-xs font-medium">Friends</span>
                   <span className="text-[10px] text-muted-foreground">
                     Mutual follows only
@@ -218,11 +218,11 @@ export function FeedLogDialog({
                   className={cn(
                     "flex flex-col items-start gap-1 rounded-lg border px-3 py-2.5 text-left transition",
                     visibility === "public"
-                      ? "border-[#FF0048]/40 bg-[#FF0048]/10"
+                      ? "border-brand/40 bg-brand/10"
                       : "border-border/80 hover:border-border",
                   )}
                 >
-                  <Globe2 className="size-4 text-[#FF0048]" />
+                  <Globe2 className="size-4 text-brand" />
                   <span className="text-xs font-medium">Public</span>
                   <span className="text-[10px] text-muted-foreground">Anyone on Clakete</span>
                 </button>
@@ -242,7 +242,7 @@ export function FeedLogDialog({
           </Button>
           <Button
             type="button"
-            className="bg-[#FF0048] text-white hover:bg-[#e60042]"
+            className="bg-brand text-white hover:bg-brand-hover"
             onClick={() => void handlePrimary()}
             disabled={busy || !date}
           >

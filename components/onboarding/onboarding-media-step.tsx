@@ -88,7 +88,7 @@ export function OnboardingMediaStep({
           <div
             className={cn(
               "relative w-full overflow-hidden bg-cover bg-center bg-no-repeat",
-              !bannerMeta && "bg-[radial-gradient(ellipse_at_50%_35%,rgba(255,0,72,0.12),transparent_55%)]",
+              !bannerMeta && "bg-[radial-gradient(ellipse_at_50%_35%,hsl(var(--brand) / 0.12),transparent_55%)]",
             )}
             style={{
               aspectRatio: BANNER_ASPECT,
@@ -115,7 +115,7 @@ export function OnboardingMediaStep({
             <button
               type="button"
               onClick={() => setShowAvatarEdit(true)}
-              className="group relative rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0048]/50"
+              className="group relative rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50"
             >
               <Avatar className="h-24 w-24 z-20 border-4 border-[#09090B] ring-2 ring-white/10">
                 <AvatarImage

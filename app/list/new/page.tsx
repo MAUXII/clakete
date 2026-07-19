@@ -241,7 +241,7 @@ export default function NewListPage() {
                     aria-label={`Movies in list: ${pickedMovies.length} of ${MIN_TITLES_TO_FINISH}`}
                   >
                     <div
-                      className="absolute inset-y-0 left-0 rounded-full bg-[#FF0048] transition-[width] duration-300 ease-out"
+                      className="absolute inset-y-0 left-0 rounded-full bg-brand transition-[width] duration-300 ease-out"
                       style={{ width: `${moviesBarFillPercent}%` }}
                     />
                   </div>
@@ -253,7 +253,7 @@ export default function NewListPage() {
                   key={s}
                   className={cn(
                     "h-1.5 flex-1 rounded-full transition-colors duration-300",
-                    filled ? "bg-[#FF0048]" : "bg-white/15",
+                    filled ? "bg-brand" : "bg-white/15",
                   )}
                 />
               )
@@ -350,7 +350,7 @@ export default function NewListPage() {
                     className={cn(
                       "h-10 min-w-[140px] rounded-full px-5 text-sm font-semibold transition-colors",
                       canContinueStep1
-                        ? "bg-[#FF0048] text-white hover:bg-[#e60042]"
+                        ? "bg-brand text-white hover:bg-brand-hover"
                         : "cursor-not-allowed bg-white/10 text-zinc-500",
                     )}
                   >
@@ -373,7 +373,7 @@ export default function NewListPage() {
                 className={cn(
                   "h-10 min-w-[140px] rounded-full px-5 text-sm font-semibold transition-colors",
                   canContinueStep2
-                    ? "bg-[#FF0048] text-white hover:bg-[#e60042]"
+                    ? "bg-brand text-white hover:bg-brand-hover"
                     : "cursor-not-allowed bg-white/10 text-zinc-500",
                 )}
               >
@@ -397,7 +397,7 @@ export default function NewListPage() {
                 className={cn(
                   "h-10 min-w-[140px] rounded-full px-5 text-sm font-semibold transition-colors",
                   canContinueStep3
-                    ? "bg-[#FF0048] text-white hover:bg-[#e60042]"
+                    ? "bg-brand text-white hover:bg-brand-hover"
                     : "cursor-not-allowed bg-white/10 text-zinc-500",
                 )}
               >

@@ -56,7 +56,7 @@ export function FilmReview({
         <DialogTrigger asChild>
           <Button
             variant="outline"
-            className="w-full border-dashed hover:bg-[#FF0048]/10 hover:text-[#FF0048] hover:border-[#FF0048]/20 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full border-dashed hover:bg-brand/10 hover:text-brand hover:border-brand/20 disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={disabled}
           >
             <IoAdd className="mr-2 h-4 w-4" />
@@ -101,11 +101,11 @@ export function FilmReview({
                     className={cn(
                       "flex flex-col items-start gap-1 rounded-lg border px-3 py-2.5 text-left transition",
                       visibility === "friends"
-                        ? "border-[#FF0048]/40 bg-[#FF0048]/10"
+                        ? "border-brand/40 bg-brand/10"
                         : "border-border/80 hover:border-border",
                     )}
                   >
-                    <Users className="size-4 text-[#FF0048]" />
+                    <Users className="size-4 text-brand" />
                     <span className="text-xs font-medium">Friends</span>
                     <span className="text-[10px] text-muted-foreground">
                       Mutual follows only
@@ -118,11 +118,11 @@ export function FilmReview({
                     className={cn(
                       "flex flex-col items-start gap-1 rounded-lg border px-3 py-2.5 text-left transition",
                       visibility === "public"
-                        ? "border-[#FF0048]/40 bg-[#FF0048]/10"
+                        ? "border-brand/40 bg-brand/10"
                         : "border-border/80 hover:border-border",
                     )}
                   >
-                    <Globe2 className="size-4 text-[#FF0048]" />
+                    <Globe2 className="size-4 text-brand" />
                     <span className="text-xs font-medium">Public</span>
                     <span className="text-[10px] text-muted-foreground">Anyone on Clakete</span>
                   </button>
@@ -140,7 +140,7 @@ export function FilmReview({
               </Button>
               <Button
                 onClick={handleSubmit}
-                className="bg-[#FF0048] hover:bg-[#FF0048]/90 disabled:opacity-50"
+                className="bg-brand hover:bg-brand/90 disabled:opacity-50"
                 disabled={disabled || !review.trim()}
               >
                 {existingReview ? "Update Review" : "Post Review"}

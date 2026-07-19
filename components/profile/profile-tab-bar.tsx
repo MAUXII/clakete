@@ -24,10 +24,11 @@ const profileTabTriggerClass = cn(
   "relative z-10 h-full w-full rounded-md bg-transparent px-8 py-2 text-sm font-medium shadow-none transition-colors",
   "text-zinc-400 group-hover:text-zinc-200 dark:group-hover:text-zinc-100",
   "data-[state=active]:!bg-transparent data-[state=active]:!shadow-none",
-  "data-[state=active]:!text-[var(--profile-tab-active,#e8486b)]",
-  "dark:data-[state=active]:!text-[var(--profile-tab-active-dark,#ff9eb0)]",
-  "data-[state=active]:group-hover:!text-[var(--profile-tab-active,#e8486b)]",
-  "dark:data-[state=active]:group-hover:!text-[var(--profile-tab-active-dark,#ff9eb0)]",
+  // Defaults (--profile-tab-active*) follow app accent; profile themes override.
+  "data-[state=active]:!text-[var(--profile-tab-active)]",
+  "dark:data-[state=active]:!text-[var(--profile-tab-active-dark)]",
+  "data-[state=active]:group-hover:!text-[var(--profile-tab-active)]",
+  "dark:data-[state=active]:group-hover:!text-[var(--profile-tab-active-dark)]",
 )
 
 const INDICATOR_SPRING = {
@@ -100,7 +101,8 @@ export function ProfileTabBar({ username, activeTab, children }: ProfileTabBarPr
         {indicator ? (
           <motion.div
             aria-hidden
-            className="pointer-events-none absolute inset-y-1 rounded-md bg-[var(--profile-indicator,rgba(255,0,72,0.1))] dark:bg-[var(--profile-indicator,rgba(255,0,72,0.14))]"
+            className="pointer-events-none absolute inset-y-1 rounded-md"
+            style={{ backgroundColor: "var(--profile-indicator)" }}
             initial={false}
             animate={{
               left: indicator.left,

@@ -371,7 +371,7 @@ export function FeedEditDialog({
                         className={cn(
                           "masonry-item group relative block w-full overflow-hidden rounded-lg text-left ring-1 transition",
                           isSelected
-                            ? "ring-2 ring-[#FF0048]"
+                            ? "ring-2 ring-brand"
                             : "ring-white/[0.06] hover:ring-white/20",
                           !isSelected &&
                             selected.length >= MAX_IMAGES &&
@@ -390,7 +390,7 @@ export function FeedEditDialog({
                           decoding="async"
                         />
                         {isSelected ? (
-                          <span className="absolute bottom-1.5 right-1.5 flex size-6 items-center justify-center rounded-full bg-[#FF0048] text-[11px] font-semibold text-white">
+                          <span className="absolute bottom-1.5 right-1.5 flex size-6 items-center justify-center rounded-full bg-brand text-[11px] font-semibold text-white">
                             {order}
                           </span>
                         ) : (
@@ -472,11 +472,11 @@ export function FeedEditDialog({
                       className={cn(
                         "flex flex-col items-start gap-1 rounded-lg border px-3 py-2.5 text-left transition",
                         layout === "slide"
-                          ? "border-[#FF0048]/40 bg-[#FF0048]/10"
+                          ? "border-brand/40 bg-brand/10"
                           : "border-border/80 hover:border-border",
                       )}
                     >
-                      <GalleryHorizontal className="size-4 text-[#FF0048]" />
+                      <GalleryHorizontal className="size-4 text-brand" />
                       <span className="text-xs font-medium">Slide</span>
                     </button>
                     <button
@@ -486,11 +486,11 @@ export function FeedEditDialog({
                       className={cn(
                         "flex flex-col items-start gap-1 rounded-lg border px-3 py-2.5 text-left transition",
                         layout === "collage"
-                          ? "border-[#FF0048]/40 bg-[#FF0048]/10"
+                          ? "border-brand/40 bg-brand/10"
                           : "border-border/80 hover:border-border",
                       )}
                     >
-                      <LayoutGrid className="size-4 text-[#FF0048]" />
+                      <LayoutGrid className="size-4 text-brand" />
                       <span className="text-xs font-medium">All in one</span>
                     </button>
                   </div>
@@ -507,11 +507,11 @@ export function FeedEditDialog({
                     className={cn(
                       "flex flex-col items-start gap-1 rounded-lg border px-3 py-2.5 text-left transition",
                       visibility === "friends"
-                        ? "border-[#FF0048]/40 bg-[#FF0048]/10"
+                        ? "border-brand/40 bg-brand/10"
                         : "border-border/80 hover:border-border",
                     )}
                   >
-                    <Users className="size-4 text-[#FF0048]" />
+                    <Users className="size-4 text-brand" />
                     <span className="text-xs font-medium">Friends</span>
                     <span className="text-[10px] text-muted-foreground">
                       Mutual follows only
@@ -524,11 +524,11 @@ export function FeedEditDialog({
                     className={cn(
                       "flex flex-col items-start gap-1 rounded-lg border px-3 py-2.5 text-left transition",
                       visibility === "public"
-                        ? "border-[#FF0048]/40 bg-[#FF0048]/10"
+                        ? "border-brand/40 bg-brand/10"
                         : "border-border/80 hover:border-border",
                     )}
                   >
-                    <Globe2 className="size-4 text-[#FF0048]" />
+                    <Globe2 className="size-4 text-brand" />
                     <span className="text-xs font-medium">Public</span>
                     <span className="text-[10px] text-muted-foreground">
                       Anyone on Clakete
@@ -551,7 +551,7 @@ export function FeedEditDialog({
           </Button>
           <Button
             type="button"
-            className="bg-[#FF0048] text-white hover:bg-[#e60042]"
+            className="bg-brand text-white hover:bg-brand-hover"
             disabled={busy || selected.length === 0}
             onClick={() => void handleSave()}
           >

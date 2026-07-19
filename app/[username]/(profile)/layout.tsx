@@ -533,7 +533,7 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
                                 className={cn(
                                   "relative z-10 flex h-full w-full items-center justify-center whitespace-nowrap rounded-md px-8 py-2 text-sm font-medium",
                                   isActive
-                                    ? "bg-[#FF0048]/10 text-[#e8486b]"
+                                    ? "bg-brand/10 text-brand-muted"
                                     : "text-zinc-400",
                                 )}
                               >
@@ -570,7 +570,7 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
           <p className="text-muted-foreground">Não foi possível carregar este perfil.</p>
           <Link
             href="/"
-            className="mt-4 inline-block text-sm font-medium text-[#FF0048] underline underline-offset-2 hover:opacity-90"
+            className="mt-4 inline-block text-sm font-medium text-brand underline underline-offset-2 hover:opacity-90"
           >
             Voltar ao início
           </Link>
@@ -818,7 +818,7 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
                         "px-4 py-2 rounded-md transition-colors w-full border border-black/10 dark:border-white/10 flex items-center justify-center",
                         themed
                           ? "profile-theme-follow"
-                          : "bg-[#FF0048]/10 text-[#FF0048]/70",
+                          : "bg-brand/10 text-brand/70",
                       )}
                     >
                       {stats.isFollowing ? 'Unfollow' : 'Follow'}

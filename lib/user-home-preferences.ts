@@ -8,6 +8,13 @@ import {
   type TmdbLanguageId,
   type WatchRegionId,
 } from "@/lib/locale-prefs"
+import { DEFAULT_BRAND_HEX, normalizeHex } from "@/lib/brand-accent"
+
+export type ColorModePreference = "light" | "dark" | "system"
+
+export function isColorModePreference(v: unknown): v is ColorModePreference {
+  return v === "light" || v === "dark" || v === "system"
+}
 
 /**
  * Coluna `users.home_preferences` (JSON): toggles de seções + opcional
@@ -27,6 +34,10 @@ export interface UserHomePreferences {
   watch_region?: WatchRegionId
   /** TMDB API `language` for titles & overviews (default pt-BR). */
   tmdb_language?: TmdbLanguageId
+  /** App-wide accent (Discord-style). Synced via home_preferences JSON. */
+  accent_color?: string
+  /** App light/dark preference (next-themes). */
+  color_mode?: ColorModePreference
 }
 
 export const defaultUserHomePreferences: UserHomePreferences = {
@@ -37,6 +48,8 @@ export const defaultUserHomePreferences: UserHomePreferences = {
   profile_theme: "default",
   watch_region: DEFAULT_WATCH_REGION,
   tmdb_language: DEFAULT_TMDB_LANGUAGE,
+  accent_color: DEFAULT_BRAND_HEX,
+  color_mode: "dark",
 }
 
 export function parseUserHomePreferences(raw: Json | null | undefined): UserHomePreferences {
@@ -67,10 +80,19 @@ export function parseUserHomePreferences(raw: Json | null | undefined): UserHome
     base.tmdb_language = o.tmdb_language
   }
 
+  const accent = normalizeHex(typeof o.accent_color === "string" ? o.accent_color : null)
+  if (accent) base.accent_color = accent
+
+  if (isColorModePreference(o.color_mode)) {
+    base.color_mode = o.color_mode
+  }
+
   return base
 }
 
 export function serializeUserHomePreferences(prefs: UserHomePreferences): Json {
+  const accent =
+    normalizeHex(prefs.accent_color) ?? DEFAULT_BRAND_HEX
   const out: Record<string, unknown> = {
     show_now_showing: prefs.show_now_showing,
     show_upcoming: prefs.show_upcoming,
@@ -78,6 +100,8 @@ export function serializeUserHomePreferences(prefs: UserHomePreferences): Json {
     show_following_feed: prefs.show_following_feed,
     watch_region: prefs.watch_region ?? DEFAULT_WATCH_REGION,
     tmdb_language: prefs.tmdb_language ?? DEFAULT_TMDB_LANGUAGE,
+    accent_color: accent,
+    color_mode: prefs.color_mode ?? "dark",
   }
   if (prefs.favorite_genre_ids?.length) {
     out.favorite_genre_ids = prefs.favorite_genre_ids

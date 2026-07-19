@@ -26,9 +26,9 @@ export function ProfileSocialLinks({ social, homePreferences, className }: Profi
             rel="noopener noreferrer"
             className={cn(
               "flex size-9 items-center justify-center rounded-md border border-border/60 bg-muted/15",
-              "text-[#FF0048]/85 transition-colors",
-              "hover:border-[#FF0048]/25 hover:bg-[#FF0048]/8 hover:text-[#FF0048]",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0048]/20 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+              "text-brand/85 transition-colors",
+              "hover:border-brand/25 hover:bg-brand/8 hover:text-brand",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/20 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
             )}
             aria-label={platform.name}
           >

@@ -206,7 +206,7 @@ export function FilmPlaybackPlayer({ filmId, title, posterPath }: FilmPlaybackPl
               <Button
                 type="button"
                 size="lg"
-                className="gap-2 bg-[#FF0048] text-white hover:bg-[#FF0048]/90"
+                className="gap-2 bg-brand text-white hover:bg-brand/90"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleAssistir();

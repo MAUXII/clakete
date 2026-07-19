@@ -68,7 +68,7 @@ function HandWrittenTitle({
             strokeLinecap="round"
             strokeLinejoin="round"
             variants={draw}
-            className={cn("opacity-80", strokeClassName ?? "text-[#FF0048]")}
+            className={cn("opacity-80", strokeClassName ?? "text-brand")}
           />
         </motion.svg>
 

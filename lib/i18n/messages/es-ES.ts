@@ -73,6 +73,16 @@ export const esES = {
     chooseBackdrop: "Elegir fondo…",
     removeBackdrop: "Quitar fondo",
     noBackdrop: "Sin fondo",
+    appearance: "Apariencia",
+    appearanceHint:
+      "Color de acento y modo claro/oscuro de la app. Se aplican al instante; guarda preferencias para sincronizar entre dispositivos.",
+    colorMode: "Tema",
+    modeLight: "Claro",
+    modeDark: "Oscuro",
+    modeSystem: "Sistema",
+    accentColor: "Color de acento",
+    resetAccent: "Restablecer",
+    accentPresetsHint: "Presets rápidos o elige cualquier color con el selector.",
   },
   catalog: {
     whereToWatch: "Dónde ver",

@@ -445,7 +445,7 @@ export default function HomePage() {
         </section>
         */}
 
-        <section className="relative left-1/2 flex w-screen max-w-[100vw] -translate-x-1/2 overflow-hidden border-t border-white/[0.06] bg-[#FF0048] px-4 py-20 sm:px-6 sm:py-28 lg:px-8">
+        <section className="relative left-1/2 flex w-screen max-w-[100vw] -translate-x-1/2 overflow-hidden border-t border-white/[0.06] bg-brand px-4 py-20 sm:px-6 sm:py-28 lg:px-8">
           <div
             className="pointer-events-none absolute inset-0 z-0 overflow-hidden"
             style={{
@@ -492,7 +492,7 @@ export default function HomePage() {
             </p>
             <Link
               href="/sign-in"
-              className="mt-8 inline-flex items-center justify-center rounded-full bg-white px-8 py-3 text-sm font-semibold text-[#FF0048] shadow-lg shadow-black/20 transition hover:bg-white/90 active:scale-[0.98]"
+              className="mt-8 inline-flex items-center justify-center rounded-full bg-white px-8 py-3 text-sm font-semibold text-brand shadow-lg shadow-black/20 transition hover:bg-white/90 active:scale-[0.98]"
             >
               Create free account
             </Link>
@@ -751,7 +751,7 @@ export default function HomePage() {
           </p>
           <Link
             href="/profile/setup"
-            className="mt-5 inline-flex rounded-md bg-[#FF0048] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#e60042]"
+            className="mt-5 inline-flex rounded-md bg-brand px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-hover"
           >
             Complete profile
           </Link>
@@ -894,7 +894,7 @@ export default function HomePage() {
                 </p>
                 <Link
                   href="/films/discover"
-                  className="mt-4 inline-flex text-sm font-medium text-[#ff9eb0] transition hover:text-[#FF0048]"
+                  className="mt-4 inline-flex text-sm font-medium text-brand-light transition hover:text-brand"
                 >
                   Find a film →
                 </Link>

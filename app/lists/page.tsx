@@ -169,7 +169,7 @@ export default function ListsPage() {
                 </p>
               ) : (
                 <p className="mt-3 text-sm text-zinc-500">
-                  <Link href="/sign-in" className="text-[#FF0048] underline-offset-4 hover:underline">
+                  <Link href="/sign-in" className="text-brand underline-offset-4 hover:underline">
                     Sign in
                   </Link>{" "}
                   to create yours.

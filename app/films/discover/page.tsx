@@ -261,7 +261,7 @@ function FilmsDiscoverContent() {
                   </Select>
                 </div>
                 <button
-                  className="mt-2 rounded-xl bg-[#FF0048] py-3 text-sm font-semibold text-white transition-colors hover:bg-[#e60042]"
+                  className="mt-2 rounded-xl bg-brand py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-hover"
                   onClick={handleSaveFilters}
                   type="button"
                 >

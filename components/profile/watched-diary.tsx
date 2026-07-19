@@ -322,7 +322,7 @@ export function WatchedDiary({
           e.stopPropagation()
           openEdit(item)
         }}
-        className="rounded-md border border-transparent bg-secondary p-2 text-white transition-colors hover:border-[#FF0048]/20 hover:bg-[#280F16] hover:text-[#FF0048]"
+        className="rounded-md border border-transparent bg-secondary p-2 text-white transition-colors hover:border-brand/20 hover:bg-[#280F16] hover:text-brand"
         aria-label={`Edit ${item.movie_title || "watch log"}`}
         title="Edit watch log"
       >
@@ -404,7 +404,7 @@ export function WatchedDiary({
         className={cn(
           "inline-flex h-8 shrink-0 items-center gap-1 rounded-md border px-2 text-xs transition",
           likedOnly
-            ? "border-[#FF0048]/30 bg-[#FF0048]/10 text-[#FF0048]"
+            ? "border-brand/30 bg-brand/10 text-brand"
             : "border-white/[0.08] text-zinc-400 hover:border-white/[0.14] hover:text-zinc-100",
         )}
       >
@@ -471,7 +471,7 @@ export function WatchedDiary({
               <button
                 type="button"
                 onClick={() => setImportOpen(true)}
-                className="inline-flex h-8 items-center gap-1.5 rounded-md border border-white/[0.08] px-2.5 text-xs text-zinc-400 transition hover:border-[#FF0048]/40 hover:text-zinc-100"
+                className="inline-flex h-8 items-center gap-1.5 rounded-md border border-white/[0.08] px-2.5 text-xs text-zinc-400 transition hover:border-brand/40 hover:text-zinc-100"
               >
                 <Upload className="size-3.5" />
                 Import from Letterboxd
@@ -578,7 +578,7 @@ export function WatchedDiary({
                       <div className="min-w-0 flex-1">
                         <Link
                           href={href}
-                          className="block truncate text-sm font-medium text-zinc-100 hover:text-[#FF0048]"
+                          className="block truncate text-sm font-medium text-zinc-100 hover:text-brand"
                         >
                           {dayItem.movie_title || "Untitled"}
                         </Link>

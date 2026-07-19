@@ -72,6 +72,16 @@ export const enUS = {
     chooseBackdrop: "Choose backdrop…",
     removeBackdrop: "Remove backdrop",
     noBackdrop: "No backdrop",
+    appearance: "Appearance",
+    appearanceHint:
+      "Accent color and light/dark mode for the whole app. Apply instantly; save preferences to sync across devices.",
+    colorMode: "Theme",
+    modeLight: "Light",
+    modeDark: "Dark",
+    modeSystem: "System",
+    accentColor: "Accent color",
+    resetAccent: "Reset",
+    accentPresetsHint: "Quick presets, or pick any color with the picker.",
   },
   catalog: {
     whereToWatch: "Where to watch",

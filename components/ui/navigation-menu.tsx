@@ -42,7 +42,7 @@ NavigationMenuList.displayName = NavigationMenuPrimitive.List.displayName
 const NavigationMenuItem = NavigationMenuPrimitive.Item
 
 const navigationMenuTriggerStyle = cva(
-  "group inline-flex h-9 w-max items-center justify-center rounded-md gap-2 items-center px-4 py-2 text-sm font-medium transition-colors hover:bg-[#FF0048]/10 hover:text-[#e8486b] dark:hover:bg-[#FF0048]/14 dark:hover:text-[#ff9eb0] focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-[#FF0048]/10 data-[active]:text-[#e8486b] dark:data-[active]:bg-[#FF0048]/14 dark:data-[active]:text-[#ff9eb0] data-[state=open]:bg-[#FF0048]/10 data-[state=open]:text-[#e8486b] dark:data-[state=open]:bg-[#FF0048]/14 dark:data-[state=open]:text-[#ff9eb0] cursor-pointer"
+  "group inline-flex h-9 w-max items-center justify-center rounded-md gap-2 items-center px-4 py-2 text-sm font-medium transition-colors hover:bg-brand/10 hover:text-brand-muted dark:hover:bg-brand/14 dark:hover:text-brand-light focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-brand/10 data-[active]:text-brand-muted dark:data-[active]:bg-brand/14 dark:data-[active]:text-brand-light data-[state=open]:bg-brand/10 data-[state=open]:text-brand-muted dark:data-[state=open]:bg-brand/14 dark:data-[state=open]:text-brand-light cursor-pointer"
 )
 
 export function isNavHrefActive(pathname: string, href: string): boolean {

@@ -101,7 +101,7 @@ export function SeriesCard({
 
         {show?.vote_average ? (
           <div className="absolute bottom-2 right-2 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-            <Badge variant="secondary" className="rounded-sm font-medium text-[#FF0048]">
+            <Badge variant="secondary" className="rounded-sm font-medium text-brand">
               {show.vote_average.toFixed(1)} ★
             </Badge>
           </div>
@@ -113,8 +113,8 @@ export function SeriesCard({
             onClick={(e) => handleAction("watch", e)}
             className={`rounded-md border p-2 transition-colors ${
               localWatched
-                ? "border-[#FF0048]/20 bg-[#280F16] text-[#FF0048] hover:bg-[#280F16]"
-                : "border-transparent bg-secondary text-white hover:border-[#FF0048]/20 hover:bg-[#280F16] hover:text-[#FF0048]"
+                ? "border-brand/20 bg-[#280F16] text-brand hover:bg-[#280F16]"
+                : "border-transparent bg-secondary text-white hover:border-brand/20 hover:bg-[#280F16] hover:text-brand"
             }`}
             title={localWatched ? "Remover dos assistidos" : "Marcar como assistido"}
           >
@@ -125,8 +125,8 @@ export function SeriesCard({
             onClick={(e) => handleAction("like", e)}
             className={`rounded-md border p-2 transition-colors ${
               localLiked
-                ? "border-[#FF0048]/20 bg-[#280F16] text-[#FF0048] hover:bg-[#280F16]"
-                : "border-transparent bg-secondary text-white hover:border-[#FF0048]/20 hover:bg-[#280F16] hover:text-[#FF0048]"
+                ? "border-brand/20 bg-[#280F16] text-brand hover:bg-[#280F16]"
+                : "border-transparent bg-secondary text-white hover:border-brand/20 hover:bg-[#280F16] hover:text-brand"
             }`}
             title={localLiked ? "Remover dos favoritos" : "Adicionar aos favoritos"}
           >

@@ -51,7 +51,7 @@ export function OnboardingProgressHeader({
                 aria-label={`Watched: ${filmsProgress.count} of ${filmsProgress.min}`}
               >
                 <div
-                  className="absolute inset-y-0 left-0 rounded-full bg-[#FF0048] transition-[width] duration-300 ease-out"
+                  className="absolute inset-y-0 left-0 rounded-full bg-brand transition-[width] duration-300 ease-out"
                   style={{ width: `${filmsProgress.fillPercent}%` }}
                 />
               </div>
@@ -64,7 +64,7 @@ export function OnboardingProgressHeader({
               key={s}
               className={cn(
                 "h-1.5 flex-1 rounded-full transition-colors duration-300",
-                filled ? "bg-[#FF0048]" : step === s ? "bg-[#FF0048]/70" : "bg-white/15",
+                filled ? "bg-brand" : step === s ? "bg-brand/70" : "bg-white/15",
               )}
               role="progressbar"
               aria-valuenow={step >= s ? 100 : 0}

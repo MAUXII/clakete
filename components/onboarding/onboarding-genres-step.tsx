@@ -38,7 +38,7 @@ export function OnboardingGenresStep({
           onClick={onContinue}
           className={cn(
             onboardingContinueButtonClass,
-            !canContinue && "cursor-not-allowed opacity-40 hover:bg-[#FF0048]",
+            !canContinue && "cursor-not-allowed opacity-40 hover:bg-brand",
           )}
         >
           Continue

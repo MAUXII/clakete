@@ -346,7 +346,7 @@ export function FeedReviewPostCard({
               <header className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5 text-[13px] leading-snug">
                 <Link
                   href={profileHref}
-                  className="font-semibold text-zinc-100 hover:text-[#FF0048]"
+                  className="font-semibold text-zinc-100 hover:text-brand"
                 >
                   {name}
                 </Link>
@@ -363,7 +363,7 @@ export function FeedReviewPostCard({
                 reviewed{" "}
                 <Link
                   href={href}
-                  className="font-medium text-zinc-100 transition-colors hover:text-[#FF0048]"
+                  className="font-medium text-zinc-100 transition-colors hover:text-brand"
                 >
                   {item.title}
                 </Link>
@@ -470,12 +470,12 @@ export function FeedReviewPostCard({
           className={cn(
             "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs transition",
             liked
-              ? "text-[#FF0048]"
+              ? "text-brand"
               : "text-zinc-500 hover:bg-white/[0.04] hover:text-zinc-300",
           )}
           aria-label="Like"
         >
-          <Heart className={cn("size-3.5", liked && "fill-[#FF0048]")} strokeWidth={2} />
+          <Heart className={cn("size-3.5", liked && "fill-brand")} strokeWidth={2} />
           {likeCount > 0 ? <span>{likeCount}</span> : null}
         </button>
         <button
@@ -552,7 +552,7 @@ export function FeedReviewPostCard({
                       <div className="flex items-baseline gap-1.5 text-[12px]">
                         <Link
                           href={feedProfileHref(c.user.username)}
-                          className="font-medium text-zinc-200 hover:text-[#FF0048]"
+                          className="font-medium text-zinc-200 hover:text-brand"
                         >
                           {cName}
                         </Link>
@@ -595,7 +595,7 @@ export function FeedReviewPostCard({
               <Button
                 type="button"
                 size="sm"
-                className="bg-[#FF0048] text-white hover:bg-[#e60042]"
+                className="bg-brand text-white hover:bg-brand-hover"
                 disabled={postingComment || !commentDraft.trim()}
                 onClick={() => void submitComment()}
               >
@@ -714,7 +714,7 @@ export function FeedListPostCard({
               <header className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5 text-[13px] leading-snug">
                 <Link
                   href={profileHref}
-                  className="font-semibold text-zinc-100 hover:text-[#FF0048]"
+                  className="font-semibold text-zinc-100 hover:text-brand"
                 >
                   {name}
                 </Link>
@@ -832,7 +832,7 @@ export function FeedListPostCard({
       <div className="mt-3">
         <Link
           href={href}
-          className="text-[15px] font-semibold leading-snug text-zinc-100 hover:text-[#FF0048]"
+          className="text-[15px] font-semibold leading-snug text-zinc-100 hover:text-brand"
         >
           {item.listTitle}
         </Link>

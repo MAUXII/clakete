@@ -230,7 +230,7 @@ export function UserFollowersList({
                       "h-8 shrink-0 rounded-md border px-3 text-xs font-medium transition",
                       isFollowing
                         ? "border-white/[0.1] text-zinc-400 hover:border-red-500/40 hover:text-red-400"
-                        : "border-[#FF0048]/20 bg-[#FF0048]/10 text-[#FF0048] hover:bg-[#FF0048]/20",
+                        : "border-brand/20 bg-brand/10 text-brand hover:bg-brand/20",
                     )}
                   >
                     {isFollowing ? "Following" : "Follow"}

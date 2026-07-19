@@ -12,7 +12,7 @@ export function LandingPlansCta() {
       aria-label="Clakete plans"
       className={cn(
         "relative left-1/2 w-screen max-w-[100vw] -translate-x-1/2",
-        "border-t border-white/[0.08] bg-[#FF0048]",
+        "border-t border-white/[0.08] bg-brand",
         "px-4 py-20 sm:px-6 sm:py-24 lg:px-8 lg:py-28",
       )}
     >
@@ -75,7 +75,7 @@ export function LandingPlansCta() {
               "ring-1 ring-inset ring-white/15",
             )}
           >
-            <span className="absolute right-5 top-5 rounded-full bg-white px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[#FF0048]">
+            <span className="absolute right-5 top-5 rounded-full bg-white px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-brand">
               Paid
             </span>
             <p className="text-[10px] font-medium uppercase tracking-[0.28em] text-[#ffb3c9]">
@@ -101,7 +101,7 @@ export function LandingPlansCta() {
             <Link
               href="/account/billing"
               className={cn(
-                "mt-8 inline-flex w-full items-center justify-center rounded-full bg-white py-3 text-center text-sm font-semibold text-[#FF0048]",
+                "mt-8 inline-flex w-full items-center justify-center rounded-full bg-white py-3 text-center text-sm font-semibold text-brand",
                 "transition hover:bg-white/90",
               )}
             >

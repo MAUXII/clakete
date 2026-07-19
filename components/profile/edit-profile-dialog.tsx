@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label"
 import { useState, useEffect } from "react"
 import { useUser } from "@supabase/auth-helpers-react"
 import { useProfile } from "@/components/providers/profile-provider"
+import { useAppearance } from "@/components/providers/appearance-provider"
 import { Settings, Link2, Pencil, ChevronRight, User, CreditCard, type LucideIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { Json } from "@/lib/supabase/database.types"
@@ -156,6 +157,7 @@ export function EditProfileDialog({
   )
   const [homePrefsDraft, setHomePrefsDraft] = useState<UserHomePreferences>(defaultUserHomePreferences)
   const [socialDisplay, setSocialDisplay] = useState<SocialDisplayMap>(defaultSocialDisplayMap)
+  const { commitAppearanceSync } = useAppearance()
   const user = useUser()
   const { refreshProfile } = useProfile()
 
@@ -226,6 +228,7 @@ export function EditProfileDialog({
           socialDisplay,
         ),
       })
+      commitAppearanceSync()
       await refreshProfile()
       setIsOpen(false)
     } catch (error) {
@@ -235,18 +238,24 @@ export function EditProfileDialog({
     }
   }
 
+  const handleOpenChange = (open: boolean) => {
+    // Appearance (accent + light/dark) applies live and persists in localStorage —
+    // do not revert it when closing the dialog without save.
+    setIsOpen(open)
+  }
+
   const showName = newDisplayName.trim() || username
   const avatarSrc = avatarDisplaySrc(avatarUrl ?? undefined) || undefined
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <button
           type="button"
           className={cn(
             "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border bg-muted/40 text-muted-foreground transition-colors",
             "hover:bg-muted hover:text-foreground",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF0048]/25 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/25 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
           )}
           aria-label="Edit profile"
           title="Edit profile"
@@ -315,7 +324,7 @@ export function EditProfileDialog({
                         className={cn(
                           "flex min-h-[44px] w-full items-center gap-3 rounded-lg px-4 py-2.5 text-left text-sm transition-colors",
                           activeSection === id
-                            ? "bg-[#FF0048]/10 font-medium text-[#e8486b] dark:bg-[#FF0048]/14 dark:text-[#ff9eb0]"
+                            ? "bg-brand/10 font-medium text-brand-muted dark:bg-brand/14 dark:text-brand-light"
                             : "text-muted-foreground hover:bg-muted/80 hover:text-foreground",
                         )}
                       >
@@ -459,7 +468,7 @@ export function EditProfileDialog({
               </Button>
               <Button
                 type="button"
-                className="rounded-md bg-[#FF0048] px-5 text-white hover:bg-[#e60042]"
+                className="rounded-md bg-brand px-5 text-white hover:bg-brand-hover"
                 onClick={handleSave}
                 disabled={loading}
               >
