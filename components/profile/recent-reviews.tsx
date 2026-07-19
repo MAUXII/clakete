@@ -5,10 +5,9 @@ import { useSupabaseClient, useUser } from "@supabase/auth-helpers-react"
 import { Database } from "@/lib/supabase/database.types"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { avatarDisplaySrc } from "@/lib/next-remote-image"
-import { FaStar } from "react-icons/fa"
+import { RatingStars } from "@/components/movies/star-rating"
 import Image from "next/image"
 import Link from "next/link"
-import { cn } from "@/lib/utils"
 import { ReviewLikeButton } from "@/hooks/use-review-like"
 
 interface FilmReview {
@@ -37,8 +36,16 @@ interface RecentReviewsProps {
   hideSectionTitle?: boolean
 }
 
-function mediaHref(tmdbId: number, mediaType: string | null | undefined) {
-  return mediaType === "tv" ? `/series/${tmdbId}` : `/film/${tmdbId}`
+import { filmHref, seriesHref } from "@/lib/media-href"
+
+function mediaHref(
+  tmdbId: number,
+  mediaType: string | null | undefined,
+  title?: string | null,
+) {
+  return mediaType === "tv"
+    ? seriesHref({ id: tmdbId, name: title })
+    : filmHref({ id: tmdbId, title })
 }
 
 export function UserRecentReviews({
@@ -165,7 +172,7 @@ export function UserRecentReviews({
 
       <ul className="space-y-6">
         {reviews.map((review) => {
-          const href = mediaHref(review.tmdb_id, review.media_type)
+          const href = mediaHref(review.tmdb_id, review.media_type, review.movie_title)
           const year = review.release_date
             ? new Date(review.release_date).getFullYear()
             : null
@@ -201,19 +208,11 @@ export function UserRecentReviews({
                         ) : null}
                       </Link>
                     </div>
-                    <div className="flex shrink-0 gap-0.5">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <FaStar
-                          key={star}
-                          className={cn(
-                            "h-4 w-4",
-                            star <= review.rating
-                              ? "text-[#FF0048]"
-                              : "text-muted-foreground/30",
-                          )}
-                        />
-                      ))}
-                    </div>
+                    <RatingStars
+                      value={review.rating}
+                      className="shrink-0"
+                      starClassName="h-4 w-4"
+                    />
                   </div>
 
                   <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">

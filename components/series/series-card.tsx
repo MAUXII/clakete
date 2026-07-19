@@ -8,11 +8,13 @@ import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { useFilmInteractions } from "@/hooks/use-film-interactions"
+import { seriesHref } from "@/lib/media-href"
 
 interface SeriesCardProps {
   series?: {
     id?: number
     name: string
+    original_name?: string | null
     poster_path: string | null
     vote_average?: number
     /** TMDB first air date — vai para `items_interactions.release_date`. */
@@ -67,7 +69,12 @@ export function SeriesCard({
 
   const renderCard = (id: number) => (
     <Link
-      href={`/series/${id}`}
+      href={seriesHref({
+        id,
+        name: show?.name,
+        original_name: show?.original_name,
+        first_air_date: show?.first_air_date,
+      })}
       className={cn(
         "group flex flex-col gap-2 transition-transform duration-300",
         isNavFill && "h-full min-h-0",

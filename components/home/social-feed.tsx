@@ -552,7 +552,7 @@ export function SocialFeed({
                   onUpdated={() => void refresh()}
                   media={
                     <WatchedMediaCarousel
-                      href={feedMediaHref(item.tmdbId, item.mediaType)}
+                      href={feedMediaHref(item.tmdbId, item.mediaType, item.title)}
                       filmTitle={item.title}
                       layout={item.feedLayout}
                       images={watchedItemImages(item)}

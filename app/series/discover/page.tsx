@@ -20,11 +20,13 @@ import {
   filmsPosterSkeletonClassName,
 } from "@/components/films/films-catalog-shell"
 import { cn } from "@/lib/utils"
+import { seriesHref } from "@/lib/media-href"
 import { useLocalePrefs } from "@/hooks/use-locale-prefs"
 
 interface TvShow {
   id: number
   name: string
+  original_name?: string | null
   poster_path: string | null
   backdrop_path: string | null
   first_air_date: string
@@ -162,7 +164,15 @@ function SeriesDiscoverContent() {
       const data = await response.json()
       if (data.results?.length) {
         const pick = data.results[Math.floor(Math.random() * data.results.length)]
-        if (pick?.id) router.push(`/series/${pick.id}`)
+        if (pick?.id)
+          router.push(
+            seriesHref({
+              id: pick.id,
+              name: pick.name,
+              original_name: pick.original_name,
+              first_air_date: pick.first_air_date,
+            }),
+          )
       }
     } catch (e) {
       console.error(e)

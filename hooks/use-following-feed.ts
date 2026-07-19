@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react"
 import { useSupabaseClient, useUser } from "@supabase/auth-helpers-react"
 import { listPublicHref, userProfilePath } from "@/lib/list-href"
 import { formatWatchedDate } from "@/lib/watched-date"
+import { filmHref, seriesHref } from "@/lib/media-href"
 
 export type FollowingFeedUser = {
   id: string
@@ -729,8 +730,14 @@ export function feedPostHref(shareUid: string) {
   return `/p/${shareUid}`
 }
 
-export function feedMediaHref(tmdbId: number, mediaType: string | null) {
-  return mediaType === "tv" ? `/series/${tmdbId}` : `/film/${tmdbId}`
+export function feedMediaHref(
+  tmdbId: number,
+  mediaType: string | null,
+  title?: string | null,
+) {
+  return mediaType === "tv"
+    ? seriesHref({ id: tmdbId, name: title })
+    : filmHref({ id: tmdbId, title })
 }
 
 export function feedListHref(item: Extract<FollowingFeedItem, { kind: "list" }>) {

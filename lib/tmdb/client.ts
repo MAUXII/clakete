@@ -4,6 +4,8 @@ const TMDB_BASE_URL = 'https://api.themoviedb.org/3'
 export interface Movie {
   id: number
   title: string | null
+  /** Original (usually English / production) title when different from localized `title`. */
+  original_title?: string | null
   poster_path: string | null
   release_date: string | null
   overview: string | null

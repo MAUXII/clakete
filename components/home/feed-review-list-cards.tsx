@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useSupabaseClient, useUser } from "@supabase/auth-helpers-react"
-import { FaStar } from "react-icons/fa"
+import { RatingStars } from "@/components/movies/star-rating"
 import {
   EyeOff,
   Flag,
@@ -107,7 +107,7 @@ export function FeedReviewPostCard({
   }, [item.likedByMe, item.likeCount, item.commentCount, item.interactionId])
 
   const profileHref = feedProfileHref(item.user.username)
-  const href = feedMediaHref(item.tmdbId, item.mediaType)
+  const href = feedMediaHref(item.tmdbId, item.mediaType, item.title)
   const name = displayName(item.user)
   const when = formatFeedRelativeTime(item.at)
   const isOwner = Boolean(authUser?.id && authUser.id === item.user.id)
@@ -449,17 +449,12 @@ export function FeedReviewPostCard({
         </Link>
         <div className="min-w-0 flex-1">
           {rating > 0 ? (
-            <div className="mb-1.5 flex items-center gap-0.5">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <FaStar
-                  key={i}
-                  className={cn(
-                    "h-3.5 w-3.5",
-                    i < rating ? "text-[#FF0048]" : "text-zinc-700",
-                  )}
-                />
-              ))}
-            </div>
+            <RatingStars
+              value={rating}
+              className="mb-1.5"
+              starClassName="h-3.5 w-3.5"
+              emptyClassName="text-zinc-700"
+            />
           ) : null}
           <p className="whitespace-pre-wrap text-[14px] leading-relaxed text-zinc-200">
             {item.review}

@@ -65,6 +65,7 @@ export async function GET(
     const formattedMovie = {
       id: movieData.id,
       title: movieData.title,
+      original_title: movieData.original_title ?? null,
       poster_path: movieData.poster_path,
       backdrop_path: movieData.backdrop_path,
       release_date: movieData.release_date,

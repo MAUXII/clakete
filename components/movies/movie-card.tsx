@@ -7,13 +7,16 @@ import { IoEyeOutline, IoEye } from "react-icons/io5"
 import { IoHeartOutline, IoHeart } from "react-icons/io5"
 import { toast } from 'sonner'
 import { useState, useEffect, type ReactNode } from 'react'
+import { filmHref } from '@/lib/media-href'
 
 interface MovieCardProps {
   movie?:{
     id?: number;
     title: string;
+    original_title?: string | null;
     poster_path: string | null;
     vote_average?: number;
+    release_date?: string | null;
   }
   externalid?: number
  
@@ -59,7 +62,12 @@ export function MovieCard({ movie, externalid, variant = 'default', extraActions
 
   const renderCard = (id: number) => (
     <Link
-      href={`/film/${id}`}
+      href={filmHref({
+        id,
+        title: movie?.title,
+        original_title: movie?.original_title,
+        release_date: movie?.release_date,
+      })}
       className={cn(
         'group flex flex-col gap-2 transition-transform duration-300',
         isNavFill && 'h-full min-h-0',

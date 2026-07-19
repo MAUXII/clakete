@@ -22,6 +22,7 @@ import { MovieCard } from "@/components/movies/movie-card";
 import { SeriesCard } from "@/components/series/series-card";
 import { IoTrashOutline } from "react-icons/io5";
 import { userProfilePath } from "@/lib/list-href";
+import { filmHref, seriesHref } from "@/lib/media-href";
 import { listBannerPresentation, parseListBannerMeta } from "@/lib/list-banner";
 import { FilmsCatalogShell } from "@/components/films/films-catalog-shell";
 import { avatarDisplaySrc } from "@/lib/next-remote-image";
@@ -921,6 +922,7 @@ export default function UserListDetailPage() {
                               id: film.tmdb_id,
                               title: film.title,
                               poster_path: film.poster_path || null,
+                              release_date: film.release_date ?? "",
                               vote_average: 0,
                             }}
                             externalid={film.tmdb_id}
@@ -976,7 +978,11 @@ export default function UserListDetailPage() {
                         </div>
                         {film.media_type === "tv" ? (
                           <Link
-                            href={`/series/${film.tmdb_id}`}
+                            href={seriesHref({
+                              id: film.tmdb_id,
+                              name: film.title,
+                              first_air_date: film.release_date,
+                            })}
                             className="flex min-w-0 flex-1 items-center gap-3"
                           >
                             <img
@@ -996,7 +1002,14 @@ export default function UserListDetailPage() {
                             </div>
                           </Link>
                         ) : (
-                          <>
+                          <Link
+                            href={filmHref({
+                              id: film.tmdb_id,
+                              title: film.title,
+                              release_date: film.release_date,
+                            })}
+                            className="flex min-w-0 flex-1 items-center gap-3"
+                          >
                             <img
                               src={
                                 film.poster_path
@@ -1012,7 +1025,7 @@ export default function UserListDetailPage() {
                                 {film.release_date ? film.release_date.slice(0, 4) : "—"}
                               </p>
                             </div>
-                          </>
+                          </Link>
                         )}
                         {canEdit && (
                           <Button

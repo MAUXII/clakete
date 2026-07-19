@@ -8,6 +8,7 @@ import EpisodesList, { type SeasonEpisode } from "@/components/series/episodes";
 import { FilmsCatalogShell } from "@/components/films/films-catalog-shell";
 import { cn } from "@/lib/utils";
 import { useLocalePrefs } from "@/hooks/use-locale-prefs";
+import { parseMediaParam, seriesHref } from "@/lib/media-href";
 
 interface SeasonDetail {
   id: number;
@@ -38,18 +39,58 @@ export default function SeriesSeasonPage({
 }: {
   params: Promise<{ id: string; season_number: string }>;
 }) {
-  const { id, season_number } = use(params);
+  const { id: rawParam, season_number } = use(params);
+  const parsed = parseMediaParam(rawParam);
+  const [seriesId, setSeriesId] = useState<number | null>(
+    parsed?.kind === "id" ? parsed.id : null,
+  );
+  const [resolveFailed, setResolveFailed] = useState(false);
   const [season, setSeason] = useState<SeasonDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const { tmdbLanguage, loading: localeLoading } = useLocalePrefs();
+  const seriesPath =
+    seriesId != null
+      ? seriesHref({ id: seriesId, name: season?.seriesName })
+      : `/series/${rawParam}`;
 
   useEffect(() => {
-    if (localeLoading) return;
+    if (!parsed) {
+      setResolveFailed(true);
+      setLoading(false);
+      return;
+    }
+    if (parsed.kind === "id") {
+      setSeriesId(parsed.id);
+      setResolveFailed(false);
+      return;
+    }
+
+    let cancelled = false;
+    setLoading(true);
+    void fetch(`/api/series/resolve?slug=${encodeURIComponent(parsed.slug)}`)
+      .then(async (res) => {
+        if (!res.ok) throw new Error("not found")
+        const data = (await res.json()) as { id?: number }
+        if (cancelled) return
+        if (data.id) setSeriesId(data.id)
+        else setResolveFailed(true)
+      })
+      .catch(() => {
+        if (!cancelled) setResolveFailed(true)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [rawParam]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (localeLoading || seriesId == null) return;
     async function fetchSeason() {
       setLoading(true);
       try {
         const response = await fetch(
-          `/api/series/${id}/season/${season_number}?language=${encodeURIComponent(tmdbLanguage)}`,
+          `/api/series/${seriesId}/season/${season_number}?language=${encodeURIComponent(tmdbLanguage)}`,
         );
         const data = await response.json();
         if (response.ok) {
@@ -60,10 +101,18 @@ export default function SeriesSeasonPage({
       }
     }
 
-    fetchSeason();
-  }, [id, season_number, tmdbLanguage, localeLoading]);
+    void fetchSeason();
+  }, [seriesId, season_number, tmdbLanguage, localeLoading]);
 
-  if (loading) {
+  if (resolveFailed || (!loading && seriesId == null)) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#09090B] text-muted-foreground">
+        Series not found
+      </div>
+    );
+  }
+
+  if (loading || seriesId == null) {
     return (
       <div className="min-h-screen w-full overflow-x-clip bg-[#09090B]">
         <FilmsCatalogShell>
@@ -99,7 +148,7 @@ export default function SeriesSeasonPage({
         <FilmsCatalogShell>
           <h1 className="text-2xl font-semibold tracking-tight">Season not found</h1>
           <Link
-            href={`/series/${id}`}
+            href={seriesPath}
             className="-mt-10 inline-flex items-center gap-2 text-sm font-medium text-zinc-400 transition-colors hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4 shrink-0" aria-hidden />
@@ -159,7 +208,7 @@ export default function SeriesSeasonPage({
 
         <div className="relative z-10 flex flex-col gap-12 pt-2 lg:flex-row lg:items-start lg:gap-16 xl:gap-20">
           <aside
-            className="sticky top-[calc(env(safe-area-inset-top,0px)+14rem)] z-20 mx-auto w-full max-w-[260px] shrink-0 self-start sm:max-w-[280px] lg:mx-0 lg:max-w-[304px]"
+            className="z-20 mx-auto w-full max-w-[260px] shrink-0 self-start sm:max-w-[280px] lg:mx-0 lg:max-w-[304px] lg:sticky lg:top-[calc(env(safe-area-inset-top,0px)+14rem)]"
             style={{ marginTop: SEASON_POSTER_ALIGN_MARGIN }}
           >
             <div className="flex flex-col gap-4">
@@ -183,7 +232,7 @@ export default function SeriesSeasonPage({
                 <ol className="mt-2 flex flex-wrap items-baseline gap-x-2 gap-y-1 text-[13px] leading-snug">
                   <li className="min-w-0">
                     <Link
-                      href={`/series/${id}`}
+                      href={seriesPath}
                       className="font-medium text-zinc-200 transition-colors hover:text-white"
                     >
                       {season.seriesName}

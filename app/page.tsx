@@ -22,6 +22,7 @@ import { LandingWhyClakete } from '@/components/landing/LandingWhyClakete'
 import { LandingPlansCta } from '@/components/landing/LandingPlansCta'
 import { CtaCatalogGridBg } from '@/components/landing/CtaCatalogGridBg'
 import { userProfilePath } from '@/lib/list-href'
+import { filmHref } from '@/lib/media-href'
 import {
   Carousel,
   CarouselContent,
@@ -363,7 +364,15 @@ export default function HomePage() {
               <CarouselContent className="-ml-3 sm:-ml-2">
                 {featuredMovies.map((movie) => (
                   <CarouselItem key={movie.id} className="basis-1/3 pl-3 sm:basis-1/6 sm:pl-2">
-                    <Link href={`/film/${movie.id}`} className="group block">
+                    <Link
+                      href={filmHref({
+                        id: movie.id,
+                        title: movie.title,
+                        original_title: movie.original_title,
+                        release_date: movie.release_date,
+                      })}
+                      className="group block"
+                    >
                       <div className="relative aspect-[2/3] overflow-hidden rounded-xl border border-white/[0.08] bg-zinc-900 shadow-lg shadow-black/40 transition group-hover:border-white/[0.14] group-hover:ring-1 group-hover:ring-white/10">
                         <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 transition group-hover:opacity-100" />
                         <img
@@ -795,7 +804,16 @@ export default function HomePage() {
                 />
                 <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-2">
                   {featuredMovies.slice(0, 6).map((movie) => (
-                    <Link key={movie.id} href={`/film/${movie.id}`} className="group block">
+                    <Link
+                      key={movie.id}
+                      href={filmHref({
+                        id: movie.id,
+                        title: movie.title,
+                        original_title: movie.original_title,
+                        release_date: movie.release_date,
+                      })}
+                      className="group block"
+                    >
                       <div className="relative aspect-[2/3] overflow-hidden rounded-md border border-white/[0.08] bg-zinc-900">
                         <img
                           src={
@@ -827,7 +845,16 @@ export default function HomePage() {
                 />
                 <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:thin] lg:grid lg:grid-cols-3 lg:overflow-visible">
                   {upcomingMovies.slice(0, 6).map((movie) => (
-                    <Link key={movie.id} href={`/film/${movie.id}`} className="shrink-0 lg:shrink">
+                    <Link
+                      key={movie.id}
+                      href={filmHref({
+                        id: movie.id,
+                        title: movie.title,
+                        original_title: movie.original_title,
+                        release_date: movie.release_date,
+                      })}
+                      className="shrink-0 lg:shrink"
+                    >
                       <div className="aspect-[2/3] w-[72px] overflow-hidden rounded-md border border-white/[0.08] bg-zinc-900 lg:w-full">
                         <img
                           src={

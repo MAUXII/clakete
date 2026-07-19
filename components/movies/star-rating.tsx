@@ -1,8 +1,60 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FaStar } from "react-icons/fa";
-import { Tooltip, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
+
+/** A single star filled 0–100% via a clipped overlay of the same glyph. */
+function Star({
+  fill,
+  starClassName,
+  emptyClassName,
+}: {
+  fill: number;
+  starClassName: string;
+  emptyClassName: string;
+}) {
+  const clamped = Math.max(0, Math.min(1, fill));
+  return (
+    <span className="relative inline-block leading-none">
+      <FaStar className={cn(starClassName, emptyClassName)} />
+      {clamped > 0 ? (
+        <span
+          className="absolute inset-0 overflow-hidden"
+          style={{ width: `${clamped * 100}%` }}
+        >
+          <FaStar className={cn(starClassName, "text-[#FF0048]")} />
+        </span>
+      ) : null}
+    </span>
+  );
+}
+
+/** Read-only star row that supports half-star values (e.g. 3.5). */
+export function RatingStars({
+  value,
+  starClassName = "h-4 w-4",
+  emptyClassName = "text-muted-foreground/30",
+  className,
+}: {
+  value: number;
+  starClassName?: string;
+  emptyClassName?: string;
+  className?: string;
+}) {
+  return (
+    <div className={cn("flex items-center gap-0.5", className)}>
+      {[1, 2, 3, 4, 5].map((star) => (
+        <Star
+          key={star}
+          fill={value - (star - 1)}
+          starClassName={starClassName}
+          emptyClassName={emptyClassName}
+        />
+      ))}
+    </div>
+  );
+}
 
 interface StarRatingProps {
   filmId: number;
@@ -12,58 +64,63 @@ interface StarRatingProps {
   size?: "sm" | "md";
 }
 
-
-
 export function StarRating({
   initialRating = 0,
   onRate,
   readonly = false,
   size = "md",
-}: Omit<StarRatingProps, 'filmId'>) {
+}: Omit<StarRatingProps, "filmId">) {
   const [rating, setRating] = useState(initialRating);
   const [hoverRating, setHoverRating] = useState(0);
 
+  useEffect(() => {
+    setRating(initialRating);
+  }, [initialRating]);
+
+  const display = hoverRating || rating;
+  const iconSize = size === "sm" ? "h-4 w-4" : "h-5 w-5";
+
   const handleRate = (value: number) => {
     if (readonly) return;
-    
-    // If clicking the same star twice, remove the rating
-    if (value === rating) {
-      setRating(0);
-      onRate?.(0);
-    } else {
-      setRating(value);
-      onRate?.(value);
-    }
+    // Clicking the same value again clears the rating.
+    const next = value === rating ? 0 : value;
+    setRating(next);
+    onRate?.(next);
   };
 
   return (
-    <TooltipProvider>
-      <div className="flex">
-        <div className="flex items-center gap-1">
-          {[1, 2, 3, 4, 5].map((star) => (
-            <Tooltip key={star}>
-              <TooltipTrigger asChild>
+    <div className="flex" onMouseLeave={() => !readonly && setHoverRating(0)}>
+      <div className="flex items-center gap-1">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <div key={star} className="relative leading-none">
+            <span className="block p-1">
+              <Star
+                fill={display - (star - 1)}
+                starClassName={iconSize}
+                emptyClassName="text-muted-foreground"
+              />
+            </span>
+            {!readonly ? (
+              <>
                 <button
                   type="button"
-                  disabled={readonly}
-                  onMouseEnter={() => !readonly && setHoverRating(star)}
-                  onMouseLeave={() => !readonly && setHoverRating(0)}
+                  aria-label={`${star - 0.5} de 5`}
+                  className="absolute left-0 top-0 z-10 h-full w-1/2 cursor-pointer"
+                  onMouseEnter={() => setHoverRating(star - 0.5)}
+                  onClick={() => handleRate(star - 0.5)}
+                />
+                <button
+                  type="button"
+                  aria-label={`${star} de 5`}
+                  className="absolute right-0 top-0 z-10 h-full w-1/2 cursor-pointer"
+                  onMouseEnter={() => setHoverRating(star)}
                   onClick={() => handleRate(star)}
-                  className={`p-1 transition-colors ${
-                    readonly ? "cursor-default" : "cursor-pointer hover:text-[#FF0048]"
-                  } ${
-                    (hoverRating ? star <= hoverRating : star <= rating)
-                      ? "text-[#FF0048]"
-                      : "text-muted-foreground"
-                  }`}
-                >
-                  <FaStar className={size === "sm" ? "h-4 w-4" : "h-auto w-5"} />
-                </button>
-              </TooltipTrigger>
-            </Tooltip>
-          ))}
-        </div>
+                />
+              </>
+            ) : null}
+          </div>
+        ))}
       </div>
-    </TooltipProvider>
+    </div>
   );
 }

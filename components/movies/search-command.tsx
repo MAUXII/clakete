@@ -10,6 +10,7 @@ import { Search } from "lucide-react"
 import { Button } from "../ui/button"
 import { MediaSearchCommandContent } from "./media-search-command-content"
 import { useT } from "@/components/providers/i18n-provider"
+import { filmHref, seriesHref } from "@/lib/media-href"
 
 export function SearchCommand() {
   const { t } = useT()
@@ -59,11 +60,25 @@ export function SearchCommand() {
           peopleLoading={peopleLoading}
           inputPlaceholder={t("common.searchPlaceholder")}
           onSelectFilm={(movie) => {
-            router.push(`/film/${movie.id}`)
+            router.push(
+              filmHref({
+                id: movie.id,
+                title: movie.title,
+                original_title: movie.original_title,
+                release_date: movie.release_date,
+              }),
+            )
             setOpen(false)
           }}
           onSelectSeries={(series) => {
-            router.push(`/series/${series.id}`)
+            router.push(
+              seriesHref({
+                id: series.id,
+                name: series.name,
+                original_name: series.original_name,
+                first_air_date: series.first_air_date,
+              }),
+            )
             setOpen(false)
           }}
           onSelectPerson={(person) => {

@@ -119,7 +119,7 @@ export function FeedWatchedPostCard({
   ])
 
   const profileHref = feedProfileHref(item.user.username)
-  const href = feedMediaHref(item.tmdbId, item.mediaType)
+  const href = feedMediaHref(item.tmdbId, item.mediaType, item.title)
   const name = displayName(item.user)
   const when = formatFeedRelativeTime(item.at)
   const isOwner = Boolean(authUser?.id && authUser.id === item.user.id)

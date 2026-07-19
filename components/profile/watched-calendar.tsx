@@ -9,6 +9,7 @@ import {
   firstWeekdayOfMonth,
   monthLabel,
 } from "@/lib/diary"
+import { filmHref, seriesHref } from "@/lib/media-href"
 import { toLocalDateString } from "@/lib/watched-date"
 
 export type CalendarWatchItem = {
@@ -16,8 +17,19 @@ export type CalendarWatchItem = {
   tmdb_id: number
   poster_path: string | null
   movie_title: string | null
+  release_date?: string | null
   media_type: string | null
   watched_date: string | null
+}
+
+function calendarItemHref(item: CalendarWatchItem) {
+  return item.media_type === "tv"
+    ? seriesHref({ id: item.tmdb_id, name: item.movie_title })
+    : filmHref({
+        id: item.tmdb_id,
+        title: item.movie_title,
+        release_date: item.release_date,
+      })
 }
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
@@ -107,12 +119,7 @@ export function WatchedCalendar({
           const dayItems = byDay.get(cell.day) ?? []
           const primary = dayItems[0]
           const isToday = dateStr === today
-          const href =
-            primary?.media_type === "tv"
-              ? `/series/${primary.tmdb_id}`
-              : primary
-                ? `/film/${primary.tmdb_id}`
-                : null
+          const href = primary ? calendarItemHref(primary) : null
 
           const inner = (
             <div

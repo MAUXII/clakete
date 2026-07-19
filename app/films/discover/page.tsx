@@ -20,11 +20,13 @@ import {
   filmsPosterSkeletonClassName,
 } from "@/components/films/films-catalog-shell";
 import { cn } from "@/lib/utils";
+import { filmHref } from "@/lib/media-href";
 import { useLocalePrefs } from "@/hooks/use-locale-prefs";
 
 interface Movie {
   id: number;
   title: string;
+  original_title?: string | null;
   poster_path: string | null;
   backdrop_path: string | null;
   release_date: string;
@@ -167,7 +169,14 @@ function FilmsDiscoverContent() {
         // Escolhe um filme aleatório da lista
         const randomMovie = data.results[Math.floor(Math.random() * data.results.length)];
         if (randomMovie && randomMovie.id) {
-          router.push(`/film/${randomMovie.id}`);
+          router.push(
+            filmHref({
+              id: randomMovie.id,
+              title: randomMovie.title,
+              original_title: randomMovie.original_title,
+              release_date: randomMovie.release_date,
+            }),
+          );
         }
       }
     } catch (error) {

@@ -1,4 +1,5 @@
 import { parseLocalDateString } from "@/lib/watched-date"
+import { filmHref, seriesHref } from "@/lib/media-href"
 
 export type ActivityKind =
   | "joined"
@@ -85,8 +86,14 @@ export function sortActivityEvents(events: ActivityEvent[]): ActivityEvent[] {
   })
 }
 
-export function mediaHref(tmdbId: number, mediaType: string | null | undefined) {
-  return mediaType === "tv" ? `/series/${tmdbId}` : `/film/${tmdbId}`
+export function mediaHref(
+  tmdbId: number,
+  mediaType: string | null | undefined,
+  title?: string | null,
+) {
+  return mediaType === "tv"
+    ? seriesHref({ id: tmdbId, name: title })
+    : filmHref({ id: tmdbId, title })
 }
 
 export function activityVerb(kind: ActivityKind, rewatchCount = 0): string {

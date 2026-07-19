@@ -1,16 +1,43 @@
 /**
  * TMDB `/search/movie` and `/search/tv` claim to match alternative titles,
- * but a single `language=` often misses region-specific AKAs. Fan out across a
- * few languages and merge by id so e.g. "Fight Club" / "Clube da Luta" both hit.
+ * but a single `language=` often misses region-specific AKAs. Fan out across
+ * common catalog languages and merge by id so e.g. "Fight Club" / "Clube da
+ * Luta" / "El club de la lucha" all hit. Display still prefers the user's lang.
  */
+
+import {
+  mediaSlugify,
+  pickCanonicalTitleSlug,
+  pickSlugTitle,
+  slugToSearchQuery,
+  splitTitleSlug,
+  yearFromDate,
+} from "@/lib/media-href"
 
 const TMDB_API_KEY = process.env.NEXT_TMDB_API_KEY
 const TMDB_BASE_URL =
   process.env.NEXT_PUBLIC_TMDB_BASE_URL || "https://api.themoviedb.org/3"
 
-/** Always cover user lang + English + Portuguese (Clakete BR-first). */
+/**
+ * Languages used only for matching titles/AKAs.
+ * User preferred first (so display fields win on merge), then a fixed set of
+ * high-coverage TMDB locales — independent of watch region.
+ */
+const SEARCH_ALIAS_LANGUAGES = [
+  "en-US",
+  "pt-BR",
+  "es-ES",
+  "fr-FR",
+  "de-DE",
+  "it-IT",
+  "ja-JP",
+  "ko-KR",
+  "zh-CN",
+] as const
+
+/** Always cover user lang + common catalog languages. */
 export function searchLanguagesForAliases(preferred: string): string[] {
-  const langs = [preferred, "en-US", "pt-BR"]
+  const langs = [preferred.trim() || "en-US", ...SEARCH_ALIAS_LANGUAGES]
   const seen = new Set<string>()
   const out: string[] = []
   for (const lang of langs) {
@@ -80,11 +107,12 @@ export async function searchMoviesWithAliases(opts: {
 
   const batches = await Promise.all(
     languages.map(async (language) => {
+      // Intentionally omit `region`: matching should be global. Watch region
+      // only affects providers / prefs elsewhere; language above only for display.
       const data = await fetchSearchJson("/search/movie", {
         query: opts.query,
         language,
         page: opts.page || "1",
-        ...(opts.region ? { region: opts.region } : {}),
       })
       return { language, rows: Array.isArray(data.results) ? data.results : [] }
     }),
@@ -265,4 +293,150 @@ export async function searchTvWithAliases(opts: {
   return Array.from(byId.values())
     .map(({ _fromPreferred: _a, _score: _b, ...rest }) => rest)
     .sort((a, b) => scoreHit(b.vote_average, b.popularity) - scoreHit(a.vote_average, a.popularity))
+}
+
+/**
+ * Resolve a Letterboxd-style title slug to a TMDB movie id + canonical slug.
+ * Supports `dune` (primary) and `dune-1984` (year disambiguation).
+ * Requires an exact Latin title/original_title slug match (no fuzzy fallback),
+ * so junk queries like `film` can't land on a random popular movie.
+ */
+export async function resolveMovieBySlug(slug: string): Promise<{
+  id: number
+  canonicalSlug: string
+} | null> {
+  const cleaned = slug.trim().toLowerCase()
+  if (!cleaned) return null
+  const { base, year } = splitTitleSlug(cleaned)
+  if (!base || !mediaSlugify(base)) return null
+  const query = slugToSearchQuery(base)
+  if (!query) return null
+
+  const rows = await searchMoviesWithAliases({
+    query,
+    preferredLanguage: "en-US",
+  })
+
+  const titleMatches = rows.filter((r) => {
+    const o = r.original_title ? mediaSlugify(r.original_title) : ""
+    const t = r.title ? mediaSlugify(r.title) : ""
+    return (o !== "" && o === base) || (t !== "" && t === base)
+  })
+
+  if (titleMatches.length === 0) return null
+
+  // Letterboxd assigns a stable short slug to one "primary" title; remakes get
+  // `-YYYY`. We approximate primary as highest TMDB popularity (not vote_average
+  // — niche films can show inflated 9–10 with almost no votes).
+  titleMatches.sort(
+    (a, b) => (b.popularity ?? 0) - (a.popularity ?? 0),
+  )
+
+  if (year != null) {
+    const yearMatches = titleMatches.filter(
+      (r) => yearFromDate(r.release_date) === year,
+    )
+    if (yearMatches.length === 0) return null
+    const chosen = yearMatches[0]!
+    const primaryId = titleMatches[0]!.id
+    const title = pickSlugTitle(chosen.original_title, chosen.title) || base
+    const chosenYear = yearFromDate(chosen.release_date)
+    const canonicalSlug =
+      pickCanonicalTitleSlug({
+        title,
+        year: chosenYear,
+        isPrimary: chosen.id === primaryId,
+        hasSiblings: titleMatches.length > 1,
+      }) || String(chosen.id)
+    return { id: chosen.id, canonicalSlug }
+  }
+
+  const chosen = titleMatches[0]!
+  const primaryId = titleMatches[0]!.id
+  const title = pickSlugTitle(chosen.original_title, chosen.title) || base
+  const chosenYear = yearFromDate(chosen.release_date)
+  const canonicalSlug =
+    pickCanonicalTitleSlug({
+      title,
+      year: chosenYear,
+      isPrimary: chosen.id === primaryId,
+      hasSiblings: titleMatches.length > 1,
+    }) || String(chosen.id)
+
+  return { id: chosen.id, canonicalSlug }
+}
+
+/** @deprecated Prefer resolveMovieBySlug */
+export async function resolveMovieIdBySlug(slug: string): Promise<number | null> {
+  const hit = await resolveMovieBySlug(slug)
+  return hit?.id ?? null
+}
+
+/** Resolve a title slug to a TMDB TV id + canonical slug. */
+export async function resolveTvBySlug(slug: string): Promise<{
+  id: number
+  canonicalSlug: string
+} | null> {
+  const cleaned = slug.trim().toLowerCase()
+  if (!cleaned) return null
+  const { base, year } = splitTitleSlug(cleaned)
+  if (!base || !mediaSlugify(base)) return null
+  const query = slugToSearchQuery(base)
+  if (!query) return null
+
+  const rows = await searchTvWithAliases({
+    query,
+    preferredLanguage: "en-US",
+  })
+
+  const titleMatches = rows.filter((r) => {
+    const o = r.original_name ? mediaSlugify(r.original_name) : ""
+    const t = r.name ? mediaSlugify(r.name) : ""
+    return (o !== "" && o === base) || (t !== "" && t === base)
+  })
+
+  if (titleMatches.length === 0) return null
+
+  titleMatches.sort(
+    (a, b) => (b.popularity ?? 0) - (a.popularity ?? 0),
+  )
+
+  if (year != null) {
+    const yearMatches = titleMatches.filter(
+      (r) => yearFromDate(r.first_air_date) === year,
+    )
+    if (yearMatches.length === 0) return null
+    const chosen = yearMatches[0]!
+    const primaryId = titleMatches[0]!.id
+    const title = pickSlugTitle(chosen.original_name, chosen.name) || base
+    const chosenYear = yearFromDate(chosen.first_air_date)
+    const canonicalSlug =
+      pickCanonicalTitleSlug({
+        title,
+        year: chosenYear,
+        isPrimary: chosen.id === primaryId,
+        hasSiblings: titleMatches.length > 1,
+      }) || String(chosen.id)
+    return { id: chosen.id, canonicalSlug }
+  }
+
+  const chosen = titleMatches[0]!
+  const primaryId = titleMatches[0]!.id
+  const title = pickSlugTitle(chosen.original_name, chosen.name) || base
+  const chosenYear = yearFromDate(chosen.first_air_date)
+  const canonicalSlug =
+    pickCanonicalTitleSlug({
+      title,
+      year: chosenYear,
+      isPrimary: chosen.id === primaryId,
+      hasSiblings: titleMatches.length > 1,
+    }) || String(chosen.id)
+
+  return { id: chosen.id, canonicalSlug }
+}
+
+/** @deprecated Prefer resolveTvBySlug */
+export async function resolveTvIdBySlug(slug: string): Promise<number | null> {
+  const hit = await resolveTvBySlug(slug)
+  return hit?.id ?? null
 }

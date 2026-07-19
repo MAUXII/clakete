@@ -75,6 +75,7 @@ export async function GET(
       id: seriesData.id,
       title: seriesData.name,
       name: seriesData.name,
+      original_name: seriesData.original_name ?? null,
       poster_path: seriesData.poster_path,
       backdrop_path: seriesData.backdrop_path,
       release_date: seriesData.first_air_date,

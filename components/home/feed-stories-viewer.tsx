@@ -294,7 +294,7 @@ export function FeedStoriesViewer({
                 <p className="text-sm text-white/70">
                   watched{" "}
                   <Link
-                    href={feedMediaHref(current.tmdbId, current.mediaType)}
+                    href={feedMediaHref(current.tmdbId, current.mediaType, current.title)}
                     className="pointer-events-auto font-semibold text-white"
                     onClick={() => onOpenChange(false)}
                   >

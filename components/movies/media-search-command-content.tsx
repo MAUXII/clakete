@@ -82,7 +82,7 @@ export function MediaSearchCommandContent({
         onValueChange={onQueryChange}
         className={commandInputClassName}
       />
-      <CommandList className={commandListClassName ?? "custom-scrollbar max-h-[460px]"}>
+      <CommandList className={commandListClassName ?? "custom-scrollbar max-h-[460px] pb-3"}>
         {anyLoading && <CommandEmpty>Searching...</CommandEmpty>}
         {!anyLoading && !hasAny && query && (
           <CommandEmpty>No results found.</CommandEmpty>
@@ -131,18 +131,32 @@ export function MediaSearchCommandContent({
                   No films found
                 </CommandItem>
               ) : (
-                filmResults.map((movie) => (
+                filmResults.map((movie) => {
+                  const title = movie.title || ""
+                  const original =
+                    movie.original_title?.trim() &&
+                    movie.original_title.trim().toLowerCase() !== title.trim().toLowerCase()
+                      ? movie.original_title.trim()
+                      : null
+                  return (
                   <HoverCard key={`film-${movie.id}`} openDelay={120} closeDelay={100}>
                     <HoverCardTrigger asChild>
                       <CommandItem
-                        value={`${movie.title || ""} ${movie.release_date || ""}`}
+                        value={`${title} ${original || ""} ${movie.release_date || ""}`}
                         data-cmdk-no-filter
                         onSelect={() => {
                           if (!pickFilms) onSelectFilm(movie)
                         }}
                         className="mx-2 flex h-10 items-center gap-2 rounded-md px-3 text-sm font-medium"
                       >
-                        <span className="min-w-0 flex-1 truncate">{movie.title}</span>
+                        <span className="min-w-0 flex-1 truncate">
+                          <span className="truncate">{title}</span>
+                          {original ? (
+                            <span className="ml-1.5 truncate text-xs font-normal text-muted-foreground">
+                              {original}
+                            </span>
+                          ) : null}
+                        </span>
                         <span
                           className={`shrink-0 text-xs text-muted-foreground tabular-nums ${!pickFilms ? "ml-auto pl-3" : ""}`}
                         >
@@ -174,7 +188,7 @@ export function MediaSearchCommandContent({
                         {movie.backdrop_path ? (
                           <img
                             src={`https://image.tmdb.org/t/p/w500/${movie.backdrop_path}`}
-                            alt={movie.title || ""}
+                            alt={title}
                             className="h-full w-full object-cover object-center"
                           />
                         ) : (
@@ -185,7 +199,7 @@ export function MediaSearchCommandContent({
                           {movie.poster_path ? (
                             <img
                               src={`https://image.tmdb.org/t/p/w185/${movie.poster_path}`}
-                              alt={movie.title || ""}
+                              alt={title}
                               className="h-full w-full object-cover"
                             />
                           ) : (
@@ -196,7 +210,10 @@ export function MediaSearchCommandContent({
                       <div className="flex min-h-[126px] items-start gap-3 px-5 py-3">
                         <div className="w-24 shrink-0" />
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-semibold">{movie.title}</p>
+                          <p className="truncate text-sm font-semibold">{title}</p>
+                          {original ? (
+                            <p className="truncate text-xs text-zinc-400">{original}</p>
+                          ) : null}
                           <p className="mt-1 line-clamp-3 text-xs leading-relaxed text-zinc-300">
                             {movie.overview?.trim() || "Sem descricao disponivel."}
                           </p>
@@ -204,7 +221,8 @@ export function MediaSearchCommandContent({
                       </div>
                     </HoverCardContent>
                   </HoverCard>
-                ))
+                  )
+                })
               )}
             </CommandGroup>
             <CommandGroup heading="Series" data-cmdk-no-filter>
@@ -213,18 +231,32 @@ export function MediaSearchCommandContent({
                   No series found
                 </CommandItem>
               ) : (
-                seriesResults.map((series) => (
+                seriesResults.map((series) => {
+                  const name = series.name || ""
+                  const original =
+                    series.original_name?.trim() &&
+                    series.original_name.trim().toLowerCase() !== name.trim().toLowerCase()
+                      ? series.original_name.trim()
+                      : null
+                  return (
                   <HoverCard key={`series-${series.id}`} openDelay={120} closeDelay={100}>
                     <HoverCardTrigger asChild>
                       <CommandItem
-                        value={`${series.name || ""} ${series.first_air_date || ""}`}
+                        value={`${name} ${original || ""} ${series.first_air_date || ""}`}
                         data-cmdk-no-filter
                         onSelect={() => {
                           if (!pickSeries) onSelectSeries(series)
                         }}
                         className="mx-2 flex h-10 items-center gap-2 rounded-md px-3 text-sm font-medium"
                       >
-                        <span className="min-w-0 flex-1 truncate">{series.name}</span>
+                        <span className="min-w-0 flex-1 truncate">
+                          <span className="truncate">{name}</span>
+                          {original ? (
+                            <span className="ml-1.5 truncate text-xs font-normal text-muted-foreground">
+                              {original}
+                            </span>
+                          ) : null}
+                        </span>
                         <span
                           className={`shrink-0 text-xs text-muted-foreground tabular-nums ${!pickSeries ? "ml-auto pl-3" : ""}`}
                         >
@@ -256,7 +288,7 @@ export function MediaSearchCommandContent({
                         {series.backdrop_path ? (
                           <img
                             src={`https://image.tmdb.org/t/p/w500/${series.backdrop_path}`}
-                            alt={series.name || ""}
+                            alt={name}
                             className="h-full w-full object-cover object-center"
                           />
                         ) : (
@@ -267,7 +299,7 @@ export function MediaSearchCommandContent({
                           {series.poster_path ? (
                             <img
                               src={`https://image.tmdb.org/t/p/w185/${series.poster_path}`}
-                              alt={series.name || ""}
+                              alt={name}
                               className="h-full w-full object-cover"
                             />
                           ) : (
@@ -278,7 +310,10 @@ export function MediaSearchCommandContent({
                       <div className="flex min-h-[126px] items-start gap-3 px-5 py-3">
                         <div className="w-24 shrink-0" />
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-semibold">{series.name}</p>
+                          <p className="truncate text-sm font-semibold">{name}</p>
+                          {original ? (
+                            <p className="truncate text-xs text-zinc-400">{original}</p>
+                          ) : null}
                           <p className="mt-1 line-clamp-3 text-xs leading-relaxed text-zinc-300">
                             {series.overview?.trim() || "Series description not available."}
                           </p>
@@ -286,7 +321,8 @@ export function MediaSearchCommandContent({
                       </div>
                     </HoverCardContent>
                   </HoverCard>
-                ))
+                  )
+                })
               )}
             </CommandGroup>
           </>

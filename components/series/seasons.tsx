@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { seriesHref } from "@/lib/media-href";
 
 interface Season {
   id: number;
@@ -13,10 +14,16 @@ interface Season {
 
 export default function SeasonsList({
   seriesId,
+  seriesName,
+  seriesOriginalName,
+  seriesFirstAirDate,
   seasons,
 }: {
-  seriesId: number;
-  seasons: Season[];
+  seriesId: number
+  seriesName?: string | null
+  seriesOriginalName?: string | null
+  seriesFirstAirDate?: string | null
+  seasons: Season[]
 }) {
   if (!seasons || seasons.length === 0) {
     return <div className="text-muted-foreground">Nenhuma temporada encontrada.</div>;
@@ -31,12 +38,19 @@ export default function SeasonsList({
     return <div className="text-muted-foreground">Nenhuma temporada encontrada.</div>;
   }
 
+  const base = seriesHref({
+    id: seriesId,
+    name: seriesName,
+    original_name: seriesOriginalName,
+    first_air_date: seriesFirstAirDate,
+  })
+
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
       {filteredSeasons.map((season) => (
         <Link
           key={season.id}
-          href={`/series/${seriesId}/season/${season.season_number}`}
+          href={`${base}/season/${season.season_number}`}
           className="group block rounded-md border border-black/20 bg-muted-foreground/10 overflow-hidden transition-opacity hover:opacity-90 dark:border-white/20"
         >
           <div className="relative w-full aspect-[2/3]">

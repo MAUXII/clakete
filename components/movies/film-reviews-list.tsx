@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSupabaseClient } from '@supabase/auth-helpers-react';
-import { FaStar } from "react-icons/fa";
+import { RatingStars } from "@/components/movies/star-rating";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { avatarDisplaySrc } from "@/lib/next-remote-image";
 import Link from "next/link";
@@ -131,14 +131,7 @@ export function FilmReviewsList({ filmId, mediaType = "movie" }: FilmReviewsList
                   </div>
             <div className="flex items-center">
                   
-                  <div className="flex items-center">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <FaStar
-                        key={star}
-                        className={`h-4 w-4 ${star <= review.rating ? "text-[#FF0048]" : "text-muted-foreground/30"}`}
-                      />
-                    ))}
-                  </div>
+                  <RatingStars value={review.rating} starClassName="h-4 w-4" />
                 </div>
             </div>
             <div className="flex-1 space-y-2">

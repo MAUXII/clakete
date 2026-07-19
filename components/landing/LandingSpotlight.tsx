@@ -1,10 +1,13 @@
 import Link from "next/link"
 import { ArrowUpRight } from "lucide-react"
+import { filmHref } from "@/lib/media-href"
 import { cn } from "@/lib/utils"
 
 export type LandingSpotlightMovie = {
   id: number
   title: string
+  original_title?: string | null
+  release_date?: string | null
   backdrop_path: string | null
   overview: string | null
   vote_average?: number | null
@@ -86,7 +89,12 @@ export function LandingSpotlight({ movie }: Props) {
 
                 <div className="mt-8 flex flex-wrap items-center gap-3">
                   <Link
-                    href={`/film/${movie.id}`}
+                    href={filmHref({
+                      id: movie.id,
+                      title: movie.title,
+                      original_title: movie.original_title,
+                      release_date: movie.release_date,
+                    })}
                     className={cn(
                       "inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-medium text-black",
                       "transition hover:bg-neutral-200 active:scale-[0.98]",

@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useState, use, type ReactNode } from "react";
+import { useEffect, useState, use, type ReactNode, type CSSProperties } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FilmActions } from "@/components/movies/film-actions";
 import { LogWatchDialog } from "@/components/movies/log-watch-dialog";
+import { ShareCardDialog } from "@/components/movies/share-card-dialog";
 import { StarRating } from "@/components/movies/star-rating";
 import { FilmReview } from "@/components/movies/film-review";
 import { FilmReviewsList } from "@/components/movies/film-reviews-list";
@@ -25,10 +27,12 @@ import { motion } from "framer-motion";
 import { useLocalePrefs } from "@/hooks/use-locale-prefs";
 import type { TmdbRegionProviders } from "@/lib/locale-prefs";
 import { useT } from "@/components/providers/i18n-provider";
+import { filmHref, parseMediaParam } from "@/lib/media-href";
 
 export interface Movie {
   id: number;
   title: string;
+  original_title?: string | null;
   poster_path: string;
   backdrop_path: string;
   release_date: string;
@@ -105,15 +109,21 @@ const FILM_LETTERBOX_HEIGHT = "clamp(400px, min(60vh, 680px), 780px)"
 const FILM_POSTER_ALIGN_MARGIN = `max(-5rem, calc(min(92vw, 304px) * 0.75 + 8rem - ${FILM_LETTERBOX_HEIGHT}))`
 
 export default function FilmPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
+  const { id: rawParam } = use(params);
+  const parsed = parseMediaParam(rawParam);
+  const router = useRouter();
   const { t } = useT();
+  const [filmId, setFilmId] = useState<number | null>(
+    parsed?.kind === "id" ? parsed.id : null,
+  );
+  const [resolveFailed, setResolveFailed] = useState(false);
   const [movie, setMovie] = useState<Movie | null>(null);
   const [loading, setLoading] = useState(true);
   const [trailerOpen, setTrailerOpen] = useState(false);
   const [posterTrailerHover, setPosterTrailerHover] = useState(false);
   const [trailerBtnFocused, setTrailerBtnFocused] = useState(false);
   const [logWatchOpen, setLogWatchOpen] = useState(false);
-  const filmId = parseInt(id);
+  const [shareOpen, setShareOpen] = useState(false);
   const { tmdbLanguage, loading: localeLoading } = useLocalePrefs();
   const {
     rating,
@@ -131,17 +141,60 @@ export default function FilmPage({ params }: { params: Promise<{ id: string }> }
     unwatch,
     toggleLiked,
     toggleWatchlist,
-  } = useFilmInteractions(filmId, movie?.poster_path, movie?.title, movie?.release_date, "movie");
+  } = useFilmInteractions(
+    filmId ?? 0,
+    movie?.poster_path,
+    movie?.title,
+    movie?.release_date,
+    "movie",
+  );
+
+  // Resolve Letterboxd-style slug → TMDB id (or use id from legacy URLs).
+  useEffect(() => {
+    if (!parsed) {
+      setResolveFailed(true);
+      setLoading(false);
+      return;
+    }
+    if (parsed.kind === "id") {
+      setFilmId(parsed.id);
+      setResolveFailed(false);
+      return;
+    }
+
+    let cancelled = false;
+    setLoading(true);
+    setResolveFailed(false);
+    void fetch(`/api/movies/resolve?slug=${encodeURIComponent(parsed.slug)}`)
+      .then(async (res) => {
+        if (!res.ok) throw new Error("not found")
+        const data = (await res.json()) as { id?: number; slug?: string }
+        if (cancelled) return
+        if (data.id) {
+          setFilmId(data.id)
+          if (data.slug && data.slug !== parsed.slug) {
+            router.replace(`/film/${data.slug}`)
+          }
+        } else setResolveFailed(true)
+      })
+      .catch(() => {
+        if (!cancelled) setResolveFailed(true)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [rawParam]); // eslint-disable-line react-hooks/exhaustive-deps -- rawParam drives parse
 
   useEffect(() => {
-    if (localeLoading) return;
+    if (localeLoading || filmId == null) return;
 
     let cancelled = false;
     async function fetchMovie() {
       setLoading(true);
       try {
         const response = await fetch(
-          `/api/movies/${id}?language=${encodeURIComponent(tmdbLanguage)}`,
+          `/api/movies/${filmId}?language=${encodeURIComponent(tmdbLanguage)}`,
         );
         const data = await response.json();
 
@@ -162,9 +215,45 @@ export default function FilmPage({ params }: { params: Promise<{ id: string }> }
     return () => {
       cancelled = true;
     };
-  }, [id, tmdbLanguage, localeLoading]);
+  }, [filmId, tmdbLanguage, localeLoading]);
 
-  if (loading) {
+  // Canonicalize → plain slug when unique / primary, or `title-year` for remakes.
+  useEffect(() => {
+    if (!movie?.id) return;
+    const canonical = filmHref({
+      id: movie.id,
+      original_title: movie.original_title,
+      title: movie.title,
+      release_date: movie.release_date,
+    });
+    // Prefer server-side Letterboxd rule (strip year for primary / unique titles).
+    const probe = canonical.replace(/^\/film\//, "");
+    let cancelled = false;
+    void fetch(`/api/movies/resolve?slug=${encodeURIComponent(probe)}`)
+      .then(async (res) => {
+        if (!res.ok || cancelled) return;
+        const data = (await res.json()) as { id?: number; slug?: string };
+        if (!data.slug || data.id !== movie.id) return;
+        const next = `/film/${data.slug}`;
+        if (`/film/${rawParam}` !== next) router.replace(next);
+      })
+      .catch(() => {
+        if (`/film/${rawParam}` !== canonical) router.replace(canonical);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [movie, rawParam, router]);
+
+  if (resolveFailed || (!loading && filmId == null)) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#09090B] text-muted-foreground">
+        Filme não encontrado
+      </div>
+    );
+  }
+
+  if (loading || filmId == null) {
     return (
       <div className="min-h-screen w-full overflow-x-clip bg-[#09090B]">
       <FilmsCatalogShell>
@@ -273,8 +362,8 @@ export default function FilmPage({ params }: { params: Promise<{ id: string }> }
 
       <div className="relative z-10 flex flex-col gap-12  pt-2 lg:flex-row lg:items-start lg:gap-16 xl:gap-20">
         <aside
-          className="sticky top-[calc(env(safe-area-inset-top,0px)+12rem)] z-20 mx-auto w-full max-w-[260px] shrink-0 self-start sm:max-w-[280px] lg:mx-0 lg:max-w-[304px]"
-          style={{ marginTop: FILM_POSTER_ALIGN_MARGIN }}
+          className="z-20 w-full shrink-0 self-start -mt-20 sm:-mt-24 lg:mx-0 lg:max-w-[304px] lg:[margin-top:var(--poster-mt)] lg:sticky lg:top-[calc(env(safe-area-inset-top,0px)+12rem)]"
+          style={{ "--poster-mt": FILM_POSTER_ALIGN_MARGIN } as CSSProperties}
         >
           <div className="flex flex-col gap-3">
             <Link
@@ -284,7 +373,10 @@ export default function FilmPage({ params }: { params: Promise<{ id: string }> }
               <ArrowLeft className="h-4 w-4 shrink-0" aria-hidden />
               {t("film.backToCatalog")}
             </Link>
-            <div className="-mt-36  overflow-hidden rounded-2xl border border-white/[0.1] bg-zinc-950">
+            {/* Mobile: poster left + title/meta right. Desktop: poster only. */}
+            <div className="flex items-end gap-4 lg:block">
+              <div className="w-[44%] max-w-[210px] shrink-0 lg:w-full lg:max-w-none">
+            <div className="overflow-hidden rounded-2xl border border-white/[0.1] bg-zinc-950 lg:-mt-36">
               <div
                 className="relative aspect-[2/3] w-full overflow-hidden bg-zinc-950"
                 onMouseEnter={() => {
@@ -344,13 +436,34 @@ export default function FilmPage({ params }: { params: Promise<{ id: string }> }
                 ) : null}
               </div>
               <Trailer trailerOpen={trailerOpen} setTrailerOpen={setTrailerOpen} movie={movie} />
-              <WatchProviders movie={movie} hideHeading omitTrailerButton />
+              <div className="hidden border-t border-white/[0.08] lg:block">
+                <WatchProviders movie={movie} hideHeading omitTrailerButton />
+              </div>
+            </div>
+              </div>
+              {/* Mobile-only meta beside the poster */}
+              <div className="min-w-0 flex-1 space-y-2 pb-1 lg:hidden">
+                <h1 className="text-balance text-2xl font-semibold tracking-tight text-foreground">
+                  {movie.title}
+                </h1>
+                {movie.tagline ? (
+                  <p className="text-pretty text-xs leading-snug text-zinc-500">{movie.tagline}</p>
+                ) : null}
+                {movie.director ? (
+                  <p className="text-xs text-zinc-500">
+                    <span className="text-foreground">{t("film.directedBy")}</span> {movie.director}
+                  </p>
+                ) : null}
+                {metaLine ? (
+                  <p className="text-xs tabular-nums text-zinc-400">{metaLine}</p>
+                ) : null}
+              </div>
             </div>
           </div>
         </aside>
 
         <div className="mt-6 flex min-w-0 flex-1 flex-col gap-12 sm:mt-8 lg:mt-8 lg:max-w-none">
-          <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between lg:gap-12 xl:gap-16">
+          <div className="hidden flex-col gap-8 lg:flex lg:flex-row lg:items-start lg:justify-between lg:gap-12 xl:gap-16">
             <header className="min-w-0 max-w-xl space-y-4">
               <h1 className="text-balance text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">{movie.title}</h1>
               {movie.tagline ? (
@@ -412,6 +525,7 @@ export default function FilmPage({ params }: { params: Promise<{ id: string }> }
                   onWatchClick={() => setLogWatchOpen(true)}
                   onLikeClick={toggleLiked}
                   onWatchlistClick={toggleWatchlist}
+                  onShareClick={() => setShareOpen(true)}
                   loading={loading || interactionsLoading}
                   updating={updating}
                 />
@@ -448,6 +562,27 @@ export default function FilmPage({ params }: { params: Promise<{ id: string }> }
             onUnwatch={unwatch}
           />
 
+          <ShareCardDialog
+            open={shareOpen}
+            onOpenChange={setShareOpen}
+            fileBase={`clakete-${movie.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "film"}`}
+            data={{
+              title: movie.title,
+              year: movie.release_date ? movie.release_date.slice(0, 4) : null,
+              posterUrl: movie.poster_path
+                ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
+                : null,
+              backdropUrl: movie.backdrop_path
+                ? `https://image.tmdb.org/t/p/w1280${movie.backdrop_path}`
+                : null,
+              rating,
+              watchedLabel: formatWatchedDate(watchedDate),
+              director: movie.director || null,
+              caption: t("share.caption"),
+              handle: t("share.handle"),
+            }}
+          />
+
           <Tabs defaultValue="credits" className="w-full">
             <TabsList className={tabListClass}>
               <TabsTrigger className={tabTriggerClass} value="credits">
@@ -476,6 +611,11 @@ export default function FilmPage({ params }: { params: Promise<{ id: string }> }
               <ImagesList movie={movie} />
             </TabsContent>
           </Tabs>
+
+          {/* Mobile-only watch providers, just before reviews */}
+          <div className="overflow-hidden rounded-2xl border border-white/[0.1] bg-zinc-950/40 lg:hidden ">
+            <WatchProviders movie={movie} hideHeading omitTrailerButton />
+          </div>
 
           <div>
             <SectionLabel>{t("film.recentReviews")}</SectionLabel>

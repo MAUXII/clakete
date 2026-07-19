@@ -17,6 +17,7 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 import { Skeleton } from "@/components/ui/skeleton"
+import { RatingStars } from "@/components/movies/star-rating"
 import {
   activityDayKey,
   activityVerb,
@@ -210,7 +211,7 @@ export function UserActivityLog({
 
       for (const row of interactions) {
         const title = row.movie_title?.trim() || "Untitled"
-        const href = mediaHref(row.tmdb_id, row.media_type)
+        const href = mediaHref(row.tmdb_id, row.media_type, row.movie_title)
         const poster = row.poster_path
 
         if (row.is_watched) {
@@ -324,7 +325,7 @@ export function UserActivityLog({
           kind: "list_item",
           at: item.added_at,
           title: item.title || "Untitled",
-          href: mediaHref(item.tmdb_id, item.media_type),
+          href: mediaHref(item.tmdb_id, item.media_type, item.title),
           posterPath: item.poster_path,
           mediaType: item.media_type,
           subtitle: list.title ? `in ${list.title}` : null,
@@ -513,13 +514,13 @@ function ActivityRow({ event }: { event: ActivityEvent }) {
         </div>
 
         {event.rating != null && event.rating > 0 ? (
-          <p className="mt-0.5 flex items-center gap-0.5 text-[11px] text-[#FF0048]">
-            {Array.from({ length: Math.min(5, Math.round(event.rating)) }).map(
-              (_, i) => (
-                <Star key={i} className="size-2.5 fill-current" />
-              ),
-            )}
-          </p>
+          <div className="mt-0.5">
+            <RatingStars
+              value={event.rating}
+              starClassName="size-2.5"
+              emptyClassName="text-zinc-700"
+            />
+          </div>
         ) : null}
 
         {event.subtitle ? (

@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/context-menu"
 import { Skeleton } from "../ui/skeleton"
 import { horizontalListSortingStrategy } from "@dnd-kit/sortable"
+import { seriesHref } from "@/lib/media-href"
 
 interface Film {
   id: number
@@ -463,7 +464,16 @@ export function UserFavoriteFilms({ userId, isEditable = false, onFilmAdded }: F
             void handleFilmSelect(movie)
           }}
           onSelectSeries={(series) => {
-            window.open(`/series/${series.id}`, "_blank", "noopener,noreferrer")
+            window.open(
+              seriesHref({
+                id: series.id,
+                name: series.name,
+                original_name: series.original_name,
+                first_air_date: series.first_air_date,
+              }),
+              "_blank",
+              "noopener,noreferrer",
+            )
           }}
           filmRowMode="pick"
           seriesRowMode="pick"

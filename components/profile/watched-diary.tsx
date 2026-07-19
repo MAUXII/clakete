@@ -40,6 +40,7 @@ import {
   diaryYear,
   downloadTextFile,
 } from "@/lib/diary"
+import { filmHref, seriesHref } from "@/lib/media-href"
 import { cn } from "@/lib/utils"
 import {
   formatRewatchLabel,
@@ -181,10 +182,25 @@ export function WatchedDiary({
       tmdb_id: item.tmdb_id,
       poster_path: item.poster_path,
       movie_title: item.movie_title,
+      release_date: item.release_date,
       media_type: item.media_type,
       watched_date: item.watched_date,
     }))
   }, [items, likedOnly])
+
+  const diaryItemHref = (item: {
+    tmdb_id: number
+    media_type: string | null
+    movie_title?: string | null
+    release_date?: string | null
+  }) =>
+    item.media_type === "tv"
+      ? seriesHref({ id: item.tmdb_id, name: item.movie_title })
+      : filmHref({
+          id: item.tmdb_id,
+          title: item.movie_title,
+          release_date: item.release_date,
+        })
 
   // Sync calendar month when year/month filters change
   useEffect(() => {
@@ -509,11 +525,7 @@ export function WatchedDiary({
             onSelectDay={(date, dayItems) => {
               if (dayItems.length === 1 && !isOwnProfile) {
                 const only = dayItems[0]
-                router.push(
-                  only.media_type === "tv"
-                    ? `/series/${only.tmdb_id}`
-                    : `/film/${only.tmdb_id}`,
-                )
+                router.push(diaryItemHref(only))
                 return
               }
               setDaySheet({ date, items: dayItems })
@@ -537,10 +549,10 @@ export function WatchedDiary({
               <ul className="space-y-2">
                 {daySheet.items.map((dayItem) => {
                   const full = items.find((i) => i.id === dayItem.id)
-                  const href =
-                    dayItem.media_type === "tv"
-                      ? `/series/${dayItem.tmdb_id}`
-                      : `/film/${dayItem.tmdb_id}`
+                  const href = diaryItemHref({
+                    ...dayItem,
+                    release_date: full?.release_date ?? dayItem.release_date,
+                  })
                   const rewatch = formatRewatchLabel(full?.rewatch_count ?? 0)
 
                   return (
