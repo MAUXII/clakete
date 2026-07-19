@@ -17,14 +17,17 @@ const PROFILE_TABS = [
 
 export type ProfileTabId = (typeof PROFILE_TABS)[number]["id"]
 
+export { PROFILE_TABS }
 const profileTabLinkClass = "group relative z-10 flex h-full min-h-0 flex-1"
 
 const profileTabTriggerClass = cn(
   "relative z-10 h-full w-full rounded-md bg-transparent px-8 py-2 text-sm font-medium shadow-none transition-colors",
   "text-zinc-400 group-hover:text-zinc-200 dark:group-hover:text-zinc-100",
-  "data-[state=active]:!bg-transparent data-[state=active]:!text-[#e8486b] data-[state=active]:!shadow-none",
-  "dark:data-[state=active]:!text-[#ff9eb0]",
-  "data-[state=active]:group-hover:!text-[#e8486b] dark:data-[state=active]:group-hover:!text-[#ff9eb0]",
+  "data-[state=active]:!bg-transparent data-[state=active]:!shadow-none",
+  "data-[state=active]:!text-[var(--profile-tab-active,#e8486b)]",
+  "dark:data-[state=active]:!text-[var(--profile-tab-active-dark,#ff9eb0)]",
+  "data-[state=active]:group-hover:!text-[var(--profile-tab-active,#e8486b)]",
+  "dark:data-[state=active]:group-hover:!text-[var(--profile-tab-active-dark,#ff9eb0)]",
 )
 
 const INDICATOR_SPRING = {
@@ -97,7 +100,7 @@ export function ProfileTabBar({ username, activeTab, children }: ProfileTabBarPr
         {indicator ? (
           <motion.div
             aria-hidden
-            className="pointer-events-none absolute inset-y-1 rounded-md bg-[#FF0048]/10 dark:bg-[#FF0048]/14"
+            className="pointer-events-none absolute inset-y-1 rounded-md bg-[var(--profile-indicator,rgba(255,0,72,0.1))] dark:bg-[var(--profile-indicator,rgba(255,0,72,0.14))]"
             initial={false}
             animate={{
               left: indicator.left,

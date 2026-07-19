@@ -77,65 +77,74 @@ body {
   font-family: 'Poppins', sans-serif; 
 }
 
-/* Clakete Premium — The Shining (profile only) */
-.profile--shining {
-  --shining-accent: #9b2335;
-  --shining-glow: #c9a227;
-}
-
-.profile--shining .shining-banner-overlay {
-  background-image: repeating-linear-gradient(
-    -45deg,
-    transparent,
-    transparent 12px,
-    rgba(201, 162, 39, 0.35) 12px,
-    rgba(201, 162, 39, 0.35) 13px
-  );
-}
-
+/* Profile themes — The Shining (público; sem overlay de listras / ring) */
 .profile--theme-overlook {
-  --shining-accent: #8b4513;
-  --shining-glow: #c9a227;
-}
-
-.profile--theme-overlook .shining-banner-overlay {
-  background-image: repeating-linear-gradient(
-    -45deg,
-    transparent,
-    transparent 14px,
-    rgba(201, 162, 39, 0.45) 14px,
-    rgba(201, 162, 39, 0.45) 15px
-  );
+  --profile-name: #f0d9a8;
+  --profile-muted: #b89a6e;
+  --profile-stat: #f5e6c8;
+  --profile-accent: #c9a227;
+  --profile-accent-soft: rgba(201, 162, 39, 0.14);
+  --profile-badge: #c9a227;
+  --profile-tab-active: #e0c06a;
+  --profile-tab-active-dark: #f0d9a8;
+  --profile-indicator: rgba(201, 162, 39, 0.16);
 }
 
 .profile--theme-noir {
-  --shining-accent: #a8b0b8;
-  --shining-glow: #6b7a8f;
-}
-
-.profile--theme-noir .shining-banner-overlay {
-  background-image: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 10px,
-    rgba(168, 176, 184, 0.28) 10px,
-    rgba(168, 176, 184, 0.28) 11px
-  );
+  --profile-name: #f3f3f3;
+  --profile-muted: #9a9a9a;
+  --profile-stat: #e8e8e8;
+  --profile-accent: #c8c8c8;
+  --profile-accent-soft: rgba(200, 200, 200, 0.12);
+  --profile-badge: #d0d0d0;
+  --profile-tab-active: #e0e0e0;
+  --profile-tab-active-dark: #f5f5f5;
+  --profile-indicator: rgba(255, 255, 255, 0.1);
 }
 
 .profile--theme-rose {
-  --shining-accent: #9b2335;
-  --shining-glow: #e8a0b0;
+  --profile-name: #f2c4ce;
+  --profile-muted: #c48996;
+  --profile-stat: #f8dce3;
+  --profile-accent: #c45c6a;
+  --profile-accent-soft: rgba(196, 92, 106, 0.14);
+  --profile-badge: #e8a0b0;
+  --profile-tab-active: #e8486b;
+  --profile-tab-active-dark: #ff9eb0;
+  --profile-indicator: rgba(232, 72, 107, 0.14);
 }
 
-.profile--theme-rose .shining-banner-overlay {
-  background-image: repeating-linear-gradient(
-    45deg,
-    transparent,
-    transparent 12px,
-    rgba(232, 160, 176, 0.32) 12px,
-    rgba(232, 160, 176, 0.32) 13px
-  );
+.profile--theme-overlook,
+.profile--theme-noir,
+.profile--theme-rose {
+  .profile-theme-name {
+    color: var(--profile-name);
+  }
+
+  .profile-theme-muted {
+    color: var(--profile-muted);
+  }
+
+  .profile-theme-stat {
+    color: var(--profile-stat);
+  }
+
+  .profile-theme-divider {
+    background-color: color-mix(in srgb, var(--profile-muted) 45%, transparent);
+  }
+
+  .profile-theme-follow {
+    background-color: var(--profile-accent-soft) !important;
+    color: var(--profile-accent) !important;
+    border-color: color-mix(in srgb, var(--profile-accent) 35%, transparent) !important;
+  }
+}
+
+/* Noir: P&B nas imagens + banner (textos já monocromáticos via vars) */
+.profile--theme-noir .profile-theme-media-banner,
+.profile--theme-noir .profile-theme-media-avatar,
+.profile--theme-noir img {
+  filter: grayscale(1);
 }
 
 /* Scrollbar fina, quadrada, sem setas — página + `.custom-scrollbar` */

@@ -9,7 +9,7 @@ import { use } from 'react'
 import { useSupabaseClient, useUser } from '@supabase/auth-helpers-react'
 import { useProfile } from "@/components/providers/profile-provider"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { ProfileTabBar } from "@/components/profile/profile-tab-bar"
+import { ProfileTabBar, PROFILE_TABS } from "@/components/profile/profile-tab-bar"
 import { toast } from "sonner"
 import Link from "next/link"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -453,14 +453,15 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
     }
   
     if (loading) {
+      const bone = "bg-zinc-800"
       return (
         <section className="relative z-10 mt-[3.75rem] w-full" aria-busy aria-label="Loading profile">
           <div
-            className="relative h-[567px] w-full min-w-0 overflow-hidden rounded-none border-0 ring-1 ring-white/[0.06]"
+            className="relative h-[567px] w-full min-w-0 overflow-hidden rounded-none border-0 bg-[#09090B] ring-1 ring-white/[0.06]"
             aria-hidden
           >
-            <Skeleton className="absolute inset-0 h-full w-full rounded-none" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+            <Skeleton className={cn("absolute inset-0 h-full w-full rounded-none", bone)} />
+            <div className="absolute inset-0 rounded-none bg-gradient-to-t from-black/50 to-transparent" />
           </div>
 
           <div className={pageContainerClass}>
@@ -468,74 +469,89 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
               <div className="relative z-10">
                 <div className="flex flex-wrap gap-6 lg:flex-nowrap lg:items-stretch">
                   <div className="flex w-full flex-col gap-6">
-                    <div className="z-20 flex flex-col gap-6 self-start">
+                    <div className="sticky top-[calc(env(safe-area-inset-top,0px)+12rem)] z-20 flex flex-col gap-6 self-start">
                       <div className="relative -mt-24 aspect-square h-36 max-w-36 overflow-clip rounded-2xl shadow-sm ring-2 ring-white dark:ring-[#090909]">
-                        <Skeleton className="h-full w-full rounded-md" />
+                        <Skeleton className={cn("h-full w-full rounded-md", bone)} />
                       </div>
 
-                      <div className="flex w-full max-w-[370px] flex-col">
-                        <Skeleton className="h-9 w-48" />
-                        <Skeleton className="-mt-1 h-6 w-32" />
+                      <div className="flex w-full max-w-[370px] flex-1 flex-col">
+                        <Skeleton className={cn("h-9 w-52", bone)} />
+                        <Skeleton className={cn("-mt-1 h-6 w-36", bone)} />
 
-                        <div className="mt-2 flex items-center gap-4">
-                          {[0, 1, 2, 3].map((i) => (
-                            <div key={i} className="flex items-center gap-4">
-                              {i > 0 ? (
-                                <div
-                                  className="h-[61%] min-h-8 w-px bg-muted-foreground/40"
-                                  aria-hidden
-                                />
-                              ) : null}
-                              <div className="flex flex-col gap-1">
-                                <Skeleton className="h-6 w-7" />
-                                <Skeleton className="h-3.5 w-12" />
-                              </div>
+                        <div className="flex">
+                          <div className="mt-2 flex items-center gap-4">
+                            <div className="flex flex-col">
+                              <Skeleton className={cn("h-6 w-8", bone)} />
+                              <Skeleton className={cn("mt-1 h-3.5 w-10", bone)} />
                             </div>
-                          ))}
-                          <Skeleton className="ml-4 h-9 w-24 shrink-0 rounded-md" />
+                            <div className="h-[61%] min-h-8 w-px bg-muted-foreground/40" aria-hidden />
+                            <div className="flex flex-col">
+                              <Skeleton className={cn("h-6 w-8", bone)} />
+                              <Skeleton className={cn("mt-1 h-3.5 w-12", bone)} />
+                            </div>
+                            <div className="h-[61%] min-h-8 w-px bg-muted-foreground/40" aria-hidden />
+                            <div className="flex flex-col">
+                              <Skeleton className={cn("h-6 w-8", bone)} />
+                              <Skeleton className={cn("mt-1 h-3.5 w-16", bone)} />
+                            </div>
+                            <div className="h-[61%] min-h-8 w-px bg-muted-foreground/40" aria-hidden />
+                            <div className="flex flex-col">
+                              <Skeleton className={cn("h-6 w-8", bone)} />
+                              <Skeleton className={cn("mt-1 h-3.5 w-16", bone)} />
+                            </div>
+                            <div className="h-[61%] min-h-8 w-px bg-muted-foreground/40" aria-hidden />
+                            <Skeleton className={cn("ml-4 h-9 w-9 shrink-0 rounded-md", bone)} />
+                          </div>
                         </div>
 
                         <div className="mt-4 flex gap-2">
-                          <Skeleton className="size-8 rounded-full" />
-                          <Skeleton className="size-8 rounded-full" />
-                          <Skeleton className="size-8 rounded-full" />
+                          <Skeleton className={cn("size-8 rounded-full", bone)} />
+                          <Skeleton className={cn("size-8 rounded-full", bone)} />
+                          <Skeleton className={cn("size-8 rounded-full", bone)} />
                         </div>
 
                         <div className="mt-4 space-y-2">
-                          <Skeleton className="h-4 w-full" />
-                          <Skeleton className="h-4 w-[88%]" />
+                          <Skeleton className={cn("h-4 w-full", bone)} />
+                          <Skeleton className={cn("h-4 w-[82%]", bone)} />
                         </div>
                       </div>
                     </div>
                   </div>
 
                   <div className="w-full">
-                    <div className="mt-6 w-full">
-                      <Skeleton className="h-12 w-full rounded-md border border-white/[0.08] bg-[#09090B]" />
-
-                      <div className="mt-4 w-full">
-                        <Skeleton className="h-3.5 w-28" />
-                        <div className="mb-4 mt-1 h-[0.3px] w-full bg-muted-foreground/10" />
-                        <div className="grid grid-cols-4 gap-3 sm:gap-4">
+                    {/* Tab bar estático no loading — sem Links (evita forçar /profile) */}
+                    <div className="mt-6 w-full" aria-hidden>
+                      <div className="relative flex h-12 w-full overflow-hidden border border-white/[0.08] bg-[#09090B] p-1 text-zinc-400">
+                        {PROFILE_TABS.map((tab) => {
+                          const isActive = tab.id === activeTab
+                          return (
+                            <div
+                              key={tab.id}
+                              className="relative z-10 flex h-full min-h-0 flex-1"
+                            >
+                              <span
+                                className={cn(
+                                  "relative z-10 flex h-full w-full items-center justify-center whitespace-nowrap rounded-md px-8 py-2 text-sm font-medium",
+                                  isActive
+                                    ? "bg-[#FF0048]/10 text-[#e8486b]"
+                                    : "text-zinc-400",
+                                )}
+                              >
+                                {tab.label}
+                              </span>
+                            </div>
+                          )
+                        })}
+                      </div>
+                      <div className="mt-4 w-full space-y-3">
+                        <Skeleton className={cn("h-3.5 w-28", bone)} />
+                        <div className="grid grid-cols-4 gap-4">
                           {Array.from({ length: 4 }).map((_, i) => (
                             <Skeleton
-                              key={`fav-${i}`}
-                              className="aspect-[2/3] w-full rounded-[5px] border border-white/15"
+                              key={i}
+                              className={cn("aspect-[2/3] w-full rounded-[5px]", bone)}
                             />
                           ))}
-                        </div>
-
-                        <div className="mt-4">
-                          <Skeleton className="h-3.5 w-36" />
-                          <div className="mb-4 mt-1 h-[0.3px] w-full bg-muted-foreground/10" />
-                          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4">
-                            {Array.from({ length: 8 }).map((_, i) => (
-                              <Skeleton
-                                key={`act-${i}`}
-                                className="aspect-[2/3] w-full rounded-[5px] border border-white/15"
-                              />
-                            ))}
-                          </div>
                         </div>
                       </div>
                     </div>
@@ -547,6 +563,7 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
         </section>
       )
     }
+
     if (!userData && !loading) {
       return (
         <section className={cn(pageContainerClass, "mt-16 py-16 text-center")}>
@@ -570,22 +587,19 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
     plan_current_period_end: userData.plan_current_period_end,
   })
   const profileTheme = parseUserHomePreferences(userData.home_preferences).profile_theme
-  const themeClass =
-    isShiningProfile && profileTheme && profileTheme !== "default"
-      ? `profile--theme-${profileTheme}`
-      : null
+  const activeTheme =
+    isShiningProfile && profileTheme && profileTheme !== "default" ? profileTheme : null
+  const themeClass = activeTheme ? `profile--theme-${activeTheme}` : null
+  const themed = Boolean(themeClass)
 
   return (
-    <section
-      className={cn(
-        "relative z-10 mt-[3.75rem] w-full",
-        isShiningProfile && "profile--shining",
-        themeClass,
-      )}
-    >
+    <section className={cn("relative z-10 mt-[3.75rem] w-full", themeClass)}>
         {/* Banner */}
         <div 
-        className="group relative h-[567px] w-full min-w-0 overflow-hidden rounded-none border-0 bg-cover bg-center ring-1 ring-b ring-white/[0.06] "
+        className={cn(
+          "group relative h-[567px] w-full min-w-0 overflow-hidden rounded-none border-0 bg-cover bg-center ring-1 ring-b ring-white/[0.06]",
+          themed && "profile-theme-media-banner",
+        )}
         style={{ 
           backgroundImage: `url(${bannerDisplay.src})`,
           backgroundPosition: bannerDisplay.backgroundPosition,
@@ -601,12 +615,6 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
           </button>
         )}
         <div className="absolute inset-0 rounded-none bg-gradient-to-t from-black/50 to-transparent z" />
-        {isShiningProfile ? (
-          <div
-            className="pointer-events-none absolute inset-0 opacity-[0.14] shining-banner-overlay"
-            aria-hidden
-          />
-        ) : null}
       </div>
 
       <div className={pageContainerClass}>
@@ -619,10 +627,8 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
             <div className="sticky top-[calc(env(safe-area-inset-top,0px)+12rem)] z-20 flex flex-col gap-6 self-start">
             <div
               className={cn(
-                "relative -mt-24 aspect-square overflow-clip h-36 group rounded-2xl max-w-36 shadow-sm ring-2",
-                isShiningProfile
-                  ? "ring-[#C9A227]/50 dark:ring-[#9B2335]/80 ring-offset-2 ring-offset-[#09090B]"
-                  : "ring-white dark:ring-[#090909]",
+                "relative -mt-24 aspect-square h-36 max-w-36 overflow-clip rounded-2xl shadow-sm ring-2 ring-white group dark:ring-[#090909]",
+                themed && "profile-theme-media-avatar",
               )}
             >
             <Avatar className="w-full h-full rounded-md shadow-none ">
@@ -650,48 +656,130 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
 
             {/* Info */}
             <div className="flex-1 flex-col flex w-full max-w-[370px]">
-              <h1 className="text-3xl font-bold dark:text-white">
+              <h1
+                className={cn(
+                  "text-3xl font-bold",
+                  themed ? "profile-theme-name" : "dark:text-white",
+                )}
+              >
                 {userData.display_name || userData.username}
               </h1>
-              <h2 className="text-lg -mt-1 text-muted-foreground">
-                @{userData.username}
+              <h2
+                className={cn(
+                  "-mt-1 inline-flex items-center gap-1.5 text-lg",
+                  themed ? "profile-theme-muted" : "text-muted-foreground",
+                )}
+              >
+                <span>@{userData.username}</span>
+                {isShiningProfile ? <ShiningBadge /> : null}
               </h2>
-              {isShiningProfile ? (
-                <div className="mt-2">
-                  <ShiningBadge />
-                </div>
-              ) : null}
 
               <div className='flex'>
                 
               <div className='flex items-center mt-2 gap-4'> 
                   <div className="flex flex-col">
-                    <span className="dark:text-white text-xl font-semibold text-black">{stats.filmsCount}</span>
-                    <span className="text-muted-foreground text-sm">Films</span>
+                    <span
+                      className={cn(
+                        "text-xl font-semibold",
+                        themed ? "profile-theme-stat" : "dark:text-white text-black",
+                      )}
+                    >
+                      {stats.filmsCount}
+                    </span>
+                    <span
+                      className={cn(
+                        "text-sm",
+                        themed ? "profile-theme-muted" : "text-muted-foreground",
+                      )}
+                    >
+                      Films
+                    </span>
                   </div>
 
-                  <div className="text-muted-foreground text-sm w-[1px] h-[61%] bg-muted-foreground/40"/>
+                  <div
+                    className={cn(
+                      "text-sm w-[1px] h-[61%]",
+                      themed ? "profile-theme-divider" : "bg-muted-foreground/40",
+                    )}
+                  />
 
                    <div className="flex flex-col">
-                    <span className="dark:text-white text-xl font-semibold text-black">{stats.seriesCount}</span>
-                    <span className="text-muted-foreground text-sm">Series</span>
+                    <span
+                      className={cn(
+                        "text-xl font-semibold",
+                        themed ? "profile-theme-stat" : "dark:text-white text-black",
+                      )}
+                    >
+                      {stats.seriesCount}
+                    </span>
+                    <span
+                      className={cn(
+                        "text-sm",
+                        themed ? "profile-theme-muted" : "text-muted-foreground",
+                      )}
+                    >
+                      Series
+                    </span>
                   </div>
                   
-                  <div className="text-muted-foreground text-sm w-[1px] h-[61%] bg-muted-foreground/40"/>
+                  <div
+                    className={cn(
+                      "text-sm w-[1px] h-[61%]",
+                      themed ? "profile-theme-divider" : "bg-muted-foreground/40",
+                    )}
+                  />
 
                   <Link href={`/${userData.username}/followers`} className="flex flex-col transition hover:opacity-80">
-                    <span className="dark:text-white text-xl font-semibold text-black">{stats.followersCount}</span>
-                    <span className="text-muted-foreground text-sm">Followers</span>
+                    <span
+                      className={cn(
+                        "text-xl font-semibold",
+                        themed ? "profile-theme-stat" : "dark:text-white text-black",
+                      )}
+                    >
+                      {stats.followersCount}
+                    </span>
+                    <span
+                      className={cn(
+                        "text-sm",
+                        themed ? "profile-theme-muted" : "text-muted-foreground",
+                      )}
+                    >
+                      Followers
+                    </span>
                   </Link>
 
-                  <div className="text-muted-foreground text-sm w-[1px] h-[61%] bg-muted-foreground/40"/>
+                  <div
+                    className={cn(
+                      "text-sm w-[1px] h-[61%]",
+                      themed ? "profile-theme-divider" : "bg-muted-foreground/40",
+                    )}
+                  />
 
                   <Link href={`/${userData.username}/following`} className="flex flex-col transition hover:opacity-80">
-                    <span className="dark:text-white text-xl font-semibold text-black">{stats.followingCount}</span>
-                    <span className="text-muted-foreground text-sm">Following</span>
+                    <span
+                      className={cn(
+                        "text-xl font-semibold",
+                        themed ? "profile-theme-stat" : "dark:text-white text-black",
+                      )}
+                    >
+                      {stats.followingCount}
+                    </span>
+                    <span
+                      className={cn(
+                        "text-sm",
+                        themed ? "profile-theme-muted" : "text-muted-foreground",
+                      )}
+                    >
+                      Following
+                    </span>
                   </Link>
 
-                  <div className="text-muted-foreground text-sm w-[1px] h-[61%] bg-muted-foreground/40"/>
+                  <div
+                    className={cn(
+                      "text-sm w-[1px] h-[61%]",
+                      themed ? "profile-theme-divider" : "bg-muted-foreground/40",
+                    )}
+                  />
 
                   {isOwnProfile ? (
                     <div className="ml-4">
@@ -726,7 +814,12 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
                   ) : (
                     <button
                       onClick={toggleFollow}
-                      className="px-4 py-2 bg-[#FF0048]  rounded-md  transition-colors w-full bg-[#FF0048]/10 text-[#FF0048]/70 border border-black/10 dark:border-white/10 flex items-center justify-center"
+                      className={cn(
+                        "px-4 py-2 rounded-md transition-colors w-full border border-black/10 dark:border-white/10 flex items-center justify-center",
+                        themed
+                          ? "profile-theme-follow"
+                          : "bg-[#FF0048]/10 text-[#FF0048]/70",
+                      )}
                     >
                       {stats.isFollowing ? 'Unfollow' : 'Follow'}
                     </button>
@@ -751,7 +844,14 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
                 homePreferences={userData.home_preferences}
               />
               {userData.bio && (
-                <p className="mt-4 text-muted-foreground">{userData.bio}</p>
+                <p
+                  className={cn(
+                    "mt-4",
+                    themed ? "profile-theme-muted" : "text-muted-foreground",
+                  )}
+                >
+                  {userData.bio}
+                </p>
         )}
       </div>
           </div>

@@ -47,9 +47,9 @@ export const FREE_PRIVATE_LIST_LIMIT = 3
 
 export const PROFILE_THEMES = [
   { id: "default", label: "Default", hint: "Clakete classic" },
-  { id: "overlook", label: "Overlook", hint: "Warm carpet gold" },
-  { id: "noir", label: "Noir", hint: "Cool silver dark" },
-  { id: "rose", label: "Rose", hint: "Soft crimson glow" },
+  { id: "overlook", label: "Overlook", hint: "Warm gold text & atmosphere" },
+  { id: "noir", label: "Noir", hint: "Full black & white profile" },
+  { id: "rose", label: "Rose", hint: "Soft crimson tint" },
 ] as const
 
 export type ProfileThemeId = (typeof PROFILE_THEMES)[number]["id"]
