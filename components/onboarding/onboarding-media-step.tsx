@@ -84,7 +84,7 @@ export function OnboardingMediaStep({
           </div>
         }
       >
-        <div className="w-full overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0c0c0e] ring-1 ring-white/[0.04]">
+        <div className="w-full overflow-hidden rounded-2xl border border-border bg-[#0c0c0e] ring-1 ring-white/[0.04]">
           <div
             className={cn(
               "relative w-full overflow-hidden bg-cover bg-center bg-no-repeat",
@@ -101,7 +101,7 @@ export function OnboardingMediaStep({
                 : {}),
             }}
           >
-            <div className="absolute inset-0 bg-gradient-to-t from-[#09090B] via-[#09090B]/35 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/35 to-transparent" />
             <button
               type="button"
               onClick={() => setShowBannerEdit(true)}
@@ -117,7 +117,7 @@ export function OnboardingMediaStep({
               onClick={() => setShowAvatarEdit(true)}
               className="group relative rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50"
             >
-              <Avatar className="h-24 w-24 z-20 border-4 border-[#09090B] ring-2 ring-white/10">
+              <Avatar className="h-24 w-24 z-20 border-4 border-background ring-2 ring-border">
                 <AvatarImage
                   src={avatarDisplaySrc(avatarDisplay.src) ?? undefined}
                   alt=""
@@ -139,7 +139,7 @@ export function OnboardingMediaStep({
             <p className="text-center text-sm font-medium text-white">
               {displayName.trim() || username}
             </p>
-            <p className="text-xs text-zinc-500">@{username}</p>
+            <p className="text-xs text-muted-foreground">@{username}</p>
           </div>
         </div>
       </OnboardingStepShell>

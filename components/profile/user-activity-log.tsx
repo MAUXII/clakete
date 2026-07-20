@@ -422,7 +422,7 @@ export function UserActivityLog({
           <h2 className="text-sm font-medium uppercase tracking-wide text-muted-foreground/50">
             Activity
           </h2>
-          <p className="mt-1 text-xs text-zinc-500">
+          <p className="mt-1 text-xs text-muted-foreground">
             Full track · {events.length}{" "}
             {events.length === 1 ? "entry" : "entries"}
             {rangeLabel ? ` · ${rangeLabel}` : null}
@@ -441,7 +441,7 @@ export function UserActivityLog({
           {groups.map(([day, dayEvents]) => (
             <li key={day}>
               <div className="mb-3 flex items-center gap-3 pl-12">
-                <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-zinc-500">
+                <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
                   {formatActivityDay(day)}
                 </span>
                 <div className="h-px flex-1 bg-white/[0.05]" />
@@ -461,7 +461,7 @@ export function UserActivityLog({
         <button
           type="button"
           onClick={() => setVisible((v) => Math.min(v + 80, events.length))}
-          className="mt-6 flex h-11 w-full items-center justify-center rounded-md border border-white/[0.08] bg-brand/10 text-sm text-brand transition hover:bg-brand/20"
+          className="mt-6 flex h-11 w-full items-center justify-center rounded-md border border-border bg-brand/10 text-sm text-brand transition hover:bg-brand/20"
         >
           Load earlier · {events.length - visible} remaining
         </button>
@@ -475,11 +475,11 @@ function ActivityRow({ event }: { event: ActivityEvent }) {
   const verb = activityVerb(event.kind, event.rewatchCount)
   const time = formatActivityTime(event.at)
   const inner = (
-    <div className="group flex gap-3 rounded-lg px-2 py-2.5 transition hover:bg-white/[0.03]">
+    <div className="group flex gap-3 rounded-lg px-2 py-2.5 transition hover:bg-muted/40">
       <div className="relative z-10 flex w-10 shrink-0 justify-center pt-1">
         <span
           className={cn(
-            "flex size-8 items-center justify-center rounded-full border border-white/[0.08] bg-[#0c0c0e] text-zinc-400",
+            "flex size-8 items-center justify-center rounded-full border border-border bg-[#0c0c0e] text-muted-foreground",
             event.kind === "joined" && "border-brand/30 text-brand",
             event.kind === "watched" && "text-brand-light",
             event.kind === "liked" && "text-brand",
@@ -491,15 +491,15 @@ function ActivityRow({ event }: { event: ActivityEvent }) {
 
       <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-3">
-          <p className="text-[13px] leading-snug text-zinc-300">
-            <span className="text-zinc-500">{verb}</span>{" "}
-            <span className="font-medium text-zinc-100 group-hover:text-brand-light">
+          <p className="text-[13px] leading-snug text-muted-foreground">
+            <span className="text-muted-foreground">{verb}</span>{" "}
+            <span className="font-medium text-foreground group-hover:text-brand-light">
               {event.title}
             </span>
             {event.kind === "watched" &&
             event.rewatchCount &&
             event.rewatchCount > 0 ? (
-              <span className="text-zinc-600">
+              <span className="text-muted-foreground">
                 {" "}
                 · {event.rewatchCount}{" "}
                 {event.rewatchCount === 1 ? "rewatch" : "rewatches"}
@@ -507,7 +507,7 @@ function ActivityRow({ event }: { event: ActivityEvent }) {
             ) : null}
           </p>
           {time ? (
-            <time className="shrink-0 pt-0.5 text-[11px] tabular-nums text-zinc-600">
+            <time className="shrink-0 pt-0.5 text-[11px] tabular-nums text-muted-foreground">
               {time}
             </time>
           ) : null}
@@ -518,20 +518,20 @@ function ActivityRow({ event }: { event: ActivityEvent }) {
             <RatingStars
               value={event.rating}
               starClassName="size-2.5"
-              emptyClassName="text-zinc-700"
+              emptyClassName="text-muted-foreground"
             />
           </div>
         ) : null}
 
         {event.subtitle ? (
-          <p className="mt-1 line-clamp-2 text-[12px] leading-relaxed text-zinc-500">
+          <p className="mt-1 line-clamp-2 text-[12px] leading-relaxed text-muted-foreground">
             {event.subtitle}
           </p>
         ) : null}
       </div>
 
       {event.posterPath ? (
-        <div className="relative mt-0.5 hidden h-14 w-9 shrink-0 overflow-hidden rounded-[3px] border border-white/[0.08] sm:block">
+        <div className="relative mt-0.5 hidden h-14 w-9 shrink-0 overflow-hidden rounded-[3px] border border-border sm:block">
           <Image
             src={`https://image.tmdb.org/t/p/w92${event.posterPath}`}
             alt=""

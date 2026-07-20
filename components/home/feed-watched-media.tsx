@@ -8,9 +8,9 @@ import { ChevronLeft, ChevronRight, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 export const feedMediaFrameClass =
-  "group/media relative mt-3 block overflow-hidden bg-zinc-950 " +
-  "-mx-4 w-[calc(100%+2rem)] rounded-none border-y border-white/[0.06] " +
-  "lg:mx-0 lg:w-full lg:rounded-2xl lg:border lg:border-white/[0.08]"
+  "group/media relative mt-3 block overflow-hidden bg-card " +
+  "-mx-4 w-[calc(100%+2rem)] rounded-none border-y border-border " +
+  "lg:mx-0 lg:w-full lg:rounded-2xl lg:border lg:border-border"
 
 function tmdbSrc(filePath: string, kind: "poster" | "backdrop") {
   const size = kind === "poster" ? "w780" : "w1280"
@@ -300,7 +300,7 @@ function FullBleedMedia({
   const aspectClass = isPoster ? "aspect-[2/3] max-h-[70vh]" : "aspect-[16/9]"
   const frame = edgeToEdge
     ? feedMediaFrameClass
-    : "group/media relative mt-3 block overflow-hidden rounded-2xl border border-white/[0.08] bg-zinc-950"
+    : "group/media relative mt-3 block overflow-hidden rounded-2xl border border-border bg-card"
 
   useEffect(() => {
     return () => {
@@ -331,7 +331,7 @@ function FullBleedMedia({
       <div className={frame}>
         <div
           className={cn(
-            "flex w-full items-center justify-center bg-zinc-900 text-sm text-zinc-600",
+            "flex w-full items-center justify-center bg-muted text-sm text-muted-foreground",
             aspectClass,
           )}
         >
@@ -404,7 +404,7 @@ export function WatchedMediaCarousel({
   const current = images[safeIndex]
   const frame = edgeToEdge
     ? feedMediaFrameClass
-    : "group/media relative mt-3 block overflow-hidden rounded-2xl border border-white/[0.08] bg-zinc-950"
+    : "group/media relative mt-3 block overflow-hidden rounded-2xl border border-border bg-card"
 
   useEffect(() => {
     return () => {
@@ -527,7 +527,7 @@ export function WatchedMediaCarousel({
   return (
     <>
       <div className={frame}>
-        <div className="relative h-[min(70vh,32rem)] w-full overflow-hidden bg-zinc-950">
+        <div className="relative h-[min(70vh,32rem)] w-full overflow-hidden bg-card">
           <button
             type="button"
             className="absolute inset-0 block cursor-zoom-in"

@@ -82,8 +82,8 @@ function formatRuntime(minutes: number) {
 function SectionLabel({ children }: { children: ReactNode }) {
   return (
     <div className="flex items-center gap-4">
-      <h2 className="shrink-0 text-[10px] font-medium uppercase tracking-[0.24em] text-zinc-500">{children}</h2>
-      <div className="h-px min-w-0 flex-1 bg-white/[0.08]" aria-hidden />
+      <h2 className="shrink-0 text-[10px] font-medium uppercase tracking-[0.24em] text-muted-foreground">{children}</h2>
+      <div className="h-px min-w-0 flex-1 bg-muted" aria-hidden />
     </div>
   );
 }
@@ -223,7 +223,7 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ id: str
 
   if (resolveFailed || (!loading && seriesId == null)) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#09090B] text-muted-foreground">
+      <div className="flex min-h-screen items-center justify-center bg-background text-muted-foreground">
         {t("film.seriesNotFound")}
       </div>
     );
@@ -231,16 +231,16 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ id: str
 
   if (loading || seriesId == null) {
     return (
-      <div className="min-h-screen w-full overflow-x-clip bg-[#09090B]">
+      <div className="min-h-screen w-full overflow-x-clip bg-background">
         <FilmsCatalogShell>
           <div
-            className="pointer-events-none relative left-1/2 z-0 mt-[3.75rem] w-screen max-w-[100vw] -translate-x-1/2 overflow-hidden bg-[#09090B]"
+            className="pointer-events-none relative left-1/2 z-0 mt-[3.75rem] w-screen max-w-[100vw] -translate-x-1/2 overflow-hidden bg-background"
             style={{ height: SERIES_LETTERBOX_HEIGHT }}
             aria-hidden
           >
             <Skeleton className="absolute inset-0 h-full w-full rounded-none" />
             <div
-              className="absolute inset-0 bg-[linear-gradient(to_top,#09090B_0%,#09090B_0%,rgba(9,9,11,0.55)_32%,transparent_62%)]"
+              className="absolute inset-0 bg-[linear-gradient(to_top,hsl(var(--background))_0%,hsl(var(--background))_0%,hsl(var(--background)/0.55)_32%,transparent_62%)]"
               aria-hidden
             />
           </div>
@@ -253,9 +253,9 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ id: str
               <div className="flex flex-col gap-3">
                 <div className="flex items-end gap-4 lg:block">
                   <div className="w-[44%] max-w-[210px] shrink-0 lg:w-full lg:max-w-none">
-                    <div className="overflow-hidden rounded-2xl border border-white/[0.1] bg-zinc-950 lg:-mt-36">
+                    <div className="overflow-hidden rounded-2xl border border-border bg-card lg:-mt-36">
                       <Skeleton className="aspect-[2/3] w-full rounded-none" />
-                      <div className="hidden space-y-2 border-t border-white/[0.08] p-3 lg:block">
+                      <div className="hidden space-y-2 border-t border-border p-3 lg:block">
                         <Skeleton className="h-3 w-20" />
                         <div className="flex gap-2">
                           <Skeleton className="size-9 rounded-full" />
@@ -290,7 +290,7 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ id: str
                 <div>
                   <div className="flex items-center gap-4">
                     <Skeleton className="h-2.5 w-16 shrink-0" />
-                    <div className="h-px min-w-0 flex-1 bg-white/[0.08]" aria-hidden />
+                    <div className="h-px min-w-0 flex-1 bg-muted" aria-hidden />
                   </div>
                   <div className="mt-4 max-w-3xl space-y-2 lg:max-w-4xl">
                     <Skeleton className="h-4 w-full" />
@@ -337,12 +337,12 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ id: str
 
   if (!series) {
     return (
-      <div className="min-h-screen w-full overflow-x-clip bg-[#09090B]">
+      <div className="min-h-screen w-full overflow-x-clip bg-background">
         <FilmsCatalogShell>
           <h1 className="text-2xl font-semibold tracking-tight">{t("film.seriesNotFound")}</h1>
           <Link
             href="/series/discover"
-            className="-mt-10 inline-flex items-center gap-2 text-sm font-medium text-zinc-400 transition-colors hover:text-foreground"
+            className="-mt-10 inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4 shrink-0" aria-hidden />
             {t("film.backToCatalog")}
@@ -370,19 +370,19 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ id: str
   const movieCompat = series as unknown as Movie;
 
   const tabListClass =
-    "flex h-auto w-full flex-wrap gap-1 rounded-lg border border-white/[0.08] bg-transparent p-1 sm:grid sm:grid-cols-5 sm:gap-1";
+    "flex h-auto w-full flex-wrap gap-1 rounded-lg border border-border bg-transparent p-1 sm:grid sm:grid-cols-5 sm:gap-1";
   const tabTriggerClass = cn(
-    "min-w-0 flex-1 rounded-md px-2 py-2.5 text-center text-sm font-medium text-zinc-500 transition-colors sm:px-3",
+    "min-w-0 flex-1 rounded-md px-2 py-2.5 text-center text-sm font-medium text-muted-foreground transition-colors sm:px-3",
     "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/25 focus-visible:ring-offset-1 focus-visible:ring-offset-background",
     "data-[state=active]:bg-brand/10 data-[state=active]:text-brand-muted",
-    "hover:text-zinc-300",
+    "hover:text-muted-foreground",
   );
 
   return (
-    <div className="min-h-screen w-full overflow-x-clip bg-[#09090B]">
+    <div className="min-h-screen w-full overflow-x-clip bg-background">
       <FilmsCatalogShell>
         <div
-          className="pointer-events-none mt-[3.75rem] relative left-1/2 z-0 w-screen max-w-[100vw] -translate-x-1/2 overflow-hidden bg-[#09090B]"
+          className="pointer-events-none mt-[3.75rem] relative left-1/2 z-0 w-screen max-w-[100vw] -translate-x-1/2 overflow-hidden bg-background"
           style={{ height: SERIES_LETTERBOX_HEIGHT }}
           aria-hidden
         >
@@ -396,7 +396,7 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ id: str
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_35%,rgba(255,255,255,0.06),transparent_55%)]" />
           )}
           <div
-            className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(9,9,11,0.18)_0%,transparent_38%)]"
+            className="absolute inset-0 bg-[linear-gradient(to_bottom,hsl(var(--background)/0.18)_0%,transparent_38%)]"
             aria-hidden
           />
           <div
@@ -404,7 +404,7 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ id: str
             aria-hidden
           />
           <div
-            className="absolute inset-0 bg-[linear-gradient(to_top,#09090B_0%,#09090B_0%,rgba(9,9,11,0.55)_32%,transparent_62%)]"
+            className="absolute inset-0 bg-[linear-gradient(to_top,hsl(var(--background))_0%,hsl(var(--background))_0%,hsl(var(--background)/0.55)_32%,transparent_62%)]"
             aria-hidden
           />
           <img
@@ -423,7 +423,7 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ id: str
             <div className="flex flex-col gap-3">
               <Link
                 href="/series/discover"
-                className="pointer-events-auto inline-flex w-fit items-center gap-2 text-sm font-medium text-zinc-300 transition-colors hover:text-white"
+                className="pointer-events-auto inline-flex w-fit items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
               >
                 <ArrowLeft className="h-4 w-4 shrink-0" aria-hidden />
                 {t("film.backToCatalog")}
@@ -431,9 +431,9 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ id: str
               {/* Mobile: poster left + title/meta right. Desktop: poster only. */}
               <div className="flex items-end gap-4 lg:block">
                 <div className="w-[44%] max-w-[210px] shrink-0 lg:w-full lg:max-w-none">
-              <div className="overflow-hidden rounded-2xl border border-white/[0.1] bg-zinc-950 lg:-mt-36">
+              <div className="overflow-hidden rounded-2xl border border-border bg-card lg:-mt-36">
                 <div
-                  className="relative aspect-[2/3] w-full overflow-hidden bg-zinc-950"
+                  className="relative aspect-[2/3] w-full overflow-hidden bg-card"
                   onMouseEnter={() => {
                     if (youtubeTrailer) setPosterTrailerHover(true);
                   }}
@@ -456,7 +456,7 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ id: str
                       style={{ pointerEvents: trailerPosterUiActive ? "auto" : "none" }}
                       className={cn(
                         "absolute inset-0 z-10 flex cursor-pointer items-center justify-center bg-black/10",
-                        "outline-none focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950",
+                        "outline-none focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                       )}
                       onClick={() => setTrailerOpen(true)}
                       onFocus={() => setTrailerBtnFocused(true)}
@@ -464,8 +464,8 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ id: str
                     >
                       <motion.span
                         className={cn(
-                          "pointer-events-none inline-flex origin-center items-center gap-3 rounded-full border border-white/[0.08]",
-                          "bg-zinc-950/50 px-1.5 py-1.5 pl-2 shadow-[0_12px_40px_-12px_rgba(0,0,0,0.5)] backdrop-blur-xl ring-1 ring-white/[0.05]",
+                          "pointer-events-none inline-flex origin-center items-center gap-3 rounded-full border border-border",
+                          "bg-muted/50 px-1.5 py-1.5 pl-2 shadow-[0_12px_40px_-12px_rgba(0,0,0,0.5)] backdrop-blur-xl ring-1 ring-border",
                         )}
                         initial={false}
                         animate={
@@ -481,7 +481,7 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ id: str
                         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.15)]">
                           <FaPlay className="ml-0.5 h-3.5 w-3.5" aria-hidden />
                         </span>
-                        <span className="pr-4 text-sm font-medium tracking-tight text-white/95">
+                        <span className="pr-4 text-sm font-medium tracking-tight text-foreground">
                           {t("film.trailer")}
                         </span>
                       </motion.span>
@@ -489,7 +489,7 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ id: str
                   ) : null}
                 </div>
                 <Trailer trailerOpen={trailerOpen} setTrailerOpen={setTrailerOpen} movie={movieCompat} />
-                <div className="hidden border-t border-white/[0.08] lg:block">
+                <div className="hidden border-t border-border lg:block">
                   <WatchProviders movie={movieCompat} hideHeading omitTrailerButton mediaType="tv" />
                 </div>
               </div>
@@ -500,15 +500,15 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ id: str
                     {displayTitle}
                   </h1>
                   {series.tagline ? (
-                    <p className="text-pretty text-xs leading-snug text-zinc-500">{series.tagline}</p>
+                    <p className="text-pretty text-xs leading-snug text-muted-foreground">{series.tagline}</p>
                   ) : null}
                   {series.director ? (
-                    <p className="text-xs text-zinc-500">
+                    <p className="text-xs text-muted-foreground">
                       <span className="text-foreground">{t("film.createdBy")}</span> {series.director}
                     </p>
                   ) : null}
                   {metaLine ? (
-                    <p className="text-xs tabular-nums text-zinc-400">{metaLine}</p>
+                    <p className="text-xs tabular-nums text-muted-foreground">{metaLine}</p>
                   ) : null}
                 </div>
               </div>
@@ -522,17 +522,17 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ id: str
                   {displayTitle}
                 </h1>
                 {series.tagline ? (
-                  <p className="text-pretty text-sm leading-snug text-zinc-500 sm:text-[0.9375rem]">{series.tagline}</p>
+                  <p className="text-pretty text-sm leading-snug text-muted-foreground sm:text-[0.9375rem]">{series.tagline}</p>
                 ) : null}
                 {series.director ? (
-                  <p className="text-sm text-zinc-500">
+                  <p className="text-sm text-muted-foreground">
                     <span className="text-foreground">{t("film.createdBy")}</span> {series.director}
                   </p>
                 ) : null}
               </header>
 
               {metaLine ? (
-                <div className="w-full shrink-0 border-t border-white/[0.08] pt-6 text-sm tabular-nums text-zinc-400 sm:w-auto lg:border-t-0 lg:pt-1 lg:text-right">
+                <div className="w-full shrink-0 border-t border-border pt-6 text-sm tabular-nums text-muted-foreground sm:w-auto lg:border-t-0 lg:pt-1 lg:text-right">
                   {metaLine}
                 </div>
               ) : null}
@@ -543,7 +543,7 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ id: str
                 {series.overview ? (
                   <div>
                     <SectionLabel>{t("film.overview")}</SectionLabel>
-                    <p className="mt-4 max-w-3xl text-pretty text-sm leading-relaxed text-zinc-500 sm:text-[0.9375rem] lg:max-w-4xl">
+                    <p className="mt-4 max-w-3xl text-pretty text-sm leading-relaxed text-muted-foreground sm:text-[0.9375rem] lg:max-w-4xl">
                       {series.overview}
                     </p>
                   </div>
@@ -554,7 +554,7 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ id: str
                       <Link
                         key={genre.id}
                         href={`/series/discover?genres=${genre.id}`}
-                        className="rounded-full bg-brand/10 px-3 py-1 text-xs font-medium text-brand-muted ring-1 ring-brand-muted/35 transition-colors hover:bg-brand/18 hover:ring-brand/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#09090B]"
+                        className="rounded-full bg-brand/10 px-3 py-1 text-xs font-medium text-brand-muted ring-1 ring-brand-muted/35 transition-colors hover:bg-brand/18 hover:ring-brand/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                       >
                         {genre.name}
                       </Link>
@@ -682,7 +682,7 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ id: str
             </Tabs>
 
             {/* Mobile-only watch providers, just before reviews */}
-            <div className="overflow-hidden rounded-2xl border border-white/[0.1] bg-zinc-950/40 lg:hidden">
+            <div className="overflow-hidden rounded-2xl border border-border bg-muted/40 lg:hidden">
               <WatchProviders movie={movieCompat} hideHeading omitTrailerButton mediaType="tv" />
             </div>
 

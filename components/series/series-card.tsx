@@ -77,13 +77,15 @@ export function SeriesCard({
       })}
       className={cn(
         "group flex flex-col gap-2 transition-transform duration-300",
-        isNavFill && "h-full min-h-0",
+        isNavFill && "h-full w-full",
       )}
     >
       <div
         className={cn(
           "relative w-full overflow-hidden border-[1px] border-black/15 shadow-black/5 shadow-sm dark:border-white/15 dark:shadow-white/5",
-          isNavFill ? "aspect-auto h-full min-h-0 flex-1 rounded-xl" : "aspect-[2/3] h-full rounded-[5px]",
+          isNavFill
+            ? "aspect-auto h-full flex-1 rounded-xl bg-muted"
+            : "aspect-[2/3] h-full rounded-[5px]",
         )}
       >
         <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
@@ -91,7 +93,10 @@ export function SeriesCard({
           <img
             src={`https://image.tmdb.org/t/p/w500${show.poster_path}`}
             alt={show?.name || "Series poster"}
-            className="h-full w-full object-cover transition-all"
+            className={cn(
+              "object-cover transition-all",
+              isNavFill ? "absolute inset-0 h-full w-full" : "h-full w-full",
+            )}
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-muted-foreground/10 text-2xl font-medium">

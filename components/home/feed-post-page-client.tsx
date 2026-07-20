@@ -208,20 +208,20 @@ export function FeedPostPageClient() {
     <div className="mx-auto w-full max-w-xl px-4 py-6">
       <Link
         href="/"
-        className="mb-4 inline-flex items-center gap-1.5 text-sm text-zinc-500 transition hover:text-brand"
+        className="mb-4 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition hover:text-brand"
       >
         <ArrowLeft className="size-3.5" />
         Back to feed
       </Link>
 
       {loading || redirecting ? (
-        <div className="flex items-center gap-2 py-16 text-sm text-zinc-500">
+        <div className="flex items-center gap-2 py-16 text-sm text-muted-foreground">
           <Loader2 className="size-4 animate-spin" />
           {redirecting ? "Opening in your feed…" : "Loading post…"}
         </div>
       ) : error ? (
-        <div className="rounded-xl border border-dashed border-white/[0.08] px-4 py-10 text-center">
-          <p className="text-sm text-zinc-500">{error}</p>
+        <div className="rounded-xl border border-dashed border-border px-4 py-10 text-center">
+          <p className="text-sm text-muted-foreground">{error}</p>
           <Link
             href="/"
             className="mt-4 inline-flex text-sm font-medium text-brand-light hover:text-brand"

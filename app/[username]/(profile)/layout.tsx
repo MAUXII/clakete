@@ -453,11 +453,11 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
     }
   
     if (loading) {
-      const bone = "bg-zinc-800"
+      const bone = "bg-muted"
       return (
         <section className="relative z-10 mt-[3.75rem] w-full" aria-busy aria-label="Loading profile">
           <div
-            className="relative h-[567px] w-full min-w-0 overflow-hidden rounded-none border-0 bg-[#09090B] ring-1 ring-white/[0.06]"
+            className="relative h-[567px] w-full min-w-0 overflow-hidden rounded-none border-0 bg-background ring-1 ring-border"
             aria-hidden
           >
             <Skeleton className={cn("absolute inset-0 h-full w-full rounded-none", bone)} />
@@ -470,7 +470,7 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
                 <div className="flex flex-wrap gap-6 lg:flex-nowrap lg:items-stretch">
                   <div className="flex w-full flex-col gap-6">
                     <div className="sticky top-[calc(env(safe-area-inset-top,0px)+12rem)] z-20 flex flex-col gap-6 self-start">
-                      <div className="relative -mt-24 aspect-square h-36 max-w-36 overflow-clip rounded-2xl shadow-sm ring-2 ring-white dark:ring-[#090909]">
+                      <div className="relative -mt-24 aspect-square h-36 max-w-36 overflow-clip rounded-2xl shadow-sm ring-2 ring-background">
                         <Skeleton className={cn("h-full w-full rounded-md", bone)} />
                       </div>
 
@@ -521,7 +521,7 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
                   <div className="w-full">
                     {/* Tab bar estático no loading — sem Links (evita forçar /profile) */}
                     <div className="mt-6 w-full" aria-hidden>
-                      <div className="relative flex h-12 w-full overflow-hidden border border-white/[0.08] bg-[#09090B] p-1 text-zinc-400">
+                      <div className="relative flex h-12 w-full overflow-hidden border border-border bg-muted p-1 text-muted-foreground">
                         {PROFILE_TABS.map((tab) => {
                           const isActive = tab.id === activeTab
                           return (
@@ -534,7 +534,7 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
                                   "relative z-10 flex h-full w-full items-center justify-center whitespace-nowrap rounded-md px-8 py-2 text-sm font-medium",
                                   isActive
                                     ? "bg-brand/10 text-brand-muted"
-                                    : "text-zinc-400",
+                                    : "text-muted-foreground",
                                 )}
                               >
                                 {tab.label}
@@ -597,7 +597,7 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
         {/* Banner */}
         <div 
         className={cn(
-          "group relative h-[567px] w-full min-w-0 overflow-hidden rounded-none border-0 bg-cover bg-center ring-1 ring-b ring-white/[0.06]",
+          "group relative h-[567px] w-full min-w-0 overflow-hidden rounded-none border-0 bg-cover bg-center ring-1 ring-border",
           themed && "profile-theme-media-banner",
         )}
         style={{ 
@@ -815,7 +815,7 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
                     <button
                       onClick={toggleFollow}
                       className={cn(
-                        "px-4 py-2 rounded-md transition-colors w-full border border-black/10 dark:border-white/10 flex items-center justify-center",
+                        "px-4 py-2 rounded-md transition-colors w-full border border-black/10 dark:border-border flex items-center justify-center",
                         themed
                           ? "profile-theme-follow"
                           : "bg-brand/10 text-brand/70",

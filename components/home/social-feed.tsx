@@ -47,7 +47,7 @@ function displayName(user: { username: string; display_name?: string | null }) {
 
 function FeedRowSkeleton() {
   return (
-    <li className="border-b border-white/[0.06] py-4">
+    <li className="border-b border-border/80 py-4">
       <div className="flex items-start gap-3">
         <Skeleton className="size-10 shrink-0 rounded-full" />
         <div className="min-w-0 flex-1 space-y-2">
@@ -80,18 +80,18 @@ function StoriesStrip({
         onClick={onSelfClick}
         className="flex w-[68px] shrink-0 flex-col items-center gap-1.5"
       >
-        <span className="relative flex size-[58px] items-center justify-center rounded-full bg-zinc-900 ring-2 ring-white/[0.12]">
+        <span className="relative flex size-[58px] items-center justify-center rounded-full bg-muted ring-2 ring-border">
           <Avatar className="size-[52px]">
             <AvatarImage src={avatarDisplaySrc(selfAvatar) ?? undefined} alt="" />
-            <AvatarFallback className="bg-zinc-800 text-xs text-zinc-400">
+            <AvatarFallback className="bg-muted text-xs text-muted-foreground">
               {(selfUsername?.[0] || "Y").toUpperCase()}
             </AvatarFallback>
           </Avatar>
-          <span className="absolute -bottom-0.5 -right-0.5 flex size-5 items-center justify-center rounded-full bg-brand text-white ring-2 ring-[#09090B]">
+          <span className="absolute -bottom-0.5 -right-0.5 flex size-5 items-center justify-center rounded-full bg-brand text-white ring-2 ring-background">
             <Plus className="size-3" strokeWidth={3} />
           </span>
         </span>
-        <span className="w-full truncate text-center text-[10px] text-zinc-400">You</span>
+        <span className="w-full truncate text-center text-[10px] text-muted-foreground">You</span>
       </button>
 
       {stories.map((u) => (
@@ -106,17 +106,17 @@ function StoriesStrip({
               "flex size-[58px] items-center justify-center rounded-full p-[2px]",
               u.hasNew
                 ? "bg-gradient-to-br from-brand via-brand-muted to-brand-light"
-                : "bg-white/[0.12]",
+                : "bg-muted",
             )}
           >
-            <Avatar className="size-full border-2 border-[#09090B]">
+            <Avatar className="size-full border-2 border-background">
               <AvatarImage src={avatarDisplaySrc(u.avatar_url) ?? undefined} alt="" />
-              <AvatarFallback className="bg-zinc-900 text-xs text-zinc-300">
+              <AvatarFallback className="bg-muted text-xs text-muted-foreground">
                 {displayName(u)[0]?.toUpperCase()}
               </AvatarFallback>
             </Avatar>
           </span>
-          <span className="w-full truncate text-center text-[10px] text-zinc-400">
+          <span className="w-full truncate text-center text-[10px] text-muted-foreground">
             {u.username}
           </span>
         </button>
@@ -130,15 +130,15 @@ function Composer({ onClick }: { onClick: () => void }) {
     <button
       type="button"
       onClick={onClick}
-      className="flex w-full items-center gap-3 rounded-2xl border border-white/[0.08] bg-zinc-950/60 px-3.5 py-3 text-left transition hover:border-white/[0.14] hover:bg-zinc-950"
+      className="flex w-full items-center gap-3 rounded-2xl border border-border bg-muted/40 px-3.5 py-3 text-left transition hover:border-border hover:bg-muted/60"
     >
       <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand/15 text-brand">
         <Plus className="size-4" strokeWidth={2.5} />
       </span>
-      <span className="min-w-0 flex-1 text-sm text-zinc-500">
+      <span className="min-w-0 flex-1 text-sm text-muted-foreground">
         Log something you watched…
       </span>
-      <span className="shrink-0 rounded-full bg-white/[0.06] px-3 py-1 text-xs font-medium text-zinc-400">
+      <span className="shrink-0 rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
         Log
       </span>
     </button>
@@ -455,8 +455,8 @@ export function SocialFeed({
   const emptyNode = useMemo(() => {
     if (followingCount === 0) {
       return (
-        <div className="rounded-xl border border-dashed border-white/[0.08] bg-zinc-950/30 px-4 py-8 text-center">
-          <p className="mx-auto max-w-sm text-sm leading-relaxed text-zinc-500">
+        <div className="rounded-xl border border-dashed border-border bg-background/70 px-4 py-8 text-center">
+          <p className="mx-auto max-w-sm text-sm leading-relaxed text-muted-foreground">
             Follow people for Friends posts — both of you must follow each
             other. Public posts can still show up from the community.
           </p>
@@ -470,8 +470,8 @@ export function SocialFeed({
       )
     }
     return (
-      <div className="rounded-xl border border-dashed border-white/[0.08] bg-zinc-950/30 px-4 py-8 text-center">
-        <p className="text-sm text-zinc-500">
+      <div className="rounded-xl border border-dashed border-border bg-background/70 px-4 py-8 text-center">
+        <p className="text-sm text-muted-foreground">
           Quiet for now — nothing new from people you follow.
         </p>
         <button
@@ -525,8 +525,8 @@ export function SocialFeed({
           ))}
         </ul>
       ) : error ? (
-        <div className="rounded-xl border border-white/[0.06] bg-zinc-950/40 px-4 py-6 text-center">
-          <p className="text-sm text-zinc-500">Could not load your feed.</p>
+        <div className="rounded-xl border border-border/80 bg-muted/40 px-4 py-6 text-center">
+          <p className="text-sm text-muted-foreground">Could not load your feed.</p>
           <button
             type="button"
             onClick={() => void refresh()}
@@ -580,13 +580,13 @@ export function SocialFeed({
           {hasMore ? (
             <div
               ref={loadMoreRef}
-              className="flex items-center justify-center py-4 text-xs text-zinc-600"
+              className="flex items-center justify-center py-4 text-xs text-muted-foreground"
               aria-hidden
             >
               Loading more…
             </div>
           ) : (
-            <p className="py-3 text-center text-[11px] text-zinc-600">
+            <p className="py-3 text-center text-[11px] text-muted-foreground">
               You&apos;re all caught up
             </p>
           )}

@@ -219,7 +219,7 @@ export default function OnboardingPage() {
 
   if (!ready) {
     return (
-      <main className="flex min-h-dvh w-full items-center justify-center bg-[#09090B] text-zinc-400">
+      <main className="flex min-h-dvh w-full items-center justify-center bg-background text-muted-foreground">
         <p className="text-sm">Loading…</p>
       </main>
     )
@@ -232,7 +232,7 @@ export default function OnboardingPage() {
       <OnboardingSplash visible={showSplash} onComplete={() => setShowSplash(false)} />
 
       {!showSplash ? (
-        <main className={cn("w-full bg-[#09090B] text-zinc-100", mainClass)}>
+        <main className={cn("w-full bg-background text-foreground", mainClass)}>
           <FilmsCatalogShell compact className="flex min-h-0 flex-1 flex-col">
             <div className="flex min-h-0 flex-1 flex-col">
             <OnboardingProgressHeader

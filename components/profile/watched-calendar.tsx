@@ -83,25 +83,25 @@ export function WatchedCalendar({
         <button
           type="button"
           onClick={goPrev}
-          className="rounded-full p-2 text-zinc-400 transition hover:bg-white/[0.06] hover:text-zinc-100"
+          className="rounded-full p-2 text-muted-foreground transition hover:bg-muted hover:text-foreground"
           aria-label="Previous month"
         >
           <ChevronLeft className="size-4" />
         </button>
-        <h3 className="text-sm font-medium text-zinc-100">
+        <h3 className="text-sm font-medium text-foreground">
           {monthLabel(year, monthIndex)}
         </h3>
         <button
           type="button"
           onClick={goNext}
-          className="rounded-full p-2 text-zinc-400 transition hover:bg-white/[0.06] hover:text-zinc-100"
+          className="rounded-full p-2 text-muted-foreground transition hover:bg-muted hover:text-foreground"
           aria-label="Next month"
         >
           <ChevronRight className="size-4" />
         </button>
       </div>
 
-      <div className="grid grid-cols-7 gap-1 text-center text-[10px] uppercase tracking-wide text-zinc-500">
+      <div className="grid grid-cols-7 gap-1 text-center text-[10px] uppercase tracking-wide text-muted-foreground">
         {WEEKDAYS.map((d) => (
           <div key={d} className="py-1">
             {d}
@@ -124,12 +124,12 @@ export function WatchedCalendar({
           const inner = (
             <div
               className={cn(
-                "relative aspect-square overflow-hidden rounded-md border border-white/[0.06] bg-zinc-950/80",
+                "relative aspect-square overflow-hidden rounded-md border border-border bg-muted/80",
                 isToday && "ring-1 ring-brand/50",
                 dayItems.length === 0 && "opacity-40",
               )}
             >
-              <span className="absolute left-1 top-0.5 z-10 text-[10px] font-medium text-zinc-300 drop-shadow">
+              <span className="absolute left-1 top-0.5 z-10 text-[10px] font-medium text-muted-foreground drop-shadow">
                 {cell.day}
               </span>
               {primary?.poster_path ? (

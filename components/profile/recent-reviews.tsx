@@ -128,7 +128,7 @@ export function UserRecentReviews({
         ) : null}
         <ul className="animate-pulse space-y-6">
           {Array.from({ length: onLandingPage ? 1 : 3 }).map((_, i) => (
-            <li key={i} className="flex gap-3 border-b border-white/[0.06] pb-6 last:border-0 last:pb-0 sm:gap-4">
+            <li key={i} className="flex gap-3 border-b border-border pb-6 last:border-0 last:pb-0 sm:gap-4">
               <div className="aspect-[2/3] w-24 shrink-0 rounded-md bg-muted sm:w-28" />
               <div className="min-w-0 flex-1 space-y-2 pt-1">
                 <div className="h-5 w-2/3 rounded bg-muted" />
@@ -178,7 +178,7 @@ export function UserRecentReviews({
             : null
 
           return (
-            <li key={review.id} className="border-b border-white/[0.06] pb-6 last:border-0 last:pb-0">
+            <li key={review.id} className="border-b border-border pb-6 last:border-0 last:pb-0">
               <div className="flex gap-3 sm:gap-4">
                 <Link href={href} className="shrink-0">
                   <div className="aspect-[2/3] w-24 overflow-hidden rounded-md border border-black/20 dark:border-white/20 sm:w-28">
@@ -200,7 +200,7 @@ export function UserRecentReviews({
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div className="min-w-0">
                       <Link href={href} className="group inline-flex flex-wrap items-baseline gap-2">
-                        <h3 className="text-lg font-medium text-zinc-100 transition-colors group-hover:text-brand sm:text-xl">
+                        <h3 className="text-lg font-medium text-foreground transition-colors group-hover:text-brand sm:text-xl">
                           {review.movie_title}
                         </h3>
                         {year ? (

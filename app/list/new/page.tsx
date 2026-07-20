@@ -79,7 +79,7 @@ export default function NewListPage() {
     "inline-flex items-center gap-3 rounded-full border border-border/60 bg-card/60 px-3 py-2 pr-4 shadow-sm backdrop-blur-sm"
   const listByPillInner = (
     <>
-      <Avatar className="h-11 w-11 border border-white/10 ring-2 ring-background shadow-md">
+      <Avatar className="h-11 w-11 border border-border ring-2 ring-background shadow-md">
         <AvatarImage
           src={avatarDisplaySrc(navAvatar?.src) ?? undefined}
           alt={profile?.display_name || profile?.username || ""}
@@ -209,20 +209,20 @@ export default function NewListPage() {
       : "min-h-screen overflow-y-auto pb-10"
 
   return (
-    <main className={cn("w-full bg-[#09090B] text-zinc-100", mainClass)}>
+    <main className={cn("w-full bg-background text-foreground", mainClass)}>
       <FilmsCatalogShell compact={step === 4}>
         <header className="mb-5 mt-28 flex items-center justify-between gap-4">
           <div className="flex min-w-0 flex-1 items-center gap-3">
             <button
               type="button"
               onClick={goBack}
-              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] text-zinc-300 transition-colors hover:text-white"
+              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-muted/40 text-muted-foreground transition-colors hover:text-white"
               aria-label={step === 1 ? "Back to lists" : "Previous step"}
             >
               <ArrowLeft className="h-4 w-4" />
             </button>
             {step === 1 ? (
-              <span className="hidden truncate text-[11px] font-medium text-zinc-500 sm:inline">
+              <span className="hidden truncate text-[11px] font-medium text-muted-foreground sm:inline">
                 Create new list
               </span>
             ) : null}
@@ -264,7 +264,7 @@ export default function NewListPage() {
         {step === 1 ? (
           <>
             <div
-              className="relative z-0 w-full overflow-hidden rounded-2xl bg-[#09090B] ring-1 ring-white/[0.06]"
+              className="relative z-0 w-full overflow-hidden rounded-2xl bg-background ring-1 ring-white/[0.06]"
               style={{ height: LIST_BANNER_HEIGHT }}
             >
               {bannerPresentation ? (
@@ -326,7 +326,7 @@ export default function NewListPage() {
                     maxLength={100}
                     type="text"
                     autoComplete="off"
-                    className="w-full bg-transparent text-3xl font-semibold tracking-tight text-foreground outline-none placeholder:text-zinc-600 md:text-4xl"
+                    className="w-full bg-transparent text-3xl font-semibold tracking-tight text-foreground outline-none placeholder:text-muted-foreground md:text-4xl"
                   />
 
                   <textarea
@@ -338,7 +338,7 @@ export default function NewListPage() {
                     rows={3}
                     maxLength={500}
                     autoComplete="off"
-                    className="w-full max-w-3xl resize-none bg-transparent text-[15px] leading-relaxed text-muted-foreground outline-none placeholder:text-zinc-600 md:text-base"
+                    className="w-full max-w-3xl resize-none bg-transparent text-[15px] leading-relaxed text-muted-foreground outline-none placeholder:text-muted-foreground md:text-base"
                   />
                 </form>
 
@@ -351,7 +351,7 @@ export default function NewListPage() {
                       "h-10 min-w-[140px] rounded-full px-5 text-sm font-semibold transition-colors",
                       canContinueStep1
                         ? "bg-brand text-white hover:bg-brand-hover"
-                        : "cursor-not-allowed bg-white/10 text-zinc-500",
+                        : "cursor-not-allowed bg-white/10 text-muted-foreground",
                     )}
                   >
                     Continue
@@ -374,7 +374,7 @@ export default function NewListPage() {
                   "h-10 min-w-[140px] rounded-full px-5 text-sm font-semibold transition-colors",
                   canContinueStep2
                     ? "bg-brand text-white hover:bg-brand-hover"
-                    : "cursor-not-allowed bg-white/10 text-zinc-500",
+                    : "cursor-not-allowed bg-white/10 text-muted-foreground",
                 )}
               >
                 Continue
@@ -398,7 +398,7 @@ export default function NewListPage() {
                   "h-10 min-w-[140px] rounded-full px-5 text-sm font-semibold transition-colors",
                   canContinueStep3
                     ? "bg-brand text-white hover:bg-brand-hover"
-                    : "cursor-not-allowed bg-white/10 text-zinc-500",
+                    : "cursor-not-allowed bg-white/10 text-muted-foreground",
                 )}
               >
                 Continue

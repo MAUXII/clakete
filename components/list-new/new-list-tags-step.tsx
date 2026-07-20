@@ -66,7 +66,7 @@ export function NewListTagsStep({ selectedTags, onChangeSelected }: NewListTagsS
       <div className="min-w-0 shrink-0 text-center">
         <h2 className="text-lg font-semibold tracking-tight text-white sm:text-xl">Add tags to your list</h2>
         <div className="mt-1 flex min-h-[3rem] items-start justify-center sm:min-h-[3.25rem]">
-          <p className="text-xs leading-relaxed text-zinc-500 sm:text-[13px]">
+          <p className="text-xs leading-relaxed text-muted-foreground sm:text-[13px]">
             Press Enter to add — use commas for several at once.
           </p>
         </div>
@@ -83,11 +83,11 @@ export function NewListTagsStep({ selectedTags, onChangeSelected }: NewListTagsS
                 aria-label={`Remove tag ${tag}`}
                 onClick={() => remove(tag)}
                 className={cn(
-                  "inline-flex max-w-full items-center gap-1.5 rounded-md border border-white/12 bg-white/[0.03] py-1 pl-2.5 pr-1 text-[13px] text-zinc-200 transition-colors hover:border-white/20 hover:bg-white/[0.06]",
+                  "inline-flex max-w-full items-center gap-1.5 rounded-md border border-white/12 bg-muted/40 py-1 pl-2.5 pr-1 text-[13px] text-foreground transition-colors hover:border-white/20 hover:bg-muted",
                 )}
               >
                 <span className="min-w-0 shrink">{formatTagLabel(tag)}</span>
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-zinc-500 hover:text-white">
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-muted-foreground hover:text-white">
                   <X className="h-3.5 w-3.5" strokeWidth={2} aria-hidden />
                 </span>
               </button>
@@ -112,7 +112,7 @@ export function NewListTagsStep({ selectedTags, onChangeSelected }: NewListTagsS
           placeholder="Add a tag (optional)…"
           maxLength={200}
           autoComplete="off"
-          className="w-full border-0 border-b border-white/10 bg-transparent py-3 text-[15px] text-zinc-100 outline-none transition-colors placeholder:text-zinc-600 focus:border-brand/60"
+          className="w-full border-0 border-b border-border bg-transparent py-3 text-[15px] text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-brand/60"
         />
       </div>
     </div>

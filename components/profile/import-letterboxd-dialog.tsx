@@ -266,17 +266,17 @@ export function ImportLetterboxdDialog({
           <DialogTitle>Import from Letterboxd</DialogTitle>
           <DialogDescription>
             Export your data on Letterboxd (Settings → Import &amp; Export), unzip,
-            then upload <span className="text-zinc-300">diary.csv</span> (or
+            then upload <span className="text-muted-foreground">diary.csv</span> (or
             watched.csv / ratings.csv).
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-1">
           {phase === "pick" ? (
-            <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-white/[0.12] bg-zinc-950/40 px-4 py-10 text-center transition hover:border-brand/40 hover:bg-brand/5">
-              <FileUp className="size-6 text-zinc-500" />
-              <span className="text-sm text-zinc-300">Choose Letterboxd CSV</span>
-              <span className="text-xs text-zinc-600">diary.csv recommended</span>
+            <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-muted/40 px-4 py-10 text-center transition hover:border-brand/40 hover:bg-brand/5">
+              <FileUp className="size-6 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">Choose Letterboxd CSV</span>
+              <span className="text-xs text-muted-foreground">diary.csv recommended</span>
               <input
                 ref={fileRef}
                 type="file"
@@ -291,8 +291,8 @@ export function ImportLetterboxdDialog({
           ) : null}
 
           {phase === "matching" || phase === "importing" ? (
-            <div className="space-y-2 rounded-lg border border-white/[0.08] bg-zinc-950/50 p-4">
-              <div className="flex items-center gap-2 text-sm text-zinc-300">
+            <div className="space-y-2 rounded-lg border border-border bg-muted/50 p-4">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Loader2 className="size-4 animate-spin text-brand" />
                 {phase === "matching"
                   ? `Matching to TMDB… ${progress.done}/${progress.total}`
@@ -305,16 +305,16 @@ export function ImportLetterboxdDialog({
                 />
               </div>
               {fileName ? (
-                <p className="truncate text-xs text-zinc-600">{fileName}</p>
+                <p className="truncate text-xs text-muted-foreground">{fileName}</p>
               ) : null}
             </div>
           ) : null}
 
           {phase === "ready" ? (
             <div className="space-y-3">
-              <div className="rounded-lg border border-white/[0.08] bg-zinc-950/50 p-3 text-sm">
-                <p className="text-zinc-200">
-                  <span className="font-medium text-zinc-100">{matchedCount}</span>{" "}
+              <div className="rounded-lg border border-border bg-muted/50 p-3 text-sm">
+                <p className="text-foreground">
+                  <span className="font-medium text-foreground">{matchedCount}</span>{" "}
                   matched
                   {unmatchedCount > 0 ? (
                     <>
@@ -324,14 +324,14 @@ export function ImportLetterboxdDialog({
                     </>
                   ) : null}
                 </p>
-                <p className="mt-1 text-xs text-zinc-500">
+                <p className="mt-1 text-xs text-muted-foreground">
                   Already watched titles keep the newer date and higher rewatch
                   count; ratings fill in when empty.
                 </p>
               </div>
 
               {unmatchedCount > 0 && unmatchedCount <= 12 ? (
-                <ul className="max-h-32 space-y-1 overflow-y-auto text-xs text-zinc-500">
+                <ul className="max-h-32 space-y-1 overflow-y-auto text-xs text-muted-foreground">
                   {resolved
                     .filter((e) => !e.match)
                     .map((e) => (
@@ -346,10 +346,10 @@ export function ImportLetterboxdDialog({
           ) : null}
 
           {phase === "done" ? (
-            <div className="rounded-lg border border-white/[0.08] bg-zinc-950/50 p-4 text-sm text-zinc-300">
+            <div className="rounded-lg border border-border bg-muted/50 p-4 text-sm text-muted-foreground">
               <p>
                 Imported{" "}
-                <span className="font-medium text-zinc-100">{stats.imported}</span>
+                <span className="font-medium text-foreground">{stats.imported}</span>
                 {stats.unmatched > 0
                   ? ` · ${stats.unmatched} unmatched skipped`
                   : ""}
@@ -392,7 +392,7 @@ export function ImportLetterboxdDialog({
               Cancel
             </Button>
           ) : (
-            <p className="text-xs text-zinc-600">Please wait…</p>
+            <p className="text-xs text-muted-foreground">Please wait…</p>
           )}
         </DialogFooter>
       </DialogContent>

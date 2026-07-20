@@ -57,7 +57,7 @@ export function OnboardingDisplayNameStep({
             onChange={(e) => onDisplayNameChange(e.target.value)}
             placeholder={username}
             maxLength={50}
-            className="border-white/10 bg-white/[0.03] py-6 text-center text-white placeholder:text-zinc-600"
+            className="border-border bg-muted/40 py-6 text-center text-white placeholder:text-muted-foreground"
             onKeyDown={(e) => {
               if (e.key === "Enter") onContinue()
             }}
@@ -65,41 +65,41 @@ export function OnboardingDisplayNameStep({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="onboarding-watch-region" className="text-sm text-zinc-400">
+          <Label htmlFor="onboarding-watch-region" className="text-sm text-muted-foreground">
             {t("onboarding.watchRegion")}
           </Label>
           <select
             id="onboarding-watch-region"
             value={watchRegion}
             onChange={(e) => onWatchRegionChange(e.target.value as WatchRegionId)}
-            className="flex h-11 w-full rounded-md border border-white/10 bg-white/[0.03] px-3 text-sm text-white outline-none focus-visible:ring-1 focus-visible:ring-brand/40"
+            className="flex h-11 w-full rounded-md border border-border bg-muted/40 px-3 text-sm text-white outline-none focus-visible:ring-1 focus-visible:ring-brand/40"
           >
             {WATCH_REGION_OPTIONS.map((region) => (
-              <option key={region.id} value={region.id} className="bg-zinc-950 text-white">
+              <option key={region.id} value={region.id} className="bg-card text-white">
                 {region.label}
               </option>
             ))}
           </select>
-          <p className="text-xs text-zinc-500">{t("onboarding.watchRegionHint")}</p>
+          <p className="text-xs text-muted-foreground">{t("onboarding.watchRegionHint")}</p>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="onboarding-tmdb-language" className="text-sm text-zinc-400">
+          <Label htmlFor="onboarding-tmdb-language" className="text-sm text-muted-foreground">
             {t("onboarding.contentLanguage")}
           </Label>
           <select
             id="onboarding-tmdb-language"
             value={tmdbLanguage}
             onChange={(e) => onTmdbLanguageChange(e.target.value as TmdbLanguageId)}
-            className="flex h-11 w-full rounded-md border border-white/10 bg-white/[0.03] px-3 text-sm text-white outline-none focus-visible:ring-1 focus-visible:ring-brand/40"
+            className="flex h-11 w-full rounded-md border border-border bg-muted/40 px-3 text-sm text-white outline-none focus-visible:ring-1 focus-visible:ring-brand/40"
           >
             {TMDB_LANGUAGE_OPTIONS.map((lang) => (
-              <option key={lang.id} value={lang.id} className="bg-zinc-950 text-white">
+              <option key={lang.id} value={lang.id} className="bg-card text-white">
                 {lang.label}
               </option>
             ))}
           </select>
-          <p className="text-xs text-zinc-500">{t("onboarding.contentLanguageHint")}</p>
+          <p className="text-xs text-muted-foreground">{t("onboarding.contentLanguageHint")}</p>
         </div>
       </div>
     </OnboardingStepShell>

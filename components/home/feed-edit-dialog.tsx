@@ -82,7 +82,7 @@ function CollagePreview({ images }: { images: FeedImageChoice[] }) {
             : "grid-cols-3"
 
   return (
-    <div className="overflow-hidden rounded-xl border border-white/[0.08] bg-zinc-950">
+    <div className="overflow-hidden rounded-xl border border-border bg-card">
       <div className={cn("grid aspect-[16/9] w-full gap-0.5 bg-black", gridClass)}>
         {images.map((img, i) => (
           <div
@@ -115,7 +115,7 @@ function PreviewMedia({
 
   if (!current) {
     return (
-      <div className="flex aspect-[16/9] w-full items-center justify-center rounded-xl bg-zinc-900 text-sm text-zinc-600">
+      <div className="flex aspect-[16/9] w-full items-center justify-center rounded-xl bg-muted text-sm text-muted-foreground">
         Select photos to preview
       </div>
     )
@@ -128,7 +128,7 @@ function PreviewMedia({
   const useFixedSlideFrame = images.length > 1 && layout === "slide"
 
   return (
-    <div className="relative overflow-hidden rounded-xl border border-white/[0.08] bg-zinc-950">
+    <div className="relative overflow-hidden rounded-xl border border-border bg-card">
       <div
         className={cn(
           "relative w-full overflow-hidden",
@@ -408,22 +408,22 @@ export function FeedEditDialog({
             <div className="space-y-4 px-5 py-4">
               <div>
                 <p className="mb-2 text-sm font-medium text-foreground">Preview</p>
-                <div className="rounded-2xl border border-white/[0.08] bg-zinc-950/80 p-3">
-                  <p className="mb-2 text-[13px] text-zinc-500">
+                <div className="rounded-2xl border border-border bg-muted/80 p-3">
+                  <p className="mb-2 text-[13px] text-muted-foreground">
                     watched{" "}
-                    <span className="font-medium text-zinc-100">{filmTitle}</span>
+                    <span className="font-medium text-foreground">{filmTitle}</span>
                   </p>
                   <PreviewMedia
                     images={selected}
                     layout={canPickLayout ? layout : "slide"}
                   />
                   {title.trim() ? (
-                    <p className="mt-2.5 text-sm font-semibold text-zinc-100">
+                    <p className="mt-2.5 text-sm font-semibold text-foreground">
                       {title.trim()}
                     </p>
                   ) : null}
                   {caption.trim() ? (
-                    <p className="mt-1 whitespace-pre-wrap text-[13px] leading-relaxed text-zinc-300">
+                    <p className="mt-1 whitespace-pre-wrap text-[13px] leading-relaxed text-muted-foreground">
                       {caption.trim()}
                     </p>
                   ) : null}

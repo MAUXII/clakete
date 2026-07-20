@@ -322,7 +322,7 @@ export function WatchedDiary({
           e.stopPropagation()
           openEdit(item)
         }}
-        className="rounded-md border border-transparent bg-secondary p-2 text-white transition-colors hover:border-brand/20 hover:bg-[#280F16] hover:text-brand"
+        className="rounded-md border border-transparent bg-secondary p-2 text-secondary-foreground transition-colors hover:border-brand/20 hover:bg-[#280F16] hover:text-brand"
         aria-label={`Edit ${item.movie_title || "watch log"}`}
         title="Edit watch log"
       >
@@ -332,15 +332,15 @@ export function WatchedDiary({
 
   const toolbar = (
     <div className="mb-4 flex flex-nowrap items-center gap-1.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-      <div className="flex shrink-0 items-center rounded-md border border-white/[0.08] p-0.5">
+      <div className="flex shrink-0 items-center rounded-md border border-border p-0.5">
         <button
           type="button"
           onClick={() => setView("grid")}
           className={cn(
             "inline-flex items-center gap-1 rounded-[5px] px-2 py-1.5 text-xs transition",
             view === "grid"
-              ? "bg-white/[0.08] text-zinc-100"
-              : "text-zinc-500 hover:text-zinc-300",
+              ? "bg-muted text-foreground"
+              : "text-muted-foreground hover:text-muted-foreground",
           )}
           aria-pressed={view === "grid"}
           title="Grid"
@@ -354,8 +354,8 @@ export function WatchedDiary({
           className={cn(
             "inline-flex items-center gap-1 rounded-[5px] px-2 py-1.5 text-xs transition",
             view === "calendar"
-              ? "bg-white/[0.08] text-zinc-100"
-              : "text-zinc-500 hover:text-zinc-300",
+              ? "bg-muted text-foreground"
+              : "text-muted-foreground hover:text-muted-foreground",
           )}
           aria-pressed={view === "calendar"}
           title="Calendar"
@@ -366,7 +366,7 @@ export function WatchedDiary({
       </div>
 
       <Select value={yearFilter} onValueChange={setYear}>
-        <SelectTrigger className="h-8 w-[92px] shrink-0 border-white/[0.08] bg-transparent text-xs">
+        <SelectTrigger className="h-8 w-[92px] shrink-0 border-border bg-transparent text-xs">
           <SelectValue placeholder="Year" />
         </SelectTrigger>
         <SelectContent>
@@ -384,7 +384,7 @@ export function WatchedDiary({
         onValueChange={(v) => setMonthFilter(v)}
         disabled={yearFilter === "all"}
       >
-        <SelectTrigger className="h-8 w-[108px] shrink-0 border-white/[0.08] bg-transparent text-xs disabled:opacity-40">
+        <SelectTrigger className="h-8 w-[108px] shrink-0 border-border bg-transparent text-xs disabled:opacity-40">
           <SelectValue placeholder="Month" />
         </SelectTrigger>
         <SelectContent>
@@ -405,7 +405,7 @@ export function WatchedDiary({
           "inline-flex h-8 shrink-0 items-center gap-1 rounded-md border px-2 text-xs transition",
           likedOnly
             ? "border-brand/30 bg-brand/10 text-brand"
-            : "border-white/[0.08] text-zinc-400 hover:border-white/[0.14] hover:text-zinc-100",
+            : "border-border text-muted-foreground hover:border-border hover:text-foreground",
         )}
       >
         <Heart className={cn("size-3.5", likedOnly && "fill-current")} />
@@ -418,7 +418,7 @@ export function WatchedDiary({
             type="button"
             onClick={() => setImportOpen(true)}
             title="Import"
-            className="inline-flex h-8 items-center gap-1 rounded-md border border-white/[0.08] px-2 text-xs text-zinc-400 transition hover:border-white/[0.14] hover:text-zinc-100"
+            className="inline-flex h-8 items-center gap-1 rounded-md border border-border px-2 text-xs text-muted-foreground transition hover:border-border hover:text-foreground"
           >
             <Upload className="size-3.5" />
             <span className="hidden md:inline">Import</span>
@@ -427,7 +427,7 @@ export function WatchedDiary({
             type="button"
             onClick={handleExport}
             title="Export CSV"
-            className="inline-flex h-8 items-center gap-1 rounded-md border border-white/[0.08] px-2 text-xs text-zinc-400 transition hover:border-white/[0.14] hover:text-zinc-100"
+            className="inline-flex h-8 items-center gap-1 rounded-md border border-border px-2 text-xs text-muted-foreground transition hover:border-border hover:text-foreground"
           >
             <Download className="size-3.5" />
             <span className="hidden md:inline">Export</span>
@@ -471,7 +471,7 @@ export function WatchedDiary({
               <button
                 type="button"
                 onClick={() => setImportOpen(true)}
-                className="inline-flex h-8 items-center gap-1.5 rounded-md border border-white/[0.08] px-2.5 text-xs text-zinc-400 transition hover:border-brand/40 hover:text-zinc-100"
+                className="inline-flex h-8 items-center gap-1.5 rounded-md border border-border px-2.5 text-xs text-muted-foreground transition hover:border-brand/40 hover:text-foreground"
               >
                 <Upload className="size-3.5" />
                 Import from Letterboxd
@@ -533,14 +533,14 @@ export function WatchedDiary({
           />
 
           {daySheet ? (
-            <div className="rounded-lg border border-white/[0.08] bg-zinc-950/60 p-3">
+            <div className="rounded-lg border border-border bg-muted/60 p-3">
               <div className="mb-2 flex items-center justify-between gap-2">
-                <p className="text-sm font-medium text-zinc-100">
+                <p className="text-sm font-medium text-foreground">
                   {formatWatchedDate(daySheet.date)}
                 </p>
                 <button
                   type="button"
-                  className="text-xs text-zinc-500 hover:text-zinc-300"
+                  className="text-xs text-muted-foreground hover:text-muted-foreground"
                   onClick={() => setDaySheet(null)}
                 >
                   Close
@@ -558,7 +558,7 @@ export function WatchedDiary({
                   return (
                     <li
                       key={dayItem.id}
-                      className="flex items-center gap-3 rounded-md border border-white/[0.05] bg-black/20 p-2"
+                      className="flex items-center gap-3 rounded-md border border-border bg-black/20 p-2"
                     >
                       <Link href={href} className="relative size-12 shrink-0 overflow-hidden rounded">
                         {dayItem.poster_path ? (
@@ -570,7 +570,7 @@ export function WatchedDiary({
                             sizes="48px"
                           />
                         ) : (
-                          <div className="flex size-full items-center justify-center bg-zinc-900 text-xs text-zinc-500">
+                          <div className="flex size-full items-center justify-center bg-muted text-xs text-muted-foreground">
                             ?
                           </div>
                         )}
@@ -578,19 +578,19 @@ export function WatchedDiary({
                       <div className="min-w-0 flex-1">
                         <Link
                           href={href}
-                          className="block truncate text-sm font-medium text-zinc-100 hover:text-brand"
+                          className="block truncate text-sm font-medium text-foreground hover:text-brand"
                         >
                           {dayItem.movie_title || "Untitled"}
                         </Link>
                         {rewatch ? (
-                          <p className="text-xs text-zinc-500">{rewatch}</p>
+                          <p className="text-xs text-muted-foreground">{rewatch}</p>
                         ) : null}
                       </div>
                       {isOwnProfile && full ? (
                         <button
                           type="button"
                           onClick={() => openEdit(full)}
-                          className="rounded-full p-2 text-zinc-500 transition hover:bg-white/[0.06] hover:text-zinc-200"
+                          className="rounded-full p-2 text-muted-foreground transition hover:bg-muted hover:text-foreground"
                           aria-label="Edit watch log"
                         >
                           <Pencil className="size-3.5" />

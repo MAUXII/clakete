@@ -99,7 +99,7 @@ function CollagePreview({ images }: { images: FeedImageChoice[] }) {
             : "grid-cols-3"
 
   return (
-    <div className="overflow-hidden rounded-xl border border-white/[0.08] bg-zinc-950">
+    <div className="overflow-hidden rounded-xl border border-border bg-card">
       <div className={cn("grid aspect-[16/9] w-full gap-0.5 bg-black", gridClass)}>
         {images.map((img, i) => (
           <div
@@ -136,7 +136,7 @@ function PreviewMedia({
 
   if (!current) {
     return (
-      <div className="flex aspect-[16/9] w-full items-center justify-center rounded-xl bg-zinc-900 text-sm text-zinc-600">
+      <div className="flex aspect-[16/9] w-full items-center justify-center rounded-xl bg-muted text-sm text-muted-foreground">
         Select photos to preview
       </div>
     )
@@ -149,7 +149,7 @@ function PreviewMedia({
   const useFixedSlideFrame = images.length > 1 && layout === "slide"
 
   return (
-    <div className="relative overflow-hidden rounded-xl border border-white/[0.08] bg-zinc-950">
+    <div className="relative overflow-hidden rounded-xl border border-border bg-card">
       <div
         className={cn(
           "relative w-full overflow-hidden",
@@ -417,30 +417,30 @@ export function FeedCustomizeDialog({
             <div className="space-y-4 px-5 py-4">
               <div>
                 <p className="mb-2 text-sm font-medium text-foreground">Preview</p>
-                <div className="rounded-2xl border border-white/[0.08] bg-zinc-950/80 p-3">
+                <div className="rounded-2xl border border-border bg-muted/80 p-3">
                   <div className="mb-2 flex items-start gap-2.5">
-                    <Avatar className="mt-0.5 size-8 border border-white/[0.08]">
+                    <Avatar className="mt-0.5 size-8 border border-border">
                       <AvatarImage
                         src={avatarDisplaySrc(selfAvatar) ?? undefined}
                         alt=""
                       />
-                      <AvatarFallback className="bg-zinc-900 text-[10px] text-zinc-300">
+                      <AvatarFallback className="bg-muted text-[10px] text-muted-foreground">
                         {previewName[0]?.toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-baseline gap-1.5 text-[13px]">
-                        <span className="font-semibold text-zinc-100">
+                        <span className="font-semibold text-foreground">
                           {previewName}
                         </span>
                         {selfUsername ? (
-                          <span className="text-zinc-600">@{selfUsername}</span>
+                          <span className="text-muted-foreground">@{selfUsername}</span>
                         ) : null}
-                        <span className="text-zinc-600">· now</span>
+                        <span className="text-muted-foreground">· now</span>
                       </div>
-                      <p className="text-[13px] text-zinc-500">
+                      <p className="text-[13px] text-muted-foreground">
                         watched{" "}
-                        <span className="font-medium text-zinc-100">
+                        <span className="font-medium text-foreground">
                           {filmTitle}
                         </span>
                       </p>
@@ -448,12 +448,12 @@ export function FeedCustomizeDialog({
                   </div>
                   <PreviewMedia images={selected} layout={layout} />
                   {postTitle.trim() ? (
-                    <p className="mt-2.5 text-sm font-semibold text-zinc-100">
+                    <p className="mt-2.5 text-sm font-semibold text-foreground">
                       {postTitle.trim()}
                     </p>
                   ) : null}
                   {caption.trim() ? (
-                    <p className="mt-1 whitespace-pre-wrap text-[13px] leading-relaxed text-zinc-300">
+                    <p className="mt-1 whitespace-pre-wrap text-[13px] leading-relaxed text-muted-foreground">
                       {caption.trim()}
                     </p>
                   ) : null}

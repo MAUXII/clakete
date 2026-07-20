@@ -50,7 +50,7 @@ function CatalogPillNav({
               "rounded-full px-4 py-2 text-sm font-medium transition-colors",
               isActive
                 ? "bg-brand/10 text-brand-muted ring-1 ring-brand-muted/35"
-                : "text-zinc-400 hover:bg-white/[0.05] hover:text-zinc-100",
+                : "text-muted-foreground hover:bg-white/[0.05] hover:text-foreground",
             )}
           >
             {label}
@@ -90,7 +90,7 @@ const listsPillClass = (active: boolean) =>
     "rounded-full px-4 py-2 text-sm font-medium transition-colors",
     active
       ? "bg-brand/10 text-brand-muted ring-1 ring-brand-muted/35"
-      : "text-zinc-400 hover:bg-white/[0.05] hover:text-zinc-100",
+      : "text-muted-foreground hover:bg-white/[0.05] hover:text-foreground",
   )
 
 /** Same pill look as catalog — filters which list blocks are shown on `/lists`. */
@@ -175,14 +175,14 @@ export function FilmsCatalogHeader({
   actions?: ReactNode
 }) {
   return (
-    <header className="mb-8 flex flex-col gap-6 border-b border-white/[0.06] pb-8 sm:flex-row sm:items-end sm:justify-between">
+    <header className="mb-8 flex flex-col gap-6 border-b border-border pb-8 sm:flex-row sm:items-end sm:justify-between">
       <div className="min-w-0 space-y-3">
         {eyebrow ? (
-          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-zinc-500">{eyebrow}</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">{eyebrow}</p>
         ) : null}
         <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">{title}</h1>
         {description ? (
-          <p className="max-w-2xl text-sm leading-relaxed text-zinc-400">{description}</p>
+          <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">{description}</p>
         ) : null}
       </div>
       {actions ? <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div> : null}
@@ -199,7 +199,7 @@ export const FilmsToolbarIconButton = React.forwardRef<
       ref={ref}
       type="button"
       className={cn(
-        "inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.03] text-zinc-300 transition-colors",
+        "inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-border bg-muted/40 text-muted-foreground transition-colors",
         "hover:border-brand/35 hover:bg-brand/10 hover:text-brand",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
         className,
@@ -228,7 +228,7 @@ export function FilmsScrollToTopFab({ visible, onClick }: { visible: boolean; on
       aria-label="Back to top"
       className={cn(
         "fixed bottom-8 right-5 z-40 flex h-12 w-12 items-center justify-center rounded-full",
-        "border border-white/[0.1] bg-zinc-950/90 text-zinc-300 shadow-lg shadow-black/35 backdrop-blur-md",
+        "border border-border bg-muted text-muted-foreground shadow-lg shadow-black/35 backdrop-blur-md",
         "transition-colors hover:border-brand/45 hover:text-brand sm:right-8",
       )}
     >

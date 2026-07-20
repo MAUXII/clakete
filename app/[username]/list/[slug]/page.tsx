@@ -546,10 +546,10 @@ export default function UserListDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen w-full overflow-x-clip bg-[#09090B]">
+      <div className="min-h-screen w-full overflow-x-clip bg-background">
         <FilmsCatalogShell>
           <div
-            className="relative left-1/2 z-0 w-screen max-w-[100vw] -translate-x-1/2 overflow-hidden bg-[#09090B]"
+            className="relative left-1/2 z-0 w-screen max-w-[100vw] -translate-x-1/2 overflow-hidden bg-background"
             style={{ height: LIST_LETTERBOX_HEIGHT }}
             aria-hidden
           />
@@ -565,11 +565,11 @@ export default function UserListDetailPage() {
 
   if (error || !list || !listId) {
     return (
-      <div className="min-h-screen w-full overflow-x-clip bg-[#09090B]">
+      <div className="min-h-screen w-full overflow-x-clip bg-background">
         <FilmsCatalogShell>
           <div className="py-16 text-center">
             <h1 className="text-xl font-semibold tracking-tight">List not found</h1>
-            <p className="mt-2 text-sm text-zinc-500">
+            <p className="mt-2 text-sm text-muted-foreground">
               This list does not exist or may have been removed.
             </p>
           </div>
@@ -582,10 +582,10 @@ export default function UserListDetailPage() {
   const listBackdropUrl = bannerPres.src;
 
   return (
-    <div className="min-h-screen w-full overflow-x-clip bg-[#09090B]">
+    <div className="min-h-screen w-full overflow-x-clip bg-background">
       <FilmsCatalogShell>
         <div
-          className="relative mt-[3.75rem] left-1/2 z-0 w-screen max-w-[100vw] -translate-x-1/2 overflow-hidden bg-[#09090B]"
+          className="relative mt-[3.75rem] left-1/2 z-0 w-screen max-w-[100vw] -translate-x-1/2 overflow-hidden bg-background"
           style={{ height: LIST_LETTERBOX_HEIGHT }}
         >
           <div className="pointer-events-none absolute inset-0">
@@ -604,7 +604,7 @@ export default function UserListDetailPage() {
               <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_35%,rgba(255,255,255,0.06),transparent_55%)]" />
             )}
             <div
-              className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(9,9,11,0.18)_0%,transparent_38%)]"
+              className="absolute inset-0 bg-[linear-gradient(to_bottom,hsl(var(--background)/0.18)_0%,transparent_38%)]"
               aria-hidden
             />
             <div
@@ -612,7 +612,7 @@ export default function UserListDetailPage() {
               aria-hidden
             />
             <div
-              className="absolute inset-0 bg-[linear-gradient(to_top,#09090B_0%,#09090B_0%,rgba(9,9,11,0.55)_32%,transparent_62%)]"
+              className="absolute inset-0 bg-[linear-gradient(to_top,hsl(var(--background))_0%,hsl(var(--background))_0%,hsl(var(--background)/0.55)_32%,transparent_62%)]"
               aria-hidden
             />
             <img
@@ -642,7 +642,7 @@ export default function UserListDetailPage() {
               href={userProfilePath(list.userData?.username)}
               className="group inline-flex items-center gap-3 rounded-full border border-border/60 bg-card/60 px-3 py-2 pr-4 shadow-sm backdrop-blur-sm transition-colors hover:border-[#e94e7a]/40 hover:bg-card"
             >
-              <Avatar className="h-11 w-11 border border-white/10 ring-2 ring-background shadow-md">
+              <Avatar className="h-11 w-11 border border-border ring-2 ring-background shadow-md">
                 <AvatarImage
                   src={avatarDisplaySrc(list.userData?.avatar_url) || undefined}
                   alt={list.userData?.display_name || list.userData?.username || ""}
@@ -1100,7 +1100,7 @@ export default function UserListDetailPage() {
               Share
             </span>
           </button>
-          <div className="rounded-md border border-black/10 bg-brand/5 p-3 text-sm dark:border-white/10">
+          <div className="rounded-md border border-black/10 bg-brand/5 p-3 text-sm dark:border-border">
             <div className="mb-2 flex items-center justify-between gap-2">
               <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 Progress
@@ -1157,7 +1157,7 @@ export default function UserListDetailPage() {
           seriesResults={seriesResults}
           loading={searchLoading}
           inputPlaceholder="Search"
-          commandInputClassName="h-12 text-sm font-medium placeholder:text-zinc-500"
+          commandInputClassName="h-12 text-sm font-medium placeholder:text-muted-foreground"
           commandListClassName="custom-scrollbar max-h-[600px] h-full overflow-y-auto"
           onSelectFilm={(movie) => {
             void handleFilmSelect(movie);

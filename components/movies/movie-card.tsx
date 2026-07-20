@@ -70,28 +70,32 @@ export function MovieCard({ movie, externalid, variant = 'default', extraActions
       })}
       className={cn(
         'group flex flex-col gap-2 transition-transform duration-300',
-        isNavFill && 'h-full min-h-0',
+        isNavFill && 'h-full w-full',
       )}
     >
       <div
         className={cn(
           'relative w-full overflow-hidden border-[1px] border-black/15 shadow-black/5 dark:border-white/15 dark:shadow-white/5 shadow-sm',
           isNavFill
-            ? 'h-full min-h-0 flex-1 rounded-xl aspect-auto'
+            ? 'h-full flex-1 rounded-xl aspect-auto bg-muted'
             : 'h-full rounded-[5px] aspect-[2/3]',
         )}
       >
         <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-        {movie?.poster_path? (
-        <img
-        src={movie?.poster_path ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` : '/placeholder.png'}
-        alt={movie?.title || 'Movie poster'}
-        className="w-full transition-all h-full object-cover"
-      />
-        ):(
-          <div className="w-full h-full flex items-center justify-center font-medium text-2xl bg-muted-foreground/10">?</div>
-         )
-         }
+        {movie?.poster_path ? (
+          <img
+            src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
+            alt={movie?.title || 'Movie poster'}
+            className={cn(
+              'object-cover transition-all',
+              isNavFill ? 'absolute inset-0 h-full w-full' : 'h-full w-full',
+            )}
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center bg-muted-foreground/10 text-2xl font-medium">
+            ?
+          </div>
+        )}
         
         {movie?.vote_average && (
           <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -106,7 +110,7 @@ export function MovieCard({ movie, externalid, variant = 'default', extraActions
             className={`p-2 rounded-md border transition-colors ${
               localWatched 
                 ? "bg-[#280F16] text-brand border-brand/20 hover:bg-[#280F16]" 
-                : "bg-secondary text-white border-transparent hover:bg-[#280F16] hover:text-brand hover:border-brand/20"
+                : "bg-secondary text-secondary-foreground border-transparent hover:bg-[#280F16] hover:text-brand hover:border-brand/20"
             }`}
             title={localWatched ? 'Remover dos assistidos' : 'Marcar como assistido'}
           >
@@ -117,7 +121,7 @@ export function MovieCard({ movie, externalid, variant = 'default', extraActions
             className={`p-2 rounded-md border transition-colors ${
               localLiked 
                 ? "bg-[#280F16] text-brand border-brand/20 hover:bg-[#280F16]" 
-                : "bg-secondary text-white border-transparent hover:bg-[#280F16] hover:text-brand hover:border-brand/20"
+                : "bg-secondary text-secondary-foreground border-transparent hover:bg-[#280F16] hover:text-brand hover:border-brand/20"
             }`}
             title={localLiked ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
           >

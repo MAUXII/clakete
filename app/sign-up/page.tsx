@@ -146,7 +146,7 @@ export default function SignUp() {
             type="button"
             onClick={handleGoogleSignUp}
             disabled={loading}
-            className="mt-4 w-full border border-black/10 bg-transparent p-[22px] font-semibold text-black hover:bg-brand/10 hover:text-brand dark:border-white/10 dark:text-white dark:hover:text-brand"
+            className="mt-4 w-full border border-black/10 bg-transparent p-[22px] font-semibold text-black hover:bg-brand/10 hover:text-brand dark:border-border dark:text-white dark:hover:text-brand"
           >
             <AuthGoogleIcon className="mr-2 h-4 w-4" />
             Google
@@ -168,7 +168,7 @@ export default function SignUp() {
                     <FormLabel className="text-sm text-muted-foreground">Email</FormLabel>
                     <FormControl>
                       <Input
-                        className="border border-black/10 py-[22px] dark:border-white/10"
+                        className="border border-black/10 py-[22px] dark:border-border"
                         placeholder="your@email.com"
                         {...field}
                       />
@@ -185,7 +185,7 @@ export default function SignUp() {
                     <FormLabel className="text-sm text-muted-foreground">Password</FormLabel>
                     <FormControl>
                       <Input
-                        className="border border-black/10 py-[22px] dark:border-white/10"
+                        className="border border-black/10 py-[22px] dark:border-border"
                         type="password"
                         placeholder="•••••••••••••"
                         {...field}
@@ -201,7 +201,7 @@ export default function SignUp() {
               />
               <Button
                 type="submit"
-                className="w-full border border-black/10 bg-brand p-[22px] font-semibold text-white hover:bg-brand/80 dark:border-white/10"
+                className="w-full border border-black/10 bg-brand p-[22px] font-semibold text-white hover:bg-brand/80 dark:border-border"
                 disabled={loading}
               >
                 {loading ? 'Creating account…' : 'Create account'}

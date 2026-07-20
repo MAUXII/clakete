@@ -22,7 +22,7 @@ interface WatchProvider {
 }
 
 const trailerIconBtnClass =
-  "inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-brand/12 text-brand transition-colors hover:bg-brand/22";
+  "inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-border bg-brand/12 text-brand transition-colors hover:bg-brand/22";
 
 export default function WatchProviders({
   movie,
@@ -135,7 +135,7 @@ export default function WatchProviders({
 
           {providers ? (
             <>
-              <div className="divide-y divide-white/[0.06]">
+              <div className="divide-y divide-border">
                 {Array.from(allProviders.values())
                   .slice(0, 2)
                   .map((provider) => (
@@ -144,9 +144,9 @@ export default function WatchProviders({
                       target="_blank"
                       rel="noopener noreferrer"
                       key={provider.provider_id}
-                      className="group flex w-full items-center gap-3 px-3 py-2.5 transition-colors hover:bg-white/[0.04]"
+                      className="group flex w-full items-center gap-3 px-3 py-2.5 transition-colors hover:bg-muted"
                     >
-                      <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-md border border-white/[0.08] bg-zinc-900">
+                      <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-md border border-border bg-muted">
                         <Image
                           src={`https://image.tmdb.org/t/p/original${provider.logo_path}`}
                           alt={provider.provider_name}
@@ -155,14 +155,14 @@ export default function WatchProviders({
                         />
                       </div>
                       <div className="min-w-0 flex-1 text-left">
-                        <p className="truncate text-sm font-medium text-zinc-100 transition-colors group-hover:text-white">
+                        <p className="truncate text-sm font-medium text-foreground transition-colors group-hover:text-foreground">
                           {provider.provider_name}
                         </p>
                         <div className="mt-0.5 flex flex-wrap gap-1">
                           {getProviderTypes(provider).map((type) => (
                             <span
                               key={type}
-                              className="text-[10px] font-medium uppercase tracking-[0.08em] text-zinc-500"
+                              className="text-[10px] font-medium uppercase tracking-[0.08em] text-muted-foreground"
                             >
                               {typeLabel(type)}
                             </span>
@@ -173,13 +173,13 @@ export default function WatchProviders({
                   ))}
               </div>
 
-              <div className="border-t border-white/[0.06] px-3 py-2">
+              <div className="border-t border-border px-3 py-2">
                 <button
                   type="button"
                   onClick={() => setProvidersDialogOpen(true)}
                   className={cn(
-                    "w-full rounded-lg py-2 text-center text-[11px] font-medium tracking-wide text-zinc-500 transition-colors",
-                    "hover:bg-white/[0.04] hover:text-zinc-200",
+                    "w-full rounded-lg py-2 text-center text-[11px] font-medium tracking-wide text-muted-foreground transition-colors",
+                    "hover:bg-muted hover:text-foreground",
                     "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-white/25",
                   )}
                 >
@@ -189,7 +189,7 @@ export default function WatchProviders({
             </>
           ) : (
             <div className="px-4 py-5 text-center">
-              <p className="text-sm leading-relaxed text-zinc-500">
+              <p className="text-sm leading-relaxed text-muted-foreground">
                 {t("catalog.notStreamingIn", { region: regionName })}
               </p>
             </div>
@@ -197,24 +197,24 @@ export default function WatchProviders({
         </div>
 
         <Dialog open={providersDialogOpen} onOpenChange={setProvidersDialogOpen}>
-          <DialogContent className="max-h-[82vh] overflow-hidden border-white/[0.12] bg-zinc-950 p-0 text-zinc-100 sm:max-w-lg">
-            <DialogHeader className="border-b border-white/[0.08] px-5 py-4">
+          <DialogContent className="max-h-[82vh] overflow-hidden border-border bg-card p-0 text-foreground sm:max-w-lg">
+            <DialogHeader className="border-b border-border px-5 py-4">
               <DialogTitle>{t("catalog.allProviders")}</DialogTitle>
-              <DialogDescription className="text-zinc-400">
+              <DialogDescription className="text-muted-foreground">
                 {t("catalog.opensOnService", { region: regionName })}
               </DialogDescription>
             </DialogHeader>
             <div className="max-h-[60vh] overflow-y-auto p-3">
-              <div className="flex flex-col divide-y divide-white/[0.08] overflow-hidden rounded-lg border border-white/[0.08]">
+              <div className="flex flex-col divide-y divide-border overflow-hidden rounded-lg border border-border">
                 {Array.from(allProviders.values()).map((provider) => (
                   <Link
                     href={providerHref(provider.provider_id)}
                     target="_blank"
                     rel="noopener noreferrer"
                     key={provider.provider_id}
-                    className="group flex w-full items-center gap-3 px-3 py-3 transition-colors hover:bg-white/[0.04]"
+                    className="group flex w-full items-center gap-3 px-3 py-3 transition-colors hover:bg-muted"
                   >
-                    <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-md border border-white/[0.08] bg-zinc-900">
+                    <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-md border border-border bg-muted">
                       <Image
                         src={`https://image.tmdb.org/t/p/original${provider.logo_path}`}
                         alt={provider.provider_name}
@@ -223,14 +223,14 @@ export default function WatchProviders({
                       />
                     </div>
                     <div className="min-w-0 flex-1 text-left">
-                      <p className="truncate font-medium text-foreground transition-colors group-hover:text-white">
+                      <p className="truncate font-medium text-foreground transition-colors group-hover:text-foreground">
                         {provider.provider_name}
                       </p>
                       <div className="mt-1.5 flex flex-wrap gap-1.5">
                         {getProviderTypes(provider).map((type) => (
                           <span
                             key={type}
-                            className="rounded-md border border-white/[0.06] px-2 py-0.5 text-[11px] font-medium text-zinc-500"
+                            className="rounded-md border border-border px-2 py-0.5 text-[11px] font-medium text-muted-foreground"
                           >
                             {typeLabel(type)}
                           </span>
@@ -241,12 +241,12 @@ export default function WatchProviders({
                 ))}
               </div>
             </div>
-            <div className="border-t border-white/[0.08] px-5 py-3 text-center">
+            <div className="border-t border-border px-5 py-3 text-center">
               <a
                 href={justWatchHref}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-[11px] text-zinc-500 underline-offset-2 hover:text-zinc-300 hover:underline"
+                className="text-[11px] text-muted-foreground underline-offset-2 hover:text-muted-foreground hover:underline"
               >
                 {t("catalog.justWatchAttr")}
               </a>
@@ -367,7 +367,7 @@ export default function WatchProviders({
           <button
             type="button"
             onClick={() => setProvidersDialogOpen(true)}
-            className="flex h-12 w-full items-center justify-center rounded-md border border-black/10 bg-brand/10 p-3 text-brand transition-colors hover:bg-brand/20 hover:text-brand/90 dark:border-white/10"
+            className="flex h-12 w-full items-center justify-center rounded-md border border-black/10 bg-brand/10 p-3 text-brand transition-colors hover:bg-brand/20 hover:text-brand/90 dark:border-border"
           >
             + {t("catalog.allProviders")}
           </button>
@@ -375,24 +375,24 @@ export default function WatchProviders({
       </Card>
 
       <Dialog open={providersDialogOpen} onOpenChange={setProvidersDialogOpen}>
-        <DialogContent className="max-h-[82vh] overflow-hidden border-white/[0.12] bg-zinc-950 p-0 text-zinc-100 sm:max-w-lg">
-          <DialogHeader className="border-b border-white/[0.08] px-5 py-4">
+        <DialogContent className="max-h-[82vh] overflow-hidden border-border bg-card p-0 text-foreground sm:max-w-lg">
+          <DialogHeader className="border-b border-border px-5 py-4">
             <DialogTitle>{t("catalog.allProviders")}</DialogTitle>
-            <DialogDescription className="text-zinc-400">
+            <DialogDescription className="text-muted-foreground">
               {t("catalog.opensOnService", { region: regionName })}
             </DialogDescription>
           </DialogHeader>
           <div className="max-h-[60vh] overflow-y-auto p-3">
-            <div className="flex flex-col divide-y divide-white/[0.08] overflow-hidden rounded-lg border border-white/[0.08]">
+            <div className="flex flex-col divide-y divide-border overflow-hidden rounded-lg border border-border">
               {Array.from(allProviders.values()).map((provider) => (
                 <Link
                   href={providerHref(provider.provider_id)}
                   target="_blank"
                   rel="noopener noreferrer"
                   key={provider.provider_id}
-                  className="group flex w-full items-center gap-3 px-3 py-3 transition-colors hover:bg-white/[0.04]"
+                  className="group flex w-full items-center gap-3 px-3 py-3 transition-colors hover:bg-muted"
                 >
-                  <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-md border border-white/[0.08] bg-zinc-900">
+                  <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-md border border-border bg-muted">
                     <Image
                       src={`https://image.tmdb.org/t/p/original${provider.logo_path}`}
                       alt={provider.provider_name}
@@ -401,14 +401,14 @@ export default function WatchProviders({
                     />
                   </div>
                   <div className="min-w-0 flex-1 text-left">
-                    <p className="truncate font-medium text-foreground transition-colors group-hover:text-white">
+                    <p className="truncate font-medium text-foreground transition-colors group-hover:text-foreground">
                       {provider.provider_name}
                     </p>
                     <div className="mt-1.5 flex flex-wrap gap-1.5">
                       {getProviderTypes(provider).map((type) => (
                         <span
                           key={type}
-                          className="rounded-md border border-white/[0.06] px-2 py-0.5 text-[11px] font-medium text-zinc-500"
+                          className="rounded-md border border-border px-2 py-0.5 text-[11px] font-medium text-muted-foreground"
                         >
                           {typeLabel(type)}
                         </span>
@@ -419,12 +419,12 @@ export default function WatchProviders({
               ))}
             </div>
           </div>
-          <div className="border-t border-white/[0.08] px-5 py-3 text-center">
+          <div className="border-t border-border px-5 py-3 text-center">
             <a
               href={justWatchHref}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[11px] text-zinc-500 underline-offset-2 hover:text-zinc-300 hover:underline"
+              className="text-[11px] text-muted-foreground underline-offset-2 hover:text-muted-foreground hover:underline"
             >
               {t("catalog.justWatchAttr")}
             </a>

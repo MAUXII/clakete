@@ -92,7 +92,7 @@ export function FilmPlaybackPlayer({ filmId, title, posterPath }: FilmPlaybackPl
 
   const sectionShell = (children: ReactNode) => (
     <section
-      className="mt-6 rounded-xl border border-black/10 bg-muted/30 p-4 dark:border-white/10"
+      className="mt-6 rounded-xl border border-black/10 bg-muted/30 p-4 dark:border-border"
       aria-label="Reprodução"
     >
       <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">

@@ -456,15 +456,15 @@ export function FeedWatchedPostCard({
       data-feed-post={item.interactionId}
       data-feed-share={item.shareUid ?? undefined}
       className={cn(
-        "scroll-mt-24 border-b border-white/[0.06] py-4 last:border-0",
+        "scroll-mt-24 border-b border-border/80 py-4 last:border-0",
         highlighted && "feed-post-locate rounded-lg",
       )}
     >
       <div className="flex items-start gap-3">
         <Link href={profileHref} className="mt-0.5 shrink-0">
-          <Avatar className="size-10 border border-white/[0.08]">
+          <Avatar className="size-10 border border-border">
             <AvatarImage src={avatarDisplaySrc(item.user.avatar_url) ?? undefined} alt="" />
-            <AvatarFallback className="bg-zinc-900 text-xs text-zinc-300">
+            <AvatarFallback className="bg-muted text-xs text-muted-foreground">
               {name[0]?.toUpperCase()}
             </AvatarFallback>
           </Avatar>
@@ -476,7 +476,7 @@ export function FeedWatchedPostCard({
               <header className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5 text-[13px] leading-snug">
                 <Link
                   href={profileHref}
-                  className="font-semibold text-zinc-100 hover:text-brand"
+                  className="font-semibold text-foreground hover:text-brand"
                 >
                   {name}
                 </Link>
@@ -487,19 +487,19 @@ export function FeedWatchedPostCard({
                 }) ? (
                   <ShiningBadge size="sm" className="translate-y-[-1px]" />
                 ) : null}
-                <span className="text-zinc-600">@{item.user.username}</span>
+                <span className="text-muted-foreground">@{item.user.username}</span>
                 {when ? (
                   <>
-                    <span className="text-zinc-600">·</span>
-                    <span className="text-zinc-600">{when}</span>
+                    <span className="text-muted-foreground">·</span>
+                    <span className="text-muted-foreground">{when}</span>
                   </>
                 ) : null}
               </header>
-              <p className="mt-0.5 text-[13px] text-zinc-500">
+              <p className="mt-0.5 text-[13px] text-muted-foreground">
                 {action}{" "}
                 <Link
                   href={href}
-                  className="font-medium text-zinc-100 transition-colors hover:text-brand"
+                  className="font-medium text-foreground transition-colors hover:text-brand"
                 >
                   {item.title}
                 </Link>
@@ -516,7 +516,7 @@ export function FeedWatchedPostCard({
                 <DropdownMenuTrigger asChild>
                   <button
                     type="button"
-                    className="rounded-full p-1.5 text-zinc-500 transition hover:bg-white/[0.04] hover:text-zinc-300"
+                    className="rounded-full p-1.5 text-muted-foreground transition hover:bg-muted/50 hover:text-muted-foreground"
                     aria-label="Post options"
                     disabled={removing || editing}
                   >
@@ -547,7 +547,7 @@ export function FeedWatchedPostCard({
                 <DropdownMenuTrigger asChild>
                   <button
                     type="button"
-                    className="rounded-full p-1.5 text-zinc-500 transition hover:bg-white/[0.04] hover:text-zinc-300"
+                    className="rounded-full p-1.5 text-muted-foreground transition hover:bg-muted/50 hover:text-muted-foreground"
                     aria-label="Post options"
                     disabled={hiding || reporting}
                   >
@@ -599,12 +599,12 @@ export function FeedWatchedPostCard({
       </div>
 
       {localTitle ? (
-        <p className="mt-3 text-[15px] font-semibold leading-snug text-zinc-100">
+        <p className="mt-3 text-[15px] font-semibold leading-snug text-foreground">
           {localTitle}
         </p>
       ) : null}
       {localCaption ? (
-        <p className="mt-1.5 whitespace-pre-wrap text-[14px] leading-relaxed text-zinc-300">
+        <p className="mt-1.5 whitespace-pre-wrap text-[14px] leading-relaxed text-muted-foreground">
           {localCaption}
         </p>
       ) : null}
@@ -618,7 +618,7 @@ export function FeedWatchedPostCard({
             "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs transition",
             liked
               ? "text-brand"
-              : "text-zinc-500 hover:bg-white/[0.04] hover:text-zinc-300",
+              : "text-muted-foreground hover:bg-muted/50 hover:text-muted-foreground",
           )}
           aria-label="Like"
         >
@@ -631,8 +631,8 @@ export function FeedWatchedPostCard({
           className={cn(
             "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs transition",
             commentsOpen
-              ? "text-zinc-200"
-              : "text-zinc-500 hover:bg-white/[0.04] hover:text-zinc-300",
+              ? "text-foreground"
+              : "text-muted-foreground hover:bg-muted/50 hover:text-muted-foreground",
           )}
           aria-label="Comment"
         >
@@ -660,7 +660,7 @@ export function FeedWatchedPostCard({
               toast.message("Could not copy link")
             }
           }}
-          className="ml-auto inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs text-zinc-500 transition hover:bg-white/[0.04] hover:text-zinc-300"
+          className="ml-auto inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs text-muted-foreground transition hover:bg-muted/50 hover:text-muted-foreground"
           aria-label="Share"
         >
           <Share className="size-3.5" strokeWidth={2} />
@@ -668,14 +668,14 @@ export function FeedWatchedPostCard({
       </footer>
 
       {commentsOpen ? (
-        <div className="mt-3 space-y-3 rounded-xl border border-white/[0.06] bg-zinc-950/50 p-3">
+        <div className="mt-3 space-y-3 rounded-xl border border-border/80 bg-muted/50 p-3">
           {commentsLoading ? (
-            <div className="flex items-center gap-2 py-2 text-xs text-zinc-500">
+            <div className="flex items-center gap-2 py-2 text-xs text-muted-foreground">
               <Loader2 className="size-3.5 animate-spin" />
               Loading comments…
             </div>
           ) : comments.length === 0 ? (
-            <p className="py-1 text-xs text-zinc-500">No comments yet.</p>
+            <p className="py-1 text-xs text-muted-foreground">No comments yet.</p>
           ) : (
             <ul className="max-h-64 space-y-3 overflow-y-auto pr-1">
               {comments.map((c) => {
@@ -685,12 +685,12 @@ export function FeedWatchedPostCard({
                 return (
                   <li key={c.id} className="flex gap-2.5">
                     <Link href={feedProfileHref(c.user.username)} className="shrink-0">
-                      <Avatar className="size-7 border border-white/[0.06]">
+                      <Avatar className="size-7 border border-border/80">
                         <AvatarImage
                           src={avatarDisplaySrc(c.user.avatar_url) ?? undefined}
                           alt=""
                         />
-                        <AvatarFallback className="bg-zinc-900 text-[9px] text-zinc-400">
+                        <AvatarFallback className="bg-muted text-[9px] text-muted-foreground">
                           {cName[0]?.toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
@@ -699,24 +699,24 @@ export function FeedWatchedPostCard({
                       <div className="flex items-baseline gap-1.5 text-[12px]">
                         <Link
                           href={feedProfileHref(c.user.username)}
-                          className="font-medium text-zinc-200 hover:text-brand"
+                          className="font-medium text-foreground hover:text-brand"
                         >
                           {cName}
                         </Link>
-                        <span className="text-zinc-600">
+                        <span className="text-muted-foreground">
                           {formatFeedRelativeTime(c.createdAt)}
                         </span>
                         {canDelete ? (
                           <button
                             type="button"
                             onClick={() => void deleteComment(c.id)}
-                            className="ml-auto text-[11px] text-zinc-600 hover:text-red-400"
+                            className="ml-auto text-[11px] text-muted-foreground hover:text-red-400"
                           >
                             Delete
                           </button>
                         ) : null}
                       </div>
-                      <p className="mt-0.5 whitespace-pre-wrap text-[13px] leading-relaxed text-zinc-300">
+                      <p className="mt-0.5 whitespace-pre-wrap text-[13px] leading-relaxed text-muted-foreground">
                         {c.body}
                       </p>
                     </div>
@@ -726,7 +726,7 @@ export function FeedWatchedPostCard({
             </ul>
           )}
 
-          <div className="space-y-2 border-t border-white/[0.06] pt-3">
+          <div className="space-y-2 border-t border-border/80 pt-3">
             <Textarea
               value={commentDraft}
               maxLength={COMMENT_MAX}
@@ -742,7 +742,7 @@ export function FeedWatchedPostCard({
               }}
             />
             <div className="flex items-center justify-between gap-2">
-              <span className="text-[11px] text-zinc-600">
+              <span className="text-[11px] text-muted-foreground">
                 {commentDraft.length}/{COMMENT_MAX} · Ctrl+Enter to post
               </span>
               <Button

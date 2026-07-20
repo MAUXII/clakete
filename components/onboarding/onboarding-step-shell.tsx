@@ -35,7 +35,7 @@ export function OnboardingStepShell({
       <div className="min-w-0 w-full shrink-0 text-center">
         <h2 className="text-lg font-semibold tracking-tight text-white sm:text-xl">{title}</h2>
         {description ? (
-          <p className="mt-2 text-xs leading-relaxed text-zinc-500 sm:text-[13px]">{description}</p>
+          <p className="mt-2 text-xs leading-relaxed text-muted-foreground sm:text-[13px]">{description}</p>
         ) : null}
       </div>
       <div

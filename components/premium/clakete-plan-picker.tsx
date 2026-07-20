@@ -71,7 +71,7 @@ export function ClaketePlanPicker({
         "flex w-full flex-col",
         embedded
           ? "gap-4"
-          : "max-w-[450px] gap-6 rounded-2xl border border-white/[0.08] bg-[#0c0c0e] p-5 shadow-sm sm:p-6",
+          : "max-w-[450px] gap-6 rounded-2xl border border-border bg-[#0c0c0e] p-5 shadow-sm sm:p-6",
         className,
       )}
     >
@@ -80,22 +80,22 @@ export function ClaketePlanPicker({
           <h2 className="text-xl font-semibold tracking-tight text-white sm:text-2xl">
             Choose your plan
           </h2>
-          <p className="text-sm text-zinc-500">
+          <p className="text-sm text-muted-foreground">
             {isPremium
               ? "You have premium access. Manage billing below."
               : "Upgrade for profile highlights and upcoming perks."}
           </p>
           {planFields.plan_status ? (
-            <p className="text-xs text-zinc-600">
+            <p className="text-xs text-muted-foreground">
               Status:{" "}
-              <span className="font-medium text-zinc-400">{planFields.plan_status}</span>
+              <span className="font-medium text-muted-foreground">{planFields.plan_status}</span>
             </p>
           ) : null}
         </div>
       ) : planFields.plan_status ? (
-        <p className="text-xs text-zinc-600">
+        <p className="text-xs text-muted-foreground">
           Status:{" "}
-          <span className="font-medium text-zinc-400">{planFields.plan_status}</span>
+          <span className="font-medium text-muted-foreground">{planFields.plan_status}</span>
         </p>
       ) : null}
 
@@ -121,10 +121,10 @@ export function ClaketePlanPicker({
             >
               <div
                 className={cn(
-                  "relative rounded-xl border bg-[#09090B] transition-colors duration-300",
+                  "relative rounded-xl border bg-background transition-colors duration-300",
                   isSelected
                     ? "z-10 border-2 border-brand shadow-[0_0_24px_-8px_hsl(var(--brand) / 0.45)]"
-                    : "border-white/[0.08]",
+                    : "border-border",
                 )}
               >
                 <div className={cn(embedded ? "p-4" : "p-5")}>
@@ -160,7 +160,7 @@ export function ClaketePlanPicker({
                         <h3 className="text-lg font-medium leading-tight text-white">
                           {plan.name}
                         </h3>
-                        <p className="text-sm lowercase text-zinc-500">
+                        <p className="text-sm lowercase text-muted-foreground">
                           {plan.description}
                         </p>
                       </div>
@@ -181,7 +181,7 @@ export function ClaketePlanPicker({
                           plan.priceLabel
                         )}
                       </div>
-                      <div className="text-xs text-zinc-600">
+                      <div className="text-xs text-muted-foreground">
                         {plan.period === "forever" ? "Free" : "per month"}
                       </div>
                     </div>
@@ -220,7 +220,7 @@ export function ClaketePlanPicker({
                                   delay: idx * 0.05,
                                   duration: 0.3,
                                 }}
-                                className="flex items-center gap-3 text-sm text-zinc-300"
+                                className="flex items-center gap-3 text-sm text-muted-foreground"
                               >
                                 <Check
                                   className="h-4 w-4 shrink-0 text-brand"
@@ -262,7 +262,7 @@ export function ClaketePlanPicker({
             variant="outline"
             onClick={() => void onPortal()}
             disabled={checkoutLoading || portalLoading}
-            className="w-full rounded-full border-white/10 bg-transparent text-zinc-200 hover:border-brand/30 hover:bg-brand/10 hover:text-white sm:flex-1"
+            className="w-full rounded-full border-border bg-transparent text-foreground hover:border-brand/30 hover:bg-brand/10 hover:text-white sm:flex-1"
           >
             {portalLoading ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -276,7 +276,7 @@ export function ClaketePlanPicker({
             variant="outline"
             onClick={() => void onCheckout()}
             disabled={checkoutLoading || portalLoading}
-            className="w-full rounded-full border-white/10 sm:flex-1"
+            className="w-full rounded-full border-border sm:flex-1"
           >
             {checkoutLoading ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />

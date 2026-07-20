@@ -104,7 +104,7 @@ export function MediaSearchCommandContent({
                       onSelect={() => onSelectPerson?.(person)}
                       className="mx-2 flex h-11 items-center gap-2.5 rounded-md px-3 text-sm font-medium"
                     >
-                      <Avatar className="size-7 rounded-md border border-white/[0.08]">
+                      <Avatar className="size-7 rounded-md border border-border">
                         <AvatarImage
                           src={avatarDisplaySrc(person.avatar_url) ?? undefined}
                           alt=""
@@ -182,7 +182,7 @@ export function MediaSearchCommandContent({
                       side="right"
                       align="start"
                       sideOffset={10}
-                      className="w-[360px] overflow-hidden rounded-xl border border-white/10 bg-[#0b0d13] p-0 text-white shadow-2xl"
+                      className="w-[360px] overflow-hidden rounded-xl border border-border bg-popover p-0 text-popover-foreground shadow-2xl"
                     >
                       <div className="relative h-32 w-full">
                         {movie.backdrop_path ? (
@@ -192,10 +192,10 @@ export function MediaSearchCommandContent({
                             className="h-full w-full object-cover object-center"
                           />
                         ) : (
-                          <div className="h-full w-full bg-zinc-800" />
+                          <div className="h-full w-full bg-muted" />
                         )}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-black/20" />
-                        <div className="absolute left-3 top-full aspect-[2/3] h-[154px] w-auto -translate-y-1/4 overflow-hidden rounded border border-white/10 bg-zinc-900 shadow-lg">
+                        <div className="absolute left-3 top-full aspect-[2/3] h-[154px] w-auto -translate-y-1/4 overflow-hidden rounded border border-border bg-muted shadow-lg">
                           {movie.poster_path ? (
                             <img
                               src={`https://image.tmdb.org/t/p/w185/${movie.poster_path}`}
@@ -203,7 +203,7 @@ export function MediaSearchCommandContent({
                               className="h-full w-full object-cover"
                             />
                           ) : (
-                            <div className="h-full w-full bg-zinc-800" />
+                            <div className="h-full w-full bg-muted" />
                           )}
                         </div>
                       </div>
@@ -212,9 +212,9 @@ export function MediaSearchCommandContent({
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-sm font-semibold">{title}</p>
                           {original ? (
-                            <p className="truncate text-xs text-zinc-400">{original}</p>
+                            <p className="truncate text-xs text-muted-foreground">{original}</p>
                           ) : null}
-                          <p className="mt-1 line-clamp-3 text-xs leading-relaxed text-zinc-300">
+                          <p className="mt-1 line-clamp-3 text-xs leading-relaxed text-muted-foreground">
                             {movie.overview?.trim() || "Sem descricao disponivel."}
                           </p>
                         </div>
@@ -282,7 +282,7 @@ export function MediaSearchCommandContent({
                       side="right"
                       align="start"
                       sideOffset={10}
-                      className="w-[360px] overflow-hidden rounded-xl border border-white/10 bg-[#0b0d13] p-0 text-white shadow-2xl"
+                      className="w-[360px] overflow-hidden rounded-xl border border-border bg-popover p-0 text-popover-foreground shadow-2xl"
                     >
                       <div className="relative h-32 w-full">
                         {series.backdrop_path ? (
@@ -292,10 +292,10 @@ export function MediaSearchCommandContent({
                             className="h-full w-full object-cover object-center"
                           />
                         ) : (
-                          <div className="h-full w-full bg-zinc-800" />
+                          <div className="h-full w-full bg-muted" />
                         )}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-black/20" />
-                        <div className="absolute left-3 top-full aspect-[2/3] h-[154px] w-auto -translate-y-1/4 overflow-hidden rounded border border-white/10 bg-zinc-900 shadow-lg">
+                        <div className="absolute left-3 top-full aspect-[2/3] h-[154px] w-auto -translate-y-1/4 overflow-hidden rounded border border-border bg-muted shadow-lg">
                           {series.poster_path ? (
                             <img
                               src={`https://image.tmdb.org/t/p/w185/${series.poster_path}`}
@@ -303,7 +303,7 @@ export function MediaSearchCommandContent({
                               className="h-full w-full object-cover"
                             />
                           ) : (
-                            <div className="h-full w-full bg-zinc-800" />
+                            <div className="h-full w-full bg-muted" />
                           )}
                         </div>
                       </div>
@@ -312,9 +312,9 @@ export function MediaSearchCommandContent({
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-sm font-semibold">{name}</p>
                           {original ? (
-                            <p className="truncate text-xs text-zinc-400">{original}</p>
+                            <p className="truncate text-xs text-muted-foreground">{original}</p>
                           ) : null}
-                          <p className="mt-1 line-clamp-3 text-xs leading-relaxed text-zinc-300">
+                          <p className="mt-1 line-clamp-3 text-xs leading-relaxed text-muted-foreground">
                             {series.overview?.trim() || "Series description not available."}
                           </p>
                         </div>

@@ -25,7 +25,7 @@ export function NewListGenreStep({
       <div className="min-w-0 shrink-0 text-center">
         <h2 className="text-lg font-semibold tracking-tight text-white sm:text-xl">{title}</h2>
         <div className="mt-1 flex min-h-[3rem] items-start justify-center sm:min-h-[3.25rem]">
-          <p className="text-xs leading-relaxed text-zinc-500 sm:text-[13px]">{description}</p>
+          <p className="text-xs leading-relaxed text-muted-foreground sm:text-[13px]">{description}</p>
         </div>
       </div>
 

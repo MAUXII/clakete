@@ -640,7 +640,7 @@ export function ShareCardDialog({
                           className="aspect-[2/3] w-full object-cover"
                         />
                       ) : (
-                        <div className="flex aspect-[2/3] w-full items-center justify-center bg-zinc-800 text-xs text-zinc-500">
+                        <div className="flex aspect-[2/3] w-full items-center justify-center bg-muted text-xs text-muted-foreground">
                           {data.title}
                         </div>
                       )}

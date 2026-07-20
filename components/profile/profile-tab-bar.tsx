@@ -22,7 +22,7 @@ const profileTabLinkClass = "group relative z-10 flex h-full min-h-0 flex-1"
 
 const profileTabTriggerClass = cn(
   "relative z-10 h-full w-full rounded-md bg-transparent px-8 py-2 text-sm font-medium shadow-none transition-colors",
-  "text-zinc-400 group-hover:text-zinc-200 dark:group-hover:text-zinc-100",
+  "text-muted-foreground group-hover:text-foreground dark:group-hover:text-foreground",
   "data-[state=active]:!bg-transparent data-[state=active]:!shadow-none",
   // Defaults (--profile-tab-active*) follow app accent; profile themes override.
   "data-[state=active]:!text-[var(--profile-tab-active)]",
@@ -96,7 +96,7 @@ export function ProfileTabBar({ username, activeTab, children }: ProfileTabBarPr
     <Tabs value={visualTab} className="mt-6 w-full">
       <TabsList
         ref={listRef}
-        className="relative flex h-12 w-full overflow-hidden border border-white/[0.08] bg-[#09090B] p-1 text-zinc-400 dark:bg-[#09090B]"
+        className="relative flex h-12 w-full overflow-hidden border border-border bg-background p-1 text-muted-foreground"
       >
         {indicator ? (
           <motion.div

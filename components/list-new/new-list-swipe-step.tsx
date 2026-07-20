@@ -360,7 +360,7 @@ export function NewListSwipeStep({
   /** Same outer size as the swipe poster (`deckShellClass`). */
   const posterSkeletonClass = cn(
     deckShellClass,
-    "relative shrink-0 overflow-hidden rounded-[20px] border border-white/[0.12] bg-[#18181B]/40",
+    "relative shrink-0 overflow-hidden rounded-[20px] border border-border bg-[#18181B]/40",
   )
 
   const actionColumnClass = cn(
@@ -402,7 +402,7 @@ export function NewListSwipeStep({
             "flex h-11 w-full shrink-0 items-center justify-center rounded-full px-5 text-sm font-semibold transition-colors",
             canFinalize && !finalizeBusy
               ? "bg-brand text-white hover:bg-brand-hover"
-              : "cursor-not-allowed bg-white/[0.08] text-zinc-600",
+              : "cursor-not-allowed bg-muted text-muted-foreground",
           )}
         >
           {finalizeBusy ? "Saving…" : copy.finishLabel}
@@ -412,7 +412,7 @@ export function NewListSwipeStep({
 
   const renderCardActions = (movie: DeckMovie) => (
     <>
-      <div className="flex justify-center gap-8 text-[10px] text-zinc-500 sm:hidden">
+      <div className="flex justify-center gap-8 text-[10px] text-muted-foreground sm:hidden">
         <span>{copy.skipLabel} ←</span>
         <span>→ {copy.addLabel}</span>
       </div>
@@ -420,7 +420,7 @@ export function NewListSwipeStep({
         <button
           type="button"
           onClick={skipAdvance}
-          className="flex h-11 min-h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-full border border-white/[0.12] bg-white/[0.04] text-sm font-semibold text-zinc-200 transition-colors hover:bg-white/[0.08] active:bg-white/[0.06]"
+          className="flex h-11 min-h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-full border border-border bg-white/[0.04] text-sm font-semibold text-foreground transition-colors hover:bg-muted active:bg-white/[0.06]"
         >
           <SkipForward className="h-4 w-4 shrink-0 opacity-80" />
           {copy.skipLabel}
@@ -477,7 +477,7 @@ export function NewListSwipeStep({
         <div className={cn(posterSkeletonClass, "ring-1 ring-inset ring-white/[0.06]")}>
           <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-zinc-800/75 to-zinc-900/35" />
           <div className="relative z-[1] flex h-full w-full items-center justify-center px-3">
-            <p className="text-center text-sm text-zinc-500">Loading suggestions…</p>
+            <p className="text-center text-sm text-muted-foreground">Loading suggestions…</p>
           </div>
         </div>
         {bodyInlineFinalize}
@@ -503,7 +503,7 @@ export function NewListSwipeStep({
         <div className={cn(posterSkeletonClass, "ring-1 ring-inset ring-white/[0.06]")}>
           <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-zinc-800/75 to-zinc-900/35" />
           <div className="relative z-[1] flex h-full w-full items-center justify-center px-3">
-            <p className="text-center text-sm text-zinc-500">Loading more…</p>
+            <p className="text-center text-sm text-muted-foreground">Loading more…</p>
           </div>
         </div>
         {bodyInlineFinalize}
@@ -515,10 +515,10 @@ export function NewListSwipeStep({
         <div
           className={cn(
             deckFallbackClass,
-            "items-center justify-center border border-white/[0.08] bg-white/[0.025]",
+            "items-center justify-center border border-border bg-white/[0.025]",
           )}
         >
-          <p className="max-w-xs text-center text-sm leading-relaxed text-zinc-400">
+          <p className="max-w-xs text-center text-sm leading-relaxed text-muted-foreground">
             {pickedCount === 0 ? copy.emptyNoGenres : copy.emptyNoMore}
           </p>
         </div>
@@ -535,15 +535,15 @@ export function NewListSwipeStep({
         }
       >
         <div className="relative flex w-full max-w-[min(480px,calc(100vw-1rem))] items-stretch justify-center gap-2 sm:gap-4">
-          <span className="hidden w-[4rem] shrink-0 pt-[min(28%,175px)] text-right text-[10px] font-medium uppercase tracking-wider text-zinc-600 sm:block">
+          <span className="hidden w-[4rem] shrink-0 pt-[min(28%,175px)] text-right text-[10px] font-medium uppercase tracking-wider text-muted-foreground sm:block">
             {copy.leftHint}
-            <span className="mt-0.5 block text-zinc-500 normal-case tracking-normal">drag ←</span>
+            <span className="mt-0.5 block text-muted-foreground normal-case tracking-normal">drag ←</span>
           </span>
 
           <div className={cn(deckShellClass, "shrink-0 drop-shadow-[0_20px_40px_rgba(0,0,0,0.42)]")}>
             {nextBehind ? (
               <div
-                className="pointer-events-none absolute inset-0 z-0 translate-y-[10px] scale-[0.94] rounded-[20px] border border-white/[0.06] bg-[#0c0c0e] opacity-[0.55]"
+                className="pointer-events-none absolute inset-0 z-0 translate-y-[10px] scale-[0.94] rounded-[20px] border border-border bg-[#0c0c0e] opacity-[0.55]"
                 aria-hidden
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -593,9 +593,9 @@ export function NewListSwipeStep({
             </AnimatePresence>
           </div>
 
-          <span className="hidden w-[4rem] shrink-0 pt-[min(28%,175px)] text-left text-[10px] font-medium uppercase tracking-wider text-zinc-600 sm:block">
+          <span className="hidden w-[4rem] shrink-0 pt-[min(28%,175px)] text-left text-[10px] font-medium uppercase tracking-wider text-muted-foreground sm:block">
             {copy.rightHint}
-            <span className="mt-0.5 block text-zinc-500 normal-case tracking-normal">drag →</span>
+            <span className="mt-0.5 block text-muted-foreground normal-case tracking-normal">drag →</span>
           </span>
         </div>
 
@@ -622,7 +622,7 @@ export function NewListSwipeStep({
     >
       <div className="min-w-0 w-full shrink-0 text-center">
         <h2 className="text-lg font-semibold tracking-tight text-white sm:text-xl">{copy.title}</h2>
-        <p className="mt-2 text-xs leading-relaxed text-zinc-500 sm:text-[13px]">{copy.description}</p>
+        <p className="mt-2 text-xs leading-relaxed text-muted-foreground sm:text-[13px]">{copy.description}</p>
       </div>
 
       <div
@@ -747,7 +747,7 @@ function SwipeCard({
         transition: { duration: 0.22 },
       }}
     >
-      <div className="relative h-full w-full overflow-hidden rounded-[20px] border border-white/[0.12] bg-[#18181B] shadow-2xl">
+      <div className="relative h-full w-full overflow-hidden rounded-[20px] border border-border bg-[#18181B] shadow-2xl">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={POSTER(movie.poster_path)}
@@ -762,7 +762,7 @@ function SwipeCard({
           {rightOverlay}
         </motion.span>
         <motion.span
-          className="pointer-events-none absolute right-6 top-8 rotate-[12deg] rounded-lg border-4 border-zinc-500 bg-[#0a0a0c]/85 px-3 py-1.5 text-lg font-black uppercase text-zinc-100 shadow-lg backdrop-blur-sm"
+          className="pointer-events-none absolute right-6 top-8 rotate-[12deg] rounded-lg border-4 border-zinc-500 bg-[#0a0a0c]/85 px-3 py-1.5 text-lg font-black uppercase text-foreground shadow-lg backdrop-blur-sm"
           style={{ opacity: nopeOpacity }}
         >
           {leftOverlay}

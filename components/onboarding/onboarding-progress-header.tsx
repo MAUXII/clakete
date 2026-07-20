@@ -32,7 +32,7 @@ export function OnboardingProgressHeader({
       <button
         type="button"
         onClick={onBack}
-        className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] text-zinc-300 transition-colors hover:text-white"
+        className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-muted/40 text-muted-foreground transition-colors hover:text-white"
         aria-label={step === 1 ? "Back" : backLabel}
       >
         <ArrowLeft className="h-4 w-4" />

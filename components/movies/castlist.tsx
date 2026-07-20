@@ -44,7 +44,7 @@ export default function CastList({ movie }: { movie: Movie }) {
           <div className="mt-2 items-center justify-center w-full flex">
             <button
               onClick={handleSeeMore}
-              className="bg-brand/10 text-brand p-3 w-full rounded-md border border-black/10 dark:border-white/10  hover:bg-brand/20 hover:text-brand/90 transition-all h-12 aspect-square flex items-center justify-center"
+              className="bg-brand/10 text-brand p-3 w-full rounded-md border border-black/10 dark:border-border  hover:bg-brand/20 hover:text-brand/90 transition-all h-12 aspect-square flex items-center justify-center"
             >
               + See more
             </button>

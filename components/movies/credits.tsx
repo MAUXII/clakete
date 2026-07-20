@@ -24,7 +24,7 @@ function PersonRow({
   const initial = (person.name?.[0] || "?").toUpperCase();
 
   return (
-    <div className="group flex items-center justify-between gap-3 py-2.5 border-b border-black/10 dark:border-white/10 last:border-b-0">
+    <div className="group flex items-center justify-between gap-3 py-2.5 border-b border-black/10 dark:border-border last:border-b-0">
       <div className="flex items-center gap-3 min-w-0">
         <div className="relative h-9 w-9 shrink-0 rounded-full overflow-hidden bg-muted">
           {person.profile_path ? (

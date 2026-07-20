@@ -236,7 +236,7 @@ export function CreateListDialog({ open, onOpenChange, onListCreated }: CreateLi
           <div className="pointer-events-none absolute -right-10 -top-14 h-40 w-40 rounded-full bg-brand/20 blur-3xl" />
           <div className="relative min-w-0">
             <h2 className="text-base font-semibold tracking-tight text-white">Nova lista</h2>
-            <p className="mt-0.5 text-xs text-zinc-400">Etapa {step} de 3</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">Etapa {step} de 3</p>
           </div>
         </div>
 
@@ -260,7 +260,7 @@ export function CreateListDialog({ open, onOpenChange, onListCreated }: CreateLi
               <div className="mx-auto w-full max-w-[38rem] space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="create-list-title" className="text-foreground">
-                    Título <span className="text-zinc-400">*</span>
+                    Título <span className="text-muted-foreground">*</span>
                   </Label>
                   <Input
                     id="create-list-title"
@@ -268,7 +268,7 @@ export function CreateListDialog({ open, onOpenChange, onListCreated }: CreateLi
                     onChange={(e) => setTitle(e.target.value)}
                     placeholder="Ex.: Noites de chuva, filmes quentes"
                     maxLength={100}
-                    className="rounded-xl border-zinc-200 bg-zinc-50/80 dark:border-zinc-800 dark:bg-zinc-950/50"
+                    className="rounded-xl border-zinc-200 bg-zinc-50/80 dark:border-zinc-800 dark:bg-muted/50"
                   />
                 </div>
 
@@ -281,13 +281,13 @@ export function CreateListDialog({ open, onOpenChange, onListCreated }: CreateLi
                     placeholder="Opcional — o que une esses títulos?"
                     maxLength={500}
                     rows={4}
-                    className="resize-none rounded-xl border-zinc-200 bg-zinc-50/80 dark:border-zinc-800 dark:bg-zinc-950/50"
+                    className="resize-none rounded-xl border-zinc-200 bg-zinc-50/80 dark:border-zinc-800 dark:bg-muted/50"
                   />
                 </div>
 
                 <fieldset className="space-y-1.5 px-0.5">
                   <legend className="px-1 pb-1 text-sm font-medium text-foreground">Privacidade</legend>
-                  <label className="flex cursor-pointer items-start gap-3 rounded-lg px-2 py-1.5 transition-colors hover:bg-zinc-50/80 dark:hover:bg-zinc-900/30">
+                  <label className="flex cursor-pointer items-start gap-3 rounded-lg px-2 py-1.5 transition-colors hover:bg-zinc-50/80 dark:hover:bg-muted/30">
                     <input
                       type="radio"
                       name="list-privacy"
@@ -301,7 +301,7 @@ export function CreateListDialog({ open, onOpenChange, onListCreated }: CreateLi
                       <span className="block text-xs text-muted-foreground">Visível para todos no Clakete.</span>
                     </span>
                   </label>
-                  <label className="flex cursor-pointer items-start gap-3 rounded-lg px-2 py-1.5 transition-colors hover:bg-zinc-50/80 dark:hover:bg-zinc-900/30">
+                  <label className="flex cursor-pointer items-start gap-3 rounded-lg px-2 py-1.5 transition-colors hover:bg-zinc-50/80 dark:hover:bg-muted/30">
                     <input
                       type="radio"
                       name="list-privacy"
@@ -403,7 +403,7 @@ export function CreateListDialog({ open, onOpenChange, onListCreated }: CreateLi
                           commitTag()
                         }
                       }}
-                      className="rounded-xl border-zinc-200 bg-zinc-50/80 dark:border-zinc-800 dark:bg-zinc-950/50"
+                      className="rounded-xl border-zinc-200 bg-zinc-50/80 dark:border-zinc-800 dark:bg-muted/50"
                     />
                     <Button type="button" variant="outline" className="rounded-xl" onClick={commitTag}>
                       Adicionar
@@ -421,7 +421,7 @@ export function CreateListDialog({ open, onOpenChange, onListCreated }: CreateLi
                           key={tag}
                           type="button"
                           onClick={() => removeTag(tag)}
-                          className="inline-flex items-center gap-1 rounded-full border border-zinc-300 bg-background px-2.5 py-1 text-xs text-foreground transition-colors hover:border-zinc-400 dark:border-zinc-700 dark:bg-zinc-950"
+                          className="inline-flex items-center gap-1 rounded-full border border-zinc-300 bg-background px-2.5 py-1 text-xs text-foreground transition-colors hover:border-zinc-400 dark:border-zinc-700 dark:bg-card"
                         >
                           <span>{tag}</span>
                           <X className="h-3 w-3" />
@@ -449,7 +449,7 @@ export function CreateListDialog({ open, onOpenChange, onListCreated }: CreateLi
                       staged.map((s) => (
                         <div
                           key={stageKey(s)}
-                          className="group relative h-[88px] w-[58px] shrink-0 overflow-hidden rounded-md border border-border bg-zinc-900 shadow-sm"
+                          className="group relative h-[88px] w-[58px] shrink-0 overflow-hidden rounded-md border border-border bg-muted shadow-sm"
                         >
                           {s.poster_path ? (
                             <Image
@@ -460,7 +460,7 @@ export function CreateListDialog({ open, onOpenChange, onListCreated }: CreateLi
                               className="h-full w-full object-cover"
                             />
                           ) : (
-                            <div className="flex h-full items-center justify-center px-1 text-center text-[10px] text-zinc-400">
+                            <div className="flex h-full items-center justify-center px-1 text-center text-[10px] text-muted-foreground">
                               {s.title.slice(0, 24)}
                             </div>
                           )}

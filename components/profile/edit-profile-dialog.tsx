@@ -376,7 +376,7 @@ export function EditProfileDialog({
               )}
 
               {activeSection === "subscription" && (
-                <div className="rounded-lg border border-border/80 bg-[#0c0c0e] p-4 sm:p-5">
+                <div className="rounded-lg border border-border/80 bg-muted/40 p-4 sm:p-5">
                   <ManageSubscription
                     embedded
                     planFields={planFields}

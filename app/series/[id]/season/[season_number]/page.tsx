@@ -25,8 +25,8 @@ interface SeasonDetail {
 function SectionLabel({ children }: { children: ReactNode }) {
   return (
     <div className="flex items-center gap-4">
-      <h2 className="shrink-0 text-[10px] font-medium uppercase tracking-[0.24em] text-zinc-500">{children}</h2>
-      <div className="h-px min-w-0 flex-1 bg-white/[0.08]" aria-hidden />
+      <h2 className="shrink-0 text-[10px] font-medium uppercase tracking-[0.24em] text-muted-foreground">{children}</h2>
+      <div className="h-px min-w-0 flex-1 bg-muted" aria-hidden />
     </div>
   );
 }
@@ -106,7 +106,7 @@ export default function SeriesSeasonPage({
 
   if (resolveFailed || (!loading && seriesId == null)) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#09090B] text-muted-foreground">
+      <div className="flex min-h-screen items-center justify-center bg-background text-muted-foreground">
         Series not found
       </div>
     );
@@ -114,10 +114,10 @@ export default function SeriesSeasonPage({
 
   if (loading || seriesId == null) {
     return (
-      <div className="min-h-screen w-full overflow-x-clip bg-[#09090B]">
+      <div className="min-h-screen w-full overflow-x-clip bg-background">
         <FilmsCatalogShell>
           <div
-            className="relative left-1/2 z-0 w-screen max-w-[100vw] -translate-x-1/2 overflow-hidden bg-[#09090B]"
+            className="relative left-1/2 z-0 w-screen max-w-[100vw] -translate-x-1/2 overflow-hidden bg-background"
             style={{ height: SEASON_LETTERBOX_HEIGHT }}
             aria-hidden
           />
@@ -144,12 +144,12 @@ export default function SeriesSeasonPage({
 
   if (!season) {
     return (
-      <div className="min-h-screen w-full overflow-x-clip bg-[#09090B]">
+      <div className="min-h-screen w-full overflow-x-clip bg-background">
         <FilmsCatalogShell>
           <h1 className="text-2xl font-semibold tracking-tight">Season not found</h1>
           <Link
             href={seriesPath}
-            className="-mt-10 inline-flex items-center gap-2 text-sm font-medium text-zinc-400 transition-colors hover:text-foreground"
+            className="-mt-10 inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4 shrink-0" aria-hidden />
             Back to series
@@ -170,10 +170,10 @@ export default function SeriesSeasonPage({
   const metaLine = [year, `${episodeCount} episode${episodeCount === 1 ? "" : "s"}`].filter(Boolean).join(" · ");
 
   return (
-    <div className="min-h-screen w-full overflow-x-clip bg-[#09090B]">
+    <div className="min-h-screen w-full overflow-x-clip bg-background">
       <FilmsCatalogShell>
         <div
-          className="pointer-events-none mt-[3.75rem] relative left-1/2 z-0 w-screen max-w-[100vw] -translate-x-1/2 overflow-hidden bg-[#09090B]"
+          className="pointer-events-none mt-[3.75rem] relative left-1/2 z-0 w-screen max-w-[100vw] -translate-x-1/2 overflow-hidden bg-background"
           style={{ height: SEASON_LETTERBOX_HEIGHT }}
           aria-hidden
         >
@@ -187,7 +187,7 @@ export default function SeriesSeasonPage({
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_35%,rgba(255,255,255,0.06),transparent_55%)]" />
           )}
           <div
-            className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(9,9,11,0.18)_0%,transparent_38%)]"
+            className="absolute inset-0 bg-[linear-gradient(to_bottom,hsl(var(--background)/0.18)_0%,transparent_38%)]"
             aria-hidden
           />
           <div
@@ -195,7 +195,7 @@ export default function SeriesSeasonPage({
             aria-hidden
           />
           <div
-            className="absolute inset-0 bg-[linear-gradient(to_top,#09090B_0%,#09090B_0%,rgba(9,9,11,0.55)_32%,transparent_62%)]"
+            className="absolute inset-0 bg-[linear-gradient(to_top,hsl(var(--background))_0%,hsl(var(--background))_0%,hsl(var(--background)/0.55)_32%,transparent_62%)]"
             aria-hidden
           />
           <img
@@ -212,8 +212,8 @@ export default function SeriesSeasonPage({
             style={{ marginTop: SEASON_POSTER_ALIGN_MARGIN }}
           >
             <div className="flex flex-col gap-4">
-              <div className="-mt-36 overflow-hidden rounded-2xl border border-white/[0.1] bg-zinc-950">
-                <div className="relative aspect-[2/3] w-full overflow-hidden bg-zinc-950">
+              <div className="-mt-36 overflow-hidden rounded-2xl border border-border bg-card">
+                <div className="relative aspect-[2/3] w-full overflow-hidden bg-card">
                   {posterUrl ? (
                     <img
                       src={posterUrl}
@@ -221,27 +221,27 @@ export default function SeriesSeasonPage({
                       className="absolute inset-0 block h-full w-full object-cover"
                     />
                   ) : (
-                    <div className="absolute inset-0 flex items-center justify-center bg-zinc-900 text-3xl font-medium text-zinc-600">
+                    <div className="absolute inset-0 flex items-center justify-center bg-muted text-3xl font-medium text-muted-foreground">
                       ?
                     </div>
                   )}
                 </div>
               </div>
               <nav aria-label="Breadcrumb" className="px-0.5">
-                <p className="text-[10px] font-medium uppercase tracking-[0.22em] text-zinc-500">Series</p>
+                <p className="text-[10px] font-medium uppercase tracking-[0.22em] text-muted-foreground">Series</p>
                 <ol className="mt-2 flex flex-wrap items-baseline gap-x-2 gap-y-1 text-[13px] leading-snug">
                   <li className="min-w-0">
                     <Link
                       href={seriesPath}
-                      className="font-medium text-zinc-200 transition-colors hover:text-white"
+                      className="font-medium text-foreground transition-colors hover:text-foreground"
                     >
                       {season.seriesName}
                     </Link>
                   </li>
-                  <li className="select-none font-normal text-zinc-600" aria-hidden>
+                  <li className="select-none font-normal text-muted-foreground" aria-hidden>
                     &gt;
                   </li>
-                  <li className="font-normal text-zinc-500" aria-current="page">
+                  <li className="font-normal text-muted-foreground" aria-current="page">
                     Season {season.season_number}
                   </li>
                 </ol>
@@ -252,17 +252,17 @@ export default function SeriesSeasonPage({
           <div className="mt-6 flex min-w-0 flex-1 flex-col gap-12 sm:mt-8 lg:mt-8 lg:max-w-none">
             <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between lg:gap-12 xl:gap-16">
               <header className="min-w-0 max-w-xl space-y-2">
-                <p className="text-pretty text-sm text-zinc-500">{season.seriesName}</p>
+                <p className="text-pretty text-sm text-muted-foreground">{season.seriesName}</p>
                 <h1 className="text-balance text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
                   Season {season.season_number}
                 </h1>
                 {season.name && season.name !== `Season ${season.season_number}` ? (
-                  <p className="text-pretty text-sm leading-snug text-zinc-500 sm:text-[0.9375rem]">{season.name}</p>
+                  <p className="text-pretty text-sm leading-snug text-muted-foreground sm:text-[0.9375rem]">{season.name}</p>
                 ) : null}
               </header>
 
               {metaLine ? (
-                <div className="w-full shrink-0 border-t border-white/[0.08] pt-6 text-sm tabular-nums text-zinc-400 sm:w-auto lg:border-t-0 lg:pt-1 lg:text-right">
+                <div className="w-full shrink-0 border-t border-border pt-6 text-sm tabular-nums text-muted-foreground sm:w-auto lg:border-t-0 lg:pt-1 lg:text-right">
                   {metaLine}
                 </div>
               ) : null}
@@ -271,7 +271,7 @@ export default function SeriesSeasonPage({
             {season.overview ? (
               <div className="-mt-2 flex flex-col gap-4">
                 <SectionLabel>Overview</SectionLabel>
-                <p className="max-w-3xl text-pretty text-sm leading-relaxed text-zinc-500 sm:text-[0.9375rem] lg:max-w-4xl">
+                <p className="max-w-3xl text-pretty text-sm leading-relaxed text-muted-foreground sm:text-[0.9375rem] lg:max-w-4xl">
                   {season.overview}
                 </p>
               </div>

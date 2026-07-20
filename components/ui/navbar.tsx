@@ -32,6 +32,7 @@ import { SeriesCard } from "../series/series-card"
 import { useMovies } from "@/hooks/use-movies"
 import { useSeries } from "@/hooks/use-series"
 import { Skeleton } from "./skeleton"
+import { ClaketeLogo } from "./clakete-logo"
 
 import { SearchCommand } from "../movies/search-command"
 import { useSupabaseClient } from '@supabase/auth-helpers-react'
@@ -125,8 +126,8 @@ export function Navbar() {
     "bg-brand/10 text-brand-muted dark:bg-brand/14 dark:text-brand-light"
 
   const profileMenuItemClass = cn(
-    "cursor-pointer rounded-md text-zinc-200 outline-none transition-colors",
-    "focus:bg-transparent focus:text-zinc-200",
+    "cursor-pointer rounded-md text-foreground outline-none transition-colors",
+    "focus:bg-transparent focus:text-foreground",
     "data-[highlighted]:bg-brand/10 data-[highlighted]:text-brand-muted",
     "dark:data-[highlighted]:bg-brand/14 dark:data-[highlighted]:text-brand-light",
     "focus-visible:bg-brand/10 focus-visible:text-brand-muted",
@@ -138,10 +139,10 @@ export function Navbar() {
       <div
         className={cn(
           "pointer-events-auto w-full",
-          "border-b border-white/[0.08]",
-          "bg-zinc-950/45 shadow-[0_12px_40px_-12px_rgba(0,0,0,0.55)]",
+          "border-b border-border",
+          "bg-background/80 shadow-[0_12px_40px_-12px_rgba(0,0,0,0.12)] dark:shadow-[0_12px_40px_-12px_rgba(0,0,0,0.55)]",
           "backdrop-blur-2xl backdrop-saturate-150",
-          "supports-[backdrop-filter]:bg-zinc-950/30",
+          "supports-[backdrop-filter]:bg-background/70",
         )}
       >
         <div
@@ -153,13 +154,9 @@ export function Navbar() {
         >
         <Link
           href="/"
-          className={cn(
-            "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl sm:h-12 sm:w-12",
-            
-          )}
-        
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl sm:h-12 sm:w-12"
         >
-          <Image src="/claketelogov2.svg" alt="Clakete" width={44} height={44} className="h-9 w-9 sm:h-10 sm:w-10" />
+          <ClaketeLogo className="h-9 w-9 sm:h-10 sm:w-10" />
         </Link>
         <nav className="hidden h-11 min-w-0 flex-1 items-center justify-between gap-2 sm:h-12 sm:gap-3 md:flex">
       <NavigationMenu>
@@ -182,26 +179,24 @@ export function Navbar() {
             </Link>
           </NavigationMenuItem >
 
-          <NavigationMenuItem className="py-2  ">
+          <NavigationMenuItem className="py-2">
             <NavigationMenuTrigger active={isMoviesNavActive(pathname)}>
             <LuClapperboard />
             {t("nav.movies")}
             </NavigationMenuTrigger >
-            <NavigationMenuContent className="rounded-2xl p-4 text-zinc-50 backdrop-blur-xl md:w-[420px] lg:w-[620px]">
-              <div className="grid min-h-[min(320px,42vh)] grid-cols-[minmax(9rem,12.5rem)_1fr] grid-rows-1 items-stretch gap-4">
-                <NavigationMenuLink asChild>
-                  <div className="flex h-full min-h-0 w-full select-none flex-col rounded-xl no-underline outline-none focus-visible:ring-2 focus-visible:ring-white/25">
-                    {moviesLoading ? (
-                      <Skeleton className="h-full min-h-[200px] w-full shrink-0 rounded-xl bg-zinc-900" />
-                    ) : featuredMovie ? (
-                      <MovieCard key={featuredMovie.id} movie={featuredMovie} variant="nav-fill" />
-                    ) : null}
-                  </div>
-                </NavigationMenuLink>
+            <NavigationMenuContent className="rounded-2xl p-4 text-foreground backdrop-blur-xl md:w-[420px] lg:w-[620px]">
+              <div className="grid h-[320px] grid-cols-[minmax(9rem,12.5rem)_1fr] grid-rows-1 items-stretch gap-4">
+                <div className="relative h-full w-full self-stretch overflow-hidden rounded-xl">
+                  {moviesLoading ? (
+                    <Skeleton className="absolute inset-0 h-full w-full rounded-xl bg-muted" />
+                  ) : featuredMovie ? (
+                    <MovieCard key={featuredMovie.id} movie={featuredMovie} variant="nav-fill" />
+                  ) : null}
+                </div>
                 <ul
                   className={cn(
                     "flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-xl",
-                    "border border-white/[0.06] bg-zinc-900/40",
+                    "border border-border/80 bg-background/60 dark:bg-background/40",
                   )}
                 >
                   {movieNavLinks.map(({ href, title, description, Icon }, index) => {
@@ -210,8 +205,8 @@ export function Navbar() {
                     <li
                       key={href}
                       className={cn(
-                        "flex min-h-0 flex-1 border-b border-white/[0.05] last:border-b-0",
-                        index % 2 === 0 ? "bg-white/[0.02]" : "bg-transparent",
+                        "flex min-h-0 flex-1 border-b border-border/60 last:border-b-0",
+                        index % 2 === 0 ? "bg-muted/15" : "bg-transparent",
                       )}
                     >
                       <Link
@@ -227,7 +222,7 @@ export function Navbar() {
                       >
                         <span
                           className={cn(
-                            "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-zinc-800/70 text-zinc-400 transition-colors",
+                            "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground transition-colors",
                             isActive
                               ? navMegaLinkAccent
                               : "group-hover:bg-brand/10 group-hover:text-brand-muted dark:group-hover:bg-brand/14 dark:group-hover:text-brand-light",
@@ -241,7 +236,7 @@ export function Navbar() {
                               "block text-sm font-semibold tracking-tight transition-colors",
                               isActive
                                 ? "text-brand-muted dark:text-brand-light"
-                                : "text-zinc-100 group-hover:text-brand-muted dark:group-hover:text-brand-light",
+                                : "text-foreground group-hover:text-brand-muted dark:group-hover:text-brand-light",
                             )}
                           >
                             {title}
@@ -251,7 +246,7 @@ export function Navbar() {
                               "mt-0.5 block text-[11px] transition-colors sm:text-xs",
                               isActive
                                 ? "text-brand-muted/80 dark:text-brand-light/75"
-                                : "text-zinc-500 group-hover:text-brand-muted/80 dark:group-hover:text-brand-light/75",
+                                : "text-muted-foreground group-hover:text-brand-muted/80 dark:group-hover:text-brand-light/75",
                             )}
                           >
                             {description}
@@ -266,26 +261,24 @@ export function Navbar() {
             </NavigationMenuContent>
           </NavigationMenuItem>
 
-          <NavigationMenuItem className="py-2  ">
+          <NavigationMenuItem className="py-2">
             <NavigationMenuTrigger active={isSeriesNavActive(pathname)}>
             <LuTv />
             {t("nav.series")}
             </NavigationMenuTrigger >
-            <NavigationMenuContent className="rounded-2xl p-4 text-zinc-50 backdrop-blur-xl md:w-[420px] lg:w-[620px]">
-              <div className="grid min-h-[min(320px,42vh)] grid-cols-[minmax(9rem,12.5rem)_1fr] grid-rows-1 items-stretch gap-4">
-                <NavigationMenuLink asChild>
-                  <div className="flex h-full min-h-0 w-full select-none flex-col rounded-xl no-underline outline-none focus-visible:ring-2 focus-visible:ring-white/25">
-                    {seriesLoading ? (
-                      <Skeleton className="h-full min-h-[200px] w-full shrink-0 rounded-xl bg-zinc-900" />
-                    ) : featuredSeries ? (
-                      <SeriesCard key={featuredSeries.id} series={featuredSeries} variant="nav-fill" />
-                    ) : null}
-                  </div>
-                </NavigationMenuLink>
+            <NavigationMenuContent className="rounded-2xl p-4 text-foreground backdrop-blur-xl md:w-[420px] lg:w-[620px]">
+              <div className="grid h-[320px] grid-cols-[minmax(9rem,12.5rem)_1fr] grid-rows-1 items-stretch gap-4">
+                <div className="relative h-full w-full self-stretch overflow-hidden rounded-xl">
+                  {seriesLoading ? (
+                    <Skeleton className="absolute inset-0 h-full w-full rounded-xl bg-muted" />
+                  ) : featuredSeries ? (
+                    <SeriesCard key={featuredSeries.id} series={featuredSeries} variant="nav-fill" />
+                  ) : null}
+                </div>
                 <ul
                   className={cn(
                     "flex h-full min-h-0 min-w-0 flex-col overflow-hidden rounded-xl",
-                    "border border-white/[0.06] bg-zinc-900/40",
+                    "border border-border/80 bg-background/60 dark:bg-background/40",
                   )}
                 >
                   {seriesNavLinks.map(({ href, title, description, Icon }, index) => {
@@ -294,8 +287,8 @@ export function Navbar() {
                     <li
                       key={href}
                       className={cn(
-                        "flex min-h-0 flex-1 border-b border-white/[0.05] last:border-b-0",
-                        index % 2 === 0 ? "bg-white/[0.02]" : "bg-transparent",
+                        "flex min-h-0 flex-1 border-b border-border/60 last:border-b-0",
+                        index % 2 === 0 ? "bg-muted/15" : "bg-transparent",
                       )}
                     >
                       <Link
@@ -311,7 +304,7 @@ export function Navbar() {
                       >
                         <span
                           className={cn(
-                            "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-zinc-800/70 text-zinc-400 transition-colors",
+                            "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground transition-colors",
                             isActive
                               ? navMegaLinkAccent
                               : "group-hover:bg-brand/10 group-hover:text-brand-muted dark:group-hover:bg-brand/14 dark:group-hover:text-brand-light",
@@ -325,7 +318,7 @@ export function Navbar() {
                               "block text-sm font-semibold tracking-tight transition-colors",
                               isActive
                                 ? "text-brand-muted dark:text-brand-light"
-                                : "text-zinc-100 group-hover:text-brand-muted dark:group-hover:text-brand-light",
+                                : "text-foreground group-hover:text-brand-muted dark:group-hover:text-brand-light",
                             )}
                           >
                             {title}
@@ -335,7 +328,7 @@ export function Navbar() {
                               "mt-0.5 block text-[11px] transition-colors sm:text-xs",
                               isActive
                                 ? "text-brand-muted/80 dark:text-brand-light/75"
-                                : "text-zinc-500 group-hover:text-brand-muted/80 dark:group-hover:text-brand-light/75",
+                                : "text-muted-foreground group-hover:text-brand-muted/80 dark:group-hover:text-brand-light/75",
                             )}
                           >
                             {description}
@@ -363,8 +356,8 @@ export function Navbar() {
                 aria-label="Open menu"
                 className={cn(
                   "flex size-11 items-center justify-center rounded-xl md:hidden",
-                  "border border-white/[0.08] bg-white/[0.04] text-zinc-200",
-                  "ring-1 ring-inset ring-white/[0.04]",
+                  "border border-border bg-muted/50 text-foreground",
+                  "ring-1 ring-inset ring-border/60",
                   "transition hover:border-brand/25 hover:bg-brand/10 hover:text-brand-muted dark:hover:bg-brand/14 dark:hover:text-brand-light",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50",
                 )}
@@ -374,7 +367,7 @@ export function Navbar() {
             </SheetTrigger>
             <SheetContent
               side="bottom"
-              className="h-[min(82dvh,44rem)] w-full rounded-t-2xl border-t border-white/[0.1] bg-zinc-950/95 text-zinc-100 backdrop-blur-xl"
+              className="h-[min(82dvh,44rem)] w-full rounded-t-2xl border-t border-border bg-popover text-foreground backdrop-blur-xl"
             >
               <SheetHeader className="pr-8">
                 <SheetTitle>{t("nav.menu")}</SheetTitle>
@@ -387,7 +380,7 @@ export function Navbar() {
                       href="/"
                       className={cn(
                         "rounded-lg px-3 py-2 text-sm font-medium",
-                        isNavHrefActive(pathname, "/") ? navMegaLinkAccent : cn("text-zinc-200", navLinkHover),
+                        isNavHrefActive(pathname, "/") ? navMegaLinkAccent : cn("text-foreground", navLinkHover),
                       )}
                     >
                       {t("nav.home")}
@@ -398,7 +391,7 @@ export function Navbar() {
                       href="/lists"
                       className={cn(
                         "rounded-lg px-3 py-2 text-sm font-medium",
-                        isNavHrefActive(pathname, "/lists") ? navMegaLinkAccent : cn("text-zinc-200", navLinkHover),
+                        isNavHrefActive(pathname, "/lists") ? navMegaLinkAccent : cn("text-foreground", navLinkHover),
                       )}
                     >
                       {t("nav.lists")}
@@ -407,7 +400,7 @@ export function Navbar() {
                 </nav>
 
                 <div className="space-y-2">
-                  <p className="px-3 text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">{t("nav.movies")}</p>
+                  <p className="px-3 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">{t("nav.movies")}</p>
                   <div className="flex flex-col gap-1">
                     {movieNavLinks.map(({ href, title, Icon }) => {
                       const isActive = isNavHrefActive(pathname, href)
@@ -417,7 +410,7 @@ export function Navbar() {
                           href={href}
                           className={cn(
                             "group flex items-center gap-2 rounded-lg px-3 py-2 text-sm",
-                            isActive ? navMegaLinkAccent : cn("text-zinc-200", navLinkHover),
+                            isActive ? navMegaLinkAccent : cn("text-foreground", navLinkHover),
                           )}
                         >
                           <Icon
@@ -425,7 +418,7 @@ export function Navbar() {
                               "h-4 w-4 transition-colors",
                               isActive
                                 ? "text-brand-muted dark:text-brand-light"
-                                : "text-zinc-400 group-hover:text-brand-muted dark:group-hover:text-brand-light",
+                                : "text-muted-foreground group-hover:text-brand-muted dark:group-hover:text-brand-light",
                             )}
                           />
                           {title}
@@ -437,7 +430,7 @@ export function Navbar() {
                 </div>
 
                 <div className="space-y-2">
-                  <p className="px-3 text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">{t("nav.series")}</p>
+                  <p className="px-3 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">{t("nav.series")}</p>
                   <div className="flex flex-col gap-1">
                     {seriesNavLinks.map(({ href, title, Icon }) => {
                       const isActive = isNavHrefActive(pathname, href)
@@ -447,7 +440,7 @@ export function Navbar() {
                           href={href}
                           className={cn(
                             "group flex items-center gap-2 rounded-lg px-3 py-2 text-sm",
-                            isActive ? navMegaLinkAccent : cn("text-zinc-200", navLinkHover),
+                            isActive ? navMegaLinkAccent : cn("text-foreground", navLinkHover),
                           )}
                         >
                           <Icon
@@ -455,7 +448,7 @@ export function Navbar() {
                               "h-4 w-4 transition-colors",
                               isActive
                                 ? "text-brand-muted dark:text-brand-light"
-                                : "text-zinc-400 group-hover:text-brand-muted dark:group-hover:text-brand-light",
+                                : "text-muted-foreground group-hover:text-brand-muted dark:group-hover:text-brand-light",
                             )}
                           />
                           {title}
@@ -473,11 +466,11 @@ export function Navbar() {
           <DropdownMenuTrigger
             className={cn(
               "flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-xl sm:size-12",
-              "border border-white/[0.08] bg-white/[0.04] text-zinc-200",
-              "ring-1 ring-inset ring-white/[0.04]",
+              "border border-border bg-muted/50 text-foreground",
+              "ring-1 ring-inset ring-border/60",
               "transition hover:border-brand/25 hover:bg-brand/10 hover:text-brand-muted dark:hover:bg-brand/14 dark:hover:text-brand-light",
               "outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50",
-              "data-[state=open]:border-white/[0.12] data-[state=open]:ring-1 data-[state=open]:ring-inset data-[state=open]:ring-white/[0.08]",
+              "data-[state=open]:border-border data-[state=open]:ring-1 data-[state=open]:ring-inset data-[state=open]:ring-border",
             )}
           >
       {!loading && (
@@ -506,7 +499,7 @@ export function Navbar() {
             align="end"
             sideOffset={8}
             onCloseAutoFocus={(e) => e.preventDefault()}
-            className="min-w-[10.5rem] rounded-xl border border-white/[0.08] bg-zinc-950/95 p-1 shadow-2xl shadow-black/50 backdrop-blur-xl"
+            className="min-w-[10.5rem] rounded-xl border border-border bg-popover p-1 shadow-2xl shadow-black/20 dark:shadow-black/50 backdrop-blur-xl"
           >
       {profile ? (
         <>

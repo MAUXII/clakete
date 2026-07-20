@@ -93,7 +93,7 @@ function LoggedHomeSectionHeader({
 }
 
 const loggedHomeSecondaryLink =
-  'text-sm font-medium text-zinc-500 transition-colors hover:text-zinc-200'
+  'text-sm font-medium text-muted-foreground transition-colors hover:text-foreground'
 
 /** Shorter letterbox for logged-in home — less giant, more product. */
 const HOME_LETTERBOX_HEIGHT = 'clamp(220px, min(32vh, 360px), 400px)' as const
@@ -596,7 +596,7 @@ export default function HomePage() {
     },
   ] as const
 
-  const sectionShell = 'border-b border-white/[0.06] py-8 last:border-b-0'
+  const sectionShell = 'border-b border-border/60 py-8 last:border-b-0'
   const showLowerBlock = homePrefs.show_recent_reviews || homePrefs.show_upcoming
 
   const allMainSectionsOff =
@@ -613,7 +613,7 @@ export default function HomePage() {
     <div className="w-full overflow-x-clip pb-16">
       {hasFilmHero && heroBackdrop ? (
         <div
-          className="pointer-events-none relative left-1/2 z-0 mt-[3.75rem] w-screen max-w-[100vw] -translate-x-1/2 overflow-hidden bg-[#09090B]"
+          className="pointer-events-none relative left-1/2 z-0 mt-[3.75rem] w-screen max-w-[100vw] -translate-x-1/2 overflow-hidden bg-background"
           style={{ height: HOME_LETTERBOX_HEIGHT }}
           aria-hidden
         >
@@ -624,11 +624,11 @@ export default function HomePage() {
             style={{ objectPosition: heroBackdrop.backgroundPosition }}
           />
           <div
-            className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(9,9,11,0.25)_0%,transparent_40%)]"
+            className="absolute inset-0 bg-gradient-to-b from-background/40 via-transparent to-transparent"
             aria-hidden
           />
           <div
-            className="absolute inset-0 bg-[linear-gradient(to_top,#09090B_0%,rgba(9,9,11,0.65)_40%,transparent_75%)]"
+            className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent"
             aria-hidden
           />
           <img
@@ -650,38 +650,20 @@ export default function HomePage() {
         <header className="pb-6">
           <div className="pointer-events-auto flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
             <div className="min-w-0 space-y-1.5">
-              <p
-                className={cn(
-                  'text-[10px] font-semibold uppercase tracking-[0.22em]',
-                  hasFilmHero ? 'text-zinc-500' : 'text-muted-foreground',
-                )}
-              >
+              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
                 Home
               </p>
-              <h1
-                className={cn(
-                  'text-2xl font-semibold tracking-tight sm:text-3xl',
-                  hasFilmHero ? 'text-white' : 'text-foreground',
-                )}
-              >
+              <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
                 Hey, {userProfile.username}
               </h1>
               {showWelcomeHint ? (
-                <p
-                  className={cn(
-                    'text-xs',
-                    hasFilmHero ? 'text-zinc-500' : 'text-muted-foreground',
-                  )}
-                >
+                <p className="text-xs text-muted-foreground">
                   {allMainSectionsOff ? (
                     <>Every home block is hidden. </>
                   ) : null}
                   <Link
                     href={profileHref}
-                    className={cn(
-                      'underline underline-offset-2',
-                      hasFilmHero ? 'hover:text-zinc-200' : 'hover:text-foreground',
-                    )}
+                    className="underline underline-offset-2 hover:text-foreground"
                   >
                     Preferences
                   </Link>
@@ -691,13 +673,7 @@ export default function HomePage() {
                       ·{' '}
                       <button
                         type="button"
-                        className={cn(
-                          'inline border-none bg-transparent p-0 underline underline-offset-2',
-                          'cursor-pointer font-inherit text-[length:inherit]',
-                          hasFilmHero
-                            ? 'text-zinc-500 hover:text-zinc-200'
-                            : 'text-muted-foreground hover:text-foreground',
-                        )}
+                        className="inline cursor-pointer border-none bg-transparent p-0 font-inherit text-[length:inherit] text-muted-foreground underline underline-offset-2 hover:text-foreground"
                         onClick={() => {
                           if (!userProfile?.username) return
                           try {
@@ -724,12 +700,7 @@ export default function HomePage() {
                 <Link
                   key={href + label}
                   href={href}
-                  className={cn(
-                    'inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition',
-                    hasFilmHero
-                      ? 'border-white/[0.1] bg-black/40 text-zinc-200 backdrop-blur-sm hover:border-white/20 hover:bg-black/55'
-                      : 'border-border bg-background text-foreground hover:bg-muted',
-                  )}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background/80 px-3 py-1.5 text-xs font-medium text-foreground backdrop-blur-sm transition hover:bg-muted"
                 >
                   <Icon className="size-3.5 opacity-70" aria-hidden />
                   {label}
@@ -739,7 +710,7 @@ export default function HomePage() {
           </div>
         </header>
       ) : (
-        <header className="border-b border-white/[0.06] pb-8">
+        <header className="border-b border-border/60 pb-8">
           <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
             Home
           </p>
@@ -788,7 +759,7 @@ export default function HomePage() {
         ) : null}
 
         {(homePrefs.show_now_showing || homePrefs.show_upcoming) ? (
-          <aside className="min-w-0 space-y-8 lg:border-l lg:border-white/[0.06] lg:pl-8">
+          <aside className="min-w-0 space-y-8 lg:border-l lg:border-border/60 lg:pl-8">
             {homePrefs.show_now_showing ? (
               <section aria-labelledby="home-now-showing">
                 <LoggedHomeSectionHeader
@@ -814,7 +785,7 @@ export default function HomePage() {
                       })}
                       className="group block"
                     >
-                      <div className="relative aspect-[2/3] overflow-hidden rounded-md border border-white/[0.08] bg-zinc-900">
+                      <div className="relative aspect-[2/3] overflow-hidden rounded-md border border-border bg-muted">
                         <img
                           src={
                             movie.poster_path
@@ -855,7 +826,7 @@ export default function HomePage() {
                       })}
                       className="shrink-0 lg:shrink"
                     >
-                      <div className="aspect-[2/3] w-[72px] overflow-hidden rounded-md border border-white/[0.08] bg-zinc-900 lg:w-full">
+                      <div className="aspect-[2/3] w-[72px] overflow-hidden rounded-md border border-border bg-muted lg:w-full">
                         <img
                           src={
                             movie.poster_path
@@ -888,8 +859,8 @@ export default function HomePage() {
             onLandingPage={false}
             hideSectionTitle
             emptyFallback={
-              <div className="rounded-xl border border-dashed border-white/[0.08] bg-zinc-950/30 px-4 py-8 text-center">
-                <p className="text-sm text-zinc-500">
+              <div className="rounded-xl border border-dashed border-border bg-muted/30 px-4 py-8 text-center">
+                <p className="text-sm text-muted-foreground">
                   No reviews yet. Open any film page to write one.
                 </p>
                 <Link

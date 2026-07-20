@@ -61,7 +61,7 @@ export function GenrePickerGrid({
 
   if (loading) {
     return (
-      <p className={cn("text-center text-sm text-zinc-500", className)}>
+      <p className={cn("text-center text-sm text-muted-foreground", className)}>
         {isOnboarding ? "Carregando gêneros…" : "Loading genres…"}
       </p>
     )
@@ -81,10 +81,10 @@ export function GenrePickerGrid({
               isOnboarding
                 ? on
                   ? "border-white bg-white text-black"
-                  : "border-white/10 bg-white/[0.08] text-zinc-200 hover:bg-white/[0.12]"
+                  : "border-border bg-muted text-foreground hover:bg-white/[0.12]"
                 : on
                   ? "border-brand bg-brand/15 text-white"
-                  : "border-white/15 bg-white/[0.06] text-zinc-300 hover:border-white/25 hover:bg-white/[0.09]",
+                  : "border-white/15 bg-white/[0.06] text-muted-foreground hover:border-white/25 hover:bg-white/[0.09]",
             )}
           >
             {g.name}

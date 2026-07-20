@@ -162,18 +162,18 @@ export function UserFollowersList({
           <h2 className="text-sm font-medium uppercase tracking-wide text-muted-foreground/50">
             {title}
           </h2>
-          <p className="mt-1 text-xs text-zinc-500">
+          <p className="mt-1 text-xs text-muted-foreground">
             @{username} · {users.length}{" "}
             {users.length === 1 ? "person" : "people"}
           </p>
         </div>
         <div className="relative w-full max-w-xs">
-          <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-zinc-500" />
+          <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search…"
-            className="h-8 border-white/[0.08] bg-transparent pl-8 text-xs"
+            className="h-8 border-border bg-transparent pl-8 text-xs"
           />
         </div>
       </div>
@@ -201,10 +201,10 @@ export function UserFollowersList({
             return (
               <li
                 key={u.id}
-                className="flex items-center gap-3 rounded-lg px-2 py-2.5 transition hover:bg-white/[0.03]"
+                className="flex items-center gap-3 rounded-lg px-2 py-2.5 transition hover:bg-muted/40"
               >
                 <Link href={`/${u.username}`} className="flex min-w-0 flex-1 items-center gap-3">
-                  <Avatar className="size-10 rounded-md border border-white/[0.08]">
+                  <Avatar className="size-10 rounded-md border border-border">
                     <AvatarImage
                       src={avatarDisplaySrc(u.avatar_url) ?? undefined}
                       alt=""
@@ -214,10 +214,10 @@ export function UserFollowersList({
                     </AvatarFallback>
                   </Avatar>
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-zinc-100">
+                    <p className="truncate text-sm font-medium text-foreground">
                       {u.display_name || u.username}
                     </p>
-                    <p className="truncate text-xs text-zinc-500">@{u.username}</p>
+                    <p className="truncate text-xs text-muted-foreground">@{u.username}</p>
                   </div>
                 </Link>
 
@@ -229,7 +229,7 @@ export function UserFollowersList({
                     className={cn(
                       "h-8 shrink-0 rounded-md border px-3 text-xs font-medium transition",
                       isFollowing
-                        ? "border-white/[0.1] text-zinc-400 hover:border-red-500/40 hover:text-red-400"
+                        ? "border-border text-muted-foreground hover:border-red-500/40 hover:text-red-400"
                         : "border-brand/20 bg-brand/10 text-brand hover:bg-brand/20",
                     )}
                   >

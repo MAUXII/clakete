@@ -197,18 +197,18 @@ function SeriesDiscoverContent() {
               </SheetTrigger>
               <SheetContent
                 side="right"
-                className="w-full max-w-sm border-l border-white/10 bg-zinc-950 text-zinc-100"
+                className="w-full max-w-sm border-l border-border bg-card text-foreground"
               >
                 <SheetHeader>
-                  <SheetTitle className="text-left text-lg text-zinc-50">Filters</SheetTitle>
+                  <SheetTitle className="text-left text-lg text-foreground">Filters</SheetTitle>
                 </SheetHeader>
                 <div className="mt-6 flex flex-col gap-5">
                   <div>
-                    <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-zinc-500">
+                    <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
                       Genre
                     </label>
                     <Select value={localGenre} onValueChange={setLocalGenre} disabled={genresLoading}>
-                      <SelectTrigger className="border-white/10 bg-white/[0.04]">
+                      <SelectTrigger className="border-border bg-white/[0.04]">
                         <SelectValue placeholder={genresLoading ? "Loading genres..." : "All genres"} />
                       </SelectTrigger>
                       <SelectContent>
@@ -224,7 +224,7 @@ function SeriesDiscoverContent() {
                     </Select>
                   </div>
                   <div>
-                    <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-zinc-500">
+                    <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
                       Max rating
                     </label>
                     <div className="flex items-center gap-2">
@@ -240,11 +240,11 @@ function SeriesDiscoverContent() {
                     </div>
                   </div>
                   <div>
-                    <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-zinc-500">
+                    <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
                       Sort by
                     </label>
                     <Select value={localSortBy} onValueChange={setLocalSortBy}>
-                      <SelectTrigger className="border-white/10 bg-white/[0.04]">
+                      <SelectTrigger className="border-border bg-white/[0.04]">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -300,7 +300,7 @@ export default function SeriesDiscoverPage() {
     <Suspense
       fallback={
         <SeriesCatalogShell>
-          <div className="py-16 text-center text-sm text-zinc-500">Loading catalog…</div>
+          <div className="py-16 text-center text-sm text-muted-foreground">Loading catalog…</div>
         </SeriesCatalogShell>
       }
     >

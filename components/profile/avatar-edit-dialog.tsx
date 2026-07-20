@@ -597,21 +597,21 @@ export function ImageEditDialog({ onClose, onSelect, isOpen, onSave, type, custo
         commandClassName={cn(
           "rounded-xl bg-[#09090b]",
           "[&_[cmdk-input-wrapper]]:mx-2 [&_[cmdk-input-wrapper]]:mt-3 [&_[cmdk-input-wrapper]]:mb-3 [&_[cmdk-input-wrapper]]:rounded-lg",
-          "[&_[cmdk-input-wrapper]]:border [&_[cmdk-input-wrapper]]:border-white/[0.08] [&_[cmdk-input-wrapper]]:bg-[#141416]",
+          "[&_[cmdk-input-wrapper]]:border [&_[cmdk-input-wrapper]]:border-border [&_[cmdk-input-wrapper]]:bg-[#141416]",
           "[&_[cmdk-input-wrapper]]:px-3 [&_[cmdk-input-wrapper]]:py-2",
-          "[&_[cmdk-input]]:h-8 [&_[cmdk-input]]:text-[13px] [&_[cmdk-input]]:placeholder:text-zinc-600",
-          "[&_[cmdk-input-wrapper]_svg]:h-3.5 [&_[cmdk-input-wrapper]_svg]:w-3.5 [&_[cmdk-input-wrapper]_svg]:text-zinc-500",
+          "[&_[cmdk-input]]:h-8 [&_[cmdk-input]]:text-[13px] [&_[cmdk-input]]:placeholder:text-muted-foreground",
+          "[&_[cmdk-input-wrapper]_svg]:h-3.5 [&_[cmdk-input-wrapper]_svg]:w-3.5 [&_[cmdk-input-wrapper]_svg]:text-muted-foreground",
           "[&_[cmdk-group]]:!pr-2 [&_[cmdk-group]]:!pt-0",
           "[&_[cmdk-item]]:!mb-2 [&_[cmdk-item]]:!overflow-hidden [&_[cmdk-item]]:!rounded-xl [&_[cmdk-item]]:!p-0",
           "[&_[cmdk-item][data-selected=true]]:!bg-transparent",
-          "[&_[cmdk-empty]]:!py-12 [&_[cmdk-empty]]:!text-[13px] [&_[cmdk-empty]]:!text-zinc-500",
+          "[&_[cmdk-empty]]:!py-12 [&_[cmdk-empty]]:!text-[13px] [&_[cmdk-empty]]:!text-muted-foreground",
         )}
       >
         <CommandInput
           placeholder="Search films & TV…"
           value={query}
           onValueChange={setQuery}
-          className="placeholder:text-zinc-600 "
+          className="placeholder:text-muted-foreground "
         />
         <CommandList className="custom-scrollbar max-h-[min(58vh,528px)] overflow-y-auto pb-3">
           {loading ? (
@@ -619,7 +619,7 @@ export function ImageEditDialog({ onClose, onSelect, isOpen, onSave, type, custo
               {Array.from({ length: 4 }).map((_, i) => (
                 <Skeleton
                   key={`sk-${String(i)}`}
-                  className="aspect-[16/9] w-full shrink-0 rounded-xl bg-zinc-800/90"
+                  className="aspect-[16/9] w-full shrink-0 rounded-xl bg-muted/90"
                 />
               ))}
             </div>
@@ -649,9 +649,9 @@ export function ImageEditDialog({ onClose, onSelect, isOpen, onSave, type, custo
                       setOpen(false);
                     }}
                   >
-                    <div className="group/card relative isolate aspect-[16/9] w-full overflow-hidden rounded-xl bg-zinc-900 ring-1 ring-white/[0.06]">
+                    <div className="group/card relative isolate aspect-[16/9] w-full overflow-hidden rounded-xl bg-muted ring-1 ring-white/[0.06]">
                       {movie.media_type === "tv" ? (
-                        <span className="absolute left-2 top-2 z-[3] rounded bg-zinc-950 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-zinc-400">
+                        <span className="absolute left-2 top-2 z-[3] rounded bg-card px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">
                           TV
                         </span>
                       ) : null}
@@ -664,7 +664,7 @@ export function ImageEditDialog({ onClose, onSelect, isOpen, onSave, type, custo
                           decoding="async"
                         />
                       ) : (
-                        <div className="absolute inset-0 flex items-center justify-center bg-zinc-900 text-[11px] text-zinc-500 transition-colors duration-300 group-hover/card:bg-zinc-800">
+                        <div className="absolute inset-0 flex items-center justify-center bg-muted text-[11px] text-muted-foreground transition-colors duration-300 group-hover/card:bg-muted">
                           No backdrop
                         </div>
                       )}
