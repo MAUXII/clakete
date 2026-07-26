@@ -8,7 +8,11 @@ import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { useFilmInteractions } from "@/hooks/use-film-interactions"
-import { seriesHref } from "@/lib/media-href"
+import { useMediaCardHref } from "@/hooks/use-media-card-href"
+import { LogWatchDialog } from "@/components/movies/log-watch-dialog"
+import { ConfirmUnwatchDialog } from "@/components/movies/confirm-unwatch-dialog"
+import { PosterActionsMenu } from "@/components/movies/poster-actions-menu"
+import { useT } from "@/components/providers/i18n-provider"
 
 interface SeriesCardProps {
   series?: {
@@ -16,70 +20,97 @@ interface SeriesCardProps {
     name: string
     original_name?: string | null
     poster_path: string | null
+    backdrop_path?: string | null
     vote_average?: number
-    /** TMDB first air date — vai para `items_interactions.release_date`. */
     first_air_date?: string | null
   }
   externalid?: number
+  href?: string | null
   variant?: "default" | "nav-fill"
-  /** Extra buttons rendered under eye/heart on poster hover (e.g. edit menu). */
   extraActions?: ReactNode
 }
 
 export function SeriesCard({
   series: show,
   externalid,
+  href: hrefOverride,
   variant = "default",
   extraActions,
 }: SeriesCardProps) {
+  const { t } = useT()
   const seriesId = externalid ?? show?.id ?? 0
-  const { isWatched, isLiked, toggleWatched, toggleLiked, updating } = useFilmInteractions(
+  const href = useMediaCardHref({
+    kind: "tv",
+    id: seriesId,
+    hrefOverride,
+    original_name: show?.original_name,
+    name: show?.name,
+    first_air_date: show?.first_air_date,
+  })
+  const {
+    isWatched,
+    isLiked,
+    isInWatchlist,
+    rating,
+    review,
+    watchedDate,
+    rewatchCount,
+    hasDiaryLogs,
+    logWatch,
+    removeFromDiary,
+    unwatch,
+    toggleWatched,
+    toggleLiked,
+    toggleWatchlist,
+    updating,
+  } = useFilmInteractions(
     seriesId || 0,
     show?.poster_path || undefined,
     show?.name,
     show?.first_air_date ?? undefined,
     "tv",
+    show?.original_name,
   )
   const [localWatched, setLocalWatched] = useState(isWatched)
   const [localLiked, setLocalLiked] = useState(isLiked)
+  const [logWatchOpen, setLogWatchOpen] = useState(false)
+  const [unwatchOpen, setUnwatchOpen] = useState(false)
 
   useEffect(() => {
     setLocalWatched(isWatched)
     setLocalLiked(isLiked)
   }, [isWatched, isLiked])
 
-  const handleAction = (action: "watch" | "like", e: React.MouseEvent) => {
+  const handleWatch = async (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-
     if (updating) return
 
-    if (action === "watch") {
-      setLocalWatched(!localWatched)
-      toggleWatched()
-      toast.success(localWatched ? "Removido dos assistidos" : "Adicionado aos assistidos")
-    } else {
-      setLocalLiked(!localLiked)
-      toggleLiked()
-      toast.success(localLiked ? "Removido dos favoritos" : "Adicionado aos favoritos")
+    const result = await toggleWatched()
+    if (result === "needs-unwatch-confirm") {
+      setUnwatchOpen(true)
+      return
     }
+    setLocalWatched(true)
+    toast.success(t("watch.markedWatched"))
+  }
+
+  const handleLike = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (updating) return
+    setLocalLiked(!localLiked)
+    void toggleLiked()
+    toast.success(
+      localLiked ? t("watch.removedFromFavorites") : t("watch.addedToFavorites"),
+    )
   }
 
   const isNavFill = variant === "nav-fill"
+  const year = show?.first_air_date?.slice(0, 4) ?? null
 
-  const renderCard = (id: number) => (
-    <Link
-      href={seriesHref({
-        id,
-        name: show?.name,
-        original_name: show?.original_name,
-        first_air_date: show?.first_air_date,
-      })}
-      className={cn(
-        "group flex flex-col gap-2 transition-transform duration-300",
-        isNavFill && "h-full w-full",
-      )}
-    >
+  const renderCard = () => {
+    const cardInner = (
       <div
         className={cn(
           "relative w-full overflow-hidden border-[1px] border-black/15 shadow-black/5 shadow-sm dark:border-white/15 dark:shadow-white/5",
@@ -115,37 +146,116 @@ export function SeriesCard({
         <div className="absolute right-2 top-2 flex flex-col gap-2 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
           <button
             type="button"
-            onClick={(e) => handleAction("watch", e)}
+            onClick={handleWatch}
             className={`rounded-md border p-2 transition-colors ${
               localWatched
                 ? "border-brand/20 bg-[#280F16] text-brand hover:bg-[#280F16]"
-                : "border-transparent bg-secondary text-white hover:border-brand/20 hover:bg-[#280F16] hover:text-brand"
+                : "border-transparent bg-secondary text-secondary-foreground hover:border-brand/20 hover:bg-[#280F16] hover:text-brand"
             }`}
-            title={localWatched ? "Remover dos assistidos" : "Marcar como assistido"}
+            title={localWatched ? t("film.unmarkWatched") : t("film.markWatched")}
           >
             {localWatched ? <IoEye className="h-4 w-4" /> : <IoEyeOutline className="h-4 w-4" />}
           </button>
           <button
             type="button"
-            onClick={(e) => handleAction("like", e)}
+            onClick={handleLike}
             className={`rounded-md border p-2 transition-colors ${
               localLiked
                 ? "border-brand/20 bg-[#280F16] text-brand hover:bg-[#280F16]"
-                : "border-transparent bg-secondary text-white hover:border-brand/20 hover:bg-[#280F16] hover:text-brand"
+                : "border-transparent bg-secondary text-secondary-foreground hover:border-brand/20 hover:bg-[#280F16] hover:text-brand"
             }`}
-            title={localLiked ? "Remover dos favoritos" : "Adicionar aos favoritos"}
+            title={localLiked ? t("film.liked") : t("film.like")}
           >
             {localLiked ? <IoHeart className="h-4 w-4" /> : <IoHeartOutline className="h-4 w-4" />}
           </button>
+          <PosterActionsMenu
+            mediaType="tv"
+            tmdbId={seriesId}
+            title={show?.name}
+            releaseDate={show?.first_air_date}
+            posterPath={show?.poster_path}
+            isInWatchlist={isInWatchlist}
+            disabled={updating}
+            onLogToDiary={() => setLogWatchOpen(true)}
+            onToggleWatchlist={() => void toggleWatchlist()}
+          />
           {extraActions}
         </div>
       </div>
-    </Link>
-  )
+    )
 
-  if (externalid) {
-    return renderCard(externalid)
+    if (!href) {
+      return (
+        <div
+          className={cn(
+            "group flex flex-col gap-2 transition-transform duration-300",
+            isNavFill && "h-full w-full",
+          )}
+        >
+          {cardInner}
+        </div>
+      )
+    }
+
+    return (
+      <Link
+        href={href}
+        className={cn(
+          "group flex flex-col gap-2 transition-transform duration-300",
+          isNavFill && "h-full w-full",
+        )}
+      >
+        {cardInner}
+      </Link>
+    )
   }
 
-  return renderCard(show?.id || 0)
+  return (
+    <>
+      {renderCard()}
+      <LogWatchDialog
+        open={logWatchOpen}
+        onOpenChange={setLogWatchOpen}
+        title={show?.name}
+        year={year}
+        posterPath={show?.poster_path}
+        backdropPath={show?.backdrop_path}
+        tmdbId={seriesId || undefined}
+        mediaType="tv"
+        isWatched={isWatched}
+        isLiked={isLiked}
+        watchedDate={watchedDate}
+        rewatchCount={rewatchCount}
+        hasDiaryLogs={hasDiaryLogs}
+        initialRating={rating}
+        initialReview={review}
+        loading={updating}
+        onLog={async (payload) => {
+          await logWatch(payload)
+          setLocalWatched(true)
+          setLocalLiked(payload.isLiked)
+          toast.success(
+            payload.shareToFeed
+              ? t("watch.sharedToFeed")
+              : isWatched && payload.isRewatch
+                ? t("watch.rewatchSaved")
+                : t("watch.savedToDiary"),
+          )
+        }}
+        onRemoveFromDiary={hasDiaryLogs ? removeFromDiary : undefined}
+      />
+      <ConfirmUnwatchDialog
+        open={unwatchOpen}
+        onOpenChange={setUnwatchOpen}
+        title={show?.name}
+        loading={updating}
+        onConfirm={async () => {
+          await unwatch()
+          setLocalWatched(false)
+          setLocalLiked(false)
+          toast.success(t("watch.unmarkedWatched"))
+        }}
+      />
+    </>
+  )
 }

@@ -25,6 +25,8 @@ interface FilmReview {
     avatar_url?: string
   }
   movie_title?: string
+  original_title?: string | null
+  original_name?: string | null
   release_date?: string
 }
 
@@ -37,16 +39,9 @@ interface RecentReviewsProps {
 }
 
 import { filmHref, seriesHref } from "@/lib/media-href"
-
-function mediaHref(
-  tmdbId: number,
-  mediaType: string | null | undefined,
-  title?: string | null,
-) {
-  return mediaType === "tv"
-    ? seriesHref({ id: tmdbId, name: title })
-    : filmHref({ id: tmdbId, title })
-}
+import { userWatchLogPathFromSlug } from "@/lib/user-media-href"
+import { canonicalMediaCacheKey } from "@/lib/client/canonical-media-slug"
+import { useCanonicalMediaSlugs } from "@/hooks/use-canonical-media-slugs"
 
 export function UserRecentReviews({
   userId,
@@ -61,6 +56,7 @@ export function UserRecentReviews({
   const [loading, setLoading] = useState(true)
 
   const targetUserId = userId || loggedInUser?.id || ""
+  const isOwnProfile = Boolean(loggedInUser?.id && targetUserId === loggedInUser.id)
 
   useEffect(() => {
     async function fetchReviews() {
@@ -70,7 +66,7 @@ export function UserRecentReviews({
         const { data, error } = await supabase
           .from("items_interactions")
           .select(
-            "id, tmdb_id, media_type, rating, review, created_at, poster_path, user_id, movie_title, release_date",
+            "id, tmdb_id, media_type, rating, review, created_at, poster_path, user_id, movie_title, original_title, original_name, release_date",
           )
           .eq("user_id", targetUserId)
           .not("review", "is", null)
@@ -112,6 +108,35 @@ export function UserRecentReviews({
 
     void fetchReviews()
   }, [supabase, targetUserId, limit])
+
+  const slugByKey = useCanonicalMediaSlugs(
+    reviews,
+    isOwnProfile ? supabase : null,
+    isOwnProfile ? targetUserId : undefined,
+  )
+
+  const reviewHref = (review: FilmReview) => {
+    const username = review.userData?.username
+    const kind = review.media_type === "tv" ? "tv" : "movie"
+    if (username) {
+      const slug = slugByKey[canonicalMediaCacheKey(review.media_type, review.tmdb_id)]
+      if (!slug) return null
+      return userWatchLogPathFromSlug(username, kind, slug, 0)
+    }
+    return kind === "tv"
+      ? seriesHref({
+          id: review.tmdb_id,
+          original_name: review.original_name,
+          name: review.movie_title,
+          first_air_date: review.release_date,
+        })
+      : filmHref({
+          id: review.tmdb_id,
+          original_title: review.original_title,
+          title: review.movie_title,
+          release_date: review.release_date,
+        })
+  }
 
   const sectionTitle = onLandingPage ? "Your Last Review" : "Recent reviews"
 
@@ -172,7 +197,7 @@ export function UserRecentReviews({
 
       <ul className="space-y-6">
         {reviews.map((review) => {
-          const href = mediaHref(review.tmdb_id, review.media_type, review.movie_title)
+          const href = reviewHref(review)
           const year = review.release_date
             ? new Date(review.release_date).getFullYear()
             : null
@@ -180,8 +205,24 @@ export function UserRecentReviews({
           return (
             <li key={review.id} className="border-b border-border pb-6 last:border-0 last:pb-0">
               <div className="flex gap-3 sm:gap-4">
-                <Link href={href} className="shrink-0">
-                  <div className="aspect-[2/3] w-24 overflow-hidden rounded-md border border-black/20 dark:border-white/20 sm:w-28">
+                {href ? (
+                  <Link href={href} className="shrink-0">
+                    <div className="aspect-[2/3] w-24 overflow-hidden rounded-md border border-black/20 dark:border-white/20 sm:w-28">
+                      <Image
+                        src={
+                          review.poster_path
+                            ? `https://image.tmdb.org/t/p/w200${review.poster_path}`
+                            : "/placeholder.png"
+                        }
+                        alt=""
+                        width={112}
+                        height={168}
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                  </Link>
+                ) : (
+                  <div className="aspect-[2/3] w-24 shrink-0 overflow-hidden rounded-md border border-black/20 dark:border-white/20 sm:w-28">
                     <Image
                       src={
                         review.poster_path
@@ -194,19 +235,28 @@ export function UserRecentReviews({
                       className="h-full w-full object-cover"
                     />
                   </div>
-                </Link>
+                )}
 
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <Link href={href} className="group inline-flex flex-wrap items-baseline gap-2">
-                        <h3 className="text-lg font-medium text-foreground transition-colors group-hover:text-brand sm:text-xl">
+                      {href ? (
+                        <Link href={href} className="group inline-flex flex-wrap items-baseline gap-2">
+                          <h3 className="text-lg font-medium text-foreground transition-colors group-hover:text-brand sm:text-xl">
+                            {review.movie_title}
+                          </h3>
+                          {year ? (
+                            <span className="text-sm text-muted-foreground">{year}</span>
+                          ) : null}
+                        </Link>
+                      ) : (
+                        <h3 className="inline-flex flex-wrap items-baseline gap-2 text-lg font-medium text-foreground sm:text-xl">
                           {review.movie_title}
+                          {year ? (
+                            <span className="text-sm text-muted-foreground">{year}</span>
+                          ) : null}
                         </h3>
-                        {year ? (
-                          <span className="text-sm text-muted-foreground">{year}</span>
-                        ) : null}
-                      </Link>
+                      )}
                     </div>
                     <RatingStars
                       value={review.rating}

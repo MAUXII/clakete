@@ -1,0 +1,7 @@
+# Xcode / XcodeGen
+*.xcodeproj/
+*.xcworkspace/
+DerivedData/
+xcuserdata/
+*.xcuserstate
+.swiftpm/

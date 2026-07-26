@@ -7,9 +7,9 @@ import { ArrowLeft } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FilmActions } from "@/components/movies/film-actions";
 import { LogWatchDialog } from "@/components/movies/log-watch-dialog";
+import { ConfirmUnwatchDialog } from "@/components/movies/confirm-unwatch-dialog";
 import { ShareCardDialog } from "@/components/movies/share-card-dialog";
 import { StarRating } from "@/components/movies/star-rating";
-import { FilmReview } from "@/components/movies/film-review";
 import { FilmReviewsList } from "@/components/movies/film-reviews-list";
 import { useFilmInteractions } from "@/hooks/use-film-interactions";
 import { formatRewatchLabel, formatWatchedDate } from "@/lib/watched-date";
@@ -29,6 +29,8 @@ import { motion } from "framer-motion";
 import { useLocalePrefs } from "@/hooks/use-locale-prefs";
 import type { TmdbRegionProviders } from "@/lib/locale-prefs";
 import { useT } from "@/components/providers/i18n-provider";
+import { prefetchDiaryArt } from "@/lib/client/diary-dialog-art";
+import { toast } from "sonner";
 import { parseMediaParam, seriesHref } from "@/lib/media-href";
 
 interface SeriesDetail {
@@ -106,6 +108,7 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ id: str
   const [posterTrailerHover, setPosterTrailerHover] = useState(false);
   const [trailerBtnFocused, setTrailerBtnFocused] = useState(false);
   const [logWatchOpen, setLogWatchOpen] = useState(false);
+  const [unwatchOpen, setUnwatchOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const { tmdbLanguage, loading: localeLoading } = useLocalePrefs();
   const displayTitle = series?.title || series?.name || "";
@@ -120,17 +123,20 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ id: str
     loading: interactionsLoading,
     updating,
     setRating,
-    setReview,
     logWatch,
+    removeFromDiary,
     unwatch,
+    toggleWatched,
     toggleLiked,
     toggleWatchlist,
+    hasDiaryLogs,
   } = useFilmInteractions(
     seriesId ?? 0,
     series?.poster_path,
     displayTitle,
     series?.release_date || series?.first_air_date,
     "tv",
+    series?.original_name,
   );
 
   useEffect(() => {
@@ -577,7 +583,18 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ id: str
                     isWatched={isWatched}
                     isLiked={isLiked}
                     isInWatchlist={isInWatchlist}
-                    onWatchClick={() => setLogWatchOpen(true)}
+                    onWatchClick={async () => {
+                      const result = await toggleWatched();
+                      if (result === "needs-unwatch-confirm") {
+                        setUnwatchOpen(true);
+                        return;
+                      }
+                      toast.success(t("watch.markedWatched"));
+                    }}
+                    onLogDiaryClick={() => {
+                      void prefetchDiaryArt("tv", series.id, series.poster_path);
+                      setLogWatchOpen(true);
+                    }}
                     onLikeClick={toggleLiked}
                     onWatchlistClick={toggleWatchlist}
                     onShareClick={() => setShareOpen(true)}
@@ -595,13 +612,13 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ id: str
                       : null}
                   </p>
                 ) : null}
-                <FilmReview
-                  filmId={series.id}
-                  initialReview={review}
-                  existingReview={review}
-                  onReviewSubmit={setReview}
-                  disabled={loading || interactionsLoading || updating}
-                />
+                {review?.trim() ? (
+                  <div className="rounded-md border border-border bg-muted/50 p-4">
+                    <p className="whitespace-pre-wrap text-sm text-muted-foreground">
+                      {review}
+                    </p>
+                  </div>
+                ) : null}
               </div>
             </section>
 
@@ -609,12 +626,41 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ id: str
               open={logWatchOpen}
               onOpenChange={setLogWatchOpen}
               title={displayTitle}
+              year={(series.release_date || series.first_air_date)?.slice(0, 4) ?? null}
+              posterPath={series.poster_path}
+              backdropPath={series.backdrop_path}
+              tmdbId={series.id}
+              mediaType="tv"
               isWatched={isWatched}
+              isLiked={isLiked}
               watchedDate={watchedDate}
               rewatchCount={rewatchCount}
+              hasDiaryLogs={hasDiaryLogs}
+              initialRating={rating}
+              initialReview={review}
               loading={updating}
-              onLog={logWatch}
-              onUnwatch={unwatch}
+              onLog={async (payload) => {
+                await logWatch(payload);
+                toast.success(
+                  payload.shareToFeed
+                    ? t("watch.sharedToFeed")
+                    : isWatched && payload.isRewatch
+                      ? t("watch.rewatchSaved")
+                      : t("watch.savedToDiary"),
+                );
+              }}
+              onRemoveFromDiary={hasDiaryLogs ? removeFromDiary : undefined}
+            />
+
+            <ConfirmUnwatchDialog
+              open={unwatchOpen}
+              onOpenChange={setUnwatchOpen}
+              title={displayTitle}
+              loading={updating}
+              onConfirm={async () => {
+                await unwatch();
+                toast.success(t("watch.unmarkedWatched"));
+              }}
             />
 
             <ShareCardDialog

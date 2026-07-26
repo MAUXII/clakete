@@ -6,12 +6,13 @@ import { IoEyeOutline, IoEye } from "react-icons/io5";
 import { IoHeartOutline, IoHeart } from "react-icons/io5";
 import { IoTimeOutline, IoTime } from "react-icons/io5";
 import { IoAdd } from "react-icons/io5";
-import { Loader2, Share2 } from "lucide-react";
+import { CalendarDays, Loader2, Share2 } from "lucide-react";
 import { useT } from "@/components/providers/i18n-provider";
 
 interface FilmActionsProps {
   filmId: number;
   onWatchClick?: () => void;
+  onLogDiaryClick?: () => void;
   onLikeClick?: () => void;
   onWatchlistClick?: () => void;
   onShareClick?: () => void;
@@ -29,6 +30,7 @@ const actionBtnClass = (active: boolean) =>
 
 export function FilmActions({
   onWatchClick,
+  onLogDiaryClick,
   onLikeClick,
   onWatchlistClick,
   onShareClick,
@@ -62,9 +64,28 @@ export function FilmActions({
             </Button>
           </TooltipTrigger>
           <TooltipContent>
-            <p>{isWatched ? "Edit watch log" : "Log as watched"}</p>
+            <p>{isWatched ? t("film.unmarkWatched") : t("film.markWatched")}</p>
           </TooltipContent>
         </Tooltip>
+
+        {onLogDiaryClick ? (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                onClick={onLogDiaryClick}
+                variant="outline"
+                size="icon"
+                disabled={loading || updating}
+                className={actionBtnClass(false)}
+              >
+                <CalendarDays className="h-5 w-5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{t("film.logToDiary")}</p>
+            </TooltipContent>
+          </Tooltip>
+        ) : null}
 
         <Tooltip>
           <TooltipTrigger asChild>
@@ -85,7 +106,7 @@ export function FilmActions({
             </Button>
           </TooltipTrigger>
           <TooltipContent>
-            <p>{isLiked ? "Liked" : "Like this film"}</p>
+            <p>{isLiked ? t("film.liked") : t("film.like")}</p>
           </TooltipContent>
         </Tooltip>
 
@@ -109,7 +130,7 @@ export function FilmActions({
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              <p>{isInWatchlist ? "In watchlist" : "Add to watchlist"}</p>
+              <p>{isInWatchlist ? t("film.inWatchlist") : t("film.addToWatchlist")}</p>
             </TooltipContent>
           </Tooltip>
           {!isInWatchlist && !updating && !loading && (

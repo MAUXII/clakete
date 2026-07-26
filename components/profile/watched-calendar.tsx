@@ -13,7 +13,8 @@ import { filmHref, seriesHref } from "@/lib/media-href"
 import { toLocalDateString } from "@/lib/watched-date"
 
 export type CalendarWatchItem = {
-  id: number
+  id: string
+  watch_index: number
   tmdb_id: number
   poster_path: string | null
   movie_title: string | null

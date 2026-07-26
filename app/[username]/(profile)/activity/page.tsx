@@ -1,18 +1,16 @@
 "use client"
 
-import { UserActivityLog } from "@/components/profile/user-activity-log"
-import { useProfileLayoutData } from "@/components/providers/profile-layout-context"
+import { useEffect } from "react"
+import { useParams, useRouter } from "next/navigation"
 
-export default function ActivityPage() {
-  const { userData, isOwnProfile } = useProfileLayoutData()
+export default function ActivityRedirectPage() {
+  const router = useRouter()
+  const params = useParams()
+  const username = params.username as string
 
-  return (
-    <div className="w-full">
-      <UserActivityLog
-        userId={userData.id}
-        username={userData.username}
-        isOwnProfile={isOwnProfile}
-      />
-    </div>
-  )
+  useEffect(() => {
+    router.replace(`/${username}/diary`)
+  }, [router, username])
+
+  return null
 }

@@ -7,7 +7,7 @@ import { I18nProvider } from "@/components/providers/i18n-provider"
 import { AppearanceProvider } from "@/components/providers/appearance-provider"
 import { ConditionalNavbar } from "@/components/ui/conditional-navbar"
 import { ConditionalFooter } from "@/components/ui/conditional-footer"
-import { Toaster } from 'sonner'
+import { Toaster } from "sonner"
 
 export function RootLayoutClient({
   children,
@@ -26,8 +26,12 @@ export function RootLayoutClient({
         <ProfileProvider>
           <AppearanceProvider>
             <I18nProvider>
-              <ConditionalNavbar />
+              {/*
+                Page content first so 404 can set data-hide-chrome before
+                fixed navbar/footer HTML is parsed (avoids chrome flash on reload).
+              */}
               {children}
+              <ConditionalNavbar />
               <ConditionalFooter />
               <Toaster richColors />
             </I18nProvider>

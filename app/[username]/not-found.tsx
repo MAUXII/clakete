@@ -1,16 +1,12 @@
-import Link from 'next/link'
+import type { Metadata } from "next"
+import { NotFoundScreen } from "@/components/not-found-screen"
+
+export const metadata: Metadata = {
+  title: "Perfil não encontrado · Clakete",
+}
 
 export default function ProfileNotFound() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center">
-      <h1 className="text-4xl font-bold">404</h1>
-      <p className="mt-2 text-gray-600">Perfil não encontrado</p>
-      <Link
-        href="/"
-        className="mt-4 text-blue-500 hover:underline"
-      >
-        Voltar para home
-      </Link>
-    </div>
+    <NotFoundScreen message="Desculpa, não encontramos o perfil que você pediu." />
   )
-} 
+}

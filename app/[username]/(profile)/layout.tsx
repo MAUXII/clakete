@@ -9,7 +9,7 @@ import { use } from 'react'
 import { useSupabaseClient, useUser } from '@supabase/auth-helpers-react'
 import { useProfile } from "@/components/providers/profile-provider"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { ProfileTabBar, PROFILE_TABS } from "@/components/profile/profile-tab-bar"
+import { ProfileTabBar, useProfileTabs } from "@/components/profile/profile-tab-bar"
 import { toast } from "sonner"
 import Link from "next/link"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -78,15 +78,16 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
     const { username } = use(params)
     const { refreshProfile, profile: sessionProfile } = useProfile()
     const pathname = usePathname()
+    const profileTabs = useProfileTabs()
     const usernameRef = useRef(username)
     useEffect(() => {
       usernameRef.current = username
     }, [username])
     const getTabFromPath = () => {
       if (pathname.endsWith('/watched') || pathname.endsWith('/films')) return 'watched';
+      if (pathname.endsWith('/diary') || pathname.endsWith('/activity')) return 'diary';
       if (pathname.endsWith('/lists')) return 'lists';
       if (pathname.endsWith('/reviews')) return 'reviews';
-      if (pathname.endsWith('/activity')) return 'activity';
       if (pathname.endsWith('/watchlist')) return 'watchlist';
       if (pathname.endsWith('/followers') || pathname.endsWith('/following')) return 'profile';
       // Se for só /[username] ou /[username]/profile, retorna 'profile'
@@ -522,7 +523,7 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
                     {/* Tab bar estático no loading — sem Links (evita forçar /profile) */}
                     <div className="mt-6 w-full" aria-hidden>
                       <div className="relative flex h-12 w-full overflow-hidden border border-border bg-muted p-1 text-muted-foreground">
-                        {PROFILE_TABS.map((tab) => {
+                        {profileTabs.map((tab) => {
                           const isActive = tab.id === activeTab
                           return (
                             <div

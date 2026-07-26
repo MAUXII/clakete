@@ -58,6 +58,10 @@ export function isSeriesNavActive(pathname: string): boolean {
   return pathname.startsWith("/series")
 }
 
+export function isGamesNavActive(pathname: string): boolean {
+  return pathname === "/games" || pathname.startsWith("/games/")
+}
+
 const NavigationMenuTrigger = React.forwardRef<
   React.ElementRef<typeof NavigationMenuPrimitive.Trigger>,
   React.ComponentPropsWithoutRef<typeof NavigationMenuPrimitive.Trigger> & {

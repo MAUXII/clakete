@@ -40,7 +40,9 @@ import {
   diaryYear,
   downloadTextFile,
 } from "@/lib/diary"
-import { filmHref, seriesHref } from "@/lib/media-href"
+import { userWatchLogPathFromSlug } from "@/lib/user-media-href"
+import { canonicalMediaCacheKey } from "@/lib/client/canonical-media-slug"
+import { useCanonicalMediaSlugs } from "@/hooks/use-canonical-media-slugs"
 import { cn } from "@/lib/utils"
 import {
   formatRewatchLabel,
@@ -48,14 +50,20 @@ import {
   toLocalDateString,
 } from "@/lib/watched-date"
 
-type WatchedItem = {
-  id: number
+import { useT } from "@/components/providers/i18n-provider"
+
+type DiaryItem = {
+  logId: string
+  watch_index: number
+  interactionId: number
   tmdb_id: number
   poster_path: string | null
   movie_title: string | null
+  original_title: string | null
+  original_name: string | null
   release_date: string | null
   media_type: string | null
-  created_at: string
+  created_at?: string
   watched_date: string | null
   rewatch_count: number | null
   rating: number | null
@@ -89,9 +97,10 @@ export function WatchedDiary({
   username: string
   isOwnProfile: boolean
 }) {
+  const { t } = useT()
   const supabase = useSupabaseClient()
   const router = useRouter()
-  const [items, setItems] = useState<WatchedItem[]>([])
+  const [items, setItems] = useState<DiaryItem[]>([])
   const [loading, setLoading] = useState(true)
   const [view, setView] = useState<ViewMode>("grid")
   const [yearFilter, setYearFilter] = useState<string>("all")
@@ -99,7 +108,7 @@ export function WatchedDiary({
   const [likedOnly, setLikedOnly] = useState(false)
   const [calYear, setCalYear] = useState(() => new Date().getFullYear())
   const [calMonth, setCalMonth] = useState(() => new Date().getMonth())
-  const [editing, setEditing] = useState<WatchedItem | null>(null)
+  const [editing, setEditing] = useState<DiaryItem | null>(null)
   const [saving, setSaving] = useState(false)
   const [importOpen, setImportOpen] = useState(false)
   const [daySheet, setDaySheet] = useState<{
@@ -121,35 +130,72 @@ export function WatchedDiary({
 
   const fetchWatched = useCallback(async () => {
     try {
-      const { data, error } = await supabase
-        .from("items_interactions")
-        .select(
-          "id, tmdb_id, poster_path, movie_title, release_date, media_type, created_at, watched_date, rewatch_count, rating, is_liked",
-        )
+      const { data: logs, error: logsError } = await supabase
+        .from("watch_logs")
+        .select("id, tmdb_id, media_type, watch_index, watched_date, rating, review")
         .eq("user_id", userId)
-        .eq("is_watched", true)
-        .order("watched_date", { ascending: false, nullsFirst: false })
-        .order("created_at", { ascending: false })
+        .order("watched_date", { ascending: false })
+        .order("watch_index", { ascending: false })
 
-      if (error) {
-        console.error(error)
-        toast.error("Could not load watched titles")
+      if (logsError) throw logsError
+
+      if (!logs?.length) {
+        setItems([])
         return
       }
 
-      setItems((data as WatchedItem[]) ?? [])
+      const { data: interactions, error: interactionsError } = await supabase
+        .from("items_interactions")
+        .select(
+          "id, tmdb_id, poster_path, movie_title, original_title, original_name, release_date, media_type, is_liked",
+        )
+        .eq("user_id", userId)
+
+      if (interactionsError) throw interactionsError
+
+      const byKey = new Map(
+        (interactions ?? []).map((row) => [`${row.media_type}:${row.tmdb_id}`, row]),
+      )
+
+      const merged: DiaryItem[] = logs.map((log) => {
+        const interaction = byKey.get(`${log.media_type}:${log.tmdb_id}`)
+        return {
+          logId: log.id,
+          watch_index: log.watch_index,
+          interactionId: interaction?.id ?? 0,
+          tmdb_id: log.tmdb_id,
+          poster_path: interaction?.poster_path ?? null,
+          movie_title: interaction?.movie_title ?? null,
+          original_title: interaction?.original_title ?? null,
+          original_name: interaction?.original_name ?? null,
+          release_date: interaction?.release_date ?? null,
+          media_type: log.media_type,
+          watched_date: log.watched_date,
+          rewatch_count: log.watch_index,
+          rating: log.rating,
+          is_liked: interaction?.is_liked ?? null,
+        }
+      })
+
+      setItems(merged)
     } catch (err) {
       console.error(err)
-      toast.error("Could not load watched titles")
+      toast.error(t("common.errorGeneric"))
     } finally {
       setLoading(false)
     }
-  }, [supabase, userId])
+  }, [supabase, userId, t])
 
   useEffect(() => {
     setLoading(true)
     void fetchWatched()
   }, [fetchWatched])
+
+  const slugByKey = useCanonicalMediaSlugs(
+    items,
+    isOwnProfile ? supabase : null,
+    isOwnProfile ? userId : undefined,
+  )
 
   const years = useMemo(() => {
     const set = new Set<number>()
@@ -178,7 +224,8 @@ export function WatchedDiary({
   const calendarItems = useMemo((): CalendarWatchItem[] => {
     const source = likedOnly ? items.filter((i) => i.is_liked) : items
     return source.map((item) => ({
-      id: item.id,
+      id: item.logId,
+      watch_index: item.watch_index,
       tmdb_id: item.tmdb_id,
       poster_path: item.poster_path,
       movie_title: item.movie_title,
@@ -191,16 +238,13 @@ export function WatchedDiary({
   const diaryItemHref = (item: {
     tmdb_id: number
     media_type: string | null
-    movie_title?: string | null
-    release_date?: string | null
-  }) =>
-    item.media_type === "tv"
-      ? seriesHref({ id: item.tmdb_id, name: item.movie_title })
-      : filmHref({
-          id: item.tmdb_id,
-          title: item.movie_title,
-          release_date: item.release_date,
-        })
+    watch_index: number
+  }) => {
+    const kind = item.media_type === "tv" ? "tv" : "movie"
+    const slug = slugByKey[canonicalMediaCacheKey(item.media_type, item.tmdb_id)]
+    if (!slug) return null
+    return userWatchLogPathFromSlug(username, kind, slug, item.watch_index)
+  }
 
   // Sync calendar month when year/month filters change
   useEffect(() => {
@@ -220,7 +264,7 @@ export function WatchedDiary({
       title: item.movie_title || "Untitled",
       releaseDate: item.release_date,
       watchedDate: item.watched_date,
-      createdAt: item.created_at,
+      createdAt: item.watched_date,
       rating: item.rating,
       rewatchCount: item.rewatch_count ?? 0,
       mediaType: item.media_type,
@@ -249,32 +293,30 @@ export function WatchedDiary({
     setSaving(true)
     try {
       const { error } = await supabase
-        .from("items_interactions")
+        .from("watch_logs")
         .update({
           watched_date: payload.watchedDate,
-          rewatch_count: payload.rewatchCount,
           updated_at: new Date().toISOString(),
         })
-        .eq("id", editing.id)
+        .eq("id", editing.logId)
         .eq("user_id", userId)
 
       if (error) throw error
 
       setItems((prev) =>
         prev.map((item) =>
-          item.id === editing.id
+          item.logId === editing.logId
             ? {
                 ...item,
                 watched_date: payload.watchedDate,
-                rewatch_count: payload.rewatchCount,
               }
             : item,
         ),
       )
-      toast.success("Watch log updated")
+      toast.success(t("watch.savedToDiary"))
     } catch (e) {
       console.error(e)
-      toast.error("Could not update watch log")
+      toast.error(t("common.errorGeneric"))
       throw e
     } finally {
       setSaving(false)
@@ -286,34 +328,29 @@ export function WatchedDiary({
     setSaving(true)
     try {
       const { error } = await supabase
-        .from("items_interactions")
-        .update({
-          is_watched: false,
-          watched_date: null,
-          rewatch_count: 0,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", editing.id)
+        .from("watch_logs")
+        .delete()
+        .eq("id", editing.logId)
         .eq("user_id", userId)
 
       if (error) throw error
 
-      setItems((prev) => prev.filter((item) => item.id !== editing.id))
-      toast.success("Removed from watched")
+      setItems((prev) => prev.filter((item) => item.logId !== editing.logId))
+      toast.success(t("watch.removeFromDiary"))
     } catch (e) {
       console.error(e)
-      toast.error("Could not remove watched")
+      toast.error(t("common.errorGeneric"))
       throw e
     } finally {
       setSaving(false)
     }
   }
 
-  const openEdit = (item: WatchedItem) => {
+  const openEdit = (item: DiaryItem) => {
     setEditing(item)
   }
 
-  const posterEditAction = (item: WatchedItem) =>
+  const posterEditAction = (item: DiaryItem) =>
     isOwnProfile ? (
       <button
         type="button"
@@ -441,7 +478,7 @@ export function WatchedDiary({
     return (
       <div className="mt-4">
         <h2 className="text-sm font-medium uppercase text-muted-foreground/50">
-          Watched
+          {t("watch.diaryTitle")}
         </h2>
         <div className="mb-4 mt-1 h-[0.3px] w-full bg-muted-foreground/10" />
         {toolbar}
@@ -461,12 +498,12 @@ export function WatchedDiary({
     return (
       <div className="mt-4">
         <h2 className="text-sm font-medium uppercase text-muted-foreground/50">
-          Watched
+          {t("watch.diaryTitle")}
         </h2>
         <div className="mb-4 mt-1 h-[0.3px] w-full bg-muted-foreground/10" />
         <div className="flex w-full items-start justify-between overflow-clip text-muted-foreground">
           <div className="space-y-3">
-            <p className="w-full text-start">Nothing watched yet</p>
+            <p className="w-full text-start">{t("watch.diaryEmpty")}</p>
             {isOwnProfile ? (
               <button
                 type="button"
@@ -498,7 +535,7 @@ export function WatchedDiary({
     <div className="mt-4">
       <div className="flex items-baseline justify-between gap-2">
         <h2 className="text-sm font-medium uppercase text-muted-foreground/50">
-          Watched
+          {t("watch.diaryTitle")}
         </h2>
         <span className="text-xs text-muted-foreground/60">
           {filtered.length}
@@ -525,8 +562,11 @@ export function WatchedDiary({
             onSelectDay={(date, dayItems) => {
               if (dayItems.length === 1 && !isOwnProfile) {
                 const only = dayItems[0]
-                router.push(diaryItemHref(only))
-                return
+                const href = diaryItemHref(only)
+                if (href) {
+                  router.push(href)
+                  return
+                }
               }
               setDaySheet({ date, items: dayItems })
             }}
@@ -548,11 +588,8 @@ export function WatchedDiary({
               </div>
               <ul className="space-y-2">
                 {daySheet.items.map((dayItem) => {
-                  const full = items.find((i) => i.id === dayItem.id)
-                  const href = diaryItemHref({
-                    ...dayItem,
-                    release_date: full?.release_date ?? dayItem.release_date,
-                  })
+                  const full = items.find((i) => i.logId === dayItem.id)
+                  const href = diaryItemHref(dayItem)
                   const rewatch = formatRewatchLabel(full?.rewatch_count ?? 0)
 
                   return (
@@ -560,28 +597,52 @@ export function WatchedDiary({
                       key={dayItem.id}
                       className="flex items-center gap-3 rounded-md border border-border bg-black/20 p-2"
                     >
-                      <Link href={href} className="relative size-12 shrink-0 overflow-hidden rounded">
-                        {dayItem.poster_path ? (
-                          <Image
-                            src={`https://image.tmdb.org/t/p/w92${dayItem.poster_path}`}
-                            alt=""
-                            fill
-                            className="object-cover"
-                            sizes="48px"
-                          />
-                        ) : (
-                          <div className="flex size-full items-center justify-center bg-muted text-xs text-muted-foreground">
-                            ?
-                          </div>
-                        )}
-                      </Link>
-                      <div className="min-w-0 flex-1">
-                        <Link
-                          href={href}
-                          className="block truncate text-sm font-medium text-foreground hover:text-brand"
-                        >
-                          {dayItem.movie_title || "Untitled"}
+                      {href ? (
+                        <Link href={href} className="relative size-12 shrink-0 overflow-hidden rounded">
+                          {dayItem.poster_path ? (
+                            <Image
+                              src={`https://image.tmdb.org/t/p/w92${dayItem.poster_path}`}
+                              alt=""
+                              fill
+                              className="object-cover"
+                              sizes="48px"
+                            />
+                          ) : (
+                            <div className="flex size-full items-center justify-center bg-muted text-xs text-muted-foreground">
+                              ?
+                            </div>
+                          )}
                         </Link>
+                      ) : (
+                        <div className="relative size-12 shrink-0 overflow-hidden rounded">
+                          {dayItem.poster_path ? (
+                            <Image
+                              src={`https://image.tmdb.org/t/p/w92${dayItem.poster_path}`}
+                              alt=""
+                              fill
+                              className="object-cover"
+                              sizes="48px"
+                            />
+                          ) : (
+                            <div className="flex size-full items-center justify-center bg-muted text-xs text-muted-foreground">
+                              ?
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        {href ? (
+                          <Link
+                            href={href}
+                            className="block truncate text-sm font-medium text-foreground hover:text-brand"
+                          >
+                            {dayItem.movie_title || "Untitled"}
+                          </Link>
+                        ) : (
+                          <p className="block truncate text-sm font-medium text-foreground">
+                            {dayItem.movie_title || "Untitled"}
+                          </p>
+                        )}
                         {rewatch ? (
                           <p className="text-xs text-muted-foreground">{rewatch}</p>
                         ) : null}
@@ -610,17 +671,20 @@ export function WatchedDiary({
       ) : (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4">
           {filtered.map((item) => {
-            const key = `${item.tmdb_id}-${item.media_type ?? "movie"}-${item.id}`
+            const key = item.logId
             const isTv = item.media_type === "tv"
             const edit = posterEditAction(item)
+            const logHref = diaryItemHref(item)
 
             return isTv ? (
               <SeriesCard
                 key={key}
                 externalid={item.tmdb_id}
+                href={logHref}
                 series={{
                   id: item.tmdb_id,
                   name: item.movie_title ?? "",
+                  original_name: item.original_name,
                   poster_path: item.poster_path,
                   first_air_date: item.release_date,
                 }}
@@ -630,10 +694,13 @@ export function WatchedDiary({
               <MovieCard
                 key={key}
                 externalid={item.tmdb_id}
+                href={logHref}
                 movie={{
                   id: item.tmdb_id,
                   title: item.movie_title ?? "",
+                  original_title: item.original_title,
                   poster_path: item.poster_path,
+                  release_date: item.release_date,
                   vote_average: 0,
                 }}
                 extraActions={edit}

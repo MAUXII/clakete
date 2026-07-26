@@ -1,30 +1,44 @@
 "use client"
 
 import Link from "next/link"
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { motion } from "framer-motion"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useT } from "@/components/providers/i18n-provider"
 import { cn } from "@/lib/utils"
 
-const PROFILE_TABS = [
-  { id: "profile", label: "Profile", href: (username: string) => `/${username}` },
-  { id: "watched", label: "Watched", href: (username: string) => `/${username}/watched` },
-  { id: "lists", label: "Lists", href: (username: string) => `/${username}/lists` },
-  { id: "reviews", label: "Reviews", href: (username: string) => `/${username}/reviews` },
-  { id: "activity", label: "Activity", href: (username: string) => `/${username}/activity` },
-  { id: "watchlist", label: "Watchlist", href: (username: string) => `/${username}/watchlist` },
+export const PROFILE_TAB_IDS = [
+  "profile",
+  "watched",
+  "diary",
+  "lists",
+  "reviews",
+  "watchlist",
 ] as const
 
-export type ProfileTabId = (typeof PROFILE_TABS)[number]["id"]
+export type ProfileTabId = (typeof PROFILE_TAB_IDS)[number]
 
-export { PROFILE_TABS }
+export function useProfileTabs() {
+  const { t } = useT()
+  return useMemo(
+    () =>
+      [
+        { id: "profile" as const, label: t("profileTabs.profile"), href: (username: string) => `/${username}` },
+        { id: "watched" as const, label: t("profileTabs.watched"), href: (username: string) => `/${username}/watched` },
+        { id: "diary" as const, label: t("profileTabs.diary"), href: (username: string) => `/${username}/diary` },
+        { id: "lists" as const, label: t("profileTabs.lists"), href: (username: string) => `/${username}/lists` },
+        { id: "reviews" as const, label: t("profileTabs.reviews"), href: (username: string) => `/${username}/reviews` },
+        { id: "watchlist" as const, label: t("profileTabs.watchlist"), href: (username: string) => `/${username}/watchlist` },
+      ] as const,
+    [t],
+  )
+}
 const profileTabLinkClass = "group relative z-10 flex h-full min-h-0 flex-1"
 
 const profileTabTriggerClass = cn(
   "relative z-10 h-full w-full rounded-md bg-transparent px-8 py-2 text-sm font-medium shadow-none transition-colors",
   "text-muted-foreground group-hover:text-foreground dark:group-hover:text-foreground",
   "data-[state=active]:!bg-transparent data-[state=active]:!shadow-none",
-  // Defaults (--profile-tab-active*) follow app accent; profile themes override.
   "data-[state=active]:!text-[var(--profile-tab-active)]",
   "dark:data-[state=active]:!text-[var(--profile-tab-active-dark)]",
   "data-[state=active]:group-hover:!text-[var(--profile-tab-active)]",
@@ -45,6 +59,7 @@ interface ProfileTabBarProps {
 }
 
 export function ProfileTabBar({ username, activeTab, children }: ProfileTabBarProps) {
+  const tabs = useProfileTabs()
   const listRef = useRef<HTMLDivElement>(null)
   const tabRefs = useRef<(HTMLAnchorElement | null)[]>([])
   const [indicator, setIndicator] = useState<{ left: number; width: number } | null>(null)
@@ -58,7 +73,7 @@ export function ProfileTabBar({ username, activeTab, children }: ProfileTabBarPr
 
   const updateIndicator = useCallback(() => {
     const listEl = listRef.current
-    const activeIndex = PROFILE_TABS.findIndex((tab) => tab.id === visualTab)
+    const activeIndex = tabs.findIndex((tab) => tab.id === visualTab)
     const activeEl = tabRefs.current[activeIndex]
     if (!listEl || !activeEl) return
 
@@ -69,7 +84,7 @@ export function ProfileTabBar({ username, activeTab, children }: ProfileTabBarPr
       left: tabRect.left - listRect.left,
       width: tabRect.width,
     })
-  }, [visualTab])
+  }, [visualTab, tabs])
 
   useLayoutEffect(() => {
     updateIndicator()
@@ -112,7 +127,7 @@ export function ProfileTabBar({ username, activeTab, children }: ProfileTabBarPr
           />
         ) : null}
 
-        {PROFILE_TABS.map((tab, index) => (
+        {tabs.map((tab, index) => (
           <Link
             key={tab.id}
             ref={(el) => {

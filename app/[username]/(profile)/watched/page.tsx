@@ -1,6 +1,6 @@
 "use client"
 
-import { WatchedDiary } from "@/components/profile/watched-diary"
+import { WatchedGrid } from "@/components/profile/watched-grid"
 import { useProfileLayoutData } from "@/components/providers/profile-layout-context"
 
 export default function WatchedPage() {
@@ -8,7 +8,7 @@ export default function WatchedPage() {
 
   return (
     <div>
-      <WatchedDiary
+      <WatchedGrid
         userId={userData.id}
         username={userData.username}
         isOwnProfile={isOwnProfile}

@@ -13,6 +13,8 @@ export interface Database {
         Row: {
           release_date: string | null
           movie_title: string | undefined
+          original_title: string | null
+          original_name: string | null
           poster_path: string | undefined
           id: number
           user_id: string
@@ -44,6 +46,8 @@ export interface Database {
           tmdb_id: number
           media_type?: string
           movie_title?: string | null
+          original_title?: string | null
+          original_name?: string | null
           poster_path?: string | null
           release_date?: string | null
           rating?: number | null
@@ -72,6 +76,8 @@ export interface Database {
           tmdb_id?: number
           media_type?: string
           movie_title?: string | null
+          original_title?: string | null
+          original_name?: string | null
           poster_path?: string | null
           release_date?: string | null
           rating?: number | null
@@ -91,6 +97,44 @@ export interface Database {
           feed_layout?: string
           feed_shared_at?: string | null
           feed_share_uid?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      watch_logs: {
+        Row: {
+          id: string
+          user_id: string
+          tmdb_id: number
+          media_type: string
+          watch_index: number
+          watched_date: string
+          rating: number | null
+          review: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          tmdb_id: number
+          media_type?: string
+          watch_index?: number
+          watched_date: string
+          rating?: number | null
+          review?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          tmdb_id?: number
+          media_type?: string
+          watch_index?: number
+          watched_date?: string
+          rating?: number | null
+          review?: string | null
           created_at?: string
           updated_at?: string
         }
