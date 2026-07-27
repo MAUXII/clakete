@@ -187,7 +187,10 @@ export const esES = {
     stream: "Stream",
     rent: "Alquilar",
     buy: "Comprar",
+    subscription: "Suscripción",
     watchTrailer: "Ver tráiler",
+    claketePlayerHint: "Incluido en tu suscripción de Clakete.",
+    claketeUnavailable: "Reproducción no disponible por ahora.",
   },
   home: {
     nowShowing: "En cartelera",

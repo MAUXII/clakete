@@ -186,7 +186,10 @@ export const enUS = {
     stream: "Stream",
     rent: "Rent",
     buy: "Buy",
+    subscription: "Subscription",
     watchTrailer: "Watch trailer",
+    claketePlayerHint: "Included with your Clakete subscription.",
+    claketeUnavailable: "Playback is unavailable right now.",
   },
   home: {
     nowShowing: "Now showing",

@@ -3,7 +3,7 @@ import { resolveOwnPlaybackUrl } from "@/lib/film-playback-sources";
 
 /**
  * URL de arquivo/stream próprio (MP4 etc.). Ver também GET …/playback-options
- * para embeds (SuperFlix, VidSrc, overrides).
+ * para embeds via FILM_SOURCE_IFRAME_OVERRIDES_JSON.
  *
  * FILM_PLAYBACK_URL_TEMPLATE=https://cdn…/filmes/{id}/main.mp4
  */

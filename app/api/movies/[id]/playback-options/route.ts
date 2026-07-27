@@ -18,7 +18,7 @@ export async function GET(
 
   const ownUrl = resolveOwnPlaybackUrl(id);
   const tmdbId = parseInt(id, 10);
-  const iframeSources = mergeIframeSources(tmdbId, id);
+  const iframeSources = await mergeIframeSources(tmdbId, id);
 
   return NextResponse.json({ ownUrl, iframeSources });
 }

@@ -1,16 +1,18 @@
 /**
- * Fontes de embed que só precisam do ID TMDB do filme.
- * URLs “estranhas” (watch.brstream.cc, hglink, etc.) entram via
- * FILM_SOURCE_IFRAME_OVERRIDES_JSON no servidor.
+ * Playback: arquivo próprio via FILM_PLAYBACK_URL_TEMPLATE (`{id}` = TMDB),
+ * SuperFlix (catálogo público) e iframes via FILM_SOURCE_IFRAME_OVERRIDES_JSON.
  */
+
+import {
+  buildMoviePlayerUrl,
+  getMovieCatalogSet,
+} from "@/lib/superflix";
 
 export type IframePlaybackSource = {
   id: string;
   label: string;
   url: string;
 };
-
-const EMBED_SUFFIX = "#noEpList#noLink";
 
 export function resolveOwnPlaybackUrl(filmId: string): string | null {
   const template = process.env.FILM_PLAYBACK_URL_TEMPLATE?.trim();
@@ -26,37 +28,6 @@ export function resolveOwnPlaybackUrl(filmId: string): string | null {
   }
 }
 
-export function buildDefaultIframeSources(tmdbId: number): IframePlaybackSource[] {
-  const id = String(tmdbId);
-  return [
-    {
-      id: "superflix-cv",
-      label: "SuperFlix (.cv)",
-      url: `https://superflixapi.cv/filme/${id}/${EMBED_SUFFIX}`,
-    },
-    {
-      id: "superflix-rest",
-      label: "SuperFlix (REST)",
-      url: `https://superflixapi.rest/filme/${id}/${EMBED_SUFFIX}`,
-    },
-    {
-      id: "playerflix",
-      label: "PlayerFlix",
-      url: `https://playerflixapi.com/filme/${id}/${EMBED_SUFFIX}`,
-    },
-    {
-      id: "fshd",
-      label: "fshd.link",
-      url: `https://fshd.link/filme/${id}/${EMBED_SUFFIX}`,
-    },
-    {
-      id: "vidsrc-pt",
-      label: "VidSrc (PT)",
-      url: `https://vidsrc.net/embed/movie?tmdb=${id}&ds_lang=pt`,
-    },
-  ];
-}
-
 function isHttpsUrl(s: string): boolean {
   try {
     const u = new URL(s);
@@ -68,9 +39,9 @@ function isHttpsUrl(s: string): boolean {
 
 /**
  * JSON no .env.local (uma linha). Exemplo:
- * {"1368166":[{"id":"brstream","label":"watch.brstream.cc","url":"https://watch.brstream.cc/watch?v=7V3Y1U0Z"}]}
+ * {"550":[{"id":"cdn","label":"CDN","url":"https://cdn.exemplo.com/embed/550"}]}
  *
- * Forma alternativa (sem label): {"1368166":{"brstream":"https://..."}}
+ * Forma alternativa (sem label): {"550":{"cdn":"https://..."}}
  */
 export function parseIframeOverridesForFilm(filmId: string): IframePlaybackSource[] {
   const raw = process.env.FILM_SOURCE_IFRAME_OVERRIDES_JSON?.trim();
@@ -114,14 +85,89 @@ export function parseIframeOverridesForFilm(filmId: string): IframePlaybackSourc
   return [];
 }
 
-export function mergeIframeSources(
+async function fetchTmdbImdbId(tmdbId: number): Promise<string | null> {
+  const apiKey = process.env.NEXT_TMDB_API_KEY;
+  const base =
+    process.env.NEXT_PUBLIC_TMDB_BASE_URL?.replace(/\/+$/, "") ||
+    "https://api.themoviedb.org/3";
+  if (!apiKey) return null;
+
+  try {
+    const res = await fetch(
+      `${base}/movie/${tmdbId}/external_ids?api_key=${apiKey}`,
+      { next: { revalidate: 86_400 } }
+    );
+    if (!res.ok) return null;
+    const data = (await res.json()) as { imdb_id?: string | null };
+    const imdb = typeof data.imdb_id === "string" ? data.imdb_id.trim() : "";
+    return imdb || null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Resolve fonte SuperFlix para o filme (IMDb/TMDB presentes no catálogo).
+ * Se o catálogo estiver indisponível, faz fallback otimista pelo IMDb.
+ * Falhas de rede não quebram as demais fontes.
+ */
+export async function resolveSuperflixMovieSource(
+  tmdbId: number
+): Promise<IframePlaybackSource | null> {
+  if (process.env.SUPERFLIX_ENABLED === "false") return null;
+
+  try {
+    const imdbId = await fetchTmdbImdbId(tmdbId);
+    const candidates = [imdbId, String(tmdbId)].filter(
+      (x): x is string => Boolean(x)
+    );
+    if (candidates.length === 0) return null;
+
+    let catalogFailed = false;
+    const sets: Partial<Record<"imdb" | "tmdb", Set<string>>> = {};
+
+    async function inCatalog(id: string): Promise<boolean | null> {
+      const kind = id.toLowerCase().startsWith("tt") ? "imdb" : "tmdb";
+      try {
+        if (!sets[kind]) {
+          sets[kind] = await getMovieCatalogSet(kind);
+        }
+        return sets[kind]!.has(id.toLowerCase());
+      } catch {
+        catalogFailed = true;
+        return null;
+      }
+    }
+
+    for (const id of candidates) {
+      const hit = await inCatalog(id);
+      if (hit === true || (hit === null && catalogFailed)) {
+        return {
+          id: "superflix",
+          label: "SuperFlix",
+          url: buildMoviePlayerUrl(id),
+        };
+      }
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
+}
+
+export async function mergeIframeSources(
   tmdbId: number,
   filmId: string
-): IframePlaybackSource[] {
-  const defaults = buildDefaultIframeSources(tmdbId);
-  const overrides = parseIframeOverridesForFilm(filmId);
+): Promise<IframePlaybackSource[]> {
   const map = new Map<string, IframePlaybackSource>();
-  for (const s of defaults) map.set(s.id, s);
-  for (const s of overrides) map.set(s.id, s);
+
+  const superflix = await resolveSuperflixMovieSource(tmdbId);
+  if (superflix) map.set(superflix.id, superflix);
+
+  for (const s of parseIframeOverridesForFilm(filmId)) {
+    map.set(s.id, s);
+  }
+
   return [...map.values()];
 }

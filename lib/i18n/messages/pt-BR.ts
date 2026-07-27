@@ -188,7 +188,10 @@ export const ptBR = {
     stream: "Stream",
     rent: "Alugar",
     buy: "Comprar",
+    subscription: "Assinatura",
     watchTrailer: "Ver trailer",
+    claketePlayerHint: "Incluído na sua assinatura Clakete.",
+    claketeUnavailable: "Reprodução indisponível no momento.",
   },
   home: {
     nowShowing: "Em cartaz",
