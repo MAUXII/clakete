@@ -190,6 +190,7 @@ export const enUS = {
     watchTrailer: "Watch trailer",
     claketePlayerHint: "Included with your Clakete subscription.",
     claketeUnavailable: "Playback is unavailable right now.",
+    watchOnClakete: "Watch on Clakete",
   },
   home: {
     nowShowing: "Now showing",

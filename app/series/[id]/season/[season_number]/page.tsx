@@ -280,7 +280,12 @@ export default function SeriesSeasonPage({
             <div className={cn(season.overview ? "" : "-mt-2")}>
               <div className="flex flex-col gap-6">
                 <SectionLabel>Episodes</SectionLabel>
-                <EpisodesList episodes={season.episodes} />
+                <EpisodesList
+                  episodes={season.episodes}
+                  seriesId={seriesId}
+                  seasonNumber={season.season_number}
+                  seriesName={season.seriesName}
+                />
               </div>
             </div>
           </div>

@@ -192,6 +192,7 @@ export const ptBR = {
     watchTrailer: "Ver trailer",
     claketePlayerHint: "Incluído na sua assinatura Clakete.",
     claketeUnavailable: "Reprodução indisponível no momento.",
+    watchOnClakete: "Assistir no Clakete",
   },
   home: {
     nowShowing: "Em cartaz",

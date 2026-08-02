@@ -237,6 +237,41 @@ export async function isMovieInCatalog(
   return imdbSet.has(id) || tmdbSet.has(id);
 }
 
+/**
+ * Set unificado de TMDB IDs para série/anime/dorama
+ * (player SuperFlix usa `/serie/{tmdb}` para os três).
+ */
+export async function getSeriesCatalogSet(
+  signal?: AbortSignal
+): Promise<Set<string>> {
+  const cacheKey = "catalog-set:tv:tmdb";
+  const cached = getCached<Set<string>>(cacheKey);
+  if (cached) return cached;
+
+  const categories: SuperflixCatalogCategory[] = ["serie", "anime", "dorama"];
+  const lists = await Promise.all(
+    categories.map((category) =>
+      listCatalogIds({ category, idType: "tmdb", signal })
+    )
+  );
+  const set = new Set<string>();
+  for (const ids of lists) {
+    for (const id of ids) set.add(id.toLowerCase());
+  }
+  setCached(cacheKey, set);
+  return set;
+}
+
+export async function isSeriesInCatalog(
+  tmdbId: string | number,
+  signal?: AbortSignal
+): Promise<boolean> {
+  const id = String(tmdbId).trim().toLowerCase();
+  if (!id) return false;
+  const set = await getSeriesCatalogSet(signal);
+  return set.has(id);
+}
+
 /** Categorias públicas de canais. */
 export async function listChannelCategories(
   signal?: AbortSignal

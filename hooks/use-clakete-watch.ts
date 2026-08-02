@@ -11,6 +11,12 @@ type PlaybackOptionsResponse = {
   iframeSources: { id: string; label: string; url: string }[];
 };
 
+export type UseClaketeWatchOptions = {
+  mediaType?: "movie" | "tv";
+  season?: number;
+  episode?: number;
+};
+
 function resolveClaketePlayback(data: PlaybackOptionsResponse): ClaketePlayback | null {
   const superflix = data.iframeSources.find((s) => s.id === "superflix");
   if (superflix?.url) return { kind: "iframe", url: superflix.url };
@@ -23,13 +29,20 @@ function resolveClaketePlayback(data: PlaybackOptionsResponse): ClaketePlayback 
   return null;
 }
 
-/** Playback Clakete (SuperFlix / CDN) — só busca para assinantes. */
-export function useClaketeWatch(filmId: number, enabled: boolean) {
+/** Playback Clakete (SuperFlix / CDN) — só busca quando `enabled` (assinantes). */
+export function useClaketeWatch(
+  mediaId: number,
+  enabled: boolean,
+  opts: UseClaketeWatchOptions = {}
+) {
+  const mediaType = opts.mediaType ?? "movie";
+  const season = opts.season ?? 1;
+  const episode = opts.episode ?? 1;
   const [playback, setPlayback] = useState<ClaketePlayback | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!enabled || !filmId) {
+    if (!enabled || !mediaId) {
       setPlayback(null);
       return;
     }
@@ -37,7 +50,12 @@ export function useClaketeWatch(filmId: number, enabled: boolean) {
     let cancelled = false;
     setLoading(true);
 
-    void fetch(`/api/movies/${filmId}/playback-options`)
+    const url =
+      mediaType === "tv"
+        ? `/api/series/${mediaId}/playback-options?season=${season}&episode=${episode}`
+        : `/api/movies/${mediaId}/playback-options`;
+
+    void fetch(url)
       .then(async (res) => {
         if (!res.ok) return null;
         return (await res.json()) as PlaybackOptionsResponse;
@@ -56,7 +74,7 @@ export function useClaketeWatch(filmId: number, enabled: boolean) {
     return () => {
       cancelled = true;
     };
-  }, [filmId, enabled]);
+  }, [mediaId, enabled, mediaType, season, episode]);
 
   return { playback, loading, available: Boolean(playback) };
 }

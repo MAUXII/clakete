@@ -191,6 +191,7 @@ export const esES = {
     watchTrailer: "Ver tráiler",
     claketePlayerHint: "Incluido en tu suscripción de Clakete.",
     claketeUnavailable: "Reproducción no disponible por ahora.",
+    watchOnClakete: "Ver en Clakete",
   },
   home: {
     nowShowing: "En cartelera",

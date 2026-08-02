@@ -9,6 +9,8 @@ export {
   getMovieCatalogSet,
   getMovieImdbCatalogSet,
   isMovieInCatalog,
+  getSeriesCatalogSet,
+  isSeriesInCatalog,
   listChannelCategories,
   listChannels,
   listEvents,
