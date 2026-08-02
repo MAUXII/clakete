@@ -193,6 +193,9 @@ export const ptBR = {
     claketePlayerHint: "Incluído na sua assinatura Clakete.",
     claketeUnavailable: "Reprodução indisponível no momento.",
     watchOnClakete: "Assistir no Clakete",
+    externalRatings: "Avaliações",
+    rtCritics: "Críticos",
+    rtAudience: "Público",
   },
   home: {
     nowShowing: "Em cartaz",
@@ -341,6 +344,13 @@ export const ptBR = {
       story: "Stories",
       square: "Feed",
     },
+  },
+  series: {
+    seasonWatchedProgress: "{watched}/{total} assistidos",
+    markSeasonWatched: "Marcar temporada",
+    unmarkSeasonWatched: "Desmarcar temporada",
+    seasonMarkedWatched: "Temporada marcada como assistida",
+    seasonUnmarkedWatched: "Temporada desmarcada",
   },
 } as const satisfies MessageTree
 

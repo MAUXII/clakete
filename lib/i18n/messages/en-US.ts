@@ -191,6 +191,9 @@ export const enUS = {
     claketePlayerHint: "Included with your Clakete subscription.",
     claketeUnavailable: "Playback is unavailable right now.",
     watchOnClakete: "Watch on Clakete",
+    externalRatings: "Ratings",
+    rtCritics: "Critics",
+    rtAudience: "Audience",
   },
   home: {
     nowShowing: "Now showing",
@@ -339,5 +342,12 @@ export const enUS = {
       story: "Stories",
       square: "Feed",
     },
+  },
+  series: {
+    seasonWatchedProgress: "{watched}/{total} watched",
+    markSeasonWatched: "Mark season watched",
+    unmarkSeasonWatched: "Unmark season",
+    seasonMarkedWatched: "Season marked as watched",
+    seasonUnmarkedWatched: "Season unmarked",
   },
 } as const satisfies AppMessages

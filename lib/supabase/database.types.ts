@@ -468,6 +468,70 @@ export interface Database {
           updated_at?: string
         }
       }
+      film_external_ratings_cache: {
+        Row: {
+          tmdb_id: number
+          media_type: string
+          ratings: Json
+          fetched_at: string
+          expires_at: string
+          cache_version: number
+        }
+        Insert: {
+          tmdb_id: number
+          media_type?: string
+          ratings?: Json
+          fetched_at?: string
+          expires_at: string
+          cache_version?: number
+        }
+        Update: {
+          tmdb_id?: number
+          media_type?: string
+          ratings?: Json
+          fetched_at?: string
+          expires_at?: string
+          cache_version?: number
+        }
+      }
+      episode_interactions: {
+        Row: {
+          id: number
+          user_id: string
+          series_tmdb_id: number
+          season_number: number
+          episode_number: number
+          tmdb_episode_id: number | null
+          is_watched: boolean
+          watched_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          user_id: string
+          series_tmdb_id: number
+          season_number: number
+          episode_number: number
+          tmdb_episode_id?: number | null
+          is_watched?: boolean
+          watched_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          user_id?: string
+          series_tmdb_id?: number
+          season_number?: number
+          episode_number?: number
+          tmdb_episode_id?: number | null
+          is_watched?: boolean
+          watched_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never

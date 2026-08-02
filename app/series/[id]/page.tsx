@@ -16,6 +16,7 @@ import { formatRewatchLabel, formatWatchedDate } from "@/lib/watched-date";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import WatchProviders from "@/components/movies/watchproviders";
 import Trailer, { type Video } from "@/components/movies/trailer";
+import { FilmExternalRatings } from "@/components/movies/film-external-ratings";
 import { FaPlay } from "react-icons/fa6";
 import SimilarSeriesList from "@/components/series/similar";
 import RecommendedSeriesList from "@/components/series/recommendations";
@@ -538,8 +539,10 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ id: str
               </header>
 
               {metaLine ? (
-                <div className="w-full shrink-0 border-t border-border pt-6 text-sm tabular-nums text-muted-foreground sm:w-auto lg:border-t-0 lg:pt-1 lg:text-right">
-                  {metaLine}
+                <div className="flex w-full shrink-0 flex-col items-start gap-2 border-t border-border pt-6 sm:w-auto lg:items-end lg:border-t-0 lg:pt-1">
+                  <p className="text-sm tabular-nums text-muted-foreground lg:text-right">
+                    {metaLine}
+                  </p>
                 </div>
               ) : null}
             </div>
@@ -569,6 +572,8 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ id: str
                 ) : null}
               </div>
             ) : null}
+
+            <FilmExternalRatings tmdbId={series.id} mediaType="show" />
 
             <section aria-label="Your rating and actions">
               <div className="flex flex-col gap-8">

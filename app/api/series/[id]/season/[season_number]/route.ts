@@ -69,6 +69,11 @@ export async function GET(
       poster_path: seasonData.poster_path,
       seriesName: seriesData.name,
       seriesBackdrop: seriesData.backdrop_path,
+      seriesPosterPath: seriesData.poster_path ?? null,
+      seriesEpisodeTotal:
+        typeof seriesData.number_of_episodes === 'number'
+          ? seriesData.number_of_episodes
+          : null,
       episodes,
     })
   } catch (error) {

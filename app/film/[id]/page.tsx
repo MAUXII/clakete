@@ -30,6 +30,7 @@ import { useT } from "@/components/providers/i18n-provider";
 import { filmHref, parseMediaParam } from "@/lib/media-href";
 import { prefetchDiaryArt } from "@/lib/client/diary-dialog-art";
 import { toast } from "sonner";
+import { FilmExternalRatings } from "@/components/movies/film-external-ratings";
 
 export interface Movie {
   id: number;
@@ -563,8 +564,10 @@ export default function FilmPage({ params }: { params: Promise<{ id: string }> }
             </header>
 
             {metaLine ? (
-              <div className="w-full shrink-0 border-t border-border pt-6 text-sm tabular-nums text-muted-foreground sm:w-auto lg:border-t-0 lg:pt-1 lg:text-right">
-                {metaLine}
+              <div className="flex w-full shrink-0 flex-col items-start gap-2 border-t border-border pt-6 sm:w-auto lg:items-end lg:border-t-0 lg:pt-1">
+                <p className="text-sm tabular-nums text-muted-foreground lg:text-right">
+                  {metaLine}
+                </p>
               </div>
             ) : null}
           </div>
@@ -594,6 +597,8 @@ export default function FilmPage({ params }: { params: Promise<{ id: string }> }
               ) : null}
             </div>
           ) : null}
+
+          <FilmExternalRatings tmdbId={movie.id} />
 
           <section className="" aria-label="Your rating and actions">
             <div className="flex flex-col gap-8">

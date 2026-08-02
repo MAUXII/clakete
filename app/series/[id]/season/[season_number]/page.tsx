@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, use, type ReactNode } from "react";
+import { useCallback, useEffect, useState, use, type ReactNode } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -9,6 +9,7 @@ import { FilmsCatalogShell } from "@/components/films/films-catalog-shell";
 import { cn } from "@/lib/utils";
 import { useLocalePrefs } from "@/hooks/use-locale-prefs";
 import { parseMediaParam, seriesHref } from "@/lib/media-href";
+import { useT } from "@/components/providers/i18n-provider";
 
 interface SeasonDetail {
   id: number;
@@ -19,6 +20,8 @@ interface SeasonDetail {
   poster_path: string | null;
   seriesName: string;
   seriesBackdrop: string | null;
+  seriesPosterPath?: string | null;
+  seriesEpisodeTotal?: number | null;
   episodes: SeasonEpisode[];
 }
 
@@ -48,6 +51,16 @@ export default function SeriesSeasonPage({
   const [season, setSeason] = useState<SeasonDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const { tmdbLanguage, loading: localeLoading } = useLocalePrefs();
+  const { t } = useT();
+  const [seasonProgress, setSeasonProgress] = useState<{
+    watched: number;
+    total: number;
+  } | null>(null);
+
+  const onProgressChange = useCallback((watched: number, total: number) => {
+    setSeasonProgress({ watched, total });
+  }, []);
+
   const seriesPath =
     seriesId != null
       ? seriesHref({ id: seriesId, name: season?.seriesName })
@@ -259,6 +272,14 @@ export default function SeriesSeasonPage({
                 {season.name && season.name !== `Season ${season.season_number}` ? (
                   <p className="text-pretty text-sm leading-snug text-muted-foreground sm:text-[0.9375rem]">{season.name}</p>
                 ) : null}
+                {seasonProgress && seasonProgress.total > 0 ? (
+                  <p className="text-sm tabular-nums text-muted-foreground">
+                    {t("series.seasonWatchedProgress", {
+                      watched: seasonProgress.watched,
+                      total: seasonProgress.total,
+                    })}
+                  </p>
+                ) : null}
               </header>
 
               {metaLine ? (
@@ -285,6 +306,9 @@ export default function SeriesSeasonPage({
                   seriesId={seriesId}
                   seasonNumber={season.season_number}
                   seriesName={season.seriesName}
+                  seriesPosterPath={season.seriesPosterPath ?? season.poster_path}
+                  seriesEpisodeTotal={season.seriesEpisodeTotal}
+                  onProgressChange={onProgressChange}
                 />
               </div>
             </div>

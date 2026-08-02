@@ -192,6 +192,9 @@ export const esES = {
     claketePlayerHint: "Incluido en tu suscripción de Clakete.",
     claketeUnavailable: "Reproducción no disponible por ahora.",
     watchOnClakete: "Ver en Clakete",
+    externalRatings: "Valoraciones",
+    rtCritics: "Críticos",
+    rtAudience: "Audiencia",
   },
   home: {
     nowShowing: "En cartelera",
@@ -340,5 +343,12 @@ export const esES = {
       story: "Stories",
       square: "Feed",
     },
+  },
+  series: {
+    seasonWatchedProgress: "{watched}/{total} vistos",
+    markSeasonWatched: "Marcar temporada",
+    unmarkSeasonWatched: "Desmarcar temporada",
+    seasonMarkedWatched: "Temporada marcada como vista",
+    seasonUnmarkedWatched: "Temporada desmarcada",
   },
 } as const satisfies AppMessages
