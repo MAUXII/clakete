@@ -17,17 +17,15 @@ import { useProfile } from "@/components/providers/profile-provider"
 import { profileHomeBackdropPresentation } from "@/lib/profile-media"
 import { useSubscription } from "@/hooks/use-subscription"
 import { PROFILE_THEMES, type ProfileThemeId } from "@/lib/plans"
-import {
-  TMDB_LANGUAGE_OPTIONS,
-  WATCH_REGION_OPTIONS,
-  type TmdbLanguageId,
-  type WatchRegionId,
-} from "@/lib/locale-prefs"
 import { cn } from "@/lib/utils"
 import { useT } from "@/components/providers/i18n-provider"
 import { AppearancePreferences } from "@/components/profile/appearance-preferences"
 import type { ColorModePreference } from "@/lib/user-home-preferences"
 import { useAppearance } from "@/components/providers/appearance-provider"
+import {
+  ContentLanguageSelect,
+  WatchRegionSelect,
+} from "@/components/profile/locale-pref-selects"
 
 export function HomePreferencesEditor({
   initialJson,
@@ -172,45 +170,19 @@ export function HomePreferencesEditor({
           <p className="mt-1 text-sm text-muted-foreground">{t("prefs.regionLanguageHint")}</p>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="watch-region" className="text-sm font-normal">
-            {t("prefs.watchRegion")}
-          </Label>
-          <select
-            id="watch-region"
-            value={prefs.watch_region ?? "BR"}
-            onChange={(e) =>
-              update({ ...prefs, watch_region: e.target.value as WatchRegionId })
-            }
-            className="flex h-10 w-full rounded-md border border-border/80 bg-background px-3 text-sm text-foreground outline-none focus-visible:ring-1 focus-visible:ring-brand/40"
-          >
-            {WATCH_REGION_OPTIONS.map((region) => (
-              <option key={region.id} value={region.id}>
-                {region.label}
-              </option>
-            ))}
-          </select>
-        </div>
+        <WatchRegionSelect
+          id="watch-region"
+          label={t("prefs.watchRegion")}
+          value={prefs.watch_region ?? "BR"}
+          onValueChange={(watch_region) => update({ ...prefs, watch_region })}
+        />
 
-        <div className="space-y-2">
-          <Label htmlFor="tmdb-language" className="text-sm font-normal">
-            {t("prefs.contentLanguage")}
-          </Label>
-          <select
-            id="tmdb-language"
-            value={prefs.tmdb_language ?? "pt-BR"}
-            onChange={(e) =>
-              update({ ...prefs, tmdb_language: e.target.value as TmdbLanguageId })
-            }
-            className="flex h-10 w-full rounded-md border border-border/80 bg-background px-3 text-sm text-foreground outline-none focus-visible:ring-1 focus-visible:ring-brand/40"
-          >
-            {TMDB_LANGUAGE_OPTIONS.map((lang) => (
-              <option key={lang.id} value={lang.id}>
-                {lang.label}
-              </option>
-            ))}
-          </select>
-        </div>
+        <ContentLanguageSelect
+          id="tmdb-language"
+          label={t("prefs.contentLanguage")}
+          value={prefs.tmdb_language ?? "pt-BR"}
+          onValueChange={(tmdb_language) => update({ ...prefs, tmdb_language })}
+        />
       </div>
 
       <div className="space-y-4">

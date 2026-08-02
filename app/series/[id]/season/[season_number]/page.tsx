@@ -5,11 +5,14 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import EpisodesList, { type SeasonEpisode } from "@/components/series/episodes";
+import WatchProviders from "@/components/movies/watchproviders";
+import type { Movie } from "@/app/film/[id]/page";
 import { FilmsCatalogShell } from "@/components/films/films-catalog-shell";
 import { cn } from "@/lib/utils";
 import { useLocalePrefs } from "@/hooks/use-locale-prefs";
 import { parseMediaParam, seriesHref } from "@/lib/media-href";
 import { useT } from "@/components/providers/i18n-provider";
+import { useEpisodeInteractions } from "@/hooks/use-episode-interactions";
 
 interface SeasonDetail {
   id: number;
@@ -22,6 +25,7 @@ interface SeasonDetail {
   seriesBackdrop: string | null;
   seriesPosterPath?: string | null;
   seriesEpisodeTotal?: number | null;
+  watchProviders?: Movie["watchProviders"];
   episodes: SeasonEpisode[];
 }
 
@@ -34,8 +38,65 @@ function SectionLabel({ children }: { children: ReactNode }) {
   );
 }
 
+function SeasonWatchProviders({
+  seriesId,
+  season,
+}: {
+  seriesId: number;
+  season: SeasonDetail;
+}) {
+  const { markWatched } = useEpisodeInteractions(
+    seriesId,
+    season.season_number,
+    {
+      seriesEpisodeTotal: season.seriesEpisodeTotal,
+      seriesTitle: season.seriesName,
+      seriesPosterPath: season.seriesPosterPath ?? season.poster_path,
+    }
+  );
+
+  const movieCompat = {
+    id: seriesId,
+    title: season.seriesName,
+    poster_path: season.seriesPosterPath ?? season.poster_path ?? "",
+    backdrop_path: season.seriesBackdrop ?? "",
+    release_date: season.air_date ?? "",
+    tagline: null,
+    overview: season.overview,
+    runtime: 0,
+    images: { backdrops: [], posters: [] },
+    director: "",
+    similar: { results: [] },
+    recommendations: { results: [] },
+    videos: { results: [] },
+    genres: [],
+    watchProviders: season.watchProviders,
+  } as unknown as Movie;
+
+  return (
+    <WatchProviders
+      movie={movieCompat}
+      hideHeading
+      omitTrailerButton
+      mediaType="tv"
+      seasonNumber={season.season_number}
+      episodes={season.episodes.map((ep) => ({
+        id: ep.id,
+        episode_number: ep.episode_number,
+        name: ep.name,
+      }))}
+      onClaketeEpisodePlay={(ep) => {
+        void markWatched(ep.episode_number, ep.id);
+      }}
+    />
+  );
+}
+
 const SEASON_LETTERBOX_HEIGHT = "clamp(400px, min(60vh, 680px), 780px)";
 const SEASON_POSTER_ALIGN_MARGIN = `max(-5rem, calc(min(92vw, 304px) * 0.75 + 8rem - ${SEASON_LETTERBOX_HEIGHT}))`;
+/** Nav (~4.5rem) + column gap (gap-10 / gap-12). Keep in sync with lg:gap-10 xl:gap-12. */
+const SEASON_POSTER_STICKY_TOP =
+  "lg:sticky lg:top-[calc(env(safe-area-inset-top,0px)_+_4.5rem_+_1.5rem)] xl:top-[calc(env(safe-area-inset-top,0px)_+_4.5rem_+_1.5rem)]";
 
 export default function SeriesSeasonPage({
   params,
@@ -134,13 +195,13 @@ export default function SeriesSeasonPage({
             style={{ height: SEASON_LETTERBOX_HEIGHT }}
             aria-hidden
           />
-          <div className="relative z-10 mt-0 flex flex-col gap-12 px-5 pt-2 sm:px-8 lg:flex-row lg:items-start lg:gap-16 lg:px-10 xl:gap-20">
+          <div className="relative z-10 mt-0 flex flex-col gap-12 px-5 pt-2 sm:px-8 lg:flex-row lg:items-start lg:gap-10 lg:px-10 xl:gap-12">
             <div
               className="mx-auto flex w-full max-w-[260px] shrink-0 flex-col gap-3 self-start sm:max-w-[280px] lg:mx-0 lg:max-w-[304px]"
-              style={{ marginTop: SEASON_POSTER_ALIGN_MARGIN }}
+              style={{ marginTop: `calc((${SEASON_POSTER_ALIGN_MARGIN}) - 9rem)` }}
             >
               <Skeleton className="h-4 w-32 rounded-md" />
-              <Skeleton className="-mt-36 aspect-[2/3] w-full rounded-2xl" />
+              <Skeleton className="aspect-[2/3] w-full rounded-2xl" />
             </div>
             <div className="min-w-0 flex-1 space-y-6 pt-1">
               <div className="space-y-3">
@@ -219,13 +280,16 @@ export default function SeriesSeasonPage({
           />
         </div>
 
-        <div className="relative z-10 flex flex-col gap-12 pt-2 lg:flex-row lg:items-start lg:gap-16 xl:gap-20">
+        <div className="relative z-10 flex flex-col gap-12 pt-2 lg:flex-row lg:items-start lg:gap-10 xl:gap-12">
           <aside
-            className="z-20 mx-auto w-full max-w-[260px] shrink-0 self-start sm:max-w-[280px] lg:mx-0 lg:max-w-[304px] lg:sticky lg:top-[calc(env(safe-area-inset-top,0px)+14rem)]"
-            style={{ marginTop: SEASON_POSTER_ALIGN_MARGIN }}
+            className={cn(
+              "z-20 mx-auto w-full max-w-[260px] shrink-0 self-start sm:max-w-[280px] lg:mx-0 lg:max-w-[304px]",
+              SEASON_POSTER_STICKY_TOP,
+            )}
+            style={{ marginTop: `calc((${SEASON_POSTER_ALIGN_MARGIN}) - 9rem)` }}
           >
             <div className="flex flex-col gap-4">
-              <div className="-mt-36 overflow-hidden rounded-2xl border border-border bg-card">
+              <div className="overflow-hidden rounded-2xl border border-border bg-card">
                 <div className="relative aspect-[2/3] w-full overflow-hidden bg-card">
                   {posterUrl ? (
                     <img
@@ -238,6 +302,12 @@ export default function SeriesSeasonPage({
                       ?
                     </div>
                   )}
+                </div>
+                <div className="border-t border-border">
+                  <SeasonWatchProviders
+                    seriesId={seriesId}
+                    season={season}
+                  />
                 </div>
               </div>
               <nav aria-label="Breadcrumb" className="px-0.5">

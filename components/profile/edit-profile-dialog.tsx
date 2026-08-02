@@ -9,11 +9,11 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { useUser } from "@supabase/auth-helpers-react"
 import { useProfile } from "@/components/providers/profile-provider"
 import { useAppearance } from "@/components/providers/appearance-provider"
-import { Settings, Link2, Pencil, ChevronRight, User, CreditCard, type LucideIcon } from "lucide-react"
+import { Settings, Link2, Pencil, ChevronRight, User, CreditCard } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { Json } from "@/lib/supabase/database.types"
 import { ConnectionsEditor } from "@/components/profile/connections-editor"
@@ -38,6 +38,7 @@ import {
   serializeUserHomePreferencesKeepingBackdrop,
   type UserHomePreferences,
 } from "@/lib/user-home-preferences"
+import { useT } from "@/components/providers/i18n-provider"
 
 interface EditProfileDialogProps {
   username: string
@@ -78,36 +79,6 @@ interface EditProfileDialogProps {
 
 type ProfileSectionId = "account" | "subscription" | "profile" | "preferences" | "social"
 
-const NAV_GROUPS: {
-  heading?: string
-  items: { id: ProfileSectionId; label: string; Icon: LucideIcon }[]
-}[] = [
-  {
-    items: [
-      { id: "account", label: "Account", Icon: User },
-      { id: "preferences", label: "Preferences", Icon: Settings },
-      { id: "social", label: "Connections", Icon: Link2 },
-      { id: "subscription", label: "Subscription", Icon: CreditCard },
-    ],
-  },
-]
-
-const SECTION_HEADINGS: Record<ProfileSectionId, string> = {
-  account: "Account",
-  subscription: "Subscription",
-  profile: "Profile",
-  preferences: "Preferences",
-  social: "Connections",
-}
-
-const SECTION_HINTS: Record<ProfileSectionId, string> = {
-  account: "Your username and sign-in identity.",
-  subscription: "The Shining — choose a plan, upgrade, and manage billing.",
-  profile: "Display name and bio shown on your public profile. Markdown is supported in bio.",
-  preferences: "Home backdrop and which sections appear after you sign in.",
-  social: "Social platforms shown on your public profile.",
-}
-
 /** Fixed shell — sections scroll inside; modal size does not change per tab. */
 const EDIT_PROFILE_MODAL_SIZE = cn(
   "h-[min(92vh,680px)] min-h-[min(92vh,680px)] max-h-[min(92vh,680px)]",
@@ -135,6 +106,7 @@ export function EditProfileDialog({
   onHomeBackdropUpdated,
   onUpdate,
 }: EditProfileDialogProps) {
+  const { t } = useT()
   const [isOpen, setIsOpen] = useState(false)
   const [activeSection, setActiveSection] = useState<ProfileSectionId>("account")
   const [loading, setLoading] = useState(false)
@@ -160,6 +132,42 @@ export function EditProfileDialog({
   const { commitAppearanceSync } = useAppearance()
   const user = useUser()
   const { refreshProfile } = useProfile()
+
+  const navGroups = useMemo((): {
+    heading?: string
+    items: { id: ProfileSectionId; label: string; Icon: typeof User }[]
+  }[] => [
+    {
+      items: [
+        { id: "account", label: t("profile.sectionAccount"), Icon: User },
+        { id: "preferences", label: t("profile.sectionPreferences"), Icon: Settings },
+        { id: "social", label: t("profile.sectionConnections"), Icon: Link2 },
+        { id: "subscription", label: t("profile.sectionSubscription"), Icon: CreditCard },
+      ],
+    },
+  ], [t])
+
+  const sectionHeadings: Record<ProfileSectionId, string> = useMemo(
+    () => ({
+      account: t("profile.sectionAccount"),
+      subscription: t("profile.sectionSubscription"),
+      profile: t("profile.sectionProfile"),
+      preferences: t("profile.sectionPreferences"),
+      social: t("profile.sectionConnections"),
+    }),
+    [t],
+  )
+
+  const sectionHints: Record<ProfileSectionId, string> = useMemo(
+    () => ({
+      account: t("profile.hintAccount"),
+      subscription: t("profile.hintSubscription"),
+      profile: t("profile.hintProfile"),
+      preferences: t("profile.hintPreferences"),
+      social: t("profile.hintConnections"),
+    }),
+    [t],
+  )
 
   useEffect(() => {
     if (!isOpen) return
@@ -257,8 +265,8 @@ export function EditProfileDialog({
             "hover:bg-muted hover:text-foreground",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/25 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
           )}
-          aria-label="Edit profile"
-          title="Edit profile"
+          aria-label={t("profile.editProfile")}
+          title={t("profile.editProfile")}
         >
           <Pencil className="h-4 w-4" aria-hidden />
         </button>
@@ -275,15 +283,15 @@ export function EditProfileDialog({
             <div className="px-2 pt-2">
               <button
                 type="button"
-                onClick={() => setActiveSection("profile")}
+                onClick={() => setActiveSection("account")}
                 className={cn(
                   "group flex w-full items-center gap-3 rounded-lg border px-3 py-3 text-left transition-colors",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-border focus-visible:ring-offset-0",
-                  activeSection === "profile"
+                  activeSection === "account"
                     ? "border-border bg-muted/50"
                     : "border-border/80 bg-background/80 hover:border-border hover:bg-muted/40",
                 )}
-                aria-label="Edit profile details"
+                aria-label={t("profile.editProfile")}
               >
                 <Avatar className="h-12 w-12 shrink-0 rounded-md border border-border shadow-sm">
                   <AvatarImage src={avatarSrc} alt="" className="rounded-md object-cover" />
@@ -293,12 +301,12 @@ export function EditProfileDialog({
                 </Avatar>
                 <div className="min-w-0 flex-1 space-y-0.5">
                   <p className="truncate text-sm font-semibold text-foreground">{showName}</p>
-                  <p className="truncate text-xs text-muted-foreground">Edit profile</p>
+                  <p className="truncate text-xs text-muted-foreground">{t("profile.editProfile")}</p>
                 </div>
                 <ChevronRight
                   className={cn(
                     "size-4 shrink-0 text-muted-foreground transition-transform",
-                    activeSection === "profile" ? "text-foreground" : "group-hover:translate-x-0.5",
+                    activeSection === "account" ? "text-foreground" : "group-hover:translate-x-0.5",
                   )}
                   aria-hidden
                 />
@@ -308,7 +316,7 @@ export function EditProfileDialog({
             <div className="mx-2 my-2 h-px bg-border" aria-hidden />
 
             <nav className="flex flex-col gap-1 px-2 pb-2">
-              {NAV_GROUPS.map((group, gi) => (
+              {navGroups.map((group, gi) => (
                 <div key={gi} className="flex flex-col">
                   {group.heading ? (
                     <p className="px-2 pb-1.5 pt-2 text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
@@ -341,10 +349,10 @@ export function EditProfileDialog({
           <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col bg-background">
             <div className="shrink-0 border-b border-border px-6 pb-4 pt-11 sm:px-8 sm:pb-5 sm:pt-6 sm:pr-8">
               <DialogTitle className="text-base font-semibold tracking-tight text-foreground">
-                {SECTION_HEADINGS[activeSection]}
+                {sectionHeadings[activeSection]}
               </DialogTitle>
               <DialogDescription className="mt-1 max-w-lg text-xs leading-relaxed text-muted-foreground sm:text-sm">
-                {SECTION_HINTS[activeSection]}
+                {sectionHints[activeSection]}
               </DialogDescription>
             </div>
 
@@ -357,20 +365,96 @@ export function EditProfileDialog({
               )}
             >
               {activeSection === "account" && (
-                <div className="rounded-lg border border-border/80 bg-muted/5 p-4 sm:p-5">
-                  <div>
-                    <Label htmlFor="account-username" className="text-xs font-medium text-muted-foreground">
-                      Username
-                    </Label>
-                    <Input
-                      id="account-username"
-                      value={username}
-                      disabled
-                      className="mt-1.5 bg-muted/30"
-                    />
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      Your username cannot be changed here.
-                    </p>
+                <div className="space-y-8">
+                  <div className="space-y-4 rounded-lg border border-border/80 bg-muted/5 p-4 sm:p-5">
+                    <div>
+                      <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                        {t("profile.profileBasics")}
+                      </h3>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        {t("profile.profileBasicsHint")}
+                      </p>
+                    </div>
+                    <div className="space-y-4">
+                      <div>
+                        <Label
+                          htmlFor="account-email"
+                          className="text-xs font-medium text-muted-foreground"
+                        >
+                          {t("profile.email")}
+                        </Label>
+                        <Input
+                          id="account-email"
+                          value={user?.email ?? ""}
+                          disabled
+                          className="mt-1.5 bg-muted/30"
+                        />
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {t("profile.emailHint")}
+                        </p>
+                      </div>
+                      <div>
+                        <Label
+                          htmlFor="account-username"
+                          className="text-xs font-medium text-muted-foreground"
+                        >
+                          {t("profile.username")}
+                        </Label>
+                        <Input
+                          id="account-username"
+                          value={username}
+                          disabled
+                          className="mt-1.5 bg-muted/30"
+                        />
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {t("profile.usernameLocked")}
+                        </p>
+                      </div>
+                      <div>
+                        <Label
+                          htmlFor="account-displayName"
+                          className="text-xs font-medium text-muted-foreground"
+                        >
+                          {t("profile.displayName")}
+                        </Label>
+                        <Input
+                          id="account-displayName"
+                          value={newDisplayName}
+                          onChange={(e) => setNewDisplayName(e.target.value)}
+                          placeholder={t("profile.displayNamePlaceholder")}
+                          className="mt-1.5"
+                        />
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {t("profile.displayNameHint")}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3 rounded-lg border border-border/80 bg-muted/5 p-4 sm:p-5">
+                    <div>
+                      <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                        {t("profile.about")}
+                      </h3>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        {t("profile.aboutHint")}
+                      </p>
+                    </div>
+                    <div>
+                      <Label className="text-xs font-medium text-muted-foreground">
+                        {t("profile.bio")}
+                      </Label>
+                      {isOpen ? (
+                        <div className="mt-1.5">
+                          <ProfileBioEditor
+                            resetKey={bioEditorKey}
+                            markdown={newBio}
+                            onChange={setNewBio}
+                            placeholder={t("profile.bioPlaceholder")}
+                          />
+                        </div>
+                      ) : null}
+                    </div>
                   </div>
                 </div>
               )}
@@ -382,61 +466,6 @@ export function EditProfileDialog({
                     planFields={planFields}
                     stripeCustomerId={stripeCustomerId}
                   />
-                </div>
-              )}
-
-              {activeSection === "profile" && (
-                <div className="space-y-8">
-                  <div className="space-y-4 rounded-lg border border-border/80 bg-muted/5 p-4 sm:p-5">
-                    <div>
-                      <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Account</h3>
-                      <p className="mt-1 text-sm text-muted-foreground">Basics shown on your profile.</p>
-                    </div>
-                    <div className="space-y-4">
-                      <div>
-                        <Label htmlFor="username" className="text-xs font-medium text-muted-foreground">
-                          Username
-                        </Label>
-                        <Input id="username" value={username} disabled className="mt-1.5 bg-muted/30" />
-                        <p className="mt-1 text-xs text-muted-foreground">Username can’t be changed here.</p>
-                      </div>
-                      <div>
-                        <Label htmlFor="displayName" className="text-xs font-medium text-muted-foreground">
-                          Display name
-                        </Label>
-                        <Input
-                          id="displayName"
-                          value={newDisplayName}
-                          onChange={(e) => setNewDisplayName(e.target.value)}
-                          placeholder="Your public name"
-                          className="mt-1.5"
-                        />
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          Shown in the header when set; otherwise your @handle is used.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3 rounded-lg border border-border/80 bg-muted/5 p-4 sm:p-5">
-                    <div>
-                      <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">About</h3>
-                      <p className="mt-1 text-sm text-muted-foreground">Short bio. Markdown: bold, lists, links.</p>
-                    </div>
-                    <div>
-                      <Label className="text-xs font-medium text-muted-foreground">Bio</Label>
-                      {isOpen ? (
-                        <div className="mt-1.5">
-                          <ProfileBioEditor
-                            resetKey={bioEditorKey}
-                            markdown={newBio}
-                            onChange={setNewBio}
-                            placeholder="Write a short bio… (**bold**, lists, links)"
-                          />
-                        </div>
-                      ) : null}
-                    </div>
-                  </div>
                 </div>
               )}
 
@@ -464,7 +493,7 @@ export function EditProfileDialog({
 
             <DialogFooter className="shrink-0 gap-2 border-t border-border bg-muted/10 px-5 py-3 sm:justify-end sm:px-8">
               <Button type="button" variant="outline" className="rounded-md" onClick={() => setIsOpen(false)}>
-                Cancel
+                {t("common.cancel")}
               </Button>
               <Button
                 type="button"
@@ -472,7 +501,7 @@ export function EditProfileDialog({
                 onClick={handleSave}
                 disabled={loading}
               >
-                {loading ? "Saving…" : "Save changes"}
+                {loading ? t("profile.saving") : t("profile.saveChanges")}
               </Button>
             </DialogFooter>
           </div>

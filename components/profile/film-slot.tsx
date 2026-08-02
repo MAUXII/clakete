@@ -4,6 +4,7 @@ import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import { Button } from "../ui/button"
 import { Plus } from "lucide-react"
+import { useT } from "@/components/providers/i18n-provider"
 
 interface Film {
   film_id: number
@@ -21,6 +22,7 @@ interface FilmSlotProps {
 }
 
 export function FilmSlot({ film, position, onSelect, onRemove }: FilmSlotProps) {
+  const { t } = useT()
   const {
     attributes,
     listeners,
@@ -73,7 +75,7 @@ export function FilmSlot({ film, position, onSelect, onRemove }: FilmSlotProps) 
           className="w-full h-full flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-primary"
         >
           <Plus className="w-6 h-6" />
-          <span className="text-xs">Add Film</span>
+          <span className="text-xs">{t("profile.addFilm")}</span>
         </Button>
       )}
     </div>

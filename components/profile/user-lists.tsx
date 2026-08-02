@@ -21,6 +21,7 @@ import {
 } from "@/components/lists/list-card-shell"
 import { ListPosterStack } from "@/components/lists/list-poster-stack"
 import { cn } from "@/lib/utils"
+import { useT } from "@/components/providers/i18n-provider"
 
 /** Mesmos 5 slots vazios que um `UserListCard` compact usa para dimensionar o stack. */
 const EMPTY_COMPACT_STACK: (string | null)[] = [null, null, null, null, null]
@@ -70,6 +71,7 @@ export function UserLists({
   singleColumn = false,
   compactCards = true,
 }: UserListsProps) {
+  const { t } = useT()
   const router = useRouter()
   const loggedInUser = useUser()
   const { lists, loading, error, fetchUserLists, deleteList } = useLists()
@@ -136,7 +138,7 @@ export function UserLists({
   if (error) {
     return (
       <div className="text-center text-muted-foreground">
-        <p>Could not load lists: {error}</p>
+        <p>{t("profile.loadListsError")}{error ? `: ${error}` : ""}</p>
       </div>
     )
   }
@@ -156,7 +158,7 @@ export function UserLists({
         )}
 
         {cappedLists.length === 0 && !canEdit ? (
-          <p className="text-sm text-muted-foreground">No lists yet.</p>
+          <p className="text-sm text-muted-foreground">{t("profile.listsEmpty")}</p>
         ) : (
           <div className={listsGridClassName(singleColumn, gridColumns)}>
             {cappedLists.map((list) => (
@@ -297,7 +299,7 @@ export function UserLists({
 
       {displayLists.length === 0 ? (
         <div className="py-8 text-center text-muted-foreground">
-          <p>No lists found.</p>
+          <p>{t("profile.listsNotFound")}</p>
           {canEdit && (
             <Button variant="outline" size="sm" onClick={() => router.push("/list/new")} className="mt-2">
               Create your first list

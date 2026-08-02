@@ -22,6 +22,7 @@ import {
 import { cn } from "@/lib/utils";
 import { filmHref } from "@/lib/media-href";
 import { useLocalePrefs } from "@/hooks/use-locale-prefs";
+import { useT } from "@/components/providers/i18n-provider";
 
 interface Movie {
   id: number;
@@ -53,6 +54,7 @@ function FilmsDiscoverContent() {
   const searchParams = useSearchParams();
   const { genres, loading: genresLoading } = useGenres();
   const { withLocale, localeQs, loading: localeLoading, tmdbLanguage, watchRegion } = useLocalePrefs();
+  const { t } = useT();
   const genre = searchParams.get("genres") || "";
   const voteAverageLte = Number(searchParams.get("vote_average.lte") || 10);
   const sortBy = searchParams.get("sort_by") || "popularity.desc";
@@ -186,17 +188,17 @@ function FilmsDiscoverContent() {
   return (
     <FilmsCatalogShell>
       <FilmsCatalogHeader
-        eyebrow="Catalog"
-        title="Discover"
-        description="Browse by genre, cap by rating and sort — filters apply to the full TMDB discover index."
+        eyebrow={t("catalog.catalogEyebrow")}
+        title={t("catalog.discoverTitle")}
+        description={t("catalog.discoverDescription")}
         actions={
           <>
-            <FilmsToolbarIconButton onClick={handleFeelingLucky} aria-label="I'm feeling lucky">
+            <FilmsToolbarIconButton onClick={handleFeelingLucky} aria-label={t("catalog.feelingLucky")}>
               <PiClover className="h-5 w-5" />
             </FilmsToolbarIconButton>
             <Sheet open={open} onOpenChange={setOpen}>
               <SheetTrigger asChild>
-                <FilmsToolbarIconButton aria-label="Filters">
+                <FilmsToolbarIconButton aria-label={t("catalog.filters")}>
                   <IoOptions className="h-5 w-5" />
                 </FilmsToolbarIconButton>
               </SheetTrigger>
@@ -205,20 +207,20 @@ function FilmsDiscoverContent() {
                 className="w-full max-w-sm border-l border-border bg-card text-foreground"
               >
                 <SheetHeader>
-                  <SheetTitle className="text-left text-lg text-foreground">Filters</SheetTitle>
+                  <SheetTitle className="text-left text-lg text-foreground">{t("catalog.filters")}</SheetTitle>
                 </SheetHeader>
                 <div className="mt-6 flex flex-col gap-5">
                 <div>
                   <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                    Genre
+                    {t("catalog.genre")}
                   </label>
                   <Select value={localGenre} onValueChange={setLocalGenre} disabled={genresLoading}>
                     <SelectTrigger className="border-border bg-white/[0.04]">
-                      <SelectValue placeholder={genresLoading ? "Loading genres..." : "All genres"} />
+                      <SelectValue placeholder={genresLoading ? t("catalog.loadingGenres") : t("catalog.allGenres")} />
                     </SelectTrigger>
                     <SelectContent>
                       {genres.length === 0 && !genresLoading && (
-                        <div className="px-3 py-2 text-muted-foreground text-sm">No genres found</div>
+                        <div className="px-3 py-2 text-muted-foreground text-sm">{t("catalog.noGenres")}</div>
                       )}
                       {genres.map(g => (
                         <SelectItem key={g.id} value={g.id.toString()}>{g.name}</SelectItem>
@@ -228,7 +230,7 @@ function FilmsDiscoverContent() {
                 </div>
                 <div>
                   <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                    Max rating
+                    {t("catalog.maxRating")}
                   </label>
                   <div className="flex items-center gap-2">
                     <Slider
@@ -244,19 +246,19 @@ function FilmsDiscoverContent() {
                 </div>
                 <div>
                   <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                    Sort by
+                    {t("catalog.sortBy")}
                   </label>
                   <Select value={localSortBy} onValueChange={setLocalSortBy}>
                     <SelectTrigger className="border-border bg-white/[0.04]">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="popularity.desc">Most popular</SelectItem>
-                      <SelectItem value="popularity.asc">Least popular</SelectItem>
-                      <SelectItem value="release_date.desc">Most recent</SelectItem>
-                      <SelectItem value="release_date.asc">Oldest</SelectItem>
-                      <SelectItem value="vote_average.desc">Highest rated</SelectItem>
-                      <SelectItem value="vote_average.asc">Lowest rated</SelectItem>
+                      <SelectItem value="popularity.desc">{t("catalog.sortMostPopular")}</SelectItem>
+                      <SelectItem value="popularity.asc">{t("catalog.sortLeastPopular")}</SelectItem>
+                      <SelectItem value="release_date.desc">{t("catalog.sortMostRecent")}</SelectItem>
+                      <SelectItem value="release_date.asc">{t("catalog.sortOldest")}</SelectItem>
+                      <SelectItem value="vote_average.desc">{t("catalog.sortHighestRated")}</SelectItem>
+                      <SelectItem value="vote_average.asc">{t("catalog.sortLowestRated")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -265,11 +267,11 @@ function FilmsDiscoverContent() {
                   onClick={handleSaveFilters}
                   type="button"
                 >
-                  Apply filters
+                  {t("catalog.applyFilters")}
                 </button>
-              </div>
-            </SheetContent>
-          </Sheet>
+                </div>
+              </SheetContent>
+            </Sheet>
           </>
         }
       />

@@ -30,6 +30,7 @@ import {
   type ActivityKind,
 } from "@/lib/activity-log"
 import { cn } from "@/lib/utils"
+import { useT } from "@/components/providers/i18n-provider"
 
 const KIND_ICON: Record<ActivityKind, typeof Eye> = {
   joined: Sparkles,
@@ -72,6 +73,7 @@ export function UserActivityLog({
   username: string
   isOwnProfile?: boolean
 }) {
+  const { t } = useT()
   const supabase = useSupabaseClient()
   const [events, setEvents] = useState<ActivityEvent[]>([])
   const [joinedAt, setJoinedAt] = useState<string | null>(null)
@@ -361,7 +363,7 @@ export function UserActivityLog({
       setVisible(80)
     } catch (e) {
       console.error("[activity-log]", e)
-      toast.error("Could not load activity")
+      toast.error(t("profile.loadActivityError"))
     } finally {
       setLoading(false)
     }
@@ -407,10 +409,10 @@ export function UserActivityLog({
     return (
       <div className="mt-4">
         <h2 className="text-sm font-medium uppercase tracking-wide text-muted-foreground/50">
-          Activity
+          {t("profile.activity")}
         </h2>
         <div className="mb-4 mt-1 h-[0.3px] w-full bg-muted-foreground/10" />
-        <p className="text-sm text-muted-foreground">No activity yet</p>
+        <p className="text-sm text-muted-foreground">{t("profile.activityEmpty")}</p>
       </div>
     )
   }
@@ -420,11 +422,13 @@ export function UserActivityLog({
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div>
           <h2 className="text-sm font-medium uppercase tracking-wide text-muted-foreground/50">
-            Activity
+            {t("profile.activity")}
           </h2>
           <p className="mt-1 text-xs text-muted-foreground">
-            Full track · {events.length}{" "}
-            {events.length === 1 ? "entry" : "entries"}
+            {t("profile.activityFullTrack", {
+              count: events.length,
+              entries: events.length === 1 ? t("profile.entry") : t("profile.entries"),
+            })}
             {rangeLabel ? ` · ${rangeLabel}` : null}
           </p>
         </div>

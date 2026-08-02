@@ -2,13 +2,15 @@
 
 import { UserLists } from "@/components/profile/user-lists"
 import { useProfileLayoutData } from "@/components/providers/profile-layout-context"
+import { useT } from "@/components/providers/i18n-provider"
 
 export default function ListsPage() {
+  const { t } = useT()
   const { userData, isOwnProfile } = useProfileLayoutData()
 
   return (
     <div className="w-full mt-4">
-      <h2 className="font-medium text-muted-foreground/50 text-sm uppercase">Lists</h2>
+      <h2 className="font-medium text-muted-foreground/50 text-sm uppercase">{t("profile.lists")}</h2>
       <div className="mt-1 mb-4 h-[0.3px] w-full bg-muted-foreground/10" />
       <UserLists
         userId={userData.id}

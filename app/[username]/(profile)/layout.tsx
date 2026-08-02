@@ -31,6 +31,8 @@ import { pageContainerClass } from "@/lib/page-container"
 import { hasShiningAccess } from "@/lib/plans"
 import { parseUserHomePreferences } from "@/lib/user-home-preferences"
 import { ShiningBadge } from "@/components/premium/shining-badge"
+import { ProfileMoreMenu } from "@/components/profile/profile-more-menu"
+import { useT } from "@/components/providers/i18n-provider"
 
 interface UserData extends ProfileLayoutUser {
   website_url?: string | null;
@@ -60,6 +62,13 @@ interface ProfileLayoutProps {
   }>
 }
 
+/**
+ * Nav (~4.5rem sm+) + folga. Compensa o -mt do avatar (lg:-mt-24) pra coluna
+ * sticky não ficar atrás da navbar.
+ */
+const PROFILE_SIDEBAR_STICKY_CLASS =
+  "lg:sticky lg:top-[calc(env(safe-area-inset-top,0px)_+_4.5rem_+_1rem_+_6rem)] lg:z-20"
+
 export default function ProfileLayout({ children, params }: ProfileLayoutProps) {
     const [userData, setUserData] = useState<UserData | null>(null)
     const [isOwnProfile, setIsOwnProfile] = useState(false)
@@ -79,6 +88,7 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
     const { refreshProfile, profile: sessionProfile } = useProfile()
     const pathname = usePathname()
     const profileTabs = useProfileTabs()
+    const { t } = useT()
     const usernameRef = useRef(username)
     useEffect(() => {
       usernameRef.current = username
@@ -358,7 +368,7 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
   
     const toggleFollow = async () => {
       if (!userData || !currentUser) {
-        toast.error("Você precisa estar logado para seguir usuários")
+        toast.error(t("profile.loginToFollow"))
         return
       }
       
@@ -381,7 +391,7 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
           
           if (createError) {
             console.error('Erro ao criar tabela de seguidores:', createError)
-            toast.error("Funcionalidade de seguidores ainda não está disponível")
+            toast.error(t("profile.followersUnavailable"))
             return
           }
           
@@ -419,7 +429,7 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
             isFollowing: false
           }))
           
-          toast.success("Você deixou de seguir este usuário")
+          toast.success(t("profile.unfollowed"))
           
         } else {
           // Seguir
@@ -443,22 +453,22 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
             isFollowing: true
           }))
           
-          toast.success("Você começou a seguir este usuário")
+          toast.success(t("profile.followed"))
           
         }
       } catch (error: unknown) {
         console.error('Erro ao alternar seguidor:', error)
         const errorMessage = error instanceof Error ? error.message : 'Desconhecido'
-        toast.error(`Erro ao seguir/deixar de seguir: ${errorMessage}`)
+        toast.error(t("profile.followError", { message: errorMessage }))
       }
     }
   
     if (loading) {
       const bone = "bg-muted"
       return (
-        <section className="relative z-10 mt-[3.75rem] w-full" aria-busy aria-label="Loading profile">
+        <section className="relative z-10 mt-[3.75rem] w-full" aria-busy aria-label={t("profile.loading")}>
           <div
-            className="relative h-[567px] w-full min-w-0 overflow-hidden rounded-none border-0 bg-background ring-1 ring-border"
+            className="relative h-44 w-full min-w-0 overflow-hidden rounded-none border-0 bg-background ring-1 ring-border sm:h-56 md:h-72 lg:h-96 xl:h-[567px]"
             aria-hidden
           >
             <Skeleton className={cn("absolute inset-0 h-full w-full rounded-none", bone)} />
@@ -470,8 +480,8 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
               <div className="relative z-10">
                 <div className="flex flex-wrap gap-6 lg:flex-nowrap lg:items-stretch">
                   <div className="flex w-full flex-col gap-6">
-                    <div className="sticky top-[calc(env(safe-area-inset-top,0px)+12rem)] z-20 flex flex-col gap-6 self-start">
-                      <div className="relative -mt-24 aspect-square h-36 max-w-36 overflow-clip rounded-2xl shadow-sm ring-2 ring-background">
+                    <div className={cn(PROFILE_SIDEBAR_STICKY_CLASS, "flex flex-col gap-6 self-start")}>
+                      <div className="relative -mt-12 aspect-square size-24 overflow-clip rounded-2xl shadow-sm ring-2 ring-background sm:-mt-16 sm:size-32 md:-mt-20 md:size-36 lg:-mt-24 lg:size-40">
                         <Skeleton className={cn("h-full w-full rounded-md", bone)} />
                       </div>
 
@@ -598,7 +608,7 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
         {/* Banner */}
         <div 
         className={cn(
-          "group relative h-[567px] w-full min-w-0 overflow-hidden rounded-none border-0 bg-cover bg-center ring-1 ring-border",
+          "group relative h-44 w-full min-w-0 overflow-hidden rounded-none border-0 bg-cover bg-center ring-1 ring-border sm:h-56 md:h-72 lg:h-96 xl:h-[567px]",
           themed && "profile-theme-media-banner",
         )}
         style={{ 
@@ -612,7 +622,7 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
             onClick={() => setShowBannerEdit(true)}
             className="absolute inset-0 z-10 flex h-full w-full cursor-pointer items-center justify-center rounded-none bg-black/50 opacity-0 backdrop-blur-[1.2px] transition-opacity group-hover:opacity-100 "
           >
-            <span className="text-white">Edit Banner</span>
+            <span className="text-white">{t("profile.editBanner")}</span>
           </button>
         )}
         <div className="absolute inset-0 rounded-none bg-gradient-to-t from-black/50 to-transparent z" />
@@ -625,10 +635,10 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
           <div className="flex flex-wrap gap-6 lg:flex-nowrap lg:items-stretch">
           <div className="flex flex-col w-full gap-6">
             {/* Avatar */}
-            <div className="sticky top-[calc(env(safe-area-inset-top,0px)+12rem)] z-20 flex flex-col gap-6 self-start">
+            <div className={cn(PROFILE_SIDEBAR_STICKY_CLASS, "flex flex-col gap-6 self-start")}>
             <div
               className={cn(
-                "relative -mt-24 aspect-square h-36 max-w-36 overflow-clip rounded-2xl shadow-sm ring-2 ring-white group dark:ring-[#090909]",
+                "relative -mt-12 aspect-square size-24 overflow-clip rounded-2xl shadow-sm ring-2 ring-white group dark:ring-[#090909] sm:-mt-16 sm:size-32 md:-mt-20 md:size-36 lg:-mt-24 lg:size-40",
                 themed && "profile-theme-media-avatar",
               )}
             >
@@ -675,9 +685,8 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
                 {isShiningProfile ? <ShiningBadge /> : null}
               </h2>
 
-              <div className='flex'>
-                
-              <div className='flex items-center mt-2 gap-4'> 
+              <div className="mt-2 flex w-full flex-col gap-3">
+                <div className="flex items-center gap-4">
                   <div className="flex flex-col">
                     <span
                       className={cn(
@@ -693,18 +702,18 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
                         themed ? "profile-theme-muted" : "text-muted-foreground",
                       )}
                     >
-                      Films
+                      {t("profile.films")}
                     </span>
                   </div>
 
                   <div
                     className={cn(
-                      "text-sm w-[1px] h-[61%]",
+                      "h-[61%] w-px shrink-0",
                       themed ? "profile-theme-divider" : "bg-muted-foreground/40",
                     )}
                   />
 
-                   <div className="flex flex-col">
+                  <div className="flex flex-col">
                     <span
                       className={cn(
                         "text-xl font-semibold",
@@ -719,18 +728,21 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
                         themed ? "profile-theme-muted" : "text-muted-foreground",
                       )}
                     >
-                      Series
+                      {t("profile.series")}
                     </span>
                   </div>
-                  
+
                   <div
                     className={cn(
-                      "text-sm w-[1px] h-[61%]",
+                      "h-[61%] w-px shrink-0",
                       themed ? "profile-theme-divider" : "bg-muted-foreground/40",
                     )}
                   />
 
-                  <Link href={`/${userData.username}/followers`} className="flex flex-col transition hover:opacity-80">
+                  <Link
+                    href={`/${userData.username}/followers`}
+                    className="flex flex-col transition hover:opacity-80"
+                  >
                     <span
                       className={cn(
                         "text-xl font-semibold",
@@ -745,18 +757,21 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
                         themed ? "profile-theme-muted" : "text-muted-foreground",
                       )}
                     >
-                      Followers
+                      {t("profile.followers")}
                     </span>
                   </Link>
 
                   <div
                     className={cn(
-                      "text-sm w-[1px] h-[61%]",
+                      "h-[61%] w-px shrink-0",
                       themed ? "profile-theme-divider" : "bg-muted-foreground/40",
                     )}
                   />
 
-                  <Link href={`/${userData.username}/following`} className="flex flex-col transition hover:opacity-80">
+                  <Link
+                    href={`/${userData.username}/following`}
+                    className="flex flex-col transition hover:opacity-80"
+                  >
                     <span
                       className={cn(
                         "text-xl font-semibold",
@@ -771,25 +786,18 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
                         themed ? "profile-theme-muted" : "text-muted-foreground",
                       )}
                     >
-                      Following
+                      {t("profile.following")}
                     </span>
                   </Link>
 
-                  <div
-                    className={cn(
-                      "text-sm w-[1px] h-[61%]",
-                      themed ? "profile-theme-divider" : "bg-muted-foreground/40",
-                    )}
-                  />
-
                   {isOwnProfile ? (
-                    <div className="ml-4">
-                  <EditProfileDialog
-                    username={userData.username}
-                    displayName={userData.display_name}
-                    bio={userData.bio}
-                    avatarUrl={userData.avatar_url ?? undefined}
-                    instagramUrl={userData.instagram_url ?? null}
+                    <div className="ml-auto shrink-0">
+                      <EditProfileDialog
+                        username={userData.username}
+                        displayName={userData.display_name}
+                        bio={userData.bio}
+                        avatarUrl={userData.avatar_url ?? undefined}
+                        instagramUrl={userData.instagram_url ?? null}
                         twitterUrl={userData.twitter_url ?? null}
                         spotifyUrl={userData.spotify_url ?? null}
                         discordUrl={userData.discord_url ?? null}
@@ -812,21 +820,40 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
                         onUpdate={updateProfile}
                       />
                     </div>
-                  ) : (
+                  ) : null}
+                </div>
+
+                {!isOwnProfile ? (
+                  <div className="flex items-center gap-2">
                     <button
+                      type="button"
                       onClick={toggleFollow}
                       className={cn(
-                        "px-4 py-2 rounded-md transition-colors w-full border border-black/10 dark:border-border flex items-center justify-center",
+                        "flex h-9 min-w-0 flex-1 items-center justify-center rounded-md border px-4 text-sm font-medium transition-colors",
                         themed
                           ? "profile-theme-follow"
-                          : "bg-brand/10 text-brand/70",
+                          : stats.isFollowing
+                            ? "border-border bg-transparent text-muted-foreground hover:bg-muted/40 hover:text-foreground"
+                            : "border-brand/20 bg-brand/10 text-brand hover:bg-brand/15",
                       )}
                     >
-                      {stats.isFollowing ? 'Unfollow' : 'Follow'}
+                      {stats.isFollowing ? t("profile.following") : t("profile.follow")}
                     </button>
-                    
-                  )}
-                </div>
+                    <ProfileMoreMenu
+                      profileUserId={userData.id}
+                      username={userData.username}
+                      onBlocked={() =>
+                        setStats((prev) => ({
+                          ...prev,
+                          isFollowing: false,
+                          followersCount: prev.isFollowing
+                            ? Math.max(0, prev.followersCount - 1)
+                            : prev.followersCount,
+                        }))
+                      }
+                    />
+                  </div>
+                ) : null}
               </div>
               <ProfileSocialLinks
                 className="mt-4"

@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { avatarDisplaySrc } from "@/lib/next-remote-image"
 import { cn } from "@/lib/utils"
+import { useT } from "@/components/providers/i18n-provider"
 
 export type FollowListUser = {
   id: string
@@ -27,6 +28,7 @@ export function UserFollowersList({
   mode: "followers" | "following"
   username: string
 }) {
+  const { t } = useT()
   const supabase = useSupabaseClient()
   const authUser = useUser()
   const [users, setUsers] = useState<FollowListUser[]>([])
@@ -35,7 +37,7 @@ export function UserFollowersList({
   const [followingIds, setFollowingIds] = useState<Set<string>>(new Set())
   const [busyId, setBusyId] = useState<string | null>(null)
 
-  const title = mode === "followers" ? "Followers" : "Following"
+  const title = mode === "followers" ? t("profile.followers") : t("profile.following")
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -96,11 +98,11 @@ export function UserFollowersList({
       }
     } catch (e) {
       console.error("[follow-list]", e)
-      toast.error(`Could not load ${title.toLowerCase()}`)
+      toast.error(t("profile.loadFollowListError", { list: title.toLowerCase() }))
     } finally {
       setLoading(false)
     }
-  }, [authUser?.id, mode, supabase, title, userId])
+  }, [authUser?.id, mode, supabase, title, userId, t])
 
   useEffect(() => {
     void load()
@@ -118,7 +120,7 @@ export function UserFollowersList({
 
   const toggleFollow = async (targetId: string) => {
     if (!authUser?.id) {
-      toast.error("Sign in to follow people")
+      toast.error(t("profile.loginToFollow"))
       return
     }
     if (targetId === authUser.id) return
@@ -149,7 +151,7 @@ export function UserFollowersList({
       }
     } catch (e) {
       console.error(e)
-      toast.error("Could not update follow")
+      toast.error(t("profile.followUpdateError"))
     } finally {
       setBusyId(null)
     }
@@ -189,9 +191,9 @@ export function UserFollowersList({
         <p className="py-8 text-sm text-muted-foreground">
           {users.length === 0
             ? mode === "followers"
-              ? "No followers yet"
-              : "Not following anyone yet"
-            : "No matches"}
+              ? t("profile.noFollowers")
+              : t("profile.noFollowing")
+            : t("profile.noMatches")}
         </p>
       ) : (
         <ul className="space-y-1">
@@ -233,7 +235,7 @@ export function UserFollowersList({
                         : "border-brand/20 bg-brand/10 text-brand hover:bg-brand/20",
                     )}
                   >
-                    {isFollowing ? "Following" : "Follow"}
+                    {isFollowing ? t("profile.following") : t("profile.follow")}
                   </button>
                 ) : null}
               </li>

@@ -33,6 +33,7 @@ import {
   type SocialPlatform,
   type SocialUrls,
 } from "@/lib/social-platforms"
+import { useT } from "@/components/providers/i18n-provider"
 
 export type ConnectionsEditorProps = {
   urls: SocialUrls
@@ -47,6 +48,7 @@ export function ConnectionsEditor({
   display,
   onDisplayChange,
 }: ConnectionsEditorProps) {
+  const { t } = useT()
   const [activePlatform, setActivePlatform] = useState<SocialPlatform | null>(null)
   const [handleDraft, setHandleDraft] = useState("")
 
@@ -106,7 +108,7 @@ export function ConnectionsEditor({
   return (
     <div className="space-y-5">
       <div className="rounded-lg border border-border/50 bg-muted/5 p-4 sm:p-5">
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Add connection</p>
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t("profile.addConnection")}</p>
         <p className="mt-1 text-sm text-muted-foreground">
           Choose a platform, then enter your handle. Connected accounts appear below.
         </p>

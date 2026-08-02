@@ -13,7 +13,7 @@ export async function GET(
     const { id, season_number } = await params
     const language = resolveTmdbLanguage(new URL(request.url).searchParams.get('language'))
 
-    const [seasonResponse, seriesResponse] = await Promise.all([
+    const [seasonResponse, seriesResponse, watchProvidersResponse] = await Promise.all([
       axios.get(`${TMDB_BASE_URL}/tv/${id}/season/${season_number}`, {
         params: {
           api_key: TMDB_API_KEY,
@@ -26,10 +26,14 @@ export async function GET(
           language,
         },
       }),
+      axios.get(`${TMDB_BASE_URL}/tv/${id}/watch/providers`, {
+        params: { api_key: TMDB_API_KEY },
+      }),
     ])
 
     const seasonData = seasonResponse.data
     const seriesData = seriesResponse.data
+    const watchProvidersData = watchProvidersResponse.data
     const today = new Date().toISOString().slice(0, 10)
 
     const rawEpisodes = seasonData.episodes || []
@@ -74,6 +78,7 @@ export async function GET(
         typeof seriesData.number_of_episodes === 'number'
           ? seriesData.number_of_episodes
           : null,
+      watchProviders: watchProvidersData,
       episodes,
     })
   } catch (error) {

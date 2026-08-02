@@ -17,6 +17,10 @@ import { useT } from "@/components/providers/i18n-provider";
 import { useSubscription } from "@/hooks/use-subscription";
 import { useClaketeWatch } from "@/hooks/use-clakete-watch";
 import { ClaketeWatchDialog } from "@/components/movies/clakete-watch-dialog";
+import {
+  ClaketeSeasonWatchDialog,
+  type ClaketeSeasonEpisode,
+} from "@/components/movies/clakete-season-watch-dialog";
 import { ClaketeLogo } from "@/components/ui/clakete-logo";
 
 interface WatchProvider {
@@ -41,12 +45,19 @@ export default function WatchProviders({
   hideHeading = false,
   omitTrailerButton = false,
   mediaType = "movie",
+  seasonNumber,
+  episodes,
+  onClaketeEpisodePlay,
 }: {
   movie: Movie;
   hideHeading?: boolean;
   omitTrailerButton?: boolean;
   /** Used to resolve JustWatch deep links (title page on Netflix etc.). */
   mediaType?: "movie" | "tv";
+  /** Se definido com mediaType=tv, Clakete abre picker de episódios da temporada. */
+  seasonNumber?: number;
+  episodes?: ClaketeSeasonEpisode[];
+  onClaketeEpisodePlay?: (episode: ClaketeSeasonEpisode) => void;
 }) {
   const [trailerOpen, setTrailerOpen] = useState(false);
   const [providersDialogOpen, setProvidersDialogOpen] = useState(false);
@@ -55,11 +66,24 @@ export default function WatchProviders({
   const { t } = useT();
   const { watchRegion } = useLocalePrefs();
   const { isShining, loading: subscriptionLoading } = useSubscription();
-  // Clakete só para The Shining ativo — free nunca vê o provider.
-  const canUseClakete = mediaType === "movie" && !subscriptionLoading && isShining;
+
+  const isSeasonWatch =
+    mediaType === "tv" &&
+    typeof seasonNumber === "number" &&
+    Array.isArray(episodes);
+
+  // Filme: sempre (Shining). Série: só na página de temporada (com eps).
+  const canUseClakete =
+    !subscriptionLoading &&
+    isShining &&
+    (mediaType === "movie" || isSeasonWatch);
+
   const { playback, available: claketeAvailable } = useClaketeWatch(
     movie.id,
-    canUseClakete
+    canUseClakete,
+    isSeasonWatch
+      ? { mediaType: "tv", season: seasonNumber, episode: 1 }
+      : { mediaType: "movie" }
   );
   const showClakete = canUseClakete && claketeAvailable;
 
@@ -291,12 +315,24 @@ export default function WatchProviders({
   );
 
   const claketeDialog = showClakete ? (
-    <ClaketeWatchDialog
-      open={claketeOpen}
-      onOpenChange={setClaketeOpen}
-      title={title || "Clakete"}
-      playback={playback}
-    />
+    isSeasonWatch && seasonNumber != null && episodes ? (
+      <ClaketeSeasonWatchDialog
+        open={claketeOpen}
+        onOpenChange={setClaketeOpen}
+        seriesId={movie.id}
+        seasonNumber={seasonNumber}
+        seriesName={title}
+        episodes={episodes}
+        onEpisodePlay={onClaketeEpisodePlay}
+      />
+    ) : (
+      <ClaketeWatchDialog
+        open={claketeOpen}
+        onOpenChange={setClaketeOpen}
+        title={title || "Clakete"}
+        playback={playback}
+      />
+    )
   ) : null;
 
   if (hideHeading) {

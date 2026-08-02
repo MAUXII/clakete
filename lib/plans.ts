@@ -66,6 +66,7 @@ export const SHINING_FEATURE_BULLETS = [
   "Everything in Free",
   "Premium badge on your profile and feed",
   "Profile themes (Overlook, Noir, Rose)",
+  "Custom avatar & banner (photo or GIF from your device)",
   `Unlimited private lists (Free: ${FREE_PRIVATE_LIST_LIMIT})`,
   "Early access to new features",
 ] as const

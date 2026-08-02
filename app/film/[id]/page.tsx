@@ -114,6 +114,9 @@ function SectionLabel({ children }: { children: ReactNode }) {
 
 const FILM_LETTERBOX_HEIGHT = "clamp(400px, min(60vh, 680px), 780px)"
 const FILM_POSTER_ALIGN_MARGIN = `max(-5rem, calc(min(92vw, 304px) * 0.75 + 8rem - ${FILM_LETTERBOX_HEIGHT}))`
+/** Nav (~4.5rem) + column gap (gap-10 / gap-12). Poster sticky top — keep in sync with lg:gap-10 xl:gap-12. */
+const FILM_POSTER_STICKY_TOP =
+  "lg:sticky lg:top-[calc(env(safe-area-inset-top,0px)_+_4.5rem_+_1.5rem)] xl:top-[calc(env(safe-area-inset-top,0px)_+_4.5rem_+_1.5rem)]"
 
 export default function FilmPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: rawParam } = use(params);
@@ -280,15 +283,15 @@ export default function FilmPage({ params }: { params: Promise<{ id: string }> }
             />
           </div>
 
-          <div className="relative z-10 flex flex-col gap-12 pt-2 lg:flex-row lg:items-start lg:gap-16 xl:gap-20">
+          <div className="relative z-10 flex flex-col gap-12 pt-2 lg:flex-row lg:items-start lg:gap-10 xl:gap-12">
             <aside
-              className="z-20 w-full shrink-0 self-start -mt-20 sm:-mt-24 lg:mx-0 lg:max-w-[304px] lg:[margin-top:var(--poster-mt)]"
+              className="z-20 w-full shrink-0 self-start -mt-20 sm:-mt-24 lg:mx-0 lg:max-w-[304px] lg:[margin-top:calc(var(--poster-mt)_-_9rem)]"
               style={{ "--poster-mt": FILM_POSTER_ALIGN_MARGIN } as CSSProperties}
             >
               <div className="flex flex-col gap-3">
                 <div className="flex items-end gap-4 lg:block">
                   <div className="w-[44%] max-w-[210px] shrink-0 lg:w-full lg:max-w-none">
-                    <div className="overflow-hidden rounded-2xl border border-border bg-card lg:-mt-36">
+                    <div className="overflow-hidden rounded-2xl border border-border bg-card">
                       <Skeleton className="aspect-[2/3] w-full rounded-none" />
                       <div className="hidden space-y-2 border-t border-border p-3 lg:block">
                         <Skeleton className="h-3 w-20" />
@@ -447,15 +450,18 @@ export default function FilmPage({ params }: { params: Promise<{ id: string }> }
         />
       </div>
 
-      <div className="relative z-10 flex flex-col gap-12  pt-2 lg:flex-row lg:items-start lg:gap-16 xl:gap-20">
+      <div className="relative z-10 flex flex-col gap-12  pt-2 lg:flex-row lg:items-start lg:gap-10 xl:gap-12">
         <aside
-          className="z-20 w-full shrink-0 self-start -mt-20 sm:-mt-24 lg:mx-0 lg:max-w-[304px] lg:[margin-top:var(--poster-mt)] lg:sticky lg:top-[calc(env(safe-area-inset-top,0px)+12rem)]"
+          className={cn(
+            "z-20 w-full shrink-0 self-start -mt-20 sm:-mt-24 lg:mx-0 lg:max-w-[304px] lg:[margin-top:calc(var(--poster-mt)_-_9rem)]",
+            FILM_POSTER_STICKY_TOP,
+          )}
           style={{ "--poster-mt": FILM_POSTER_ALIGN_MARGIN } as CSSProperties}
         >
           <div className="flex flex-col gap-3">
             <Link
               href="/films/discover"
-              className="pointer-events-auto inline-flex w-fit items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              className="pointer-events-auto inline-flex w-fit items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground md:hidden"
             >
               <ArrowLeft className="h-4 w-4 shrink-0" aria-hidden />
               {t("film.backToCatalog")}
@@ -463,7 +469,7 @@ export default function FilmPage({ params }: { params: Promise<{ id: string }> }
             {/* Mobile: poster left + title/meta right. Desktop: poster only. */}
             <div className="flex items-end gap-4 lg:block">
               <div className="w-[44%] max-w-[210px] shrink-0 lg:w-full lg:max-w-none">
-            <div className="overflow-hidden rounded-2xl border border-border bg-card lg:-mt-36">
+            <div className="overflow-hidden rounded-2xl border border-border bg-card">
               <div
                 className="relative aspect-[2/3] w-full overflow-hidden bg-card"
                 onMouseEnter={() => {

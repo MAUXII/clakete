@@ -8,21 +8,27 @@ export const DEFAULT_WATCH_REGION = "BR"
 export const DEFAULT_TMDB_LANGUAGE = "pt-BR"
 
 export const WATCH_REGION_OPTIONS = [
-  { id: "BR", label: "Brasil" },
-  { id: "US", label: "United States" },
-  { id: "PT", label: "Portugal" },
-  { id: "MX", label: "México" },
-  { id: "AR", label: "Argentina" },
-  { id: "ES", label: "España" },
-  { id: "GB", label: "United Kingdom" },
+  { id: "BR", label: "Brasil", flagCode: "br" },
+  { id: "US", label: "United States", flagCode: "us" },
+  { id: "PT", label: "Portugal", flagCode: "pt" },
+  { id: "MX", label: "México", flagCode: "mx" },
+  { id: "AR", label: "Argentina", flagCode: "ar" },
+  { id: "ES", label: "España", flagCode: "es" },
+  { id: "GB", label: "United Kingdom", flagCode: "gb" },
 ] as const
 
 export const TMDB_LANGUAGE_OPTIONS = [
-  { id: "pt-BR", label: "Português (Brasil)" },
-  { id: "en-US", label: "English" },
-  { id: "es-ES", label: "Español" },
-  { id: "pt-PT", label: "Português (Portugal)" },
+  { id: "pt-BR", label: "Português (Brasil)", flagCode: "br" },
+  { id: "en-US", label: "English", flagCode: "us" },
+  { id: "es-ES", label: "Español", flagCode: "es" },
+  { id: "pt-PT", label: "Português (Portugal)", flagCode: "pt" },
 ] as const
+
+/** PNG pequeno — emoji de bandeira falha em vários Windows. */
+export function flagImageUrl(flagCode: string, width = 40): string {
+  const code = flagCode.trim().toLowerCase()
+  return `https://flagcdn.com/w${width}/${code}.png`
+}
 
 export type WatchRegionId = (typeof WATCH_REGION_OPTIONS)[number]["id"]
 export type TmdbLanguageId = (typeof TMDB_LANGUAGE_OPTIONS)[number]["id"]

@@ -72,20 +72,19 @@ type DiaryItem = {
 
 type ViewMode = "grid" | "calendar"
 
-const MONTH_OPTIONS = [
-  { value: "all", label: "All months" },
-  { value: "01", label: "January" },
-  { value: "02", label: "February" },
-  { value: "03", label: "March" },
-  { value: "04", label: "April" },
-  { value: "05", label: "May" },
-  { value: "06", label: "June" },
-  { value: "07", label: "July" },
-  { value: "08", label: "August" },
-  { value: "09", label: "September" },
-  { value: "10", label: "October" },
-  { value: "11", label: "November" },
-  { value: "12", label: "December" },
+const MONTH_KEYS = [
+  "01",
+  "02",
+  "03",
+  "04",
+  "05",
+  "06",
+  "07",
+  "08",
+  "09",
+  "10",
+  "11",
+  "12",
 ] as const
 
 export function WatchedDiary({
@@ -100,6 +99,13 @@ export function WatchedDiary({
   const { t } = useT()
   const supabase = useSupabaseClient()
   const router = useRouter()
+  const monthOptions = [
+    { value: "all", label: t("profile.allMonths") },
+    ...MONTH_KEYS.map((value) => ({
+      value,
+      label: t(`profile.month${value}`),
+    })),
+  ] as const
   const [items, setItems] = useState<DiaryItem[]>([])
   const [loading, setLoading] = useState(true)
   const [view, setView] = useState<ViewMode>("grid")
@@ -272,7 +278,7 @@ export function WatchedDiary({
     }))
 
     if (rows.length === 0) {
-      toast.message("Nothing to export")
+      toast.message(t("profile.nothingToExport"))
       return
     }
 
@@ -285,7 +291,12 @@ export function WatchedDiary({
           : `-${yearFilter}`
         : ""
     downloadTextFile(`clakete-diary-${username}${suffix}-${stamp}.csv`, csv)
-    toast.success(`Exported ${rows.length} ${rows.length === 1 ? "entry" : "entries"}`)
+    toast.success(
+      t("profile.exportedCount", {
+        count: rows.length,
+        entries: rows.length === 1 ? t("profile.entry") : t("profile.entries"),
+      }),
+    )
   }
 
   const handleSaveEdit = async (payload: EditWatchLogPayload) => {
@@ -360,8 +371,8 @@ export function WatchedDiary({
           openEdit(item)
         }}
         className="rounded-md border border-transparent bg-secondary p-2 text-secondary-foreground transition-colors hover:border-brand/20 hover:bg-[#280F16] hover:text-brand"
-        aria-label={`Edit ${item.movie_title || "watch log"}`}
-        title="Edit watch log"
+        aria-label={t("profile.editWatchLog")}
+        title={t("profile.editWatchLog")}
       >
         <Pencil className="h-4 w-4" />
       </button>
@@ -407,7 +418,7 @@ export function WatchedDiary({
           <SelectValue placeholder="Year" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">All years</SelectItem>
+          <SelectItem value="all">{t("profile.allYears")}</SelectItem>
           {years.map((y) => (
             <SelectItem key={y} value={String(y)}>
               {y}
@@ -425,7 +436,7 @@ export function WatchedDiary({
           <SelectValue placeholder="Month" />
         </SelectTrigger>
         <SelectContent>
-          {MONTH_OPTIONS.map((m) => (
+          {monthOptions.map((m) => (
             <SelectItem key={m.value} value={m.value}>
               {m.label}
             </SelectItem>
@@ -437,7 +448,7 @@ export function WatchedDiary({
         type="button"
         onClick={() => setLikedOnly((v) => !v)}
         aria-pressed={likedOnly}
-        title="Liked"
+        title={t("profile.liked")}
         className={cn(
           "inline-flex h-8 shrink-0 items-center gap-1 rounded-md border px-2 text-xs transition",
           likedOnly
@@ -446,7 +457,7 @@ export function WatchedDiary({
         )}
       >
         <Heart className={cn("size-3.5", likedOnly && "fill-current")} />
-        <span className="hidden sm:inline">Liked</span>
+        <span className="hidden sm:inline">{t("profile.liked")}</span>
       </button>
 
       {isOwnProfile ? (
@@ -454,20 +465,20 @@ export function WatchedDiary({
           <button
             type="button"
             onClick={() => setImportOpen(true)}
-            title="Import"
+            title={t("profile.import")}
             className="inline-flex h-8 items-center gap-1 rounded-md border border-border px-2 text-xs text-muted-foreground transition hover:border-border hover:text-foreground"
           >
             <Upload className="size-3.5" />
-            <span className="hidden md:inline">Import</span>
+            <span className="hidden md:inline">{t("profile.import")}</span>
           </button>
           <button
             type="button"
             onClick={handleExport}
-            title="Export CSV"
+            title={t("profile.exportCsv")}
             className="inline-flex h-8 items-center gap-1 rounded-md border border-border px-2 text-xs text-muted-foreground transition hover:border-border hover:text-foreground"
           >
             <Download className="size-3.5" />
-            <span className="hidden md:inline">Export</span>
+            <span className="hidden md:inline">{t("profile.export")}</span>
           </button>
         </div>
       ) : null}
@@ -511,7 +522,7 @@ export function WatchedDiary({
                 className="inline-flex h-8 items-center gap-1.5 rounded-md border border-border px-2.5 text-xs text-muted-foreground transition hover:border-brand/40 hover:text-foreground"
               >
                 <Upload className="size-3.5" />
-                Import from Letterboxd
+                {t("profile.importFromLetterboxd")}
               </button>
             ) : null}
           </div>
@@ -652,7 +663,7 @@ export function WatchedDiary({
                           type="button"
                           onClick={() => openEdit(full)}
                           className="rounded-full p-2 text-muted-foreground transition hover:bg-muted hover:text-foreground"
-                          aria-label="Edit watch log"
+                          aria-label={t("profile.editWatchLog")}
                         >
                           <Pencil className="size-3.5" />
                         </button>
@@ -666,7 +677,7 @@ export function WatchedDiary({
         </div>
       ) : filtered.length === 0 ? (
         <p className="py-8 text-sm text-muted-foreground">
-          No titles for this period.
+          {t("profile.noTitlesPeriod")}
         </p>
       ) : (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4">

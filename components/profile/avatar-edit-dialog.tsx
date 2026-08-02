@@ -5,12 +5,12 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef, type ChangeEvent } from "react";
 import { ImageCropper } from "./image-cropper";
 import { Movie } from "@/lib/tmdb/client";
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Upload } from "lucide-react";
 import { useSupabaseClient } from "@supabase/auth-helpers-react";
 import { useDebounce } from "@/hooks/use-debounce";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -26,6 +26,10 @@ import { buildTmdbStoredImageMeta } from "@/lib/tmdb-stored-image";
 import type { Json } from "@/lib/supabase/database.types";
 import { setHomeBackdropInsidePreferences } from "@/lib/user-home-preferences";
 import { cn } from "@/lib/utils";
+import { useSubscription } from "@/hooks/use-subscription";
+import { useT } from "@/components/providers/i18n-provider";
+import { ShiningBadge } from "@/components/premium/shining-badge";
+import { toast } from "sonner";
 
 function normalizeMovieApiRow(row: Record<string, unknown>): Movie {
   return {
@@ -106,12 +110,30 @@ export function ImageEditDialog({ onClose, onSelect, isOpen, onSave, type, custo
   } | null>(null)
   const [croppedImage, setCroppedImage] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  const [customUploadFile, setCustomUploadFile] = useState<File | null>(null)
+  const [customPreviewUrl, setCustomPreviewUrl] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const supabase = useSupabaseClient()
   const debouncedQuery = useDebounce(query, 300)
   const [open, setOpen] = useState(false)
   const [results, setResults] = useState<Movie[]>([])
   const { refreshProfile } = useProfile()
   const { localeQs, loading: localeLoading } = useLocalePrefs()
+  const { isShining } = useSubscription()
+  const { t } = useT()
+  const allowCustomUpload =
+    isShining && (type === "avatar" || type === "banner")
+  const isCustomGif = Boolean(
+    customUploadFile && customUploadFile.type === "image/gif",
+  )
+  const useStorageBlobFlow = Boolean(customUploadFile) || !tmdbMetaOnlyFlow
+
+  const revokeCustomPreview = useCallback(() => {
+    if (customPreviewUrl) {
+      URL.revokeObjectURL(customPreviewUrl)
+      setCustomPreviewUrl(null)
+    }
+  }, [customPreviewUrl])
 
   const handleListCropGeometry = useCallback(
     (geo: { pixelCrop: Area; imageWidth: number; imageHeight: number }) => {
@@ -123,6 +145,53 @@ export function ImageEditDialog({ onClose, onSelect, isOpen, onSave, type, custo
   useEffect(() => {
     setListCropGeometry(null)
   }, [selectedImage])
+
+  useEffect(() => {
+    return () => {
+      if (customPreviewUrl) URL.revokeObjectURL(customPreviewUrl)
+    }
+  }, [customPreviewUrl])
+
+  const handleCustomFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    event.target.value = ""
+    if (!file || !allowCustomUpload) return
+
+    const allowed = new Set([
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "image/gif",
+    ])
+    if (!allowed.has(file.type)) {
+      toast.error(t("prefs.uploadInvalidType"))
+      return
+    }
+    const maxBytes =
+      file.type === "image/gif" ? 8 * 1024 * 1024 : 5 * 1024 * 1024
+    if (file.size > maxBytes) {
+      toast.error(t("prefs.uploadTooLarge"))
+      return
+    }
+
+    revokeCustomPreview()
+    const previewUrl = URL.createObjectURL(file)
+    setCustomPreviewUrl(previewUrl)
+    setCustomUploadFile(file)
+    setSelectedMovie(null)
+    setSelectedTmdbFilePath(null)
+    setListCropGeometry(null)
+    setShowSearchCommand(false)
+    setSelectedImage(previewUrl)
+
+    if (file.type === "image/gif") {
+      setCroppedImage(previewUrl)
+      setShowCropper(true)
+    } else {
+      setCroppedImage(null)
+      setShowCropper(true)
+    }
+  }
 
   useEffect(() => {
     const MOVIE_PICKER_PAGES = 2
@@ -290,6 +359,8 @@ export function ImageEditDialog({ onClose, onSelect, isOpen, onSave, type, custo
     setListCropGeometry(null)
     setCroppedImage(null);
     setShowCropper(false);
+    setCustomUploadFile(null)
+    revokeCustomPreview()
   };
 
   const handleImageSelect = (imageUrl: string, tmdbFilePath?: string | null) => {
@@ -315,6 +386,51 @@ export function ImageEditDialog({ onClose, onSelect, isOpen, onSave, type, custo
         throw new Error("Usuário não autenticado")
       }
 
+      /* REDRUM: upload direto de GIF (sem crop — mantém animação). */
+      if (
+        customUploadFile &&
+        customUploadFile.type === "image/gif" &&
+        (type === "avatar" || type === "banner")
+      ) {
+        if (!isShining) {
+          throw new Error("Upload próprio é exclusivo The Shining (REDRUM).")
+        }
+        const fileName = `${type}-${session.user.id}.gif`
+        const filePath = `${type}s/${fileName}`
+        await supabase.storage.from("profile-images").remove([filePath])
+        const { error: uploadError } = await supabase.storage
+          .from("profile-images")
+          .upload(filePath, customUploadFile, {
+            contentType: "image/gif",
+            cacheControl: "3600",
+            upsert: true,
+          })
+        if (uploadError) throw uploadError
+        const timestamp = Date.now()
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from("profile-images").getPublicUrl(filePath)
+        const urlWithTimestamp = `${publicUrl}?t=${timestamp}`
+        const metaKey = type === "avatar" ? "avatar_meta" : "banner_meta"
+        const urlKey = type === "avatar" ? "avatar_url" : "banner_url"
+        if (customSave) {
+          await customSave(urlWithTimestamp)
+        } else {
+          const { error: updateError } = await supabase
+            .from("users")
+            .update({
+              [urlKey]: urlWithTimestamp,
+              [metaKey]: null,
+            })
+            .eq("id", session.user.id)
+          if (updateError) throw updateError
+          await refreshProfile()
+        }
+        onSave(urlWithTimestamp)
+        toast.success(t("profile.imageSaved"))
+        return
+      }
+
       /* Lista: só TMDB path + crop, sem Storage */
       if (listMetaFlow && customListBannerSave && listId && selectedTmdbFilePath && listCropGeometry) {
         const meta = buildListBannerMeta(
@@ -324,12 +440,14 @@ export function ImageEditDialog({ onClose, onSelect, isOpen, onSave, type, custo
           listCropGeometry.imageHeight,
         )
         await customListBannerSave(meta)
+        toast.success(t("profile.imageSaved"))
         onSave("")
         return
       }
 
       /* Perfil: meta em avatar_meta/banner_meta; home backdrop vive só em users.home_preferences (JSON). */
       if (
+        !customUploadFile &&
         (type === "avatar" || type === "banner" || type === "home_backdrop") &&
         selectedTmdbFilePath &&
         listCropGeometry
@@ -357,11 +475,13 @@ export function ImageEditDialog({ onClose, onSelect, isOpen, onSave, type, custo
             .eq("id", session.user.id)
           if (profileMetaErr) throw profileMetaErr
           await refreshProfile()
+          toast.success(t("profile.imageSaved"))
           onSave("")
           return
         }
         if (customTmdbMetaSave) {
           await customTmdbMetaSave(meta)
+          toast.success(t("profile.imageSaved"))
           onSave("")
           return
         }
@@ -376,56 +496,36 @@ export function ImageEditDialog({ onClose, onSelect, isOpen, onSave, type, custo
           .eq("id", session.user.id)
         if (profileMetaErr) throw profileMetaErr
         await refreshProfile()
+        toast.success(t("profile.imageSaved"))
         onSave("")
         return
       }
 
       if (!croppedImage) {
-        alert("Escolha o recorte antes de aplicar.")
+        toast.error(t("profile.chooseCropFirst"))
         return
       }
-      
-      console.log('✅ Usuário autenticado:', session.user.id);
-      
-      // Converte o Data URL para Blob e força o tipo como webp
-      console.log('🔄 Convertendo Data URL para Blob...');
-      const response = await fetch(croppedImage);
-      const originalBlob = await response.blob();
-      console.log('✅ Blob original criado:', originalBlob.size, 'bytes');
-      
-      // Cria um canvas para converter para WebP
-      console.log('🔄 Criando canvas para conversão WebP...');
+
       const img = new Image();
       img.src = croppedImage;
       await new Promise(resolve => img.onload = resolve);
-      console.log('✅ Imagem carregada no canvas:', img.width, 'x', img.height);
-      
+
       const canvas = document.createElement('canvas');
       canvas.width = img.width;
       canvas.height = img.height;
-      
+
       const ctx = canvas.getContext('2d');
       if (!ctx) throw new Error('Não foi possível criar contexto 2d');
-      
-      // Desenha a imagem no canvas
+
       ctx.drawImage(img, 0, 0);
-      
-      // Converte para WebP com alta qualidade
-      console.log('🔄 Convertendo para WebP...');
+
       const webpBlob = await new Promise<Blob>((resolve, reject) => {
         canvas.toBlob(blob => {
           if (blob) resolve(blob);
           else reject(new Error('Falha ao converter para WebP'));
         }, 'image/webp', 0.95);
       });
-      
-      console.log('✅ WebP criado:', {
-        originalSize: originalBlob.size,
-        webpSize: webpBlob.size,
-        type: webpBlob.type
-      });
-      
-      // Nome baseado no tipo e ID apropriado
+
       let fileName: string;
       if (type === 'list') {
         if (!listId) {
@@ -435,37 +535,19 @@ export function ImageEditDialog({ onClose, onSelect, isOpen, onSave, type, custo
       } else {
         fileName = `${type}-${session.user.id}.webp`;
       }
-      
+
       let filePath = type === 'list' ? `lists/${fileName}` : `${type}s/${fileName}`;
-      console.log('📁 Salvando em:', filePath);
-      
-      // Estratégia de upload mais robusta
-      console.log('🔄 Iniciando upload para Supabase Storage...');
-      
-      // Primeiro, tenta remover o arquivo antigo se existir
-      console.log('🔄 Verificando se arquivo antigo existe...');
+
       const { data: existingFiles } = await supabase.storage
         .from('profile-images')
         .list(type === 'list' ? 'lists' : `${type}s`, {
           search: fileName
         });
-      
+
       if (existingFiles && existingFiles.length > 0) {
-        console.log('🔄 Arquivo antigo encontrado, removendo...');
-        const { error: removeError } = await supabase.storage
-          .from('profile-images')
-          .remove([filePath]);
-        
-        if (removeError) {
-          console.error('❌ Erro ao remover arquivo antigo:', removeError);
-          // Continua mesmo com erro na remoção
-        } else {
-          console.log('✅ Arquivo antigo removido com sucesso');
-        }
+        await supabase.storage.from('profile-images').remove([filePath]);
       }
-      
-      // Agora faz o upload do novo arquivo
-      console.log('🔄 Fazendo upload do novo arquivo...');
+
       const { error: uploadError } = await supabase.storage
         .from('profile-images')
         .upload(filePath, webpBlob, {
@@ -474,111 +556,66 @@ export function ImageEditDialog({ onClose, onSelect, isOpen, onSave, type, custo
         });
 
       if (uploadError) {
-        console.error('❌ Erro no upload:', uploadError);
-        console.error('❌ Detalhes do erro:', {
-          message: uploadError.message
-        });
-        
-        // Se o erro for de conflito, tenta uma abordagem diferente
         if (uploadError.message?.includes('already exists') || uploadError.message?.includes('duplicate')) {
-          console.log('🔄 Tentando abordagem alternativa com nome único...');
-          
-          // Gera um nome único com timestamp
           const timestamp = Date.now();
           const uniqueFileName = `${type === 'list' ? 'list' : type}-${type === 'list' ? listId : session.user.id}-${timestamp}.webp`;
           const uniqueFilePath = type === 'list' ? `lists/${uniqueFileName}` : `${type}s/${uniqueFileName}`;
-          
-          console.log('🔄 Tentando upload com nome único:', uniqueFilePath);
-          
+
           const { error: uniqueUploadError } = await supabase.storage
             .from('profile-images')
             .upload(uniqueFilePath, webpBlob, {
               contentType: 'image/webp',
               cacheControl: '3600'
             });
-          
-          if (uniqueUploadError) {
-            console.error('❌ Erro no upload com nome único:', uniqueUploadError);
-            throw uniqueUploadError;
-          }
-          
-          // Atualiza o filePath para usar o novo nome
+
+          if (uniqueUploadError) throw uniqueUploadError;
           filePath = uniqueFilePath;
-          console.log('✅ Upload com nome único realizado com sucesso');
         } else {
           throw uploadError;
         }
-      } else {
-        console.log('✅ Upload realizado com sucesso');
       }
 
-      console.log('✅ Upload realizado com sucesso');
-
-      // Pega a URL pública do arquivo com timestamp para evitar cache
       const timestamp = Date.now();
       const { data: { publicUrl } } = supabase.storage
         .from('profile-images')
         .getPublicUrl(filePath);
 
       const urlWithTimestamp = `${publicUrl}?t=${timestamp}`;
-      console.log('🔗 URL obtida:', urlWithTimestamp);
 
-      // Se customSave foi fornecido, use-o (para listas)
       if (customSave) {
-        console.log('🔄 Executando customSave...');
-        try {
-          await customSave(urlWithTimestamp);
-          console.log('✅ Custom save executado com sucesso');
-        } catch (customError) {
-          console.error('❌ Erro no customSave:', customError);
-          throw customError;
-        }
-      } else {
-        // Avatar/banner de perfil — nunca confundir com type list
-        if (type !== 'list' && (type === 'avatar' || type === 'banner')) {
-          console.log('🔄 Atualizando perfil do usuário...');
-          const { error: updateError } = await supabase
-            .from('users')
-            .update({
-              [`${type}_url`]: urlWithTimestamp
-            })
-            .eq('id', session.user.id);
+        await customSave(urlWithTimestamp);
+      } else if (type !== 'list' && (type === 'avatar' || type === 'banner')) {
+        const metaKey = type === "avatar" ? "avatar_meta" : "banner_meta"
+        const { error: updateError } = await supabase
+          .from('users')
+          .update({
+            [`${type}_url`]: urlWithTimestamp,
+            ...(customUploadFile ? { [metaKey]: null } : {}),
+          })
+          .eq('id', session.user.id);
 
-          if (updateError) {
-            console.error('❌ Erro ao atualizar perfil:', updateError);
-            throw updateError;
-          }
-
-          console.log('✅ Perfil atualizado');
-          refreshProfile()
-        }
+        if (updateError) throw updateError;
+        refreshProfile()
       }
 
-      console.log('✅ Processo finalizado com sucesso');
+      toast.success(t("profile.imageSaved"))
       onSave(urlWithTimestamp);
     } catch (error) {
-      console.error('❌ Erro completo ao salvar imagem:', error);
-      console.error('❌ Tipo do erro:', typeof error);
-      console.error('❌ Mensagem do erro:', error instanceof Error ? error.message : 'Erro desconhecido');
-      console.error('❌ Stack trace:', error instanceof Error ? error.stack : 'N/A');
-      
-      // Exibir erro mais amigável para o usuário
-      let errorMessage = 'Erro ao salvar imagem';
-      
+      let errorMessage = t("profile.imageSaveError");
+
       if (error instanceof Error) {
         if (error.message.includes('storage')) {
-          errorMessage = 'Erro no armazenamento. Verifique sua conexão e tente novamente.';
+          errorMessage = t("profile.storageError");
         } else if (error.message.includes('auth')) {
-          errorMessage = 'Erro de autenticação. Faça login novamente.';
+          errorMessage = t("profile.authError");
         } else if (error.message.includes('network')) {
-          errorMessage = 'Erro de conexão. Verifique sua internet e tente novamente.';
+          errorMessage = t("profile.networkError");
         } else {
-          errorMessage = `Erro: ${error.message}`;
+          errorMessage = error.message;
         }
       }
-      
-      // Aqui você pode adicionar um toast ou alert para mostrar o erro ao usuário
-      alert(errorMessage);
+
+      toast.error(errorMessage);
     } finally {
       setSaving(false);
       onClose();
@@ -608,11 +645,38 @@ export function ImageEditDialog({ onClose, onSelect, isOpen, onSave, type, custo
         )}
       >
         <CommandInput
-          placeholder="Search films & TV…"
+          placeholder={t("profile.searchFilmsTv")}
           value={query}
           onValueChange={setQuery}
           className="placeholder:text-muted-foreground "
         />
+        {allowCustomUpload ? (
+          <div className="mx-2 mb-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              className="sr-only"
+              onChange={handleCustomFileChange}
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="flex w-full items-center gap-2.5 rounded-lg border border-border bg-[#141416] px-3 py-2.5 text-left transition-colors hover:bg-muted/40"
+            >
+              <Upload className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden />
+              <span className="min-w-0 flex-1">
+                <span className="flex items-center gap-1.5 text-[13px] font-medium text-foreground">
+                  {t("prefs.uploadOwnImage")}
+                  <ShiningBadge size="sm" />
+                </span>
+                <span className="mt-0.5 block text-[11px] text-muted-foreground">
+                  {t("prefs.uploadOwnImageHint")}
+                </span>
+              </span>
+            </button>
+          </div>
+        ) : null}
         <CommandList className="custom-scrollbar max-h-[min(58vh,528px)] overflow-y-auto pb-3">
           {loading ? (
             <div className="space-y-2 px-2" aria-busy aria-label="Searching">
@@ -625,7 +689,7 @@ export function ImageEditDialog({ onClose, onSelect, isOpen, onSave, type, custo
             </div>
           ) : null}
           {!loading && results.length === 0 && query.trim().length > 0 ? (
-            <CommandEmpty>No films or series found.</CommandEmpty>
+            <CommandEmpty>{t("profile.noFilmsOrSeries")}</CommandEmpty>
           ) : null}
           {!loading && results.length > 0 ? (
             <CommandGroup>
@@ -665,7 +729,7 @@ export function ImageEditDialog({ onClose, onSelect, isOpen, onSave, type, custo
                         />
                       ) : (
                         <div className="absolute inset-0 flex items-center justify-center bg-muted text-[11px] text-muted-foreground transition-colors duration-300 group-hover/card:bg-muted">
-                          No backdrop
+                          {t("profile.noBackdrop")}
                         </div>
                       )}
                       <div
@@ -773,20 +837,31 @@ export function ImageEditDialog({ onClose, onSelect, isOpen, onSave, type, custo
       <Dialog open={isOpen && showCropper} onOpenChange={onClose}>
         <DialogContent className="w-[82vw] max-w-[38rem] overflow-hidden p-0">
           <DialogHeader className="border-b border-border/50 px-4 py-2.5">
-            <DialogTitle>Editar imagem</DialogTitle>
+            <DialogTitle>{t("profile.editImage")}</DialogTitle>
           </DialogHeader>
-          {showCropper && selectedImage && (
+          {showCropper && selectedImage && isCustomGif ? (
+            <div className="flex items-center justify-center bg-black px-2 py-4">
+              <img
+                src={selectedImage}
+                alt=""
+                className="max-h-[min(70vh,28rem)] w-auto max-w-full rounded-md object-contain"
+              />
+            </div>
+          ) : null}
+          {showCropper && selectedImage && !isCustomGif ? (
             <div className="px-2 py-2">
               <ImageCropper
                 image={selectedImage}
                 aspect={type === 'avatar' ? 1 : bannerAspect}
                 onCrop={setCroppedImage}
                 type={type === 'home_backdrop' ? 'banner' : type}
-                deferWebpBlob={tmdbMetaOnlyFlow}
-                onCropGeometry={tmdbMetaOnlyFlow ? handleListCropGeometry : undefined}
+                deferWebpBlob={!useStorageBlobFlow}
+                onCropGeometry={
+                  !useStorageBlobFlow ? handleListCropGeometry : undefined
+                }
               />
             </div>
-          )}
+          ) : null}
           <DialogFooter className="mt-0 flex justify-end gap-2 border-t border-border/50 px-4 py-2.5">
             <Button
               variant="outline"
@@ -796,18 +871,25 @@ export function ImageEditDialog({ onClose, onSelect, isOpen, onSave, type, custo
                 setSelectedTmdbFilePath(null);
                 setListCropGeometry(null);
                 setCroppedImage(null);
+                setCustomUploadFile(null);
+                revokeCustomPreview();
+                setShowSearchCommand(true);
               }}
             >
-              Cancelar
+              {t("common.cancel")}
             </Button>
             <Button
               onClick={() => void handleSaveImage()}
               disabled={
                 saving ||
-                (tmdbMetaOnlyFlow ? !(selectedTmdbFilePath && listCropGeometry) : !croppedImage)
+                (isCustomGif
+                  ? !customUploadFile
+                  : useStorageBlobFlow
+                    ? !croppedImage
+                    : !(selectedTmdbFilePath && listCropGeometry))
               }
             >
-              {saving ? 'Salvando...' : 'Aplicar'}
+              {saving ? t("profile.saving") : t("profile.apply")}
             </Button>
           </DialogFooter>
         </DialogContent>

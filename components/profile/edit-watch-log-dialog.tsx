@@ -26,6 +26,7 @@ import {
   parseLocalDateString,
   toLocalDateString,
 } from "@/lib/watched-date"
+import { useT } from "@/components/providers/i18n-provider"
 
 export type EditWatchLogPayload = {
   watchedDate: string
@@ -53,6 +54,7 @@ export function EditWatchLogDialog({
   onSave,
   onUnwatch,
 }: EditWatchLogDialogProps) {
+  const { t } = useT()
   const [date, setDate] = useState(toLocalDateString())
   const [rewatches, setRewatches] = useState(0)
   const [saving, setSaving] = useState(false)
@@ -68,7 +70,7 @@ export function EditWatchLogDialog({
   const selectedDate = parseLocalDateString(date)
   const today = parseLocalDateString(toLocalDateString())
   const busy = loading || saving
-  const dateLabel = formatWatchedDate(date) ?? "Pick a date"
+  const dateLabel = formatWatchedDate(date) ?? t("profile.pickDate")
   const rewatchHint = formatRewatchLabel(rewatches)
 
   const handleSave = async () => {
@@ -99,11 +101,11 @@ export function EditWatchLogDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Edit watch log</DialogTitle>
+          <DialogTitle>{t("profile.editWatchLog")}</DialogTitle>
           <DialogDescription>
             {title
-              ? `Update when you watched ${title}.`
-              : "Update the watch date and rewatch count."}
+              ? t("profile.updateWatchDateNamed", { title })
+              : t("profile.updateWatchDate")}
           </DialogDescription>
         </DialogHeader>
 
@@ -185,7 +187,7 @@ export function EditWatchLogDialog({
               onClick={() => onOpenChange(false)}
               disabled={busy}
             >
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button
               type="button"
@@ -193,7 +195,7 @@ export function EditWatchLogDialog({
               onClick={() => void handleSave()}
               disabled={busy || !date}
             >
-              {busy ? "Saving…" : "Save"}
+              {busy ? t("profile.saving") : t("common.save")}
             </Button>
           </div>
         </DialogFooter>

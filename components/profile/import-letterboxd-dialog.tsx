@@ -20,6 +20,7 @@ import {
   type LetterboxdCollapsedEntry,
 } from "@/lib/letterboxd-import"
 import { toLocalDateString } from "@/lib/watched-date"
+import { useT } from "@/components/providers/i18n-provider"
 
 type MatchResult = {
   tmdbId: number
@@ -46,6 +47,7 @@ export function ImportLetterboxdDialog({
   onOpenChange: (open: boolean) => void
   onImported?: () => void
 }) {
+  const { t } = useT()
   const supabase = useSupabaseClient()
   const user = useUser()
   const fileRef = useRef<HTMLInputElement>(null)
@@ -93,7 +95,7 @@ export function ImportLetterboxdDialog({
 
   const handleFile = async (file: File) => {
     if (!file.name.toLowerCase().endsWith(".csv")) {
-      toast.error("Upload a .csv from the Letterboxd export zip")
+      toast.error(t("profile.uploadCsvError"))
       return
     }
 
@@ -104,7 +106,7 @@ export function ImportLetterboxdDialog({
       const text = await file.text()
       const rows = parseLetterboxdCsv(text)
       if (rows.length === 0) {
-        toast.error("No rows found in that CSV")
+        toast.error(t("profile.noCsvRows"))
         reset()
         return
       }
@@ -131,20 +133,20 @@ export function ImportLetterboxdDialog({
       )
     } catch (e) {
       console.error(e)
-      toast.error(e instanceof Error ? e.message : "Could not read CSV")
+      toast.error(e instanceof Error ? e.message : t("common.errorGeneric"))
       reset()
     }
   }
 
   const runImport = async () => {
     if (!user) {
-      toast.error("Sign in to import")
+      toast.error(t("common.signIn"))
       return
     }
 
     const toImport = resolved.filter((e) => e.match)
     if (toImport.length === 0) {
-      toast.message("Nothing matched to import")
+      toast.message(t("profile.noMatchesToImport"))
       return
     }
 
@@ -244,11 +246,14 @@ export function ImportLetterboxdDialog({
 
     if (imported > 0) {
       toast.success(
-        `Imported ${imported} ${imported === 1 ? "title" : "titles"}`,
+        t("profile.importedCount", {
+          count: imported,
+          titles: imported === 1 ? t("profile.title") : t("profile.titles"),
+        }),
       )
     }
     if (skipped > 0) {
-      toast.message(`${skipped} failed to save`)
+      toast.message(t("profile.importFailed", { count: skipped }))
     }
   }
 
@@ -263,20 +268,16 @@ export function ImportLetterboxdDialog({
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Import from Letterboxd</DialogTitle>
-          <DialogDescription>
-            Export your data on Letterboxd (Settings → Import &amp; Export), unzip,
-            then upload <span className="text-muted-foreground">diary.csv</span> (or
-            watched.csv / ratings.csv).
-          </DialogDescription>
+          <DialogTitle>{t("profile.importFromLetterboxd")}</DialogTitle>
+          <DialogDescription>{t("profile.importLetterboxdDesc")}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-1">
           {phase === "pick" ? (
             <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-muted/40 px-4 py-10 text-center transition hover:border-brand/40 hover:bg-brand/5">
               <FileUp className="size-6 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">Choose Letterboxd CSV</span>
-              <span className="text-xs text-muted-foreground">diary.csv recommended</span>
+              <span className="text-sm text-muted-foreground">{t("profile.chooseLetterboxdCsv")}</span>
+              <span className="text-xs text-muted-foreground">{t("profile.diaryCsvRecommended")}</span>
               <input
                 ref={fileRef}
                 type="file"
@@ -295,8 +296,8 @@ export function ImportLetterboxdDialog({
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Loader2 className="size-4 animate-spin text-brand" />
                 {phase === "matching"
-                  ? `Matching to TMDB… ${progress.done}/${progress.total}`
-                  : `Saving… ${progress.done}/${progress.total}`}
+                  ? t("profile.matchingTmdb", { done: progress.done, total: progress.total })
+                  : t("profile.savingProgress", { done: progress.done, total: progress.total })}
               </div>
               <div className="h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
                 <div
@@ -315,18 +316,17 @@ export function ImportLetterboxdDialog({
               <div className="rounded-lg border border-border bg-muted/50 p-3 text-sm">
                 <p className="text-foreground">
                   <span className="font-medium text-foreground">{matchedCount}</span>{" "}
-                  matched
+                  {t("profile.matched")}
                   {unmatchedCount > 0 ? (
                     <>
                       {" · "}
                       <span className="text-amber-400/90">{unmatchedCount}</span>{" "}
-                      unmatched (skipped)
+                      {t("profile.unmatchedSkipped")}
                     </>
                   ) : null}
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Already watched titles keep the newer date and higher rewatch
-                  count; ratings fill in when empty.
+                  {t("profile.importKeepHint")}
                 </p>
               </div>
 
@@ -348,12 +348,16 @@ export function ImportLetterboxdDialog({
           {phase === "done" ? (
             <div className="rounded-lg border border-border bg-muted/50 p-4 text-sm text-muted-foreground">
               <p>
-                Imported{" "}
-                <span className="font-medium text-foreground">{stats.imported}</span>
+                {t("profile.importedCount", {
+                  count: stats.imported,
+                  titles: stats.imported === 1 ? t("profile.title") : t("profile.titles"),
+                })}
                 {stats.unmatched > 0
-                  ? ` · ${stats.unmatched} unmatched skipped`
+                  ? ` · ${stats.unmatched} ${t("profile.unmatchedSkipped")}`
                   : ""}
-                {stats.skipped > 0 ? ` · ${stats.skipped} failed` : ""}
+                {stats.skipped > 0
+                  ? ` · ${t("profile.importFailed", { count: stats.skipped })}`
+                  : ""}
               </p>
             </div>
           ) : null}
@@ -363,7 +367,7 @@ export function ImportLetterboxdDialog({
           {phase === "ready" ? (
             <>
               <Button type="button" variant="outline" onClick={reset}>
-                Choose another file
+                {t("profile.chooseLetterboxdCsv")}
               </Button>
               <Button
                 type="button"
@@ -372,7 +376,7 @@ export function ImportLetterboxdDialog({
                 disabled={matchedCount === 0}
               >
                 <Upload className="mr-1.5 size-3.5" />
-                Import {matchedCount}
+                {t("profile.importAction", { count: matchedCount })}
               </Button>
             </>
           ) : phase === "done" ? (
@@ -381,7 +385,7 @@ export function ImportLetterboxdDialog({
               className="bg-brand text-white hover:bg-brand-hover"
               onClick={() => handleClose(false)}
             >
-              Done
+              {t("common.close")}
             </Button>
           ) : phase === "pick" ? (
             <Button
@@ -389,10 +393,10 @@ export function ImportLetterboxdDialog({
               variant="outline"
               onClick={() => handleClose(false)}
             >
-              Cancel
+              {t("common.cancel")}
             </Button>
           ) : (
-            <p className="text-xs text-muted-foreground">Please wait…</p>
+            <p className="text-xs text-muted-foreground">{t("common.loading")}</p>
           )}
         </DialogFooter>
       </DialogContent>

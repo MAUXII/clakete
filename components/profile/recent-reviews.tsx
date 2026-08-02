@@ -9,6 +9,7 @@ import { RatingStars } from "@/components/movies/star-rating"
 import Image from "next/image"
 import Link from "next/link"
 import { ReviewLikeButton } from "@/hooks/use-review-like"
+import { useT } from "@/components/providers/i18n-provider"
 
 interface FilmReview {
   id: number
@@ -50,6 +51,7 @@ export function UserRecentReviews({
   emptyFallback,
   hideSectionTitle = false,
 }: RecentReviewsProps) {
+  const { t } = useT()
   const supabase = useSupabaseClient<Database>()
   const loggedInUser = useUser()
   const [reviews, setReviews] = useState<FilmReview[]>([])
@@ -138,7 +140,9 @@ export function UserRecentReviews({
         })
   }
 
-  const sectionTitle = onLandingPage ? "Your Last Review" : "Recent reviews"
+  const sectionTitle = onLandingPage
+    ? t("profile.yourLastReview")
+    : t("profile.recentReviews")
 
   if (loading) {
     return (

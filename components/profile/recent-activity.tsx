@@ -7,6 +7,7 @@ import { toast } from "sonner"
 import { MovieCard } from "../movies/movie-card"
 import { SeriesCard } from "../series/series-card"
 import { Skeleton } from "../ui/skeleton"
+import { useT } from "@/components/providers/i18n-provider"
 
 interface WatchedItem {
   id: number
@@ -29,6 +30,7 @@ interface RecentActivityProps {
 const RECENT_LIMIT = 60
 
 export function UserRecentActivity({ userId, showAllWatched }: RecentActivityProps) {
+  const { t } = useT()
   const [watchedItems, setWatchedItems] = useState<WatchedItem[]>([])
   const [loading, setLoading] = useState(true)
   const [visibleCount, setVisibleCount] = useState(showAllWatched ? 999 : RECENT_LIMIT)
@@ -60,23 +62,23 @@ export function UserRecentActivity({ userId, showAllWatched }: RecentActivityPro
 
         if (error) {
           console.error("Erro ao buscar assistidos:", error)
-          toast.error("Could not load watched titles")
+          toast.error(t("profile.loadWatchedError"))
           return
         }
 
         setWatchedItems((interactions as WatchedItem[]) ?? [])
       } catch (err) {
         console.error("Erro ao buscar assistidos:", err)
-        toast.error("Could not load watched titles")
+        toast.error(t("profile.loadWatchedError"))
       } finally {
         setLoading(false)
       }
     }
 
     void fetchWatched()
-  }, [userId, supabase])
+  }, [userId, supabase, t])
 
-  const pageTitle = showAllWatched ? "Watched" : "Recent Activity"
+  const pageTitle = showAllWatched ? t("profileTabs.watched") : t("profile.recentActivity")
   const visibleItems = watchedItems.slice(0, visibleCount)
   const hasMore = !showAllWatched && watchedItems.length > visibleCount
 
@@ -104,7 +106,7 @@ export function UserRecentActivity({ userId, showAllWatched }: RecentActivityPro
         <div className="mb-4 mt-1 h-[0.3px] w-full bg-muted-foreground/10" />
         <div className="flex w-full items-start justify-between overflow-clip text-muted-foreground">
           <p className="w-full text-start">
-            {showAllWatched ? "Nothing watched yet" : "No activity"}
+            {showAllWatched ? t("profile.nothingWatched") : t("profile.noActivity")}
           </p>
           <RiveComponent width={400} className="invisible flex h-20 w-[222px] pl-9" />
         </div>
@@ -159,7 +161,7 @@ export function UserRecentActivity({ userId, showAllWatched }: RecentActivityPro
             onClick={() => setVisibleCount(watchedItems.length)}
             className="flex h-12 w-full items-center justify-center rounded-md border border-black/10 bg-brand/10 p-3 text-brand transition-all hover:bg-brand/20 hover:text-brand/90 dark:border-border"
           >
-            + See more
+            {t("profile.showMore")}
           </button>
         </div>
       ) : null}

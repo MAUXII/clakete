@@ -1,17 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect } from "react";
 import Image from "next/image";
-import { Play } from "lucide-react";
 import { IoEye, IoEyeOutline } from "react-icons/io5";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { ClaketeWatchDialog } from "@/components/movies/clakete-watch-dialog";
-import { useSubscription } from "@/hooks/use-subscription";
-import {
-  useClaketeWatch,
-  type ClaketePlayback,
-} from "@/hooks/use-clakete-watch";
 import { useEpisodeInteractions } from "@/hooks/use-episode-interactions";
 import { useT } from "@/components/providers/i18n-provider";
 import { cn } from "@/lib/utils";
@@ -33,31 +26,9 @@ type EpisodesListProps = {
   seasonNumber: number;
   seriesName?: string;
   seriesPosterPath?: string | null;
-  /** Total de episódios da série (TMDB). Se completo → marca a série. */
   seriesEpisodeTotal?: number | null;
   onProgressChange?: (watched: number, total: number) => void;
 };
-
-async function fetchEpisodePlayback(
-  seriesId: number,
-  season: number,
-  episode: number
-): Promise<ClaketePlayback | null> {
-  const res = await fetch(
-    `/api/series/${seriesId}/playback-options?season=${season}&episode=${episode}`
-  );
-  if (!res.ok) return null;
-  const data = (await res.json()) as {
-    ownUrl: string | null;
-    iframeSources: { id: string; url: string }[];
-  };
-  const superflix = data.iframeSources?.find((s) => s.id === "superflix");
-  if (superflix?.url) return { kind: "iframe", url: superflix.url };
-  const first = data.iframeSources?.[0];
-  if (first?.url) return { kind: "iframe", url: first.url };
-  if (data.ownUrl) return { kind: "video", url: data.ownUrl };
-  return null;
-}
 
 export default function EpisodesList({
   episodes,
@@ -69,24 +40,12 @@ export default function EpisodesList({
   onProgressChange,
 }: EpisodesListProps) {
   const { t } = useT();
-  const { isShining, loading: subscriptionLoading } = useSubscription();
-  const canUse = !subscriptionLoading && isShining;
-
-  const { available: seriesAvailable, loading: availabilityLoading } =
-    useClaketeWatch(seriesId, canUse, {
-      mediaType: "tv",
-      season: seasonNumber,
-      episode: 1,
-    });
-
-  const showWatch = canUse && (availabilityLoading || seriesAvailable);
 
   const {
     user,
     watchedCount,
     isWatched,
     toggleWatched,
-    markWatched,
     setSeasonWatched,
     updatingEpisode,
     updatingSeason,
@@ -96,57 +55,12 @@ export default function EpisodesList({
     seriesPosterPath,
   });
 
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [dialogTitle, setDialogTitle] = useState("");
-  const [playback, setPlayback] = useState<ClaketePlayback | null>(null);
-  const [loadingEpisode, setLoadingEpisode] = useState<number | null>(null);
-
   const total = episodes.length;
   const allWatched = total > 0 && watchedCount >= total;
 
   useEffect(() => {
     onProgressChange?.(watchedCount, total);
   }, [watchedCount, total, onProgressChange]);
-
-  const openEpisode = useCallback(
-    async (ep: SeasonEpisode) => {
-      if (!seriesAvailable) return;
-      const title = [
-        seriesName,
-        `S${seasonNumber}E${ep.episode_number}`,
-        ep.name,
-      ]
-        .filter(Boolean)
-        .join(" · ");
-
-      setDialogTitle(title);
-      setDialogOpen(true);
-      setPlayback(null);
-      setLoadingEpisode(ep.episode_number);
-
-      try {
-        const next = await fetchEpisodePlayback(
-          seriesId,
-          seasonNumber,
-          ep.episode_number
-        );
-        setPlayback(next);
-        if (next && user) {
-          await markWatched(ep.episode_number, ep.id);
-        }
-      } finally {
-        setLoadingEpisode(null);
-      }
-    },
-    [
-      seriesAvailable,
-      seriesId,
-      seasonNumber,
-      seriesName,
-      user,
-      markWatched,
-    ]
-  );
 
   const onToggleWatched = useCallback(
     async (ep: SeasonEpisode) => {
@@ -189,7 +103,7 @@ export default function EpisodesList({
 
   if (!episodes.length) {
     return (
-      <div className="text-muted-foreground">Nenhum episódio encontrado.</div>
+      <div className="text-muted-foreground">{t("series.noEpisodes")}</div>
     );
   }
 
@@ -229,23 +143,27 @@ export default function EpisodesList({
           return (
             <div
               key={ep.id}
-              className="flex flex-col gap-4 border-b border-black/10 pb-8 last:border-b-0 dark:border-white/10 sm:flex-row sm:gap-6"
+              className="flex flex-col gap-4 sm:flex-row sm:gap-6"
             >
               <div
                 className={cn(
-                  "group relative w-full shrink-0 overflow-hidden rounded-md border sm:max-w-[320px] sm:basis-[320px]",
+                  "group relative w-full shrink-0 self-start overflow-hidden rounded-md border sm:max-w-[320px] sm:basis-[320px]",
                   watched
                     ? "border-brand/40"
                     : "border-black/20 dark:border-white/20"
                 )}
               >
-                <div className="relative aspect-video w-full bg-muted-foreground/10">
+                <div className="relative aspect-video w-full overflow-hidden bg-muted-foreground/10">
                   {ep.still_path ? (
                     <Image
                       src={`https://image.tmdb.org/t/p/w500${ep.still_path}`}
                       alt={ep.name}
                       fill
-                      className={cn("object-cover", watched && "opacity-80")}
+                      sizes="(max-width: 640px) 100vw, 320px"
+                      className={cn(
+                        "object-cover object-center",
+                        watched && "opacity-80"
+                      )}
                     />
                   ) : (
                     <div className="flex h-full min-h-[180px] w-full items-center justify-center font-medium text-2xl text-muted-foreground">
@@ -312,33 +230,11 @@ export default function EpisodesList({
                     {ep.overview}
                   </p>
                 ) : null}
-                {showWatch && seriesAvailable ? (
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="secondary"
-                    disabled={loadingEpisode === ep.episode_number}
-                    onClick={() => void openEpisode(ep)}
-                    className="mt-3 gap-1.5"
-                  >
-                    <Play className="size-3.5 fill-current" aria-hidden />
-                    {t("catalog.watchOnClakete")}
-                  </Button>
-                ) : null}
               </div>
             </div>
           );
         })}
       </div>
-
-      {showWatch ? (
-        <ClaketeWatchDialog
-          open={dialogOpen}
-          onOpenChange={setDialogOpen}
-          title={dialogTitle || "Clakete"}
-          playback={playback}
-        />
-      ) : null}
     </>
   );
 }

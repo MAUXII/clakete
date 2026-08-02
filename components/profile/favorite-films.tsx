@@ -26,6 +26,7 @@ import {
 import { Skeleton } from "../ui/skeleton"
 import { horizontalListSortingStrategy } from "@dnd-kit/sortable"
 import { seriesHref } from "@/lib/media-href"
+import { useT } from "@/components/providers/i18n-provider"
 
 interface Film {
   id: number
@@ -84,6 +85,7 @@ function FavoriteSlot({
   onSelect: () => void
   canEdit: boolean
 }) {
+  const { t } = useT()
   const handleRemoveClick = (e: MouseEvent) => {
     e.stopPropagation()
     e.preventDefault()
@@ -128,7 +130,7 @@ function FavoriteSlot({
           onClick={onSelect}
         >
           <Plus className="h-6 w-6" />
-          <span className="text-xs">Add Film</span>
+          <span className="text-xs">{t("profile.addFilm")}</span>
         </button>
       ) : null}
     </div>
@@ -155,6 +157,7 @@ interface FavoriteFilmsProps {
 }
 
 export function UserFavoriteFilms({ userId, isEditable = false, onFilmAdded }: FavoriteFilmsProps) {
+  const { t } = useT()
   const [sortableItems, setSortableItems] = useState<FavoriteSortableItem[]>(() =>
     LOGICAL_SLOTS.map((idx) => ({ id: `empty-${idx}`, film: null })),
   )
@@ -251,7 +254,7 @@ export function UserFavoriteFilms({ userId, isEditable = false, onFilmAdded }: F
   if (loading) {
     return (
       <div className="mt-0">
-        <h2 className="text-sm font-medium uppercase text-muted-foreground/50">Favorite Films</h2>
+        <h2 className="text-sm font-medium uppercase text-muted-foreground/50">{t("profile.favoriteFilms")}</h2>
         <div className="mt-1 mb-4 h-[0.3px] w-full bg-muted-foreground/10" />
         <div className="grid grid-cols-4 gap-3 sm:gap-4">
           {[...Array(4)].map((_, i) => (
@@ -270,7 +273,7 @@ export function UserFavoriteFilms({ userId, isEditable = false, onFilmAdded }: F
   if (!canEdit) {
     return (
       <>
-        <h2 className="text-sm font-medium uppercase text-muted-foreground/50">Favorite Films</h2>
+        <h2 className="text-sm font-medium uppercase text-muted-foreground/50">{t("profile.favoriteFilms")}</h2>
         <div className="mt-1 mb-4 h-[0.3px] w-full bg-muted-foreground/10" />
 
         <div className="grid grid-cols-4 gap-4">
@@ -415,7 +418,7 @@ export function UserFavoriteFilms({ userId, isEditable = false, onFilmAdded }: F
 
   return (
     <>
-      <h2 className="text-sm font-medium uppercase text-muted-foreground/50">Favorite Films</h2>
+      <h2 className="text-sm font-medium uppercase text-muted-foreground/50">{t("profile.favoriteFilms")}</h2>
       <div className="mt-1 mb-4 h-[0.3px] w-full bg-muted-foreground/10" />
 
       <Sortable

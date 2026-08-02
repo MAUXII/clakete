@@ -33,6 +33,11 @@ export function ClaketeWatchDialog({
           <DialogDescription className="text-xs text-muted-foreground">
             {t("catalog.claketePlayerHint")}
           </DialogDescription>
+          {playback?.kind === "iframe" ? (
+            <p className="text-[11px] leading-snug text-muted-foreground/80">
+              {t("catalog.claketePlayerAdTip")}
+            </p>
+          ) : null}
         </DialogHeader>
         <div className="bg-black">
           {playback ? (
