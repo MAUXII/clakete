@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { pageContainerClass } from "@/lib/page-container"
+import { LegalFooterCat } from "@/components/legal/legal-footer-cat"
 
 export function LegalDoc({
   title,
@@ -28,23 +29,27 @@ export function LegalDoc({
           {children}
         </article>
 
-        <nav className="mt-14 flex flex-wrap gap-x-4 gap-y-2 border-t border-border pt-6 text-sm">
-          <Link href="/" className="text-foreground underline-offset-4 hover:underline">
-            Início
-          </Link>
-          <Link
-            href="/privacy"
-            className="text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-          >
-            Privacidade
-          </Link>
-          <Link
-            href="/terms"
-            className="text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-          >
-            Termos
-          </Link>
-        </nav>
+        <footer className="mt-14">
+          <LegalFooterCat />
+          <div className="mb-4 mt-1 h-[0.3px] w-full bg-muted-foreground/10" />
+          <nav className="flex flex-wrap gap-x-4 gap-y-2 pt-2 text-sm">
+            <Link href="/" className="text-foreground underline-offset-4 hover:underline">
+              Início
+            </Link>
+            <Link
+              href="/privacy"
+              className="text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+            >
+              Privacidade
+            </Link>
+            <Link
+              href="/terms"
+              className="text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+            >
+              Termos
+            </Link>
+          </nav>
+        </footer>
       </div>
     </main>
   )

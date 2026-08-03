@@ -13,6 +13,8 @@ export function ConditionalFooter() {
     pathname === '/sign-up' ||
     pathname === '/onboarding' ||
     pathname === '/list/new' ||
+    pathname === '/privacy' ||
+    pathname === '/terms' ||
     // Individual games run fullscreen; only the /games hub keeps the footer.
     pathname.startsWith('/games/')
 
