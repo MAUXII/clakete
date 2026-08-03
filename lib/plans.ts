@@ -42,6 +42,11 @@ export function hasShiningAccess(fields: PlanFields): boolean {
 
 export const SHINING_PRODUCT_NAME = "The Shining"
 
+/** Display price for marketing (BRL). Stripe price ID still comes from env. */
+export const SHINING_MONTHLY_PRICE = 7.9
+export const SHINING_MONTHLY_PRICE_LABEL = "R$ 7,90"
+export const SHINING_TRIAL_DAYS = 7
+
 /** Free accounts can keep this many private lists; Shining is unlimited. */
 export const FREE_PRIVATE_LIST_LIMIT = 3
 

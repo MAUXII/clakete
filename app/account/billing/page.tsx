@@ -42,7 +42,7 @@ function BillingContent() {
   }
 
   return (
-    <main className="mx-auto mt-[calc(3.75rem+2rem)] max-w-lg px-4 pb-16 sm:px-6">
+    <main className="mx-auto mt-[calc(3.75rem+var(--clakete-promo-h,0px)+2rem)] max-w-lg px-4 pb-16 sm:px-6">
       <div className="mb-8">
         <p className="text-[10px] font-medium uppercase tracking-[0.28em] text-muted-foreground">
           Account

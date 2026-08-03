@@ -74,7 +74,7 @@ function WatchLogPageSkeleton() {
     <motion.div layout className="min-h-screen w-full overflow-x-clip bg-background">
       <FilmsCatalogShell>
         <div
-          className="pointer-events-none relative left-1/2 z-0 mt-[3.75rem] w-screen max-w-[100vw] -translate-x-1/2 overflow-hidden bg-background"
+          className="pointer-events-none relative left-1/2 z-0 mt-[calc(3.75rem+var(--clakete-promo-h,0px))] w-screen max-w-[100vw] -translate-x-1/2 overflow-hidden bg-background"
           style={{ height: LETTERBOX_HEIGHT }}
           aria-hidden
         >
@@ -339,7 +339,7 @@ export function UserWatchLogPage({
     <div className="min-h-screen w-full overflow-x-clip bg-background">
       <FilmsCatalogShell>
         <div
-          className="pointer-events-none relative left-1/2 z-0 mt-[3.75rem] w-screen max-w-[100vw] -translate-x-1/2 overflow-hidden bg-background"
+          className="pointer-events-none relative left-1/2 z-0 mt-[calc(3.75rem+var(--clakete-promo-h,0px))] w-screen max-w-[100vw] -translate-x-1/2 overflow-hidden bg-background"
           style={{ height: LETTERBOX_HEIGHT }}
           aria-hidden
         >

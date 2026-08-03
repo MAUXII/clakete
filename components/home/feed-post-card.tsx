@@ -28,6 +28,7 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { ShiningBadge } from "@/components/premium/shining-badge"
 import { hasShiningAccess } from "@/lib/plans"
+import { createNotification } from "@/lib/notifications"
 import {
   FeedEditDialog,
   type FeedEditPayload,
@@ -145,6 +146,13 @@ export function FeedWatchedPostCard({
           user_id: authUser.id,
         })
         if (error) throw error
+        void createNotification(supabase, {
+          recipientId: item.user.id,
+          actorId: authUser.id,
+          type: "feed_like",
+          entityType: "interaction",
+          entityId: item.interactionId,
+        })
       } else {
         const { error } = await supabase
           .from("feed_post_likes")
@@ -161,7 +169,7 @@ export function FeedWatchedPostCard({
     } finally {
       setLiking(false)
     }
-  }, [authUser?.id, item.interactionId, liked, liking, supabase])
+  }, [authUser?.id, item.interactionId, item.user.id, liked, liking, supabase])
 
   /** Instagram-style: double-tap always likes (never unlikes) + heart burst */
   const likeFromDoubleTap = useCallback(async () => {
@@ -184,6 +192,13 @@ export function FeedWatchedPostCard({
         user_id: authUser.id,
       })
       if (error) throw error
+      void createNotification(supabase, {
+        recipientId: item.user.id,
+        actorId: authUser.id,
+        type: "feed_like",
+        entityType: "interaction",
+        entityId: item.interactionId,
+      })
     } catch (e) {
       console.error(e)
       setLiked(false)
@@ -192,7 +207,7 @@ export function FeedWatchedPostCard({
     } finally {
       setLiking(false)
     }
-  }, [authUser?.id, item.interactionId, liked, liking, supabase])
+  }, [authUser?.id, item.interactionId, item.user.id, liked, liking, supabase])
 
   const mediaNode = isValidElement(media)
     ? cloneElement(media as React.ReactElement<{ onDoubleLike?: () => void }>, {
@@ -291,6 +306,14 @@ export function FeedWatchedPostCard({
         .single()
 
       if (error) throw error
+
+      void createNotification(supabase, {
+        recipientId: item.user.id,
+        actorId: authUser.id,
+        type: "feed_comment",
+        entityType: "interaction",
+        entityId: item.interactionId,
+      })
 
                     setComments((prev) => [
         ...prev,

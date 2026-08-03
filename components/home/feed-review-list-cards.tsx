@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Textarea } from "@/components/ui/textarea"
 import { ShiningBadge } from "@/components/premium/shining-badge"
+import { createNotification } from "@/lib/notifications"
 import { feedMediaFrameClass } from "@/components/home/feed-watched-media"
 import {
   feedListHref,
@@ -126,6 +127,13 @@ export function FeedReviewPostCard({
           user_id: authUser.id,
         })
         if (error) throw error
+        void createNotification(supabase, {
+          recipientId: item.user.id,
+          actorId: authUser.id,
+          type: "feed_like",
+          entityType: "interaction",
+          entityId: item.interactionId,
+        })
       } else {
         const { error } = await supabase
           .from("feed_post_likes")
@@ -142,7 +150,7 @@ export function FeedReviewPostCard({
     } finally {
       setLiking(false)
     }
-  }, [authUser?.id, item.interactionId, liked, liking, supabase])
+  }, [authUser?.id, item.interactionId, item.user.id, liked, liking, supabase])
 
   const loadComments = useCallback(async () => {
     setCommentsLoading(true)
@@ -214,6 +222,13 @@ export function FeedReviewPostCard({
         .select("id, body, created_at")
         .single()
       if (error) throw error
+      void createNotification(supabase, {
+        recipientId: item.user.id,
+        actorId: authUser.id,
+        type: "feed_comment",
+        entityType: "interaction",
+        entityId: item.interactionId,
+      })
       setComments((prev) => [
         ...prev,
         {
@@ -237,7 +252,7 @@ export function FeedReviewPostCard({
     } finally {
       setPostingComment(false)
     }
-  }, [authUser, commentDraft, item.interactionId, loadComments, supabase])
+  }, [authUser, commentDraft, item.interactionId, item.user.id, loadComments, supabase])
 
   const deleteComment = useCallback(
     async (commentId: number) => {

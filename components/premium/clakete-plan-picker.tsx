@@ -9,6 +9,7 @@ import {
   FREE_FEATURE_BULLETS,
   hasShiningAccess,
   SHINING_FEATURE_BULLETS,
+  SHINING_MONTHLY_PRICE,
   SHINING_PRODUCT_NAME,
   type PlanFields,
 } from "@/lib/plans"
@@ -19,7 +20,7 @@ const PLANS = [
     id: "free" as const,
     name: "Free",
     description: "your movie diary",
-    priceLabel: "$0",
+    priceLabel: "R$ 0",
     period: "forever",
     features: [...FREE_FEATURE_BULLETS],
   },
@@ -28,7 +29,7 @@ const PLANS = [
     name: SHINING_PRODUCT_NAME,
     description: "premium member",
     priceLabel: null as string | null,
-    monthlyPrice: 4.99,
+  monthlyPrice: SHINING_MONTHLY_PRICE,
     period: "month",
     features: [...SHINING_FEATURE_BULLETS],
   },
@@ -175,7 +176,7 @@ export function ClaketePlanPicker({
                         {plan.id === "shining" && plan.monthlyPrice != null ? (
                           <NumberFlow
                             value={plan.monthlyPrice}
-                            format={{ style: "currency", currency: "USD" }}
+                            format={{ style: "currency", currency: "BRL" }}
                           />
                         ) : (
                           plan.priceLabel

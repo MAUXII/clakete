@@ -1,8 +1,9 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useSupabaseClient } from "@supabase/auth-helpers-react"
+import { useSupabaseClient, useUser } from "@supabase/auth-helpers-react"
 import { useDebounce } from "@/hooks/use-debounce"
+import { fetchBlockedUserIds } from "@/lib/user-blocks"
 
 export type UserSearchResult = {
   id: string
@@ -13,6 +14,7 @@ export type UserSearchResult = {
 
 export function useUserSearch(query: string, enabled = true) {
   const supabase = useSupabaseClient()
+  const user = useUser()
   const debounced = useDebounce(query, 300)
   const [results, setResults] = useState<UserSearchResult[]>([])
   const [loading, setLoading] = useState(false)
@@ -32,24 +34,30 @@ export function useUserSearch(query: string, enabled = true) {
 
     void (async () => {
       try {
-        // Escape commas/% that break PostgREST .or() filters
         const safe = q.replace(/[%_,]/g, "")
         if (safe.length < 2) {
           if (!cancelled) setResults([])
           return
         }
         const pattern = `%${safe}%`
-        const { data, error } = await supabase
-          .from("users")
-          .select("id, username, display_name, avatar_url")
-          .or(`username.ilike.${pattern},display_name.ilike.${pattern}`)
-          .order("username", { ascending: true })
-          .limit(12)
+        const [{ data, error }, blockedIds] = await Promise.all([
+          supabase
+            .from("users")
+            .select("id, username, display_name, avatar_url")
+            .or(`username.ilike.${pattern},display_name.ilike.${pattern}`)
+            .order("username", { ascending: true })
+            .limit(12),
+          user?.id
+            ? fetchBlockedUserIds(supabase, user.id)
+            : Promise.resolve(new Set<string>()),
+        ])
 
         if (error) throw error
         if (!cancelled) {
           setResults(
-            ((data ?? []) as UserSearchResult[]).filter((u) => Boolean(u.username)),
+            ((data ?? []) as UserSearchResult[]).filter(
+              (u) => Boolean(u.username) && !blockedIds.has(u.id),
+            ),
           )
         }
       } catch (e) {
@@ -63,7 +71,7 @@ export function useUserSearch(query: string, enabled = true) {
     return () => {
       cancelled = true
     }
-  }, [debounced, enabled, supabase])
+  }, [debounced, enabled, supabase, user?.id])
 
   return { results, loading }
 }

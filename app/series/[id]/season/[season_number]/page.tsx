@@ -96,7 +96,7 @@ const SEASON_LETTERBOX_HEIGHT = "clamp(400px, min(60vh, 680px), 780px)";
 const SEASON_POSTER_ALIGN_MARGIN = `max(-5rem, calc(min(92vw, 304px) * 0.75 + 8rem - ${SEASON_LETTERBOX_HEIGHT}))`;
 /** Nav (~4.5rem) + column gap (gap-10 / gap-12). Keep in sync with lg:gap-10 xl:gap-12. */
 const SEASON_POSTER_STICKY_TOP =
-  "lg:sticky lg:top-[calc(env(safe-area-inset-top,0px)_+_4.5rem_+_1.5rem)] xl:top-[calc(env(safe-area-inset-top,0px)_+_4.5rem_+_1.5rem)]";
+  "lg:sticky lg:top-[calc(env(safe-area-inset-top,0px)_+_4.5rem_+_var(--clakete-promo-h,0px)_+_1.5rem)] xl:top-[calc(env(safe-area-inset-top,0px)_+_4.5rem_+_var(--clakete-promo-h,0px)_+_1.5rem)]";
 
 export default function SeriesSeasonPage({
   params,
@@ -247,7 +247,7 @@ export default function SeriesSeasonPage({
     <div className="min-h-screen w-full overflow-x-clip bg-background">
       <FilmsCatalogShell>
         <div
-          className="pointer-events-none mt-[3.75rem] relative left-1/2 z-0 w-screen max-w-[100vw] -translate-x-1/2 overflow-hidden bg-background"
+          className="pointer-events-none mt-[calc(3.75rem+var(--clakete-promo-h,0px))] relative left-1/2 z-0 w-screen max-w-[100vw] -translate-x-1/2 overflow-hidden bg-background"
           style={{ height: SEASON_LETTERBOX_HEIGHT }}
           aria-hidden
         >

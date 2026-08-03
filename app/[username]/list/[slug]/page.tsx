@@ -585,7 +585,7 @@ export default function UserListDetailPage() {
     <div className="min-h-screen w-full overflow-x-clip bg-background">
       <FilmsCatalogShell>
         <div
-          className="relative mt-[3.75rem] left-1/2 z-0 w-screen max-w-[100vw] -translate-x-1/2 overflow-hidden bg-background"
+          className="relative mt-[calc(3.75rem+var(--clakete-promo-h,0px))] left-1/2 z-0 w-screen max-w-[100vw] -translate-x-1/2 overflow-hidden bg-background"
           style={{ height: LIST_LETTERBOX_HEIGHT }}
         >
           <div className="pointer-events-none absolute inset-0">

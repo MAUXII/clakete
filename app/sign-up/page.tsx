@@ -25,8 +25,12 @@ import { AuthGoogleIcon } from '@/components/auth/auth-google-icon'
 import { AuthMarketingPanel } from '@/components/auth/auth-marketing-panel'
 import { userProfilePath } from '@/lib/list-href'
 import { getClientOrigin } from '@/lib/app-url'
+import { usernameSchema } from '@/lib/onboarding'
+import { checkUsernameAvailability } from '@/lib/username-availability'
+import { useProfile } from '@/components/providers/profile-provider'
 
 const formSchema = z.object({
+  username: usernameSchema,
   email: z.string().email('Invalid email'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
 })
@@ -36,6 +40,7 @@ export default function SignUp() {
   const [loading, setLoading] = useState(false)
   const [showProfileDialog, setShowProfileDialog] = useState(false)
   const supabase = useSupabaseClient()
+  const { refreshProfile } = useProfile()
 
   const { rive, RiveComponent } = useRive({
     src: '/cat_password.riv',
@@ -46,7 +51,7 @@ export default function SignUp() {
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: { email: '', password: '' },
+    defaultValues: { username: '', email: '', password: '' },
   })
 
   const handlePasswordChange = () => {
@@ -59,20 +64,64 @@ export default function SignUp() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
       setLoading(true)
-      const { error } = await supabase.auth.signUp({
+
+      const availability = await checkUsernameAvailability(
+        supabase,
+        values.username,
+      )
+      if (availability.status !== 'available') {
+        form.setError('username', {
+          message: availability.message ?? 'Username unavailable',
+        })
+        return
+      }
+
+      const username = values.username.toLowerCase()
+
+      const { data, error } = await supabase.auth.signUp({
         email: values.email,
         password: values.password,
         options: {
           emailRedirectTo: `${getClientOrigin()}/auth/callback`,
+          data: { username },
         },
       })
 
       if (error) throw error
 
+      const userId = data.user?.id
+      if (userId && data.session) {
+        const { error: profileError } = await supabase.from('users').insert({
+          id: userId,
+          username,
+          avatar_url: null,
+        })
+
+        if (profileError) {
+          if (profileError.code === '23505') {
+            toast.error('This username is already taken')
+            setShowProfileDialog(true)
+            return
+          }
+          throw profileError
+        }
+
+        await refreshProfile()
+        toast.success('Account created!')
+        router.push('/onboarding')
+        router.refresh()
+        return
+      }
+
       toast.success('Account created!', {
-        description: 'Choose your username to continue.',
+        description: data.session
+          ? 'Choose your username to continue.'
+          : 'Check your email to confirm, then sign in.',
       })
-      setShowProfileDialog(true)
+
+      if (data.session) {
+        setShowProfileDialog(true)
+      }
     } catch (error) {
       console.error('Sign up error:', error)
       toast.error('Could not create account', {
@@ -160,6 +209,39 @@ export default function SignUp() {
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="username"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm text-muted-foreground">
+                      Username
+                    </FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+                          @
+                        </span>
+                        <Input
+                          className="border border-black/10 py-[22px] pl-8 dark:border-border"
+                          placeholder="your_username"
+                          autoComplete="username"
+                          autoCapitalize="none"
+                          autoCorrect="off"
+                          spellCheck={false}
+                          {...field}
+                          onChange={(e) => {
+                            field.onChange(
+                              e.target.value.replace(/[^a-zA-Z0-9_]/g, ''),
+                            )
+                          }}
+                        />
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <FormField
                 control={form.control}
                 name="email"

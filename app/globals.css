@@ -19,6 +19,65 @@
   animation: feed-post-locate 2.4s ease-out forwards;
 }
 
+/* Pricing card — drifting red cloud */
+@keyframes shining-cloud-drift-a {
+  0%,
+  100% {
+    transform: translate3d(-4%, 6%, 0) scale(1);
+    opacity: 0.9;
+  }
+  50% {
+    transform: translate3d(8%, -2%, 0) scale(1.12);
+    opacity: 1;
+  }
+}
+
+@keyframes shining-cloud-drift-b {
+  0%,
+  100% {
+    transform: translate3d(6%, 4%, 0) scale(1.05);
+    opacity: 0.75;
+  }
+  50% {
+    transform: translate3d(-10%, 0%, 0) scale(1.18);
+    opacity: 0.95;
+  }
+}
+
+@keyframes shining-cloud-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+.shining-cloud-layer {
+  will-change: transform, opacity;
+}
+
+.shining-cloud-a {
+  animation: shining-cloud-drift-a 14s ease-in-out infinite;
+}
+
+.shining-cloud-b {
+  animation: shining-cloud-drift-b 18s ease-in-out infinite;
+}
+
+.shining-cloud-c {
+  animation: shining-cloud-pulse 10s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shining-cloud-a,
+  .shining-cloud-b,
+  .shining-cloud-c {
+    animation: none;
+  }
+}
+
 .my-masonry-grid {
   display: flex;
   margin-left: -16px;
@@ -410,6 +469,7 @@ input:-webkit-autofill:active {
 
 @layer base {
   :root {
+    --clakete-promo-h: 0px;
     --background: 0 0% 100%;
     --foreground: 240 10% 3.9%;
     --card: 0 0% 100%;

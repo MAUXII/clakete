@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react"
 import { useSupabaseClient, useUser } from "@supabase/auth-helpers-react"
 import { listPublicHref, userProfilePath } from "@/lib/list-href"
 import { formatWatchedDate } from "@/lib/watched-date"
+import { fetchBlockedUserIds } from "@/lib/user-blocks"
 import { filmHref, seriesHref } from "@/lib/media-href"
 
 export type FollowingFeedUser = {
@@ -343,9 +344,13 @@ export function useFollowingFeed(limit = 20) {
 
       if (followsError) throw followsError
 
-      const followingIds = (follows ?? [])
+      const followingIdsRaw = (follows ?? [])
         .map((row) => row.user_id as string)
         .filter(Boolean)
+
+      const blockedIds = await fetchBlockedUserIds(supabase, user.id)
+
+      const followingIds = followingIdsRaw.filter((id) => !blockedIds.has(id))
 
       setFollowingCount(followingIds.length)
 
@@ -359,7 +364,7 @@ export function useFollowingFeed(limit = 20) {
       const followerIdSet = new Set(
         (followersRows ?? [])
           .map((row) => row.follower_id as string)
-          .filter(Boolean),
+          .filter((id) => id && !blockedIds.has(id)),
       )
       const mutualIds = new Set(
         followingIds.filter((id) => followerIdSet.has(id)),
@@ -415,7 +420,11 @@ export function useFollowingFeed(limit = 20) {
       const circleRows = (interactionsRes.data ?? []) as WatchedFeedRow[]
       const discoverRows = ((publicInteractionsRes.error ? [] : publicInteractionsRes.data) ?? [])
         .map((r) => r as WatchedFeedRow)
-        .filter((r) => !circleIds.has(r.user_id as string))
+        .filter(
+          (r) =>
+            !circleIds.has(r.user_id as string) &&
+            !blockedIds.has(r.user_id as string),
+        )
         .slice(0, PUBLIC_DISCOVER_LIMIT)
 
       const allRows = [...circleRows, ...discoverRows]
@@ -424,6 +433,7 @@ export function useFollowingFeed(limit = 20) {
       for (const row of allRows) {
         const id = row.id as number
         if (seenIds.has(id)) continue
+        if (blockedIds.has(row.user_id as string)) continue
         seenIds.add(id)
         uniqueRows.push(row)
       }
@@ -431,7 +441,11 @@ export function useFollowingFeed(limit = 20) {
       const circleLists = ((listsRes.error ? [] : listsRes.data) ?? []) as ListFeedRow[]
       const discoverLists = ((publicListsRes.error ? [] : publicListsRes.data) ?? [])
         .map((r) => r as ListFeedRow)
-        .filter((r) => !circleIds.has(r.user_id as string))
+        .filter(
+          (r) =>
+            !circleIds.has(r.user_id as string) &&
+            !blockedIds.has(r.user_id as string),
+        )
         .slice(0, PUBLIC_DISCOVER_LIMIT)
 
       const allLists = [...circleLists, ...discoverLists]
@@ -439,6 +453,7 @@ export function useFollowingFeed(limit = 20) {
       const uniqueLists: ListFeedRow[] = []
       for (const row of allLists) {
         if (seenListIds.has(row.id)) continue
+        if (blockedIds.has(row.user_id as string)) continue
         seenListIds.add(row.id)
         uniqueLists.push(row)
       }

@@ -46,6 +46,12 @@ import { useSupabaseClient } from '@supabase/auth-helpers-react'
 import { usePathname, useRouter } from 'next/navigation'
 import { useProfile } from "@/components/providers/profile-provider"
 import { profileAvatarPresentation } from "@/lib/profile-media"
+import { NotificationsMenu } from "@/components/notifications/notifications-menu"
+import { PromoTopBanner } from "@/components/promo/promo-top-banner"
+import {
+  SHINING_MONTHLY_PRICE_LABEL,
+  SHINING_PRODUCT_NAME,
+} from "@/lib/plans"
 import { avatarDisplaySrc, remoteImageSrcLooksLikeGif } from "@/lib/next-remote-image"
 import React from "react"
 import { useT } from "@/components/providers/i18n-provider"
@@ -494,6 +500,23 @@ export function Navbar() {
     </nav>
 
         <div className="ml-auto flex items-center gap-2">
+          <Link
+            href="/price"
+            className={cn(
+              "hidden items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium sm:inline-flex",
+              "text-muted-foreground transition-colors",
+              "hover:bg-muted/40 hover:text-foreground",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/25",
+            )}
+            aria-label={`${SHINING_PRODUCT_NAME} ${SHINING_MONTHLY_PRICE_LABEL}`}
+          >
+            <span className="hidden md:inline">{SHINING_PRODUCT_NAME}</span>
+            <span className="tabular-nums text-foreground/90">
+              {SHINING_MONTHLY_PRICE_LABEL}
+              <span className="text-muted-foreground">/mês</span>
+            </span>
+          </Link>
+          {profile ? <NotificationsMenu /> : null}
           <Sheet>
             <SheetTrigger asChild>
               <button
@@ -540,6 +563,18 @@ export function Navbar() {
                       )}
                     >
                       {t("nav.lists")}
+                    </Link>
+                  </SheetClose>
+                  <SheetClose asChild>
+                    <Link
+                      href="/price"
+                      className={cn(
+                        "rounded-lg px-3 py-2 text-sm font-medium",
+                        "text-foreground",
+                        navLinkHover,
+                      )}
+                    >
+                      {SHINING_PRODUCT_NAME} · {SHINING_MONTHLY_PRICE_LABEL}/mês
                     </Link>
                   </SheetClose>
                 </nav>
@@ -731,6 +766,7 @@ export function Navbar() {
         </div>
         </div>
       </div>
+      <PromoTopBanner />
     </header>
   )
 }

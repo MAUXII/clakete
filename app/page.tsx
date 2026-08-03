@@ -16,6 +16,8 @@ import { cn } from '@/lib/utils'
 import { pageContainerClass } from '@/lib/page-container'
 import { UserRecentReviews } from "@/components/profile/recent-reviews";
 import { SocialFeed } from "@/components/home/social-feed";
+import { HomeForYouRail } from "@/components/home/home-for-you-rail";
+import { HomeFriendsWatchedRail } from "@/components/home/home-friends-watched-rail";
 import CinematicBackground from '@/components/CinematicBackground'
 import { LandingSpotlight } from '@/components/landing/LandingSpotlight'
 import { LandingWhyClakete } from '@/components/landing/LandingWhyClakete'
@@ -613,7 +615,7 @@ export default function HomePage() {
     <div className="w-full overflow-x-clip pb-16">
       {hasFilmHero && heroBackdrop ? (
         <div
-          className="pointer-events-none relative left-1/2 z-0 mt-[3.75rem] w-screen max-w-[100vw] -translate-x-1/2 overflow-hidden bg-background"
+          className="pointer-events-none relative left-1/2 z-0 mt-[calc(3.75rem+var(--clakete-promo-h,0px))] w-screen max-w-[100vw] -translate-x-1/2 overflow-hidden bg-background"
           style={{ height: HOME_LETTERBOX_HEIGHT }}
           aria-hidden
         >
@@ -643,7 +645,7 @@ export default function HomePage() {
       <div
         className={cn(
           pageContainerClass,
-          hasFilmHero ? 'relative z-10 -mt-[3.5rem] sm:-mt-[4rem]' : 'mt-20 pt-6',
+          hasFilmHero ? 'relative z-10 -mt-[3.5rem] sm:-mt-[4rem]' : 'mt-[calc(5rem+var(--clakete-promo-h,0px))] pt-6',
         )}
       >
       {userProfile ? (
@@ -728,6 +730,39 @@ export default function HomePage() {
           </Link>
         </header>
       )}
+
+      {userProfile ? (
+        <div className={cn(sectionShell, "space-y-8")}>
+          {(homePrefs.favorite_genre_ids?.length ?? 0) > 0 ? (
+            <section aria-labelledby="home-for-you" className="min-w-0">
+              <LoggedHomeSectionHeader
+                dense
+                eyebrow={t("home.forYouEyebrow")}
+                title={t("home.forYou")}
+                titleId="home-for-you"
+                description={t("home.forYouHint")}
+                action={
+                  <Link href="/films/discover" className={loggedHomeSecondaryLink}>
+                    {t("home.catalogLink")}
+                  </Link>
+                }
+              />
+              <HomeForYouRail genreIds={homePrefs.favorite_genre_ids ?? []} />
+            </section>
+          ) : null}
+
+          <section aria-labelledby="home-friends-watched" className="min-w-0">
+            <LoggedHomeSectionHeader
+              dense
+              eyebrow={t("home.friendsEyebrow")}
+              title={t("home.friendsWatched")}
+              titleId="home-friends-watched"
+              description={t("home.friendsWatchedHint")}
+            />
+            <HomeFriendsWatchedRail />
+          </section>
+        </div>
+      ) : null}
 
       {/* Feed + catalog rail */}
       <div

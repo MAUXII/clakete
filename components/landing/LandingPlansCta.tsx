@@ -1,6 +1,11 @@
 import Link from "next/link"
 import { Check } from "lucide-react"
-import { FREE_FEATURE_BULLETS, SHINING_FEATURE_BULLETS } from "@/lib/plans"
+import {
+  FREE_FEATURE_BULLETS,
+  SHINING_FEATURE_BULLETS,
+  SHINING_MONTHLY_PRICE_LABEL,
+  SHINING_TRIAL_DAYS,
+} from "@/lib/plans"
 import { cn } from "@/lib/utils"
 
 const freeFeatures = [...FREE_FEATURE_BULLETS]
@@ -9,6 +14,7 @@ const iluminadoFeatures = [...SHINING_FEATURE_BULLETS]
 export function LandingPlansCta() {
   return (
     <section
+      id="plans"
       aria-label="Clakete plans"
       className={cn(
         "relative left-1/2 w-screen max-w-[100vw] -translate-x-1/2",
@@ -58,13 +64,13 @@ export function LandingPlansCta() {
               ))}
             </ul>
             <Link
-              href="/sign-in"
+              href="/price"
               className={cn(
                 "mt-8 inline-flex w-full items-center justify-center rounded-full border-2 border-white/40 bg-transparent py-3 text-center text-sm font-semibold text-white",
                 "transition hover:border-white hover:bg-white/10",
               )}
             >
-              Create free account
+              See plans
             </Link>
           </div>
 
@@ -87,8 +93,12 @@ export function LandingPlansCta() {
             <p className="mt-1 text-sm text-white/75">
               More profile visibility and extra features - an added glow for your movie world.
             </p>
-            <p className="mt-4 text-sm text-white/80">
-              Monthly subscription — manage billing anytime.
+            <p className="mt-4 text-3xl font-semibold tabular-nums text-white">
+              {SHINING_MONTHLY_PRICE_LABEL}
+              <span className="text-base font-medium text-white/55">/mês</span>
+            </p>
+            <p className="mt-1 text-sm text-white/80">
+              {SHINING_TRIAL_DAYS} days free — manage billing anytime.
             </p>
             <ul className="mt-6 flex flex-col gap-3">
               {iluminadoFeatures.map((line) => (
@@ -99,7 +109,7 @@ export function LandingPlansCta() {
               ))}
             </ul>
             <Link
-              href="/account/billing"
+              href="/price"
               className={cn(
                 "mt-8 inline-flex w-full items-center justify-center rounded-full bg-white py-3 text-center text-sm font-semibold text-brand",
                 "transition hover:bg-white/90",

@@ -532,6 +532,78 @@ export interface Database {
           updated_at?: string
         }
       }
+      user_blocks: {
+        Row: {
+          blocker_id: string
+          blocked_id: string
+          created_at: string
+        }
+        Insert: {
+          blocker_id: string
+          blocked_id: string
+          created_at?: string
+        }
+        Update: {
+          blocker_id?: string
+          blocked_id?: string
+          created_at?: string
+        }
+      }
+      user_profile_reports: {
+        Row: {
+          id: number
+          reporter_id: string
+          reported_user_id: string
+          reason: string
+          created_at: string
+        }
+        Insert: {
+          id?: number
+          reporter_id: string
+          reported_user_id: string
+          reason?: string
+          created_at?: string
+        }
+        Update: {
+          id?: number
+          reporter_id?: string
+          reported_user_id?: string
+          reason?: string
+          created_at?: string
+        }
+      }
+      notifications: {
+        Row: {
+          id: number
+          user_id: string
+          actor_id: string
+          type: string
+          entity_type: string | null
+          entity_id: string | null
+          read_at: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: number
+          user_id: string
+          actor_id: string
+          type: string
+          entity_type?: string | null
+          entity_id?: string | null
+          read_at?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: number
+          user_id?: string
+          actor_id?: string
+          type?: string
+          entity_type?: string | null
+          entity_id?: string | null
+          read_at?: string | null
+          created_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never

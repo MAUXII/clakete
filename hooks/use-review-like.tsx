@@ -5,12 +5,13 @@ import { useSupabaseClient, useUser } from "@supabase/auth-helpers-react"
 import { Heart } from "lucide-react"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
+import { createNotification } from "@/lib/notifications"
 
 /**
  * Like/unlike a review (items_interactions row with text review).
  * Requires `review_likes` table (migration 20260713_review_likes.sql).
  */
-export function useReviewLike(interactionId: number) {
+export function useReviewLike(interactionId: number, reviewOwnerId?: string | null) {
   const supabase = useSupabaseClient()
   const user = useUser()
   const [liked, setLiked] = useState(false)
@@ -63,6 +64,15 @@ export function useReviewLike(interactionId: number) {
           user_id: user.id,
         })
         if (error) throw error
+        if (reviewOwnerId) {
+          void createNotification(supabase, {
+            recipientId: reviewOwnerId,
+            actorId: user.id,
+            type: "review_like",
+            entityType: "interaction",
+            entityId: interactionId,
+          })
+        }
       } else {
         const { error } = await supabase
           .from("review_likes")

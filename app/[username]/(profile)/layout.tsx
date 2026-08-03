@@ -33,6 +33,8 @@ import { parseUserHomePreferences } from "@/lib/user-home-preferences"
 import { ShiningBadge } from "@/components/premium/shining-badge"
 import { ProfileMoreMenu } from "@/components/profile/profile-more-menu"
 import { useT } from "@/components/providers/i18n-provider"
+import { fetchBlockedUserIds } from "@/lib/user-blocks"
+import { createNotification } from "@/lib/notifications"
 
 interface UserData extends ProfileLayoutUser {
   website_url?: string | null;
@@ -67,7 +69,7 @@ interface ProfileLayoutProps {
  * sticky não ficar atrás da navbar.
  */
 const PROFILE_SIDEBAR_STICKY_CLASS =
-  "lg:sticky lg:top-[calc(env(safe-area-inset-top,0px)_+_4.5rem_+_1rem_+_6rem)] lg:z-20"
+  "lg:sticky lg:top-[calc(env(safe-area-inset-top,0px)_+_4.5rem_+_var(--clakete-promo-h,0px)_+_1rem_+_6rem)] lg:z-20"
 
 export default function ProfileLayout({ children, params }: ProfileLayoutProps) {
     const [userData, setUserData] = useState<UserData | null>(null)
@@ -377,6 +379,12 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
       }
       
       try {
+        const blockedIds = await fetchBlockedUserIds(supabase, currentUser.id)
+        if (blockedIds.has(userData.id)) {
+          toast.error(t("profile.blockPreventsFollow"))
+          return
+        }
+
         // Verificar se a tabela user_followers existe
         const { error: tableCheckError } = await supabase
           .from('user_followers')
@@ -445,6 +453,12 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
             console.error('Erro ao seguir:', followError)
             throw followError
           }
+
+          void createNotification(supabase, {
+            recipientId: userData.id,
+            actorId: currentUser.id,
+            type: "follow",
+          })
           
           // Atualizar contagens
           setStats(prev => ({
@@ -466,7 +480,7 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
     if (loading) {
       const bone = "bg-muted"
       return (
-        <section className="relative z-10 mt-[3.75rem] w-full" aria-busy aria-label={t("profile.loading")}>
+        <section className="relative z-10 mt-[calc(3.75rem+var(--clakete-promo-h,0px))] w-full" aria-busy aria-label={t("profile.loading")}>
           <div
             className="relative h-44 w-full min-w-0 overflow-hidden rounded-none border-0 bg-background ring-1 ring-border sm:h-56 md:h-72 lg:h-96 xl:h-[567px]"
             aria-hidden
@@ -604,7 +618,7 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
   const themed = Boolean(themeClass)
 
   return (
-    <section className={cn("relative z-10 mt-[3.75rem] w-full", themeClass)}>
+    <section className={cn("relative z-10 mt-[calc(3.75rem+var(--clakete-promo-h,0px))] w-full", themeClass)}>
         {/* Banner */}
         <div 
         className={cn(

@@ -57,11 +57,11 @@ export function ProfileMoreMenu({
     if (!requireAuth() || !currentUser) return
     setBusy(true)
     try {
-      const { error } = await supabase.from("user_profile_reports" as never).insert({
+      const { error } = await supabase.from("user_profile_reports").insert({
         reporter_id: currentUser.id,
         reported_user_id: profileUserId,
         reason: "other",
-      } as never)
+      })
       if (error) {
         if (error.code === "23505") {
           toast.message(t("profile.alreadyReported"))
@@ -87,12 +87,10 @@ export function ProfileMoreMenu({
     }
     setBusy(true)
     try {
-      const { error: blockError } = await supabase
-        .from("user_blocks" as never)
-        .insert({
-          blocker_id: currentUser.id,
-          blocked_id: profileUserId,
-        } as never)
+      const { error: blockError } = await supabase.from("user_blocks").insert({
+        blocker_id: currentUser.id,
+        blocked_id: profileUserId,
+      })
       if (blockError) {
         if (blockError.code === "23505") {
           toast.message(t("profile.alreadyBlocked"))
@@ -101,11 +99,18 @@ export function ProfileMoreMenu({
         throw blockError
       }
 
-      await supabase
-        .from("user_followers")
-        .delete()
-        .eq("user_id", profileUserId)
-        .eq("follower_id", currentUser.id)
+      await Promise.all([
+        supabase
+          .from("user_followers")
+          .delete()
+          .eq("user_id", profileUserId)
+          .eq("follower_id", currentUser.id),
+        supabase
+          .from("user_followers")
+          .delete()
+          .eq("user_id", currentUser.id)
+          .eq("follower_id", profileUserId),
+      ])
 
       toast.success(t("profile.blocked"))
       onBlocked?.()

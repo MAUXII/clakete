@@ -24,6 +24,12 @@ export const RESERVED_USERNAMES = new Set([
   "watchlist",
   "activity",
   "reviews",
+  "privacy",
+  "terms",
+  "games",
+  "post",
+  "price",
+  "pricing",
 ])
 
 export const usernameSchema = z
