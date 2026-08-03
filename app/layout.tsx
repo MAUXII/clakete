@@ -11,6 +11,9 @@ const fontSans = Geist({
 export const metadata: Metadata = {
   title: "Clakete",
   description: "Your movie diary",
+  verification: {
+    google: "bhTwZ6ddu8orCriSFj21WvyQkLvFJ6b7_zQ8ffhNIz0",
+  },
 }
 
 /** Apply stored accent before paint to avoid a red flash. */
