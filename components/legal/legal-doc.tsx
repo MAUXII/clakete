@@ -12,8 +12,8 @@ export function LegalDoc({
   children: React.ReactNode
 }) {
   return (
-    <main className="relative z-10 min-h-dvh bg-background pb-20 pt-[calc(4.5rem+var(--clakete-promo-h,0px))] text-foreground">
-      <div className={cn(pageContainerClass, "max-w-2xl")}>
+    <main className="relative z-10 mt-[calc(3.75rem+var(--clakete-promo-h,0px))] min-h-dvh bg-background pb-20 text-foreground">
+      <div className={cn(pageContainerClass, "max-w-2xl pt-10 sm:pt-14")}>
         <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
           Clakete
         </p>
