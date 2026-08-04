@@ -13,7 +13,8 @@ import {
 } from "@/lib/plans"
 import { cn } from "@/lib/utils"
 
-const STORAGE_KEY = "clakete.promo-banner.dismissed.v1"
+/** Bump when promo copy changes so dismissed users see it again. */
+const STORAGE_KEY = "clakete.promo-banner.dismissed.v2"
 /** Keep in sync with banner height (h-9). */
 export const PROMO_BANNER_HEIGHT = "2.25rem"
 
@@ -29,7 +30,7 @@ function setPromoHeightVar(on: boolean) {
 
 export function PromoTopBanner() {
   const { t } = useT()
-  const { profile } = useProfile()
+  const { profile, loading: profileLoading } = useProfile()
   const [visible, setVisible] = useState(false)
 
   const shining = hasShiningAccess({
@@ -39,11 +40,15 @@ export function PromoTopBanner() {
   })
 
   useEffect(() => {
+    // Wait for profile so we don't flash then hide for Shining users.
+    if (profileLoading) return
+
     if (shining) {
       setVisible(false)
       setPromoHeightVar(false)
       return
     }
+
     try {
       if (localStorage.getItem(STORAGE_KEY) === "1") {
         setVisible(false)
@@ -53,10 +58,14 @@ export function PromoTopBanner() {
     } catch {
       /* ignore */
     }
+
     setVisible(true)
     setPromoHeightVar(true)
+  }, [shining, profileLoading])
+
+  useEffect(() => {
     return () => setPromoHeightVar(false)
-  }, [shining])
+  }, [])
 
   const dismiss = () => {
     try {
@@ -75,7 +84,7 @@ export function PromoTopBanner() {
   return (
     <div
       className={cn(
-        "pointer-events-auto relative w-full",
+        "pointer-events-auto relative z-10 w-full shrink-0",
         "bg-brand text-white",
         "border-b border-white/10",
       )}
@@ -86,15 +95,16 @@ export function PromoTopBanner() {
         <p className="flex min-w-0 items-center justify-center gap-1.5 truncate text-center text-[12px] font-medium sm:text-[13px]">
           <Sparkles className="size-3.5 shrink-0 opacity-90" aria-hidden />
           <span className="truncate">
+            <span className="font-semibold">{SHINING_PRODUCT_NAME}</span>
+            {" → "}
             {t("promo.bannerText", {
-              plan: SHINING_PRODUCT_NAME,
               price: SHINING_MONTHLY_PRICE_LABEL,
               days: SHINING_TRIAL_DAYS,
             })}
           </span>
           <Link
             href={href}
-            className="ml-1 shrink-0 underline underline-offset-2 transition hover:text-white/90"
+            className="ml-1 inline-flex shrink-0 items-center gap-1 underline underline-offset-2 transition hover:text-white/90"
           >
             {t("promo.bannerCta")}
           </Link>

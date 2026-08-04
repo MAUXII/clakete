@@ -28,11 +28,14 @@ export function LandingWhyClakete() {
       className={cn(
         "relative left-1/2 w-screen max-w-[100vw] -translate-x-1/2",
         "bg-black",
-        "bg-[radial-gradient(ellipse_90%_60%_at_100%_-10%,hsl(var(--brand) / 0.14),transparent_52%)]",
         "py-20 sm:py-24 lg:py-28",
       )}
     >
-      <div className="mx-auto max-w-6xl sm:px-6 lg:px-8">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_90%_60%_at_100%_-10%,hsl(var(--brand)_/_0.14),transparent_52%)]"
+      />
+      <div className="relative mx-auto max-w-6xl sm:px-6 lg:px-8">
         <div className="max-w-2xl">
           <p className="text-[10px] font-medium uppercase tracking-[0.35em] text-brand/90">
             Why

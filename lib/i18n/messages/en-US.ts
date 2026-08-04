@@ -230,7 +230,7 @@ export const enUS = {
   },
   promo: {
     bannerAria: "The Shining offer",
-    bannerText: "{plan} — {days} days free, then {price}/mo",
+    bannerText: "{days} days free, then {price}/mo",
     bannerCta: "Get it",
   },
   pricing: {

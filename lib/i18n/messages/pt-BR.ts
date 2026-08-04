@@ -232,7 +232,7 @@ export const ptBR = {
   },
   promo: {
     bannerAria: "Oferta The Shining",
-    bannerText: "{plan} — {days} dias grátis, depois {price}/mês",
+    bannerText: "{days} dias grátis, depois {price}/mês",
     bannerCta: "Garantir",
   },
   pricing: {

@@ -153,10 +153,10 @@ export function Navbar() {
     "bg-brand/10 text-brand-muted dark:bg-brand/14 dark:text-brand-light"
 
   return (
-    <header className="pointer-events-none fixed inset-x-0 top-0 z-[50] w-full pt-[env(safe-area-inset-top,0px)]">
+    <header className="pointer-events-none fixed inset-x-0 top-0 z-[50] flex w-full flex-col pt-[env(safe-area-inset-top,0px)]">
       <div
         className={cn(
-          "pointer-events-auto w-full",
+          "pointer-events-auto relative z-30 w-full",
           "border-b border-border",
           "bg-background/80 shadow-[0_12px_40px_-12px_rgba(0,0,0,0.12)] dark:shadow-[0_12px_40px_-12px_rgba(0,0,0,0.55)]",
           "backdrop-blur-2xl backdrop-saturate-150",

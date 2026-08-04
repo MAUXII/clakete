@@ -231,7 +231,7 @@ export const esES = {
   },
   promo: {
     bannerAria: "Oferta The Shining",
-    bannerText: "{plan} — {days} días gratis, luego {price}/mes",
+    bannerText: "{days} días gratis, luego {price}/mes",
     bannerCta: "Asegurar",
   },
   pricing: {
