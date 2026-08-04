@@ -26,7 +26,7 @@ export function HomeForYouRail({
   genreIds: number[]
   className?: string
 }) {
-  const { withLocale, loading: localeLoading } = useLocalePrefs()
+  const { localeQs, loading: localeLoading } = useLocalePrefs()
   const [movies, setMovies] = useState<DiscoverMovie[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -44,9 +44,7 @@ export function HomeForYouRail({
       try {
         const genres = genreIds.slice(0, 3).join("|")
         const res = await fetch(
-          withLocale(
-            `/api/movies/discover?with_genres=${encodeURIComponent(genres)}&sort_by=popularity.desc&page=1`,
-          ),
+          `/api/movies/discover?with_genres=${encodeURIComponent(genres)}&sort_by=popularity.desc&page=1&${localeQs}`,
         )
         if (!res.ok) throw new Error("discover failed")
         const data = (await res.json()) as { results?: DiscoverMovie[] }
@@ -61,7 +59,7 @@ export function HomeForYouRail({
     return () => {
       cancelled = true
     }
-  }, [genreIds, localeLoading, withLocale])
+  }, [genreIds, localeLoading, localeQs])
 
   if (!genreIds.length) return null
   if (!loading && movies.length === 0) return null
