@@ -13,9 +13,6 @@ import {
   isSeriesNavActive,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./dropdown-menu"
-import { FiUser } from "react-icons/fi"
-import { RiLoginBoxLine } from "react-icons/ri"
 import {
   List,
   Compass,
@@ -31,7 +28,6 @@ import {
 } from "lucide-react"
 import { BiHomeAlt } from "react-icons/bi"
 import Link from "next/link"
-import Image from "next/image"
 import { LuClapperboard, LuTv } from "react-icons/lu"
 import { MovieCard } from "../movies/movie-card"
 import { SeriesCard } from "../series/series-card"
@@ -40,19 +36,16 @@ import { useMovies } from "@/hooks/use-movies"
 import { useSeries } from "@/hooks/use-series"
 import { Skeleton } from "./skeleton"
 import { ClaketeLogo } from "./clakete-logo"
+import { ProfileNavMenu } from "./profile-nav-menu"
 
 import { SearchCommand } from "../movies/search-command"
-import { useSupabaseClient } from '@supabase/auth-helpers-react'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import { useProfile } from "@/components/providers/profile-provider"
-import { profileAvatarPresentation } from "@/lib/profile-media"
-import { NotificationsMenu } from "@/components/notifications/notifications-menu"
 import { PromoTopBanner } from "@/components/promo/promo-top-banner"
 import {
   SHINING_MONTHLY_PRICE_LABEL,
   SHINING_PRODUCT_NAME,
 } from "@/lib/plans"
-import { avatarDisplaySrc, remoteImageSrcLooksLikeGif } from "@/lib/next-remote-image"
 import React from "react"
 import { useT } from "@/components/providers/i18n-provider"
 import { cn } from "@/lib/utils"
@@ -65,18 +58,8 @@ export function Navbar() {
   const featuredMovie = movies?.[0]
   const { series, loading: seriesLoading } = useSeries()
   const featuredSeries = series?.[0]
-  const { profile, loading } = useProfile()
-  const navAvatar = profile ? profileAvatarPresentation(profile) : null
-  const supabase = useSupabaseClient()
-  const router = useRouter()
+  const { profile } = useProfile()
   const pathname = usePathname()
-
-
-  const handleSignOut = async () => {
-    await supabase.auth.signOut()
-    router.push('/sign-in')
-    router.refresh()
-  }
 
   const movieNavLinks = [
     {
@@ -168,15 +151,6 @@ export function Navbar() {
 
   const navMegaLinkAccent =
     "bg-brand/10 text-brand-muted dark:bg-brand/14 dark:text-brand-light"
-
-  const profileMenuItemClass = cn(
-    "cursor-pointer rounded-md text-foreground outline-none transition-colors",
-    "focus:bg-transparent focus:text-foreground",
-    "data-[highlighted]:bg-brand/10 data-[highlighted]:text-brand-muted",
-    "dark:data-[highlighted]:bg-brand/14 dark:data-[highlighted]:text-brand-light",
-    "focus-visible:bg-brand/10 focus-visible:text-brand-muted",
-    "dark:focus-visible:bg-brand/14 dark:focus-visible:text-brand-light",
-  )
 
   return (
     <header className="pointer-events-none fixed inset-x-0 top-0 z-[50] w-full pt-[env(safe-area-inset-top,0px)]">
@@ -516,7 +490,6 @@ export function Navbar() {
               <span className="text-muted-foreground">/mês</span>
             </span>
           </Link>
-          {profile ? <NotificationsMenu /> : null}
           <Sheet>
             <SheetTrigger asChild>
               <button
@@ -686,83 +659,7 @@ export function Navbar() {
             </SheetContent>
           </Sheet>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            className={cn(
-              "flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-xl sm:size-12",
-              "border border-border bg-muted/50 text-foreground",
-              "ring-1 ring-inset ring-border/60",
-              "transition hover:border-brand/25 hover:bg-brand/10 hover:text-brand-muted dark:hover:bg-brand/14 dark:hover:text-brand-light",
-              "outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50",
-              "data-[state=open]:border-border data-[state=open]:ring-1 data-[state=open]:ring-inset data-[state=open]:ring-border",
-            )}
-          >
-      {!loading && (
-          <>
-            {navAvatar?.src && profile ? (
-              <Image
-                src={avatarDisplaySrc(navAvatar.src) ?? navAvatar.src}
-                alt={profile.username}
-                width={48}
-                height={48}
-                unoptimized={remoteImageSrcLooksLikeGif(avatarDisplaySrc(navAvatar.src) ?? navAvatar.src)}
-                className="w-full h-full object-cover"
-                style={
-                  navAvatar.objectPosition
-                    ? { objectPosition: navAvatar.objectPosition }
-                    : undefined
-                }
-              />
-            ) : (
-              <FiUser />
-            )}
-          </>
-        )}
-          </DropdownMenuTrigger>
-          <DropdownMenuContent
-            align="end"
-            sideOffset={8}
-            onCloseAutoFocus={(e) => e.preventDefault()}
-            className="min-w-[10.5rem] rounded-xl border border-border bg-popover p-1 shadow-2xl shadow-black/20 dark:shadow-black/50 backdrop-blur-xl"
-          >
-      {profile ? (
-        <>
-        <DropdownMenuItem asChild className={profileMenuItemClass}>
-          <Link href={`/${profile.username}`}>
-            {t("common.profile")}
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild className={profileMenuItemClass}>
-          <Link href={`/${profile.username}/watched`}>
-            {t("nav.watched")}
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild className={profileMenuItemClass}>
-          <Link href={`/${profile.username}/watchlist`}>
-            {t("nav.watchlist")}
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild className={profileMenuItemClass}>
-          <Link href="/lists">
-            {t("nav.lists")}
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={handleSignOut} className={profileMenuItemClass}>
-          {t("common.signOut")}
-        </DropdownMenuItem>
-      </>
-        ) : (
-          <>
-        <DropdownMenuItem asChild className={profileMenuItemClass}>
-          <Link href="/sign-in">
-            <RiLoginBoxLine className="mr-2 h-4 w-4" />
-            {t("common.signIn")}
-          </Link>
-        </DropdownMenuItem>
-          </>
-        )}
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <ProfileNavMenu />
         </div>
         </div>
       </div>
