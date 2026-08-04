@@ -252,6 +252,7 @@ export const ptBR = {
     shiningDesc: "Mais presença no perfil e extras pra quem vive de filme.",
     shiningCta: "Começar teste grátis",
     shiningCtaManage: "Gerenciar assinatura",
+    checkoutSuccess: "The Shining ativado. Bom filme.",
     shiningFeatAll: "Tudo do Free",
     shiningFeatBadge: "Badge premium no perfil e no feed",
     shiningFeatThemes: "Temas de perfil (Overlook, Noir, Rose)",

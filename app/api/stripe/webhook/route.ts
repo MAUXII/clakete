@@ -72,6 +72,22 @@ export async function POST(request: Request) {
         break
       }
 
+      // Wallets / delayed payment methods (Apple Pay usually sync, but keep this).
+      case "checkout.session.async_payment_succeeded": {
+        const session = event.data.object as Stripe.Checkout.Session
+        const userId = session.metadata?.user_id ?? session.client_reference_id
+        const subId =
+          typeof session.subscription === "string"
+            ? session.subscription
+            : session.subscription?.id
+
+        if (subId) {
+          const subscription = await resolveSubscription(stripe, subId)
+          await syncUserFromSubscription(subscription, userId)
+        }
+        break
+      }
+
       case "customer.subscription.created":
       case "customer.subscription.updated": {
         const subscription = event.data.object as Stripe.Subscription

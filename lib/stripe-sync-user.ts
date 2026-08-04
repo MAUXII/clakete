@@ -23,6 +23,11 @@ export function planStateFromSubscription(
     return { plan: "shining", plan_status: status }
   }
 
+  // Checkout just finished; payment may still be confirming (wallets).
+  if (status === "incomplete") {
+    return { plan: "shining", plan_status: status }
+  }
+
   if ((status === "canceled" || status === "unpaid") && stillInPeriod) {
     return { plan: "shining", plan_status: status }
   }
@@ -56,7 +61,7 @@ export async function syncUserFromSubscription(
 
   if (!userId) {
     console.error("[stripe-sync] user not found for subscription", subscription.id)
-    return
+    throw new Error(`stripe-sync: user not found for subscription ${subscription.id}`)
   }
 
   const { plan, plan_status } = planStateFromSubscription(subscription)

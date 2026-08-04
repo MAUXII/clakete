@@ -2,8 +2,10 @@
 
 import { useEffect, useRef } from "react"
 import Link from "next/link"
-import { useSearchParams } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
+import { useSupabaseClient } from "@supabase/auth-helpers-react"
 import { Check, Loader2 } from "lucide-react"
+import { toast } from "sonner"
 import { useProfile } from "@/components/providers/profile-provider"
 import { useT } from "@/components/providers/i18n-provider"
 import { useShiningCheckout } from "@/hooks/use-shining-checkout"
@@ -18,10 +20,13 @@ import { cn } from "@/lib/utils"
 
 export function PricingPageContent() {
   const { t } = useT()
-  const { profile } = useProfile()
+  const router = useRouter()
+  const supabase = useSupabaseClient()
+  const { profile, refreshProfile } = useProfile()
   const searchParams = useSearchParams()
   const { isPremium, loading, startShiningFlow, startCheckout } = useShiningCheckout()
   const autoCheckoutStarted = useRef(false)
+  const successSyncStarted = useRef(false)
 
   const freeHref = profile?.username ? `/${profile.username}` : "/sign-up"
 
@@ -33,6 +38,51 @@ export function PricingPageContent() {
     autoCheckoutStarted.current = true
     void startCheckout()
   }, [searchParams, profile, isPremium, startCheckout])
+
+  // After Stripe redirect: sync plan from session (covers Apple Pay / webhook lag).
+  useEffect(() => {
+    if (successSyncStarted.current) return
+    if (searchParams.get("success") !== "1") return
+    const sessionId = searchParams.get("session_id")
+    if (!sessionId) return
+
+    successSyncStarted.current = true
+
+    void (async () => {
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession()
+        const token = session?.access_token
+        if (!token) return
+
+        for (let attempt = 0; attempt < 4; attempt++) {
+          const res = await fetch("/api/stripe/sync-checkout", {
+            method: "POST",
+            credentials: "include",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ session_id: sessionId }),
+          })
+          if (res.ok) break
+          if (res.status === 202) {
+            await new Promise((r) => setTimeout(r, 1200 * (attempt + 1)))
+            continue
+          }
+          const data = (await res.json().catch(() => null)) as { error?: string } | null
+          throw new Error(data?.error || t("billing.requestFailed"))
+        }
+
+        await refreshProfile()
+        toast.success(t("pricing.checkoutSuccess"))
+        router.replace("/price")
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : t("billing.requestFailed"))
+      }
+    })()
+  }, [searchParams, supabase, refreshProfile, router, t])
 
   const freeFeatures = [
     t("pricing.freeFeatDiary"),

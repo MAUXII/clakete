@@ -250,6 +250,7 @@ export const enUS = {
     shiningDesc: "More profile presence and extras for movie people.",
     shiningCta: "Start free trial",
     shiningCtaManage: "Manage subscription",
+    checkoutSuccess: "The Shining is on. Enjoy the movies.",
     shiningFeatAll: "Everything in Free",
     shiningFeatBadge: "Premium badge on profile and feed",
     shiningFeatThemes: "Profile themes (Overlook, Noir, Rose)",

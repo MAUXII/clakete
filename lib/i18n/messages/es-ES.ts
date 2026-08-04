@@ -251,6 +251,7 @@ export const esES = {
     shiningDesc: "Más presencia en el perfil y extras para cinéfilos.",
     shiningCta: "Empezar prueba gratis",
     shiningCtaManage: "Gestionar suscripción",
+    checkoutSuccess: "The Shining activado. Buen cine.",
     shiningFeatAll: "Todo lo de Free",
     shiningFeatBadge: "Badge premium en perfil y feed",
     shiningFeatThemes: "Temas de perfil (Overlook, Noir, Rose)",
