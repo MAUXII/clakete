@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { getRouteAuthUser } from "@/lib/supabase/route-auth"
 import { createSupabaseAdmin } from "@/lib/supabase-admin"
 import { getSiteUrl, getStripe, getStripePriceId } from "@/lib/stripe-server"
+import { SHINING_TRIAL_DAYS } from "@/lib/plans"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -37,6 +38,7 @@ export async function POST(request: Request) {
       client_reference_id: user.id,
       metadata: { user_id: user.id },
       subscription_data: {
+        trial_period_days: SHINING_TRIAL_DAYS,
         metadata: { user_id: user.id },
       },
       allow_promotion_codes: true,
