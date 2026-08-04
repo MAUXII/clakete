@@ -1,12 +1,14 @@
 "use client"
 
+import { useEffect, useRef } from "react"
 import Link from "next/link"
-import { Check } from "lucide-react"
+import { useSearchParams } from "next/navigation"
+import { Check, Loader2 } from "lucide-react"
 import { useProfile } from "@/components/providers/profile-provider"
 import { useT } from "@/components/providers/i18n-provider"
+import { useShiningCheckout } from "@/hooks/use-shining-checkout"
 import {
   FREE_PRIVATE_LIST_LIMIT,
-  hasShiningAccess,
   SHINING_MONTHLY_PRICE_LABEL,
   SHINING_PRODUCT_NAME,
   SHINING_TRIAL_DAYS,
@@ -17,16 +19,20 @@ import { cn } from "@/lib/utils"
 export function PricingPageContent() {
   const { t } = useT()
   const { profile } = useProfile()
-  const isPremium = hasShiningAccess({
-    plan: profile?.plan,
-    plan_status: profile?.plan_status,
-    plan_current_period_end: profile?.plan_current_period_end,
-  })
+  const searchParams = useSearchParams()
+  const { isPremium, loading, startShiningFlow, startCheckout } = useShiningCheckout()
+  const autoCheckoutStarted = useRef(false)
 
-  const shiningHref = profile
-    ? "/account/billing"
-    : `/sign-in?next=${encodeURIComponent("/account/billing")}`
   const freeHref = profile?.username ? `/${profile.username}` : "/sign-up"
+
+  // After sign-in with ?checkout=1, go straight to Stripe.
+  useEffect(() => {
+    if (autoCheckoutStarted.current) return
+    if (searchParams.get("checkout") !== "1") return
+    if (!profile || isPremium) return
+    autoCheckoutStarted.current = true
+    void startCheckout()
+  }, [searchParams, profile, isPremium, startCheckout])
 
   const freeFeatures = [
     t("pricing.freeFeatDiary"),
@@ -43,6 +49,8 @@ export function PricingPageContent() {
     t("pricing.shiningFeatLists"),
     t("pricing.shiningFeatTrial", { days: SHINING_TRIAL_DAYS }),
   ]
+
+  const shiningBusy = loading === "checkout" || loading === "portal"
 
   return (
     <main
@@ -170,15 +178,20 @@ export function PricingPageContent() {
                   </li>
                 ))}
               </ul>
-              <Link
-                href={isPremium ? "/account/billing" : shiningHref}
+              <button
+                type="button"
+                disabled={shiningBusy}
+                onClick={() => void startShiningFlow()}
                 className={cn(
-                  "mt-8 inline-flex w-full items-center justify-center rounded-full bg-brand py-3 text-sm font-semibold text-white",
-                  "transition hover:bg-brand/90",
+                  "mt-8 inline-flex w-full items-center justify-center gap-2 rounded-full bg-brand py-3 text-sm font-semibold text-white",
+                  "transition hover:bg-brand/90 disabled:opacity-60",
                 )}
               >
+                {shiningBusy ? (
+                  <Loader2 className="size-4 animate-spin" aria-hidden />
+                ) : null}
                 {isPremium ? t("pricing.shiningCtaManage") : t("pricing.shiningCta")}
-              </Link>
+              </button>
             </div>
           </article>
         </div>
