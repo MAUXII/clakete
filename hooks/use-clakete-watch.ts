@@ -29,6 +29,41 @@ function resolveClaketePlayback(data: PlaybackOptionsResponse): ClaketePlayback 
   return null;
 }
 
+function cacheKey(
+  mediaType: string,
+  mediaId: number,
+  season: number,
+  episode: number
+) {
+  return `clakete:playback:v1:${mediaType}:${mediaId}:${season}:${episode}`;
+}
+
+function readCachedPlayback(key: string): ClaketePlayback | null {
+  try {
+    const raw = sessionStorage.getItem(key);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as ClaketePlayback;
+    if (
+      (parsed.kind === "iframe" || parsed.kind === "video") &&
+      typeof parsed.url === "string" &&
+      parsed.url.length > 0
+    ) {
+      return parsed;
+    }
+  } catch {
+    // ignore
+  }
+  return null;
+}
+
+function writeCachedPlayback(key: string, playback: ClaketePlayback) {
+  try {
+    sessionStorage.setItem(key, JSON.stringify(playback));
+  } catch {
+    // ignore
+  }
+}
+
 /** Playback Clakete (SuperFlix / CDN) — só busca quando `enabled` (assinantes). */
 export function useClaketeWatch(
   mediaId: number,
@@ -47,8 +82,15 @@ export function useClaketeWatch(
       return;
     }
 
+    const key = cacheKey(mediaType, mediaId, season, episode);
+    const cached = readCachedPlayback(key);
+    if (cached) {
+      setPlayback(cached);
+      setLoading(false);
+    }
+
     let cancelled = false;
-    setLoading(true);
+    if (!cached) setLoading(true);
 
     const url =
       mediaType === "tv"
@@ -62,10 +104,12 @@ export function useClaketeWatch(
       })
       .then((data) => {
         if (cancelled || !data) return;
-        setPlayback(resolveClaketePlayback(data));
+        const next = resolveClaketePlayback(data);
+        setPlayback(next);
+        if (next) writeCachedPlayback(key, next);
       })
       .catch(() => {
-        if (!cancelled) setPlayback(null);
+        if (!cancelled && !cached) setPlayback(null);
       })
       .finally(() => {
         if (!cancelled) setLoading(false);

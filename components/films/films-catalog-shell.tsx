@@ -8,6 +8,10 @@ import { MdOutlineKeyboardDoubleArrowUp } from "react-icons/md"
 import { cn } from "@/lib/utils"
 import { pageContainerClass } from "@/lib/page-container"
 import { useT } from "@/components/providers/i18n-provider"
+import {
+  SlidingIndicator,
+  useSlidingIndicator,
+} from "@/components/ui/sliding-indicator"
 
 const FILMS_NAV_HREF = [
   "/films/discover",
@@ -26,6 +30,7 @@ const SERIES_NAV_HREF = [
 /** Nestas rotas o conteúdo do shell fica abaixo da navbar fixa (`mt-28`). */
 const CATALOG_NAVBAR_OFFSET_ROUTES = new Set<string>([
   "/lists",
+  "/cinemas",
   ...FILMS_NAV_HREF,
   ...SERIES_NAV_HREF,
 ])
@@ -38,18 +43,41 @@ function CatalogPillNav({
   ariaLabel: string
 }) {
   const pathname = usePathname()
+  const listRef = React.useRef<HTMLElement>(null)
+  const itemRefs = React.useRef<(HTMLAnchorElement | null)[]>([])
+  const activeHref =
+    items.find((item) => pathname === item.href)?.href ?? items[0]?.href ?? ""
+
+  const getActiveElement = React.useCallback(() => {
+    const index = items.findIndex((item) => item.href === activeHref)
+    return itemRefs.current[index] ?? null
+  }, [items, activeHref])
+
+  const indicator = useSlidingIndicator(activeHref, listRef, getActiveElement)
+
   return (
-    <nav aria-label={ariaLabel} className="mb-8 flex flex-wrap gap-2">
-      {items.map(({ href, label }) => {
+    <nav
+      ref={listRef}
+      aria-label={ariaLabel}
+      className="relative mb-8 flex flex-wrap gap-2"
+    >
+      <SlidingIndicator
+        indicator={indicator}
+        className="rounded-full bg-brand/10 ring-1 ring-brand-muted/35"
+      />
+      {items.map(({ href, label }, index) => {
         const isActive = pathname === href
         return (
           <Link
             key={href}
+            ref={(el) => {
+              itemRefs.current[index] = el
+            }}
             href={href}
             className={cn(
-              "rounded-full px-4 py-2 text-sm font-medium transition-colors",
+              "relative z-10 rounded-full px-4 py-2 text-sm font-medium transition-colors",
               isActive
-                ? "bg-brand/10 text-brand-muted ring-1 ring-brand-muted/35"
+                ? "text-brand-muted"
                 : "text-muted-foreground hover:bg-white/[0.05] hover:text-foreground",
             )}
           >
@@ -62,12 +90,14 @@ function CatalogPillNav({
 }
 
 export function FilmsSubNav() {
-  const { t } = useT()
+  const { t, locale } = useT()
   const items = [
     { href: "/films/discover", label: t("nav.discover") },
     { href: "/films/popular", label: t("nav.popular") },
     { href: "/films/top-rated", label: t("nav.topRated") },
-    { href: "/films/upcoming", label: t("nav.upcoming") },
+    locale === "pt-BR"
+      ? { href: "/cinemas", label: t("nav.inTheaters") }
+      : { href: "/films/upcoming", label: t("nav.upcoming") },
   ] as const
   return <CatalogPillNav items={items} ariaLabel={t("nav.filmsCatalog")} />
 }

@@ -33,6 +33,8 @@ export function useProfileTabs() {
     [t],
   )
 }
+import { SLIDING_INDICATOR_SPRING } from "@/components/ui/sliding-indicator"
+
 const profileTabLinkClass = "group relative z-10 flex h-full min-h-0 flex-1"
 
 const profileTabTriggerClass = cn(
@@ -44,13 +46,6 @@ const profileTabTriggerClass = cn(
   "data-[state=active]:group-hover:!text-[var(--profile-tab-active)]",
   "dark:data-[state=active]:group-hover:!text-[var(--profile-tab-active-dark)]",
 )
-
-const INDICATOR_SPRING = {
-  type: "spring" as const,
-  stiffness: 460,
-  damping: 22,
-  mass: 0.7,
-}
 
 interface ProfileTabBarProps {
   username: string
@@ -123,7 +118,7 @@ export function ProfileTabBar({ username, activeTab, children }: ProfileTabBarPr
               left: indicator.left,
               width: indicator.width,
             }}
-            transition={INDICATOR_SPRING}
+            transition={SLIDING_INDICATOR_SPRING}
           />
         ) : null}
 

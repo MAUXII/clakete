@@ -12,6 +12,10 @@ import {
 import { cn } from "@/lib/utils";
 import type { ClaketePlayback } from "@/hooks/use-clakete-watch";
 import { useT } from "@/components/providers/i18n-provider";
+import {
+  CLAKETE_PLAYER_FRAME,
+  ClaketePlayerShell,
+} from "@/components/movies/clakete-player-shell";
 
 export type ClaketeSeasonEpisode = {
   id: number;
@@ -29,11 +33,45 @@ type ClaketeSeasonWatchDialogProps = {
   onEpisodePlay?: (episode: ClaketeSeasonEpisode) => void;
 };
 
+function episodeCacheKey(seriesId: number, season: number, episode: number) {
+  return `clakete:playback:v1:tv:${seriesId}:${season}:${episode}`;
+}
+
+function readCachedPlayback(key: string): ClaketePlayback | null {
+  try {
+    const raw = sessionStorage.getItem(key);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as ClaketePlayback;
+    if (
+      (parsed.kind === "iframe" || parsed.kind === "video") &&
+      typeof parsed.url === "string" &&
+      parsed.url.length > 0
+    ) {
+      return parsed;
+    }
+  } catch {
+    // ignore
+  }
+  return null;
+}
+
+function writeCachedPlayback(key: string, playback: ClaketePlayback) {
+  try {
+    sessionStorage.setItem(key, JSON.stringify(playback));
+  } catch {
+    // ignore
+  }
+}
+
 async function fetchEpisodePlayback(
   seriesId: number,
   season: number,
   episode: number
 ): Promise<ClaketePlayback | null> {
+  const key = episodeCacheKey(seriesId, season, episode);
+  const cached = readCachedPlayback(key);
+  if (cached) return cached;
+
   const res = await fetch(
     `/api/series/${seriesId}/playback-options?season=${season}&episode=${episode}`
   );
@@ -43,11 +81,15 @@ async function fetchEpisodePlayback(
     iframeSources: { id: string; url: string }[];
   };
   const superflix = data.iframeSources?.find((s) => s.id === "superflix");
-  if (superflix?.url) return { kind: "iframe", url: superflix.url };
-  const first = data.iframeSources?.[0];
-  if (first?.url) return { kind: "iframe", url: first.url };
-  if (data.ownUrl) return { kind: "video", url: data.ownUrl };
-  return null;
+  let next: ClaketePlayback | null = null;
+  if (superflix?.url) next = { kind: "iframe", url: superflix.url };
+  else {
+    const first = data.iframeSources?.[0];
+    if (first?.url) next = { kind: "iframe", url: first.url };
+    else if (data.ownUrl) next = { kind: "video", url: data.ownUrl };
+  }
+  if (next) writeCachedPlayback(key, next);
+  return next;
 }
 
 export function ClaketeSeasonWatchDialog({
@@ -105,44 +147,21 @@ export function ClaketeSeasonWatchDialog({
     ? `S${seasonNumber}E${selected.episode_number}`
     : `Season ${seasonNumber}`;
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className={cn(
-          "gap-0 overflow-hidden border-border bg-card p-0 text-foreground",
-          picking ? "max-w-md sm:max-w-md" : "max-w-3xl"
-        )}
-      >
-        <DialogHeader className="space-y-1 border-b border-border px-5 py-4 text-left">
-          {!picking ? (
-            <button
-              type="button"
-              onClick={backToList}
-              className="mb-1 inline-flex w-fit items-center gap-1.5 text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground transition-colors hover:text-foreground"
-            >
-              <ArrowLeft className="size-3" aria-hidden />
-              {t("series.backToEpisodes")}
-            </button>
-          ) : null}
-          <p className="text-[10px] font-medium uppercase tracking-[0.22em] text-muted-foreground">
-            {headerMeta}
-          </p>
-          <DialogTitle className="text-lg font-semibold tracking-tight">
-            {headerTitle}
-          </DialogTitle>
-          <DialogDescription className="text-xs text-muted-foreground">
-            {picking
-              ? t("series.pickEpisodeToWatch")
-              : t("catalog.claketePlayerHint")}
-          </DialogDescription>
-          {!picking && playback?.kind === "iframe" ? (
-            <p className="text-[11px] leading-snug text-muted-foreground/80">
-              {t("catalog.claketePlayerAdTip")}
+  if (picking) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="gap-0 overflow-hidden border-border bg-card p-0 text-foreground sm:max-w-md sm:rounded-2xl">
+          <DialogHeader className="space-y-1 border-b border-border px-5 py-4 text-left">
+            <p className="text-[10px] font-medium uppercase tracking-[0.22em] text-muted-foreground">
+              {headerMeta}
             </p>
-          ) : null}
-        </DialogHeader>
-
-        {picking ? (
+            <DialogTitle className="text-lg font-semibold tracking-tight">
+              {headerTitle}
+            </DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground">
+              {t("series.pickEpisodeToWatch")}
+            </DialogDescription>
+          </DialogHeader>
           <div className="custom-scrollbar max-h-[min(58vh,440px)] overflow-y-auto">
             {episodes.length === 0 ? (
               <p className="px-5 py-10 text-center text-sm text-muted-foreground">
@@ -157,7 +176,7 @@ export function ClaketeSeasonWatchDialog({
                       onClick={() => void playEpisode(ep)}
                       className={cn(
                         "group flex w-full items-baseline gap-4 px-4 py-3.5 text-left transition-colors",
-                        "hover:bg-muted/50 focus-visible:bg-muted/50 focus-visible:outline-none"
+                        "hover:bg-muted/50 focus-visible:bg-muted/50 focus-visible:outline-none",
                       )}
                     >
                       <span className="w-7 shrink-0 text-right text-xs tabular-nums text-muted-foreground/70 transition-colors group-hover:text-muted-foreground">
@@ -172,52 +191,81 @@ export function ClaketeSeasonWatchDialog({
               </ul>
             )}
           </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  return (
+    <ClaketePlayerShell
+      open={open}
+      onOpenChange={onOpenChange}
+      title={headerTitle}
+      eyebrow={headerMeta}
+      description={t("catalog.claketePlayerHint")}
+      tip={playback?.kind === "iframe" ? t("catalog.claketePlayerAdTip") : null}
+      confirmLeave={Boolean(playback) || loading}
+      headerStart={
+        <button
+          type="button"
+          onClick={backToList}
+          aria-label={t("series.backToEpisodes")}
+          className="inline-flex size-9 items-center justify-center rounded-full bg-black/35 text-white/80 backdrop-blur-md transition hover:bg-black/55 hover:text-white"
+        >
+          <ArrowLeft className="size-4" aria-hidden />
+        </button>
+      }
+    >
+      {loading ? (
+        <div
+          className={cn(
+            CLAKETE_PLAYER_FRAME,
+            "flex items-center justify-center text-sm text-white/40",
+          )}
+        >
+          {t("common.loading")}
+        </div>
+      ) : playback ? (
+        playback.kind === "video" ? (
+          <video
+            key={playback.url}
+            className={cn(CLAKETE_PLAYER_FRAME, "object-contain")}
+            controls
+            playsInline
+            preload="auto"
+            src={playback.url}
+            aria-label={`${headerMeta} · ${headerTitle}`}
+          />
         ) : (
-          <div className="bg-black">
-            {loading ? (
-              <div className="flex aspect-video items-center justify-center text-sm text-muted-foreground">
-                {t("common.loading")}
-              </div>
-            ) : playback ? (
-              playback.kind === "video" ? (
-                <video
-                  key={playback.url}
-                  className="aspect-video w-full object-contain"
-                  controls
-                  playsInline
-                  preload="metadata"
-                  src={playback.url}
-                  aria-label={`${headerMeta} · ${headerTitle}`}
-                />
-              ) : (
-                <div className="relative aspect-video w-full">
-                  <iframe
-                    key={playback.url}
-                    title={`${headerMeta} · ${headerTitle}`}
-                    src={playback.url}
-                    className="absolute inset-0 h-full w-full border-0"
-                    allow="autoplay; encrypted-media; picture-in-picture; fullscreen; clipboard-write; accelerometer; gyroscope"
-                    allowFullScreen
-                    loading="lazy"
-                    referrerPolicy="no-referrer-when-downgrade"
-                  />
-                </div>
-              )
-            ) : (
-              <div className="flex aspect-video flex-col items-center justify-center gap-3 px-6 text-center text-sm text-muted-foreground">
-                <p>{t("catalog.claketeUnavailable")}</p>
-                <button
-                  type="button"
-                  onClick={backToList}
-                  className="text-[11px] font-medium uppercase tracking-[0.14em] text-foreground/80 underline-offset-4 hover:underline"
-                >
-                  {t("series.backToEpisodes")}
-                </button>
-              </div>
-            )}
+          <div className={cn("relative", CLAKETE_PLAYER_FRAME)}>
+            <iframe
+              key={playback.url}
+              title={`${headerMeta} · ${headerTitle}`}
+              src={playback.url}
+              className="absolute inset-0 h-full w-full border-0"
+              allow="autoplay; encrypted-media; picture-in-picture; fullscreen; clipboard-write; accelerometer; gyroscope"
+              allowFullScreen
+              referrerPolicy="no-referrer-when-downgrade"
+            />
           </div>
-        )}
-      </DialogContent>
-    </Dialog>
+        )
+      ) : (
+        <div
+          className={cn(
+            CLAKETE_PLAYER_FRAME,
+            "flex flex-col items-center justify-center gap-3 px-6 text-center text-sm text-white/40",
+          )}
+        >
+          <p>{t("catalog.claketeUnavailable")}</p>
+          <button
+            type="button"
+            onClick={backToList}
+            className="text-[11px] font-medium uppercase tracking-[0.14em] text-white/70 underline-offset-4 hover:underline"
+          >
+            {t("series.backToEpisodes")}
+          </button>
+        </div>
+      )}
+    </ClaketePlayerShell>
   );
 }

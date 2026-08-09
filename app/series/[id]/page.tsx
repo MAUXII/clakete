@@ -13,7 +13,7 @@ import { StarRating } from "@/components/movies/star-rating";
 import { FilmReviewsList } from "@/components/movies/film-reviews-list";
 import { useFilmInteractions } from "@/hooks/use-film-interactions";
 import { formatRewatchLabel, formatWatchedDate } from "@/lib/watched-date";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { MediaDetailTabs } from "@/components/ui/media-detail-tabs";
 import WatchProviders from "@/components/movies/watchproviders";
 import Trailer, { type Video } from "@/components/movies/trailer";
 import { FilmExternalRatings } from "@/components/movies/film-external-ratings";
@@ -379,15 +379,6 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ id: str
   const trailerPosterUiActive = posterTrailerHover || trailerBtnFocused;
   const movieCompat = series as unknown as Movie;
 
-  const tabListClass =
-    "flex h-auto w-full flex-wrap gap-1 rounded-lg border border-border bg-transparent p-1 sm:grid sm:grid-cols-5 sm:gap-1";
-  const tabTriggerClass = cn(
-    "min-w-0 flex-1 rounded-md px-2 py-2.5 text-center text-sm font-medium text-muted-foreground transition-colors sm:px-3",
-    "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/25 focus-visible:ring-offset-1 focus-visible:ring-offset-background",
-    "data-[state=active]:bg-brand/10 data-[state=active]:text-brand-muted",
-    "hover:text-muted-foreground",
-  );
-
   return (
     <div className="min-h-screen w-full overflow-x-clip bg-background">
       <FilmsCatalogShell>
@@ -697,46 +688,52 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ id: str
               }}
             />
 
-            <Tabs defaultValue="credits" className="w-full">
-              <TabsList className={tabListClass}>
-                <TabsTrigger className={tabTriggerClass} value="credits">
-                  {t("film.credits")}
-                </TabsTrigger>
-                <TabsTrigger className={tabTriggerClass} value="seasons">
-                  {t("film.seasons")}
-                </TabsTrigger>
-                <TabsTrigger className={tabTriggerClass} value="similar">
-                  {t("film.similar")}
-                </TabsTrigger>
-                <TabsTrigger className={tabTriggerClass} value="recommended">
-                  {t("film.recommended")}
-                </TabsTrigger>
-                <TabsTrigger className={tabTriggerClass} value="images">
-                  {t("film.images")}
-                </TabsTrigger>
-              </TabsList>
-              <TabsContent className="mt-6 w-full outline-none" value="credits">
-                <CreditsList cast={series.cast || []} crew={series.crew || []} />
-              </TabsContent>
-              <TabsContent className="mt-6 outline-none" value="seasons">
-                <SeasonsList
-                  seriesId={series.id}
-                  seriesName={series.name || series.title}
-                  seriesOriginalName={series.original_name}
-                  seriesFirstAirDate={series.first_air_date || series.release_date}
-                  seasons={series.seasons || []}
-                />
-              </TabsContent>
-              <TabsContent className="mt-6 outline-none" value="similar">
-                <SimilarSeriesList series={series} />
-              </TabsContent>
-              <TabsContent className="mt-6 outline-none" value="recommended">
-                <RecommendedSeriesList series={series} />
-              </TabsContent>
-              <TabsContent className="mt-6 outline-none" value="images">
-                <ImagesList movie={series as never} />
-              </TabsContent>
-            </Tabs>
+            <MediaDetailTabs
+              columns={5}
+              defaultValue="credits"
+              tabs={[
+                {
+                  value: "credits",
+                  label: t("film.credits"),
+                  content: (
+                    <CreditsList
+                      cast={series.cast || []}
+                      crew={series.crew || []}
+                    />
+                  ),
+                },
+                {
+                  value: "seasons",
+                  label: t("film.seasons"),
+                  content: (
+                    <SeasonsList
+                      seriesId={series.id}
+                      seriesName={series.name || series.title}
+                      seriesOriginalName={series.original_name}
+                      seriesFirstAirDate={
+                        series.first_air_date || series.release_date
+                      }
+                      seasons={series.seasons || []}
+                    />
+                  ),
+                },
+                {
+                  value: "similar",
+                  label: t("film.similar"),
+                  content: <SimilarSeriesList series={series} />,
+                },
+                {
+                  value: "recommended",
+                  label: t("film.recommended"),
+                  content: <RecommendedSeriesList series={series} />,
+                },
+                {
+                  value: "images",
+                  label: t("film.images"),
+                  content: <ImagesList movie={series as never} />,
+                },
+              ]}
+            />
 
             {/* Mobile-only watch providers, just before reviews */}
             <div className="overflow-hidden rounded-2xl border border-border bg-muted/40 lg:hidden">

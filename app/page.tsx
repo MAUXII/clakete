@@ -349,10 +349,10 @@ export default function HomePage() {
                 </p>
               </div>
               <Link
-                href="/films/discover"
+                href="/cinemas"
                 className="shrink-0 text-sm font-medium text-zinc-400 transition hover:text-white"
               >
-                {t("home.viewCatalog")}
+                {t("home.viewCinemas")}
               </Link>
             </div>
 
@@ -803,8 +803,8 @@ export default function HomePage() {
                   title={t("home.nowShowing")}
                   titleId="home-now-showing"
                   action={
-                    <Link href="/films/discover" className={loggedHomeSecondaryLink}>
-                      {t("home.catalogLink")}
+                    <Link href="/cinemas" className={loggedHomeSecondaryLink}>
+                      {t("home.viewCinemas")}
                     </Link>
                   }
                 />

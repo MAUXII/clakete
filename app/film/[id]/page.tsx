@@ -13,7 +13,7 @@ import { StarRating } from "@/components/movies/star-rating";
 import { FilmReviewsList } from "@/components/movies/film-reviews-list";
 import { useFilmInteractions } from "@/hooks/use-film-interactions";
 import { formatRewatchLabel, formatWatchedDate } from "@/lib/watched-date";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { MediaDetailTabs } from "@/components/ui/media-detail-tabs";
 import WatchProviders from "@/components/movies/watchproviders";
 import Trailer, { type Video } from "@/components/movies/trailer";
 import { FaPlay } from "react-icons/fa6";
@@ -31,6 +31,7 @@ import { filmHref, parseMediaParam } from "@/lib/media-href";
 import { prefetchDiaryArt } from "@/lib/client/diary-dialog-art";
 import { toast } from "sonner";
 import { FilmExternalRatings } from "@/components/movies/film-external-ratings";
+import { FilmNearbyCinemas } from "@/components/cinemas/film-nearby-cinemas";
 
 export interface Movie {
   id: number;
@@ -404,15 +405,6 @@ export default function FilmPage({ params }: { params: Promise<{ id: string }> }
   );
   const trailerPosterUiActive = posterTrailerHover || trailerBtnFocused;
 
-  const tabListClass =
-    "flex h-auto w-full flex-wrap gap-1 rounded-lg border border-border bg-transparent p-1 sm:grid sm:grid-cols-4 sm:gap-1";
-  const tabTriggerClass = cn(
-    "min-w-0 flex-1 rounded-md px-3 py-2.5 text-center text-sm font-medium text-muted-foreground transition-colors",
-    "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/25 focus-visible:ring-offset-1 focus-visible:ring-offset-background",
-    "data-[state=active]:bg-brand/10 data-[state=active]:text-brand-muted",
-    "hover:text-muted-foreground",
-  );
-
   return (
     <div className="min-h-screen w-full overflow-x-clip bg-background">
     <FilmsCatalogShell>
@@ -552,6 +544,12 @@ export default function FilmPage({ params }: { params: Promise<{ id: string }> }
                 ) : null}
               </div>
             </div>
+            <FilmNearbyCinemas
+              tmdbId={movie.id}
+              title={movie.title}
+              originalTitle={movie.original_title}
+              className="px-0.5"
+            />
           </div>
         </aside>
 
@@ -720,34 +718,34 @@ export default function FilmPage({ params }: { params: Promise<{ id: string }> }
             }}
           />
 
-          <Tabs defaultValue="credits" className="w-full">
-            <TabsList className={tabListClass}>
-              <TabsTrigger className={tabTriggerClass} value="credits">
-                {t("film.credits")}
-              </TabsTrigger>
-              <TabsTrigger className={tabTriggerClass} value="similar">
-                {t("film.similar")}
-              </TabsTrigger>
-              <TabsTrigger className={tabTriggerClass} value="recommended">
-                {t("film.recommended")}
-              </TabsTrigger>
-              <TabsTrigger className={tabTriggerClass} value="images">
-                {t("film.images")}
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent className="mt-6 w-full outline-none" value="credits">
-              <CreditsList cast={movie.cast || []} crew={movie.crew || []} />
-            </TabsContent>
-            <TabsContent className="mt-6 outline-none" value="similar">
-              <SimilarList movie={movie} />
-            </TabsContent>
-            <TabsContent className="mt-6 outline-none" value="recommended">
-              <RecommendationsList movie={movie} />
-            </TabsContent>
-            <TabsContent className="mt-6 outline-none" value="images">
-              <ImagesList movie={movie} />
-            </TabsContent>
-          </Tabs>
+          <MediaDetailTabs
+            columns={4}
+            defaultValue="credits"
+            tabs={[
+              {
+                value: "credits",
+                label: t("film.credits"),
+                content: (
+                  <CreditsList cast={movie.cast || []} crew={movie.crew || []} />
+                ),
+              },
+              {
+                value: "similar",
+                label: t("film.similar"),
+                content: <SimilarList movie={movie} />,
+              },
+              {
+                value: "recommended",
+                label: t("film.recommended"),
+                content: <RecommendationsList movie={movie} />,
+              },
+              {
+                value: "images",
+                label: t("film.images"),
+                content: <ImagesList movie={movie} />,
+              },
+            ]}
+          />
 
           {/* Mobile-only watch providers, just before reviews */}
           <div className="overflow-hidden rounded-2xl border border-border bg-muted/40 lg:hidden ">
