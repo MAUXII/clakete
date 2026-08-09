@@ -104,14 +104,18 @@ export default function WatchProviders({
     []
   );
 
-  const { playback, available: claketeAvailable } = useClaketeWatch(
-    movie.id,
-    canUseClakete,
-    isSeasonWatch
-      ? { mediaType: "tv", season: seasonNumber, episode: 1 }
-      : { mediaType: "movie" }
-  );
-  const showClakete = canUseClakete && claketeAvailable;
+  const { playback, available: claketeAvailable, loading: claketeLoading } =
+    useClaketeWatch(
+      movie.id,
+      canUseClakete,
+      isSeasonWatch
+        ? { mediaType: "tv", season: seasonNumber, episode: 1 }
+        : { mediaType: "movie" }
+    );
+  // Show in the compact provider list (not only inside "all providers" dialog).
+  // Keep visible while playback options load; hide only if confirmed unavailable.
+  const showClakete =
+    canUseClakete && (claketeLoading || claketeAvailable);
   const showCinemas = canUseCinemas && cinemasAvailable;
   const cinemasRow: ProviderRow = {
     kind: "cinemas",
@@ -187,17 +191,22 @@ export default function WatchProviders({
   }
 
   const tmdbProviderRows = Array.from(tmdbProviders.values());
-  const previewRows = tmdbProviderRows.slice(0, 2);
   const allProviderRows: ProviderRow[] = [
-    ...(showCinemas ? [cinemasRow] : []),
     ...(showClakete ? [CLAKETE_ROW] : []),
+    ...(showCinemas ? [cinemasRow] : []),
     ...tmdbProviderRows,
   ];
-  const stripRows: ProviderRow[] = [
-    ...(showCinemas ? [cinemasRow] : []),
-    ...(showClakete ? [CLAKETE_ROW] : []),
-    ...previewRows,
-  ].slice(0, 3);
+  // Compact strip: Clakete first so it never gets sliced out of the preview.
+  const stripRows: ProviderRow[] = (() => {
+    const rows: ProviderRow[] = [];
+    if (showClakete) rows.push(CLAKETE_ROW);
+    if (showCinemas) rows.push(cinemasRow);
+    for (const row of tmdbProviderRows) {
+      if (rows.length >= 3) break;
+      rows.push(row);
+    }
+    return rows;
+  })();
   const showAllProvidersButton =
     tmdbProviderRows.length > 2 || showClakete || showCinemas;
   const hasPreviewProviders = stripRows.length > 0;
