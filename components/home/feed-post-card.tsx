@@ -1,9 +1,8 @@
 "use client"
 
-import { cloneElement, isValidElement, useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import Link from "next/link"
 import { useSupabaseClient, useUser } from "@supabase/auth-helpers-react"
-import { AnimatePresence, motion } from "framer-motion"
 import {
   EyeOff,
   Flag,
@@ -99,8 +98,6 @@ export function FeedWatchedPostCard({
   const [localTitle, setLocalTitle] = useState(item.feedTitle)
   const [localCaption, setLocalCaption] = useState(item.feedCaption)
   const [localVisibility, setLocalVisibility] = useState(item.feedVisibility)
-  const [heartBurst, setHeartBurst] = useState(false)
-  const [heartKey, setHeartKey] = useState(0)
 
   useEffect(() => {
     setLiked(item.likedByMe)
@@ -170,50 +167,6 @@ export function FeedWatchedPostCard({
       setLiking(false)
     }
   }, [authUser?.id, item.interactionId, item.user.id, liked, liking, supabase])
-
-  /** Instagram-style: double-tap always likes (never unlikes) + heart burst */
-  const likeFromDoubleTap = useCallback(async () => {
-    setHeartKey((k) => k + 1)
-    setHeartBurst(true)
-    window.setTimeout(() => setHeartBurst(false), 900)
-
-    if (!authUser?.id) {
-      toast.error("Sign in to like posts")
-      return
-    }
-    if (liked || liking) return
-
-    setLiked(true)
-    setLikeCount((c) => c + 1)
-    setLiking(true)
-    try {
-      const { error } = await supabase.from("feed_post_likes").insert({
-        interaction_id: item.interactionId,
-        user_id: authUser.id,
-      })
-      if (error) throw error
-      void createNotification(supabase, {
-        recipientId: item.user.id,
-        actorId: authUser.id,
-        type: "feed_like",
-        entityType: "interaction",
-        entityId: item.interactionId,
-      })
-    } catch (e) {
-      console.error(e)
-      setLiked(false)
-      setLikeCount((c) => Math.max(0, c - 1))
-      toast.error("Could not update like")
-    } finally {
-      setLiking(false)
-    }
-  }, [authUser?.id, item.interactionId, item.user.id, liked, liking, supabase])
-
-  const mediaNode = isValidElement(media)
-    ? cloneElement(media as React.ReactElement<{ onDoubleLike?: () => void }>, {
-        onDoubleLike: likeFromDoubleTap,
-      })
-    : media
 
   const loadComments = useCallback(async () => {
     setCommentsLoading(true)
@@ -597,29 +550,8 @@ export function FeedWatchedPostCard({
               </DropdownMenu>
             )}
           </div>
-        </div>
-      </div>
 
-      <div className="relative">
-        {mediaNode}
-        <AnimatePresence>
-          {heartBurst ? (
-            <motion.div
-              key={heartKey}
-              className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center"
-              initial={{ opacity: 0, scale: 0.4 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 1.15 }}
-              transition={{ duration: 0.35, ease: [0.2, 0.8, 0.2, 1] }}
-            >
-              <Heart
-                className="size-24 fill-brand text-brand drop-shadow-[0_8px_24px_rgba(0,0,0,0.45)]"
-                strokeWidth={0}
-              />
-            </motion.div>
-          ) : null}
-        </AnimatePresence>
-      </div>
+      {media}
 
       {localTitle ? (
         <p className="mt-3 text-[15px] font-semibold leading-snug text-foreground">
@@ -785,6 +717,8 @@ export function FeedWatchedPostCard({
           </div>
         </div>
       ) : null}
+        </div>
+      </div>
 
       <FeedEditDialog
         open={editOpen}

@@ -8,9 +8,13 @@ import { ChevronLeft, ChevronRight, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 export const feedMediaFrameClass =
-  "group/media relative mt-3 block overflow-hidden bg-card " +
-  "-mx-4 w-[calc(100%+2rem)] rounded-none border-y border-border " +
-  "lg:mx-0 lg:w-full lg:rounded-2xl lg:border lg:border-border"
+  "group/media relative mt-2 block max-w-full overflow-hidden rounded-2xl border border-border bg-card"
+
+/** Full-width frame (backdrops, collage, list media). */
+export const feedMediaFrameFullClass = cn(feedMediaFrameClass, "w-full bg-black")
+
+/** Poster frame shrinks to media aspect (no letterbox side bars). */
+export const feedMediaFrameFitClass = cn(feedMediaFrameClass, "w-fit")
 
 function tmdbSrc(filePath: string, kind: "poster" | "backdrop") {
   const size = kind === "poster" ? "w780" : "w1280"
@@ -285,54 +289,27 @@ function FullBleedMedia({
   imagePath,
   imageKind,
   title,
-  edgeToEdge = true,
-  onDoubleLike,
+  edgeToEdge: _edgeToEdge = false,
 }: {
   imagePath: string | null
   imageKind?: "poster" | "backdrop" | null
   title: string
+  /** @deprecated Always inset (X-style); kept for callers. */
   edgeToEdge?: boolean
-  onDoubleLike?: () => void
 }) {
   const [expanded, setExpanded] = useState(false)
-  const expandTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const isPoster = imageKind === "poster"
-  const aspectClass = isPoster ? "aspect-[2/3] max-h-[70vh]" : "aspect-[16/9]"
-  const frame = edgeToEdge
-    ? feedMediaFrameClass
-    : "group/media relative mt-3 block overflow-hidden rounded-2xl border border-border bg-card"
-
-  useEffect(() => {
-    return () => {
-      if (expandTimer.current) clearTimeout(expandTimer.current)
-    }
-  }, [])
-
-  const scheduleExpand = () => {
-    if (expandTimer.current) clearTimeout(expandTimer.current)
-    expandTimer.current = setTimeout(() => {
-      setExpanded(true)
-      expandTimer.current = null
-    }, 280)
-  }
-
-  const handleDoubleClick = (e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    if (expandTimer.current) {
-      clearTimeout(expandTimer.current)
-      expandTimer.current = null
-    }
-    onDoubleLike?.()
-  }
+  const frame = isPoster ? feedMediaFrameFitClass : feedMediaFrameFullClass
 
   if (!imagePath) {
     return (
       <div className={frame}>
         <div
           className={cn(
-            "flex w-full items-center justify-center bg-muted text-sm text-muted-foreground",
-            aspectClass,
+            "flex items-center justify-center bg-muted text-sm text-muted-foreground",
+            isPoster
+              ? "aspect-[2/3] h-[min(28rem,52vh)]"
+              : "aspect-[16/9] w-full max-h-[min(22rem,45vh)]",
           )}
         >
           {title}
@@ -347,21 +324,33 @@ function FullBleedMedia({
     <>
       <button
         type="button"
-        className={cn(frame, "w-full cursor-zoom-in text-left")}
-        onClick={scheduleExpand}
-        onDoubleClick={handleDoubleClick}
+        className={cn(frame, "cursor-zoom-in text-left")}
+        onClick={() => setExpanded(true)}
         aria-label={`Expand ${title}`}
       >
-        <div className={cn("relative w-full overflow-hidden", aspectClass)}>
-          <Image
-            src={src}
-            alt={title}
-            fill
-            quality={90}
-            className="object-cover transition duration-500 group-hover/media:scale-[1.02]"
-            sizes="(max-width: 1024px) 100vw, 720px"
-          />
-        </div>
+        {isPoster ? (
+          <div className="relative aspect-[2/3] h-[min(28rem,52vh)] w-auto max-w-full">
+            <Image
+              src={src}
+              alt={title}
+              fill
+              quality={90}
+              className="object-cover transition duration-500 group-hover/media:scale-[1.02]"
+              sizes="(max-width: 1024px) 55vw, 320px"
+            />
+          </div>
+        ) : (
+          <div className="relative aspect-[16/9] w-full max-h-[min(22rem,45vh)] overflow-hidden">
+            <Image
+              src={src}
+              alt={title}
+              fill
+              quality={90}
+              className="object-cover transition duration-500 group-hover/media:scale-[1.02]"
+              sizes="(max-width: 1024px) 100vw, 600px"
+            />
+          </div>
+        )}
       </button>
       <MediaLightbox
         open={expanded}
@@ -385,53 +374,23 @@ export function WatchedMediaCarousel({
   images,
   filmTitle,
   layout = "slide",
-  edgeToEdge = true,
-  onDoubleLike,
+  edgeToEdge: _edgeToEdge = false,
   /** @deprecated Media is not a film link anymore; kept optional for callers. */
   href: _href,
 }: {
   images: { filePath: string; kind: "poster" | "backdrop" }[]
   filmTitle: string
   layout?: "slide" | "collage"
+  /** @deprecated Always inset (X-style); kept for callers. */
   edgeToEdge?: boolean
-  onDoubleLike?: () => void
   href?: string
 }) {
   const [index, setIndex] = useState(0)
   const [expanded, setExpanded] = useState(false)
-  const expandTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const safeIndex = Math.min(index, Math.max(0, images.length - 1))
   const current = images[safeIndex]
-  const frame = edgeToEdge
-    ? feedMediaFrameClass
-    : "group/media relative mt-3 block overflow-hidden rounded-2xl border border-border bg-card"
-
-  useEffect(() => {
-    return () => {
-      if (expandTimer.current) clearTimeout(expandTimer.current)
-    }
-  }, [])
-
-  const scheduleExpand = useCallback(() => {
-    if (expandTimer.current) clearTimeout(expandTimer.current)
-    expandTimer.current = setTimeout(() => {
-      setExpanded(true)
-      expandTimer.current = null
-    }, 280)
-  }, [])
-
-  const handleDoubleLike = useCallback(
-    (e: React.MouseEvent) => {
-      e.preventDefault()
-      e.stopPropagation()
-      if (expandTimer.current) {
-        clearTimeout(expandTimer.current)
-        expandTimer.current = null
-      }
-      onDoubleLike?.()
-    },
-    [onDoubleLike],
-  )
+  const isPoster = current?.kind === "poster"
+  const frame = isPoster ? feedMediaFrameFitClass : feedMediaFrameFullClass
 
   const goPrev = useCallback(() => {
     setIndex((i) => (i - 1 + images.length) % images.length)
@@ -442,14 +401,7 @@ export function WatchedMediaCarousel({
   }, [images.length])
 
   if (!current) {
-    return (
-      <FullBleedMedia
-        imagePath={null}
-        title={filmTitle}
-        edgeToEdge={edgeToEdge}
-        onDoubleLike={onDoubleLike}
-      />
-    )
+    return <FullBleedMedia imagePath={null} title={filmTitle} />
   }
 
   if (images.length === 1) {
@@ -458,8 +410,6 @@ export function WatchedMediaCarousel({
         imagePath={current.filePath}
         imageKind={current.kind}
         title={filmTitle}
-        edgeToEdge={edgeToEdge}
-        onDoubleLike={onDoubleLike}
       />
     )
   }
@@ -469,12 +419,11 @@ export function WatchedMediaCarousel({
       <>
         <button
           type="button"
-          className={cn(frame, "w-full cursor-zoom-in text-left")}
-          onClick={scheduleExpand}
-          onDoubleClick={handleDoubleLike}
+          className={cn(feedMediaFrameFullClass, "cursor-zoom-in text-left")}
+          onClick={() => setExpanded(true)}
           aria-label={`Expand ${filmTitle}`}
         >
-          <div className="relative aspect-[16/9] w-full">
+          <div className="relative aspect-[16/9] w-full max-h-[min(22rem,45vh)]">
             <div
               className={cn(
                 "absolute inset-0 grid gap-0.5 bg-black",
@@ -526,13 +475,19 @@ export function WatchedMediaCarousel({
 
   return (
     <>
-      <div className={frame}>
-        <div className="relative h-[min(70vh,32rem)] w-full overflow-hidden bg-card">
+      <div className={cn(frame, "relative")}>
+        <div
+          className={cn(
+            "relative overflow-hidden",
+            isPoster
+              ? "aspect-[2/3] h-[min(28rem,52vh)] w-auto"
+              : "h-[min(22rem,45vh)] w-full",
+          )}
+        >
           <button
             type="button"
             className="absolute inset-0 block cursor-zoom-in"
-            onClick={scheduleExpand}
-            onDoubleClick={handleDoubleLike}
+            onClick={() => setExpanded(true)}
             aria-label={`Expand ${filmTitle}`}
           >
             <Image
@@ -541,7 +496,11 @@ export function WatchedMediaCarousel({
               fill
               quality={90}
               className="object-cover"
-              sizes="(max-width: 1024px) 100vw, 720px"
+              sizes={
+                isPoster
+                  ? "(max-width: 1024px) 55vw, 320px"
+                  : "(max-width: 1024px) 100vw, 600px"
+              }
             />
           </button>
           <button

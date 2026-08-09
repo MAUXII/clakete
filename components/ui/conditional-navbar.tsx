@@ -1,8 +1,8 @@
 'use client'
 
-import { usePathname } from 'next/navigation'
 import { Navbar } from './navbar'
 import { useHideAppChromeRequested } from './hide-app-footer'
+import { usePathname } from 'next/navigation'
 
 export function ConditionalNavbar() {
   const pathname = usePathname()

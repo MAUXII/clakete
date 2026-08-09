@@ -31,7 +31,6 @@ import { filmHref, parseMediaParam } from "@/lib/media-href";
 import { prefetchDiaryArt } from "@/lib/client/diary-dialog-art";
 import { toast } from "sonner";
 import { FilmExternalRatings } from "@/components/movies/film-external-ratings";
-import { FilmNearbyCinemas } from "@/components/cinemas/film-nearby-cinemas";
 
 export interface Movie {
   id: number;
@@ -544,12 +543,6 @@ export default function FilmPage({ params }: { params: Promise<{ id: string }> }
                 ) : null}
               </div>
             </div>
-            <FilmNearbyCinemas
-              tmdbId={movie.id}
-              title={movie.title}
-              originalTitle={movie.original_title}
-              className="px-0.5"
-            />
           </div>
         </aside>
 

@@ -15,9 +15,12 @@ import {
 import { cn } from '@/lib/utils'
 import { pageContainerClass } from '@/lib/page-container'
 import { UserRecentReviews } from "@/components/profile/recent-reviews";
-import { SocialFeed } from "@/components/home/social-feed";
+import { SocialFeed, SocialFeedSkeleton } from "@/components/home/social-feed";
 import { HomeForYouRail } from "@/components/home/home-for-you-rail";
 import { HomeFriendsWatchedRail } from "@/components/home/home-friends-watched-rail";
+import { HomeFeedPremiumCard } from "@/components/home/home-feed-premium-card";
+import { HomeFeedWhoToFollow } from "@/components/home/home-feed-who-to-follow";
+import { HomeCatalogPosterCarousel } from "@/components/home/home-catalog-poster-carousel";
 import CinematicBackground from '@/components/CinematicBackground'
 import { LandingSpotlight } from '@/components/landing/LandingSpotlight'
 import { LandingWhyClakete } from '@/components/landing/LandingWhyClakete'
@@ -57,30 +60,36 @@ function LoggedHomeSectionHeader({
   action,
   titleId,
   dense = false,
+  /** Force title above action (narrow rails). */
+  stack = false,
 }: {
-  eyebrow: string
+  eyebrow?: string
   title: string
   description?: string
   action?: ReactNode
   titleId?: string
   dense?: boolean
+  stack?: boolean
 }) {
   return (
     <header
       className={cn(
-        "flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between",
-        dense ? "mb-4" : "mb-6",
+        "flex items-baseline justify-between gap-2",
+        stack ? "flex-col items-start gap-1.5" : "flex-row",
+        dense ? "mb-3" : "mb-6",
       )}
     >
       <div className="min-w-0 space-y-1">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-          {eyebrow}
-        </p>
+        {eyebrow ? (
+          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+            {eyebrow}
+          </p>
+        ) : null}
         <h2
           id={titleId}
           className={cn(
             "font-semibold tracking-tight text-foreground",
-            dense ? "text-base sm:text-lg" : "text-lg sm:text-xl",
+            dense ? "truncate text-[15px] leading-snug" : "text-lg sm:text-xl",
           )}
         >
           {title}
@@ -89,7 +98,9 @@ function LoggedHomeSectionHeader({
           <p className="max-w-xl text-sm leading-relaxed text-muted-foreground">{description}</p>
         ) : null}
       </div>
-      {action ? <div className="flex shrink-0 flex-wrap items-center gap-2">{action}</div> : null}
+      {action ? (
+        <div className="flex shrink-0 items-center gap-2">{action}</div>
+      ) : null}
     </header>
   )
 }
@@ -610,6 +621,165 @@ export default function HomePage() {
   const showWelcomeHint = allMainSectionsOff || !welcomeHintHidden
 
   const hasFilmHero = Boolean(userProfile && heroBackdrop)
+  const feedLayout = Boolean(userProfile && homePrefs.show_following_feed)
+  const showLeftCatalog =
+    homePrefs.show_now_showing || homePrefs.show_upcoming
+
+  const catalogAside = showLeftCatalog ? (
+    <div className="space-y-6">
+      {homePrefs.show_now_showing ? (
+        <section aria-labelledby="home-now-showing" className="min-w-0">
+          <LoggedHomeSectionHeader
+            dense
+            title={t("home.nowShowing")}
+            titleId="home-now-showing"
+            action={
+              <Link
+                href="/cinemas"
+                className={cn(loggedHomeSecondaryLink, "whitespace-nowrap text-xs")}
+              >
+                {t("home.seeAll")}
+              </Link>
+            }
+          />
+          <HomeCatalogPosterCarousel movies={featuredMovies.slice(0, 10)} />
+        </section>
+      ) : null}
+
+      {homePrefs.show_upcoming ? (
+        <section className="min-w-0">
+          <LoggedHomeSectionHeader
+            dense
+            title={t("home.upcoming")}
+            action={
+              <Link
+                href="/films/upcoming"
+                className={cn(loggedHomeSecondaryLink, "whitespace-nowrap text-xs")}
+              >
+                {t("home.seeAll")}
+              </Link>
+            }
+          />
+          <HomeCatalogPosterCarousel
+            movies={upcomingMovies.slice(0, 10)}
+            intervalMs={3800}
+          />
+        </section>
+      ) : null}
+    </div>
+  ) : null
+
+  const recentReviewsSection = homePrefs.show_recent_reviews ? (
+    <section className={cn(sectionShell, 'min-w-0')}>
+      <LoggedHomeSectionHeader
+        dense
+        eyebrow="Diary"
+        title="Your reviews"
+        description="Notes you’ve written on films and series."
+      />
+      <UserRecentReviews
+        limit={3}
+        onLandingPage={false}
+        hideSectionTitle
+        emptyFallback={
+          <div className="rounded-xl border border-dashed border-border bg-muted/30 px-4 py-8 text-center">
+            <p className="text-sm text-muted-foreground">
+              No reviews yet. Open any film page to write one.
+            </p>
+            <Link
+              href="/films/discover"
+              className="mt-4 inline-flex text-sm font-medium text-brand-light transition hover:text-brand"
+            >
+              Find a film →
+            </Link>
+          </div>
+        }
+      />
+    </section>
+  ) : null
+
+  if (feedLayout) {
+    /** Clear fixed navbar, then keep a small gap so sticky rails don't kiss the chrome. */
+    const stickyTopClass =
+      'lg:sticky lg:top-[calc(3.75rem+var(--clakete-promo-h,0px)+0.75rem)] lg:max-h-[calc(100vh-3.75rem-var(--clakete-promo-h,0px)-0.75rem)] lg:overflow-y-auto'
+    const stickyHeaderTop =
+      'top-[calc(3.75rem+var(--clakete-promo-h,0px)+0.75rem)]'
+
+    return (
+      <div className="w-full overflow-x-clip pb-16">
+        <div
+          className={cn(
+            pageContainerClass,
+            'mt-[calc(3.75rem+var(--clakete-promo-h,0px))]',
+          )}
+        >
+          <div
+            className={cn(
+              'grid w-full items-stretch lg:min-h-[calc(100vh-3.75rem-var(--clakete-promo-h,0px))]',
+              showLeftCatalog
+                ? 'lg:grid-cols-[minmax(140px,0.55fr)_minmax(0,2fr)_minmax(200px,0.7fr)]'
+                : 'lg:grid-cols-[minmax(0,2fr)_minmax(200px,0.7fr)]',
+            )}
+          >
+            {showLeftCatalog ? (
+              <aside
+                className={cn(
+                  'hidden min-w-0 lg:block',
+                  stickyTopClass,
+                  'lg:py-3 lg:pr-5',
+                )}
+              >
+                {catalogAside}
+              </aside>
+            ) : null}
+
+            <main className="min-w-0 w-full lg:border-x lg:border-border/70">
+              <header
+                className={cn(
+                  'sticky z-20 border-b border-border/70 bg-background/80 px-3 py-3 backdrop-blur-xl supports-[backdrop-filter]:bg-background/70 sm:px-4',
+                  stickyHeaderTop,
+                )}
+              >
+                <h1
+                  id="home-following-feed"
+                  className="text-[17px] font-bold tracking-tight text-foreground"
+                >
+                  {t('home.activity')}
+                </h1>
+              </header>
+              <div className="px-3 py-3 sm:px-4">
+                <Suspense fallback={<SocialFeedSkeleton />}>
+                  <SocialFeed
+                    selfUsername={userProfile?.username}
+                    selfAvatar={userProfile?.avatar_url}
+                    limit={12}
+                  />
+                </Suspense>
+              </div>
+            </main>
+
+            <aside
+              className={cn(
+                'min-w-0 w-full space-y-3',
+                stickyTopClass,
+                'lg:py-3 lg:pl-5',
+              )}
+            >
+              <HomeFeedPremiumCard />
+              <HomeFeedWhoToFollow />
+              {showLeftCatalog ? (
+                <div className="space-y-6 pt-2 lg:hidden">{catalogAside}</div>
+              ) : null}
+            </aside>
+          </div>
+
+          {recentReviewsSection ? (
+            <div className="mx-auto mt-10 max-w-2xl">{recentReviewsSection}</div>
+          ) : null}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="w-full overflow-x-clip pb-16">
@@ -764,151 +934,12 @@ export default function HomePage() {
         </div>
       ) : null}
 
-      {/* Feed + catalog rail */}
-      <div
-        className={cn(
-          'grid gap-10 lg:gap-12',
-          homePrefs.show_following_feed &&
-            (homePrefs.show_now_showing || homePrefs.show_upcoming)
-            ? 'lg:grid-cols-[minmax(0,1fr)_minmax(240px,300px)]'
-            : 'grid-cols-1',
-          sectionShell,
-        )}
-      >
-        {homePrefs.show_following_feed ? (
-          <section aria-labelledby="home-following-feed" className="min-w-0">
-            <LoggedHomeSectionHeader
-              dense
-              eyebrow={t("home.following")}
-              title={t("home.activity")}
-              titleId="home-following-feed"
-            />
-            <Suspense fallback={null}>
-              <SocialFeed
-                selfUsername={userProfile?.username}
-                selfAvatar={userProfile?.avatar_url}
-                limit={12}
-              />
-            </Suspense>
-          </section>
-        ) : null}
-
-        {(homePrefs.show_now_showing || homePrefs.show_upcoming) ? (
-          <aside className="min-w-0 space-y-8 lg:border-l lg:border-border/60 lg:pl-8">
-            {homePrefs.show_now_showing ? (
-              <section aria-labelledby="home-now-showing">
-                <LoggedHomeSectionHeader
-                  dense
-                  eyebrow={t("home.inTheaters")}
-                  title={t("home.nowShowing")}
-                  titleId="home-now-showing"
-                  action={
-                    <Link href="/cinemas" className={loggedHomeSecondaryLink}>
-                      {t("home.viewCinemas")}
-                    </Link>
-                  }
-                />
-                <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-2">
-                  {featuredMovies.slice(0, 6).map((movie) => (
-                    <Link
-                      key={movie.id}
-                      href={filmHref({
-                        id: movie.id,
-                        title: movie.title,
-                        original_title: movie.original_title,
-                        release_date: movie.release_date,
-                      })}
-                      className="group block"
-                    >
-                      <div className="relative aspect-[2/3] overflow-hidden rounded-md border border-border bg-muted">
-                        <img
-                          src={
-                            movie.poster_path
-                              ? `https://image.tmdb.org/t/p/w342${movie.poster_path}`
-                              : '/placeholder.png'
-                          }
-                          alt={movie.title || 'Poster'}
-                          className="h-full w-full object-cover opacity-90 transition duration-300 group-hover:scale-[1.03] group-hover:opacity-100"
-                        />
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              </section>
-            ) : null}
-
-            {homePrefs.show_upcoming ? (
-              <section>
-                <LoggedHomeSectionHeader
-                  dense
-                  eyebrow={t("home.comingSoon")}
-                  title={t("home.upcoming")}
-                  action={
-                    <Link href="/films/upcoming" className={loggedHomeSecondaryLink}>
-                      {t("home.seeAll")}
-                    </Link>
-                  }
-                />
-                <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:thin] lg:grid lg:grid-cols-3 lg:overflow-visible">
-                  {upcomingMovies.slice(0, 6).map((movie) => (
-                    <Link
-                      key={movie.id}
-                      href={filmHref({
-                        id: movie.id,
-                        title: movie.title,
-                        original_title: movie.original_title,
-                        release_date: movie.release_date,
-                      })}
-                      className="shrink-0 lg:shrink"
-                    >
-                      <div className="aspect-[2/3] w-[72px] overflow-hidden rounded-md border border-border bg-muted lg:w-full">
-                        <img
-                          src={
-                            movie.poster_path
-                              ? `https://image.tmdb.org/t/p/w185${movie.poster_path}`
-                              : '/placeholder.png'
-                          }
-                          alt={movie.title || ''}
-                          className="size-full object-cover"
-                        />
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              </section>
-            ) : null}
-          </aside>
-        ) : null}
-      </div>
-
-      {homePrefs.show_recent_reviews ? (
-        <section className={cn(sectionShell, 'min-w-0')}>
-          <LoggedHomeSectionHeader
-            dense
-            eyebrow="Diary"
-            title="Your reviews"
-            description="Notes you’ve written on films and series."
-          />
-          <UserRecentReviews
-            limit={3}
-            onLandingPage={false}
-            hideSectionTitle
-            emptyFallback={
-              <div className="rounded-xl border border-dashed border-border bg-muted/30 px-4 py-8 text-center">
-                <p className="text-sm text-muted-foreground">
-                  No reviews yet. Open any film page to write one.
-                </p>
-                <Link
-                  href="/films/discover"
-                  className="mt-4 inline-flex text-sm font-medium text-brand-light transition hover:text-brand"
-                >
-                  Find a film →
-                </Link>
-              </div>
-            }
-          />
-        </section>
+      {/* Catalog rail only (feed off) */}
+      {showLeftCatalog ? (
+        <div className={cn(sectionShell, 'min-w-0')}>{catalogAside}</div>
       ) : null}
+
+      {recentReviewsSection}
       </div>
     </div>
   )

@@ -30,7 +30,6 @@ const SERIES_NAV_HREF = [
 /** Nestas rotas o conteúdo do shell fica abaixo da navbar fixa (`mt-28`). */
 const CATALOG_NAVBAR_OFFSET_ROUTES = new Set<string>([
   "/lists",
-  "/cinemas",
   ...FILMS_NAV_HREF,
   ...SERIES_NAV_HREF,
 ])
@@ -90,14 +89,12 @@ function CatalogPillNav({
 }
 
 export function FilmsSubNav() {
-  const { t, locale } = useT()
+  const { t } = useT()
   const items = [
     { href: "/films/discover", label: t("nav.discover") },
     { href: "/films/popular", label: t("nav.popular") },
     { href: "/films/top-rated", label: t("nav.topRated") },
-    locale === "pt-BR"
-      ? { href: "/cinemas", label: t("nav.inTheaters") }
-      : { href: "/films/upcoming", label: t("nav.upcoming") },
+    { href: "/films/upcoming", label: t("nav.upcoming") },
   ] as const
   return <CatalogPillNav items={items} ariaLabel={t("nav.filmsCatalog")} />
 }

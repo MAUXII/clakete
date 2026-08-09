@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
 import Link from "next/link";
+import { MapPin } from "lucide-react";
 import Trailer from "./trailer";
 import type { Movie } from "@/app/film/[id]/page";
 import { FaPlay } from "react-icons/fa6";
@@ -22,6 +23,7 @@ import {
   type ClaketeSeasonEpisode,
 } from "@/components/movies/clakete-season-watch-dialog";
 import { ClaketeLogo } from "@/components/ui/clakete-logo";
+import { FilmNearbyCinemasSheet } from "@/components/cinemas/film-nearby-cinemas";
 
 interface WatchProvider {
   logo_path: string;
@@ -29,12 +31,23 @@ interface WatchProvider {
   provider_id: number;
 }
 
-type ProviderRow = WatchProvider | { kind: "clakete"; provider_name: string };
+type ProviderRow =
+  | WatchProvider
+  | { kind: "clakete"; provider_name: string }
+  | { kind: "cinemas"; provider_name: string };
 
 const CLAKETE_ROW: ProviderRow = { kind: "clakete", provider_name: "Clakete" };
 
-function isClaketeRow(provider: ProviderRow): provider is { kind: "clakete"; provider_name: string } {
+function isClaketeRow(
+  provider: ProviderRow
+): provider is { kind: "clakete"; provider_name: string } {
   return "kind" in provider && provider.kind === "clakete";
+}
+
+function isCinemasRow(
+  provider: ProviderRow
+): provider is { kind: "cinemas"; provider_name: string } {
+  return "kind" in provider && provider.kind === "cinemas";
 }
 
 const trailerIconBtnClass =
@@ -62,8 +75,11 @@ export default function WatchProviders({
   const [trailerOpen, setTrailerOpen] = useState(false);
   const [providersDialogOpen, setProvidersDialogOpen] = useState(false);
   const [claketeOpen, setClaketeOpen] = useState(false);
+  const [cinemasOpen, setCinemasOpen] = useState(false);
+  const [cinemasAvailable, setCinemasAvailable] = useState(false);
+  const [cinemasCount, setCinemasCount] = useState(0);
   const [deepLinks, setDeepLinks] = useState<Record<number, string>>({});
-  const { t } = useT();
+  const { t, locale } = useT();
   const { watchRegion } = useLocalePrefs();
   const { isShining, loading: subscriptionLoading } = useSubscription();
 
@@ -78,6 +94,16 @@ export default function WatchProviders({
     isShining &&
     (mediaType === "movie" || isSeasonWatch);
 
+  const canUseCinemas = mediaType === "movie" && locale === "pt-BR";
+
+  const onCinemasAvailableChange = useCallback(
+    (available: boolean, cinemaCount: number) => {
+      setCinemasAvailable(available);
+      setCinemasCount(cinemaCount);
+    },
+    []
+  );
+
   const { playback, available: claketeAvailable } = useClaketeWatch(
     movie.id,
     canUseClakete,
@@ -86,6 +112,11 @@ export default function WatchProviders({
       : { mediaType: "movie" }
   );
   const showClakete = canUseClakete && claketeAvailable;
+  const showCinemas = canUseCinemas && cinemasAvailable;
+  const cinemasRow: ProviderRow = {
+    kind: "cinemas",
+    provider_name: t("film.nearbyCinemasCta"),
+  };
 
   const providers = pickRegionProviders(movie.watchProviders?.results, watchRegion);
   const regionName = watchRegionLabel(watchRegion);
@@ -158,15 +189,23 @@ export default function WatchProviders({
   const tmdbProviderRows = Array.from(tmdbProviders.values());
   const previewRows = tmdbProviderRows.slice(0, 2);
   const allProviderRows: ProviderRow[] = [
+    ...(showCinemas ? [cinemasRow] : []),
     ...(showClakete ? [CLAKETE_ROW] : []),
     ...tmdbProviderRows,
   ];
-  const showAllProvidersButton = tmdbProviderRows.length > 2 || showClakete;
-  const hasPreviewProviders = tmdbProviderRows.length > 0;
-  const hasAnyProvider = hasPreviewProviders || showClakete;
+  const stripRows: ProviderRow[] = [
+    ...(showCinemas ? [cinemasRow] : []),
+    ...(showClakete ? [CLAKETE_ROW] : []),
+    ...previewRows,
+  ].slice(0, 3);
+  const showAllProvidersButton =
+    tmdbProviderRows.length > 2 || showClakete || showCinemas;
+  const hasPreviewProviders = stripRows.length > 0;
+  const hasAnyProvider = hasPreviewProviders || showClakete || showCinemas;
 
   const getProviderTypes = (provider: ProviderRow) => {
     if (isClaketeRow(provider)) return ["Subscription"];
+    if (isCinemasRow(provider)) return ["Theater"];
     if (!providers) return [] as string[];
     const types: string[] = [];
     if (providers.flatrate?.some((x) => x.provider_id === provider.provider_id)) types.push("Stream");
@@ -189,6 +228,14 @@ export default function WatchProviders({
       );
     }
 
+    if (isCinemasRow(provider)) {
+      return (
+        <div className={cn(box, "flex items-center justify-center bg-muted")}>
+          <MapPin className="h-4 w-4 text-foreground/80" aria-hidden />
+        </div>
+      );
+    }
+
     return (
       <div className={box}>
         <Image
@@ -202,23 +249,30 @@ export default function WatchProviders({
   };
 
   const providerTypeTags = (provider: ProviderRow, variant: "compact" | "dialog" = "compact") =>
-    getProviderTypes(provider).map((type) =>
-      variant === "compact" ? (
+    getProviderTypes(provider).map((type) => {
+      const label =
+        type === "Theater"
+          ? cinemasCount > 0
+            ? t("cinemas.nearCount", { count: String(cinemasCount) })
+            : t("home.inTheaters")
+          : typeLabel(type);
+
+      return variant === "compact" ? (
         <span
           key={type}
           className="text-[10px] font-medium uppercase tracking-[0.08em] text-muted-foreground"
         >
-          {typeLabel(type)}
+          {label}
         </span>
       ) : (
         <span
           key={type}
           className="rounded-md border border-border px-2 py-0.5 text-[11px] font-medium text-muted-foreground"
         >
-          {typeLabel(type)}
+          {label}
         </span>
-      )
-    );
+      );
+    });
 
   const renderProviderRow = (
     provider: ProviderRow,
@@ -254,6 +308,24 @@ export default function WatchProviders({
           type="button"
           key="clakete"
           onClick={() => setClaketeOpen(true)}
+          className={cn(
+            "group flex w-full items-center gap-3 text-left transition-colors",
+            variant === "strip" && "px-3 py-2.5 hover:bg-muted",
+            variant === "card" && "rounded-lg p-2 hover:bg-brand/10",
+            variant === "dialog" && "px-3 py-3 hover:bg-muted"
+          )}
+        >
+          {inner}
+        </button>
+      );
+    }
+
+    if (isCinemasRow(provider)) {
+      return (
+        <button
+          type="button"
+          key="cinemas"
+          onClick={() => setCinemasOpen(true)}
           className={cn(
             "group flex w-full items-center gap-3 text-left transition-colors",
             variant === "strip" && "px-3 py-2.5 hover:bg-muted",
@@ -358,7 +430,7 @@ export default function WatchProviders({
             <>
               {hasPreviewProviders ? (
                 <div className="divide-y divide-border">
-                  {previewRows.map((provider) => renderProviderRow(provider, "strip"))}
+                  {stripRows.map((provider) => renderProviderRow(provider, "strip"))}
                 </div>
               ) : null}
 
@@ -376,14 +448,6 @@ export default function WatchProviders({
                   {t("catalog.allProviders")}
                 </button>
               ) : null}
-
-              {!providers && showClakete ? (
-                <div className="border-t border-border px-4 py-3 text-center">
-                  <p className="text-xs leading-relaxed text-muted-foreground">
-                    {t("catalog.notStreamingIn", { region: regionName })}
-                  </p>
-                </div>
-              ) : null}
             </>
           ) : (
             <div className="px-4 py-5 text-center">
@@ -396,6 +460,16 @@ export default function WatchProviders({
 
         {providersDialog}
         {claketeDialog}
+        {canUseCinemas ? (
+          <FilmNearbyCinemasSheet
+            open={cinemasOpen}
+            onOpenChange={setCinemasOpen}
+            tmdbId={movie.id}
+            title={title || movie.title}
+            originalTitle={movie.original_title}
+            onAvailableChange={onCinemasAvailableChange}
+          />
+        ) : null}
         {!omitTrailerButton ? (
           <Trailer trailerOpen={trailerOpen} setTrailerOpen={setTrailerOpen} movie={movie} />
         ) : null}
@@ -430,6 +504,16 @@ export default function WatchProviders({
         </Card>
 
         <Trailer trailerOpen={trailerOpen} setTrailerOpen={setTrailerOpen} movie={movie} />
+        {canUseCinemas ? (
+          <FilmNearbyCinemasSheet
+            open={cinemasOpen}
+            onOpenChange={setCinemasOpen}
+            tmdbId={movie.id}
+            title={title || movie.title}
+            originalTitle={movie.original_title}
+            onAvailableChange={onCinemasAvailableChange}
+          />
+        ) : null}
       </>
     );
   }
@@ -455,7 +539,7 @@ export default function WatchProviders({
         <CardContent>
           {hasPreviewProviders ? (
             <div className="mt-4 flex w-full flex-col space-y-4">
-              {previewRows.map((provider) => renderProviderRow(provider, "card"))}
+              {stripRows.map((provider) => renderProviderRow(provider, "card"))}
             </div>
           ) : (
             <p className="mt-4 text-sm text-muted-foreground">
@@ -478,6 +562,16 @@ export default function WatchProviders({
 
       {providersDialog}
       {claketeDialog}
+      {canUseCinemas ? (
+        <FilmNearbyCinemasSheet
+          open={cinemasOpen}
+          onOpenChange={setCinemasOpen}
+          tmdbId={movie.id}
+          title={title || movie.title}
+          originalTitle={movie.original_title}
+          onAvailableChange={onCinemasAvailableChange}
+        />
+      ) : null}
       <Trailer trailerOpen={trailerOpen} setTrailerOpen={setTrailerOpen} movie={movie} />
     </>
   );

@@ -25,7 +25,6 @@ import {
   Image as ImageIcon,
   ArrowUpDown,
   Quote,
-  MapPin,
 } from "lucide-react"
 import { BiHomeAlt } from "react-icons/bi"
 import Link from "next/link"
@@ -54,14 +53,13 @@ import { pageContainerClass } from "@/lib/page-container"
 import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "./sheet"
 
 export function Navbar() {
-  const { t, locale } = useT()
+  const { t } = useT()
   const { movies, loading: moviesLoading } = useMovies()
   const featuredMovie = movies?.[0]
   const { series, loading: seriesLoading } = useSeries()
   const featuredSeries = series?.[0]
   const { profile } = useProfile()
   const pathname = usePathname()
-  const showCinemasNav = locale === "pt-BR"
 
   const movieNavLinks = [
     {
@@ -82,19 +80,12 @@ export function Navbar() {
       description: t("nav.topRatedDesc"),
       Icon: Star,
     },
-    showCinemasNav
-      ? {
-          href: "/cinemas",
-          title: t("nav.inTheaters"),
-          description: t("nav.inTheatersDesc"),
-          Icon: MapPin,
-        }
-      : {
-          href: "/films/upcoming",
-          title: t("nav.upcoming"),
-          description: t("nav.upcomingDesc"),
-          Icon: CalendarClock,
-        },
+    {
+      href: "/films/upcoming",
+      title: t("nav.upcoming"),
+      description: t("nav.upcomingDesc"),
+      Icon: CalendarClock,
+    },
   ] as const
 
   const seriesNavLinks = [

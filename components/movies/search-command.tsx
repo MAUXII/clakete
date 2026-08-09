@@ -12,7 +12,11 @@ import { MediaSearchCommandContent } from "./media-search-command-content"
 import { useT } from "@/components/providers/i18n-provider"
 import { filmHref, seriesHref } from "@/lib/media-href"
 
-export function SearchCommand() {
+export function SearchCommand({
+  variant = "default",
+}: {
+  variant?: "default" | "rail"
+}) {
   const { t } = useT()
   const router = useRouter()
   const [open, setOpen] = useState(false)
@@ -35,6 +39,63 @@ export function SearchCommand() {
     return () => document.removeEventListener("keydown", down)
   }, [])
 
+  const dialog = (
+    <CommandDialog open={open} onOpenChange={setOpen}>
+      <MediaSearchCommandContent
+        query={query}
+        onQueryChange={setQuery}
+        filmResults={filmResults}
+        seriesResults={seriesResults}
+        loading={loading}
+        peopleResults={peopleResults}
+        peopleLoading={peopleLoading}
+        inputPlaceholder={t("common.searchPlaceholder")}
+        onSelectFilm={(movie) => {
+          router.push(
+            filmHref({
+              id: movie.id,
+              title: movie.title,
+              original_title: movie.original_title,
+              release_date: movie.release_date,
+            }),
+          )
+          setOpen(false)
+        }}
+        onSelectSeries={(series) => {
+          router.push(
+            seriesHref({
+              id: series.id,
+              name: series.name,
+              original_name: series.original_name,
+              first_air_date: series.first_air_date,
+            }),
+          )
+          setOpen(false)
+        }}
+        onSelectPerson={(person) => {
+          router.push(`/${person.username}`)
+          setOpen(false)
+        }}
+      />
+    </CommandDialog>
+  )
+
+  if (variant === "rail") {
+    return (
+      <>
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="flex w-full items-center gap-3 rounded-full px-3 py-2.5 text-[15px] font-medium text-muted-foreground transition hover:bg-muted/60 hover:text-foreground"
+        >
+          <Search className="size-5 shrink-0" strokeWidth={1.75} />
+          <span>{t("common.search")}</span>
+        </button>
+        {dialog}
+      </>
+    )
+  }
+
   return (
     <>
       <Button
@@ -49,44 +110,7 @@ export function SearchCommand() {
           <span className="text-xs">⌘</span>K
         </kbd>
       </Button>
-      <CommandDialog open={open} onOpenChange={setOpen}>
-        <MediaSearchCommandContent
-          query={query}
-          onQueryChange={setQuery}
-          filmResults={filmResults}
-          seriesResults={seriesResults}
-          loading={loading}
-          peopleResults={peopleResults}
-          peopleLoading={peopleLoading}
-          inputPlaceholder={t("common.searchPlaceholder")}
-          onSelectFilm={(movie) => {
-            router.push(
-              filmHref({
-                id: movie.id,
-                title: movie.title,
-                original_title: movie.original_title,
-                release_date: movie.release_date,
-              }),
-            )
-            setOpen(false)
-          }}
-          onSelectSeries={(series) => {
-            router.push(
-              seriesHref({
-                id: series.id,
-                name: series.name,
-                original_name: series.original_name,
-                first_air_date: series.first_air_date,
-              }),
-            )
-            setOpen(false)
-          }}
-          onSelectPerson={(person) => {
-            router.push(`/${person.username}`)
-            setOpen(false)
-          }}
-        />
-      </CommandDialog>
+      {dialog}
     </>
   )
 }

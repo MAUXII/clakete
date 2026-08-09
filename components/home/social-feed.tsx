@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useSupabaseClient, useUser } from "@supabase/auth-helpers-react"
-import { Plus } from "lucide-react"
 import { toast } from "sonner"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -15,11 +14,7 @@ import {
   FeedListPostCard,
   FeedReviewPostCard,
 } from "@/components/home/feed-review-list-cards"
-import {
-  FeedLogDialog,
-  type FeedLogDraft,
-} from "@/components/home/feed-log-dialog"
-import { FeedStoriesViewer } from "@/components/home/feed-stories-viewer"
+import { FeedLogDialog, type FeedLogDraft } from "@/components/home/feed-log-dialog"
 import {
   WatchedMediaCarousel,
   watchedItemImages,
@@ -33,17 +28,13 @@ import {
   useFollowingFeed,
   WATCHED_FEED_SELECT,
   type FollowingFeedItem,
-  type FollowingStoryPerson,
   type WatchedFeedRow,
 } from "@/hooks/use-following-feed"
 import { avatarDisplaySrc } from "@/lib/next-remote-image"
 import type { Movie } from "@/lib/tmdb/client"
 import { toLocalDateString } from "@/lib/watched-date"
-import { cn } from "@/lib/utils"
-
-function displayName(user: { username: string; display_name?: string | null }) {
-  return user.display_name?.trim() || user.username
-}
+import { Button } from "@/components/ui/button"
+import { useT } from "@/components/providers/i18n-provider"
 
 function FeedRowSkeleton() {
   return (
@@ -53,95 +44,66 @@ function FeedRowSkeleton() {
         <div className="min-w-0 flex-1 space-y-2">
           <Skeleton className="h-3 w-40" />
           <Skeleton className="h-3 w-28" />
+          <Skeleton className="mt-2 aspect-[16/9] w-full max-h-56 rounded-2xl" />
+          <Skeleton className="mt-2 h-3 w-24" />
         </div>
       </div>
-      <Skeleton className="-mx-4 mt-3 aspect-[16/9] w-[calc(100%+2rem)] rounded-none lg:mx-0 lg:w-full lg:rounded-2xl" />
     </li>
   )
 }
 
-function StoriesStrip({
-  selfUsername,
-  selfAvatar,
-  stories,
-  onSelfClick,
-  onStoryClick,
-}: {
-  selfUsername?: string
-  selfAvatar?: string | null
-  stories: FollowingStoryPerson[]
-  onSelfClick: () => void
-  onStoryClick: (person: FollowingStoryPerson) => void
-}) {
+/** Suspense / SSR-safe placeholder while SocialFeed hydrates. */
+export function SocialFeedSkeleton({ rows = 4 }: { rows?: number }) {
   return (
-    <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-1 pt-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-      <button
-        type="button"
-        onClick={onSelfClick}
-        className="flex w-[68px] shrink-0 flex-col items-center gap-1.5"
-      >
-        <span className="relative flex size-[58px] items-center justify-center rounded-full bg-muted ring-2 ring-border">
-          <Avatar className="size-[52px]">
-            <AvatarImage src={avatarDisplaySrc(selfAvatar) ?? undefined} alt="" />
-            <AvatarFallback className="bg-muted text-xs text-muted-foreground">
-              {(selfUsername?.[0] || "Y").toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
-          <span className="absolute -bottom-0.5 -right-0.5 flex size-5 items-center justify-center rounded-full bg-brand text-white ring-2 ring-background">
-            <Plus className="size-3" strokeWidth={3} />
-          </span>
-        </span>
-        <span className="w-full truncate text-center text-[10px] text-muted-foreground">You</span>
-      </button>
-
-      {stories.map((u) => (
-        <button
-          key={u.id}
-          type="button"
-          onClick={() => onStoryClick(u)}
-          className="flex w-[68px] shrink-0 flex-col items-center gap-1.5"
-        >
-          <span
-            className={cn(
-              "flex size-[58px] items-center justify-center rounded-full p-[2px]",
-              u.hasNew
-                ? "bg-gradient-to-br from-brand via-brand-muted to-brand-light"
-                : "bg-muted",
-            )}
-          >
-            <Avatar className="size-full border-2 border-background">
-              <AvatarImage src={avatarDisplaySrc(u.avatar_url) ?? undefined} alt="" />
-              <AvatarFallback className="bg-muted text-xs text-muted-foreground">
-                {displayName(u)[0]?.toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-          </span>
-          <span className="w-full truncate text-center text-[10px] text-muted-foreground">
-            {u.username}
-          </span>
-        </button>
-      ))}
+    <div className="space-y-3">
+      <Skeleton className="h-16 w-full rounded-none" />
+      <ul>
+        {Array.from({ length: rows }).map((_, i) => (
+          <FeedRowSkeleton key={i} />
+        ))}
+      </ul>
     </div>
   )
 }
 
-function Composer({ onClick }: { onClick: () => void }) {
+function Composer({
+  onClick,
+  avatarUrl,
+  username,
+}: {
+  onClick: () => void
+  avatarUrl?: string | null
+  username?: string
+}) {
+  const { t } = useT()
+  const initial = (username?.[0] || "?").toUpperCase()
+
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="flex w-full items-center gap-3 rounded-2xl border border-border bg-muted/40 px-3.5 py-3 text-left transition hover:border-border hover:bg-muted/60"
-    >
-      <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand/15 text-brand">
-        <Plus className="size-4" strokeWidth={2.5} />
-      </span>
-      <span className="min-w-0 flex-1 text-sm text-muted-foreground">
-        Log something you watched…
-      </span>
-      <span className="shrink-0 rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
-        Log
-      </span>
-    </button>
+    <div className="-mx-3 border-b border-border/70 sm:-mx-4">
+      <button
+        type="button"
+        onClick={onClick}
+        className="group flex w-full items-center gap-3 px-3 py-3 text-left transition hover:bg-muted/20 sm:px-4"
+      >
+        <Avatar className="size-10 shrink-0 border border-border">
+          <AvatarImage src={avatarDisplaySrc(avatarUrl) ?? undefined} alt="" />
+          <AvatarFallback className="bg-muted text-sm text-muted-foreground">
+            {initial}
+          </AvatarFallback>
+        </Avatar>
+
+        <p className="min-w-0 flex-1 text-[15px] leading-snug text-muted-foreground/70">
+          {t("home.composerPlaceholder")}
+        </p>
+
+        <span
+          aria-disabled="true"
+          className="inline-flex h-8 shrink-0 cursor-default items-center justify-center rounded-full bg-brand/35 px-4 text-[13px] font-bold text-white/90 opacity-60"
+        >
+          {t("home.composerCta")}
+        </span>
+      </button>
+    </div>
   )
 }
 
@@ -165,13 +127,15 @@ export function SocialFeed({
   selfAvatar?: string | null
   limit?: number
 }) {
+  const { t } = useT()
   const supabase = useSupabaseClient()
   const authUser = useUser()
   const router = useRouter()
   const searchParams = useSearchParams()
   const locateShareUid = searchParams.get("p")?.trim() || null
-  const { items, stories, followingCount, loading, error, hasMore, loadMore, refresh } =
+  const { items, followingCount, loading, error, hasMore, loadMore, refresh } =
     useFollowingFeed(limit)
+  const [loadingMore, setLoadingMore] = useState(false)
 
   const [searchOpen, setSearchOpen] = useState(false)
   const [query, setQuery] = useState("")
@@ -186,8 +150,6 @@ export function SocialFeed({
   const [pending, setPending] = useState<PendingLog | null>(null)
   const [draft, setDraft] = useState<FeedLogDraft | null>(null)
   const [logging, setLogging] = useState(false)
-  const [storyPerson, setStoryPerson] = useState<FollowingStoryPerson | null>(null)
-  const [storiesOpen, setStoriesOpen] = useState(false)
   const [highlightUid, setHighlightUid] = useState<string | null>(null)
   const [pinnedItem, setPinnedItem] = useState<FollowingFeedItem | null>(null)
   const locateDone = useRef(false)
@@ -456,36 +418,47 @@ export function SocialFeed({
     if (followingCount === 0) {
       return (
         <div className="rounded-xl border border-dashed border-border bg-background/70 px-4 py-8 text-center">
-          <p className="mx-auto max-w-sm text-sm leading-relaxed text-muted-foreground">
-            Follow people for Friends posts — both of you must follow each
-            other. Public posts can still show up from the community.
+          <p className="text-sm font-medium text-foreground">
+            {t("home.feedEmptyNoFollowsTitle")}
           </p>
-          <Link
-            href="/lists"
-            className="mt-4 inline-flex text-sm font-medium text-brand-light transition hover:text-brand"
-          >
-            Browse public lists →
-          </Link>
+          <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-muted-foreground">
+            {t("home.feedEmptyNoFollowsBody")}
+          </p>
+          <Button asChild variant="outline" size="sm" className="mt-5">
+            <Link href="/lists">{t("home.feedEmptyNoFollowsCta")}</Link>
+          </Button>
         </div>
       )
     }
     return (
       <div className="rounded-xl border border-dashed border-border bg-background/70 px-4 py-8 text-center">
-        <p className="text-sm text-muted-foreground">
-          Quiet for now — nothing new from people you follow.
+        <p className="text-sm font-medium text-foreground">
+          {t("home.feedEmptyQuietTitle")}
         </p>
-        <button
+        <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-muted-foreground">
+          {t("home.feedEmptyQuietBody")}
+        </p>
+        <Button
           type="button"
+          variant="outline"
+          size="sm"
+          className="mt-5"
           onClick={openComposer}
-          className="mt-4 inline-flex text-sm font-medium text-brand-light transition hover:text-brand"
         >
-          Log something yourself →
-        </button>
+          {t("home.feedEmptyQuietCta")}
+        </Button>
       </div>
     )
-  }, [followingCount, openComposer])
+  }, [followingCount, openComposer, t])
 
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
+
+  const requestLoadMore = useCallback(() => {
+    if (!hasMore || loading || loadingMore) return
+    setLoadingMore(true)
+    loadMore()
+    window.setTimeout(() => setLoadingMore(false), 120)
+  }, [hasMore, loading, loadingMore, loadMore])
 
   useEffect(() => {
     if (!hasMore || loading) return
@@ -495,30 +468,26 @@ export function SocialFeed({
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries.some((e) => e.isIntersecting)) {
-          loadMore()
+          requestLoadMore()
         }
       },
       { rootMargin: "240px 0px" },
     )
     observer.observe(node)
     return () => observer.disconnect()
-  }, [hasMore, loading, loadMore, items.length])
+  }, [hasMore, loading, requestLoadMore, items.length])
+
+  const initialLoading = loading && items.length === 0
 
   return (
-    <div className="space-y-4">
-      <StoriesStrip
-        selfUsername={selfUsername}
-        selfAvatar={selfAvatar}
-        stories={stories}
-        onSelfClick={openComposer}
-        onStoryClick={(person) => {
-          setStoryPerson(person)
-          setStoriesOpen(true)
-        }}
+    <div className="space-y-3">
+      <Composer
+        onClick={openComposer}
+        avatarUrl={selfAvatar}
+        username={selfUsername}
       />
-      <Composer onClick={openComposer} />
 
-      {loading ? (
+      {initialLoading ? (
         <ul>
           {Array.from({ length: 4 }).map((_, i) => (
             <FeedRowSkeleton key={i} />
@@ -526,13 +495,13 @@ export function SocialFeed({
         </ul>
       ) : error ? (
         <div className="rounded-xl border border-border/80 bg-muted/40 px-4 py-6 text-center">
-          <p className="text-sm text-muted-foreground">Could not load your feed.</p>
+          <p className="text-sm text-muted-foreground">{t("home.feedLoadError")}</p>
           <button
             type="button"
             onClick={() => void refresh()}
             className="mt-3 text-sm text-brand-light hover:text-brand"
           >
-            Try again
+            {t("home.feedTryAgain")}
           </button>
         </div>
       ) : feedItems.length === 0 ? (
@@ -580,14 +549,14 @@ export function SocialFeed({
           {hasMore ? (
             <div
               ref={loadMoreRef}
-              className="flex items-center justify-center py-4 text-xs text-muted-foreground"
-              aria-hidden
+              className="flex min-h-10 items-center justify-center py-4 text-xs text-muted-foreground"
+              aria-busy={loadingMore}
             >
-              Loading more…
+              {loadingMore ? t("home.feedLoadMore") : null}
             </div>
           ) : (
             <p className="py-3 text-center text-[11px] text-muted-foreground">
-              You&apos;re all caught up
+              {t("home.feedCaughtUp")}
             </p>
           )}
         </>
@@ -649,15 +618,6 @@ export function SocialFeed({
           onPost={handlePostToFeed}
         />
       ) : null}
-
-      <FeedStoriesViewer
-        open={storiesOpen}
-        onOpenChange={(open) => {
-          setStoriesOpen(open)
-          if (!open) setStoryPerson(null)
-        }}
-        person={storyPerson}
-      />
     </div>
   )
 }

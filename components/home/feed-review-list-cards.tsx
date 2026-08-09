@@ -28,7 +28,7 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { ShiningBadge } from "@/components/premium/shining-badge"
 import { createNotification } from "@/lib/notifications"
-import { feedMediaFrameClass } from "@/components/home/feed-watched-media"
+import { feedMediaFrameFullClass } from "@/components/home/feed-watched-media"
 import {
   feedListHref,
   feedMediaHref,
@@ -443,8 +443,6 @@ export function FeedReviewPostCard({
               </DropdownMenu>
             )}
           </div>
-        </div>
-      </div>
 
       <div className="mt-3 flex gap-3">
         <Link href={href} className="relative h-28 w-[76px] shrink-0 overflow-hidden rounded-lg border border-border bg-background">
@@ -624,6 +622,8 @@ export function FeedReviewPostCard({
           </div>
         </div>
       ) : null}
+        </div>
+      </div>
     </article>
   )
 }
@@ -804,11 +804,9 @@ export function FeedListPostCard({
               </DropdownMenu>
             )}
           </div>
-        </div>
-      </div>
 
-      <Link href={href} className={feedMediaFrameClass}>
-        <div className="aspect-[16/9] w-full">
+      <Link href={href} className={feedMediaFrameFullClass}>
+        <div className="aspect-[16/9] w-full max-h-[min(22rem,45vh)]">
           {posters.length > 0 ? (
             <div
               className={cn(
@@ -875,6 +873,8 @@ export function FeedListPostCard({
           <Share className="size-3.5" strokeWidth={2} />
         </button>
       </footer>
+        </div>
+      </div>
     </article>
   )
 }
