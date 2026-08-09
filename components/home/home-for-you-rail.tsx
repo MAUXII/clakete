@@ -9,6 +9,7 @@ import {
   CarouselContent,
   CarouselItem,
 } from "@/components/ui/carousel"
+import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 
 type DiscoverMovie = {
@@ -76,7 +77,7 @@ export function HomeForYouRail({
                 key={i}
                 className="basis-[88px] pl-2 sm:basis-[100px]"
               >
-                <div className="aspect-[2/3] w-full animate-pulse rounded-md bg-muted" />
+                <Skeleton className="aspect-[2/3] w-full rounded-md" />
               </CarouselItem>
             ))
           : movies.map((movie) => (

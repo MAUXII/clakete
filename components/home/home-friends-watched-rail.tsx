@@ -10,6 +10,7 @@ import {
   CarouselContent,
   CarouselItem,
 } from "@/components/ui/carousel"
+import { Skeleton } from "@/components/ui/skeleton"
 import { useT } from "@/components/providers/i18n-provider"
 import { cn } from "@/lib/utils"
 
@@ -153,7 +154,7 @@ export function HomeFriendsWatchedRail({ className }: { className?: string }) {
                 key={i}
                 className="basis-[88px] pl-2 sm:basis-[100px]"
               >
-                <div className="aspect-[2/3] w-full animate-pulse rounded-md bg-muted" />
+                <Skeleton className="aspect-[2/3] w-full rounded-md" />
               </CarouselItem>
             ))
           : items.map((item) => {

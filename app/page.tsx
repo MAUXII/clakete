@@ -119,6 +119,8 @@ export default function HomePage() {
   const [welcomeHintHidden, setWelcomeHintHidden] = useState(false)
   const [featuredMovies, setFeaturedMovies] = useState<Movie[]>([])
   const [upcomingMovies, setUpcomingMovies] = useState<Movie[]>([])
+  const [featuredLoading, setFeaturedLoading] = useState(true)
+  const [upcomingLoading, setUpcomingLoading] = useState(true)
   const [spotlightMovie, setSpotlightMovie] = useState<Movie | null>(null)
   const [catalogMovieTotal, setCatalogMovieTotal] = useState<number | null>(null)
   const user = useUser()
@@ -164,6 +166,7 @@ export default function HomePage() {
   useEffect(() => {
     if (localeLoading) return
     let cancelled = false
+    setFeaturedLoading(true)
     async function fetchFeaturedMovie() {
       try {
         const response = await fetch(`/api/movies?type=now_playing&page=1&${localeQs}`)
@@ -171,9 +174,14 @@ export default function HomePage() {
         if (cancelled) return
         if (data.results && data.results.length > 0) {
           setFeaturedMovies(data.results.slice(0, 12))
+        } else {
+          setFeaturedMovies([])
         }
       } catch (error) {
         console.error('Erro ao buscar filme em destaque:', error)
+        if (!cancelled) setFeaturedMovies([])
+      } finally {
+        if (!cancelled) setFeaturedLoading(false)
       }
     }
     fetchFeaturedMovie()
@@ -299,18 +307,29 @@ export default function HomePage() {
 
   useEffect(() => {
     if (localeLoading) return
+    let cancelled = false
+    setUpcomingLoading(true)
     async function fetchUpcomingMovies() {
       try {
         const response = await fetch(`/api/movies?type=upcoming&page=1&${localeQs}`)
         const data = await response.json()
+        if (cancelled) return
         if (data.results && data.results.length > 0) {
           setUpcomingMovies(data.results.slice(0, 6))
+        } else {
+          setUpcomingMovies([])
         }
       } catch (error) {
         console.error('Erro ao buscar filmes populares:', error)
+        if (!cancelled) setUpcomingMovies([])
+      } finally {
+        if (!cancelled) setUpcomingLoading(false)
       }
     }
     fetchUpcomingMovies()
+    return () => {
+      cancelled = true
+    }
   }, [localeQs, localeLoading])
 
   if (loading) {
@@ -642,7 +661,10 @@ export default function HomePage() {
               </Link>
             }
           />
-          <HomeCatalogPosterCarousel movies={featuredMovies.slice(0, 10)} />
+          <HomeCatalogPosterCarousel
+            movies={featuredMovies.slice(0, 10)}
+            loading={featuredLoading || localeLoading}
+          />
         </section>
       ) : null}
 
@@ -663,6 +685,7 @@ export default function HomePage() {
           <HomeCatalogPosterCarousel
             movies={upcomingMovies.slice(0, 10)}
             intervalMs={3800}
+            loading={upcomingLoading || localeLoading}
           />
         </section>
       ) : null}
