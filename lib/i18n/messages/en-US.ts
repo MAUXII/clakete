@@ -247,6 +247,8 @@ export const enUS = {
       "The movie may need to load again if you leave now.",
     claketePlayerLeaveTitle: "Leave the player?",
     claketePlayerLeaveAction: "Leave",
+    claketePlayerFullscreen: "Fullscreen",
+    claketePlayerExitFullscreen: "Exit fullscreen",
     claketeUnavailable: "Playback is unavailable right now.",
     watchOnClakete: "Watch on Clakete",
     externalRatings: "Ratings",

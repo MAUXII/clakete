@@ -71,7 +71,7 @@ export function ClaketeWatchDialog({
             title={title}
             src={playback.url}
             className="absolute inset-0 h-full w-full border-0"
-            allow="autoplay; encrypted-media; picture-in-picture; fullscreen; clipboard-write; accelerometer; gyroscope"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; fullscreen *; gyroscope; picture-in-picture *; web-share"
             allowFullScreen
             referrerPolicy="no-referrer-when-downgrade"
           />

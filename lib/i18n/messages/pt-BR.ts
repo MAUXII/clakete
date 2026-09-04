@@ -249,6 +249,8 @@ export const ptBR = {
       "O filme pode precisar carregar de novo se você sair agora.",
     claketePlayerLeaveTitle: "Sair do player?",
     claketePlayerLeaveAction: "Sair",
+    claketePlayerFullscreen: "Tela cheia",
+    claketePlayerExitFullscreen: "Sair da tela cheia",
     claketeUnavailable: "Reprodução indisponível no momento.",
     watchOnClakete: "Assistir no Clakete",
     externalRatings: "Avaliações",

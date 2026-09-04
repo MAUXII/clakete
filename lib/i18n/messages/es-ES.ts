@@ -248,6 +248,8 @@ export const esES = {
       "La película puede tener que cargar de nuevo si sales ahora.",
     claketePlayerLeaveTitle: "¿Salir del reproductor?",
     claketePlayerLeaveAction: "Salir",
+    claketePlayerFullscreen: "Pantalla completa",
+    claketePlayerExitFullscreen: "Salir de pantalla completa",
     claketeUnavailable: "Reproducción no disponible por ahora.",
     watchOnClakete: "Ver en Clakete",
     externalRatings: "Valoraciones",
