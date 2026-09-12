@@ -4,10 +4,9 @@
  * - `/film/dune-2021` / `/film/film-2000` when another title shares the slug
  *
  * Slugs always prefer TMDB `original_title` / `original_name` (Obsession),
- * never the UI-localized title (Obsessão). When original is missing (diary
- * rows etc.), fall back to `/film/{id}` so the detail page can canonicalize.
- *
- * CJK originals with no Latin chars may fall back to a localized Latin title.
+ * never the UI-localized title (Obsessão / Zona Zero). When original is
+ * missing or non-Latin (CJK), fall back to `/film/{id}` so the detail page
+ * can load by id and canonicalize via `/api/movies/{id}/slug`.
  *
  * Legacy still works and redirects:
  * - `/film/10386`
@@ -60,18 +59,15 @@ export function pickSlugTitle(
 
 /**
  * Title used to build the URL slug.
- * Prefer original_* always. If original is missing, return "" (numeric id).
- * If original has no Latin chars (CJK), allow localized Latin fallback.
+ * Prefer original_* always. If original is missing or has no Latin chars
+ * (e.g. 군체), return "" so callers fall back to `/film/{id}` — never invent
+ * a slug from a localized display title ("Zona Zero"), which breaks resolve.
  */
 function resolveTitle(input: MediaHrefInput, kind: "movie" | "tv"): string {
   const originals =
     kind === "tv"
       ? [input.original_name, input.original_title]
       : [input.original_title, input.original_name]
-  const localized =
-    kind === "tv"
-      ? [input.name, input.title]
-      : [input.title, input.name]
 
   const originalRaw = originals.map((c) => c?.trim() || "").find(Boolean) || ""
   if (!originalRaw) return ""
@@ -80,7 +76,8 @@ function resolveTitle(input: MediaHrefInput, kind: "movie" | "tv"): string {
     return pickSlugTitle(...originals)
   }
 
-  return pickSlugTitle(...localized)
+  // Non-Latin original: do not fall back to localized title for URLs.
+  return ""
 }
 
 /** Extract YYYY from `2001-01-01` / `2001`. */

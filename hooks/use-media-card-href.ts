@@ -5,6 +5,7 @@ import { useEffect, useState } from "react"
 import { filmHref, seriesHref } from "@/lib/media-href"
 import {
   fetchCanonicalMediaSlug,
+  mediaHrefUsesNumericId,
   readCachedMediaSlug,
   slugFromStoredOriginal,
   writeCachedMediaSlug,
@@ -38,6 +39,11 @@ function persistResolvedSlug(input: UseMediaCardHrefInput, path: string) {
   })
 }
 
+/**
+ * Speculative href from *original* title only (never localized display title).
+ * Localized titles like "Zona Zero" for 군체/Colony break TMDB slug resolve.
+ * Falls back to `/film/{id}` so the click always works (Letterboxd has /tmdb/{id}).
+ */
 function buildHrefFromKnown(input: UseMediaCardHrefInput): string | null {
   if (!input.id) return null
 
@@ -53,25 +59,25 @@ function buildHrefFromKnown(input: UseMediaCardHrefInput): string | null {
   const cached = readCachedMediaSlug(input.kind, input.id)
   if (cached?.slug) return mediaPathFromSlug(input.kind, cached.slug)
 
-  const fromHref =
+  // Only original_* — do not pass localized title/name.
+  const fromOriginal =
     input.kind === "tv"
       ? seriesHref({
           id: input.id,
           original_name: input.original_name,
-          name: input.name,
           first_air_date: input.first_air_date,
         })
       : filmHref({
           id: input.id,
           original_title: input.original_title,
-          title: input.title,
           release_date: input.release_date,
         })
 
-  const segment = fromHref.replace(/^\/(film|series)\//, "").split("/")[0] ?? ""
-  if (segment && !/^\d+$/.test(segment)) return fromHref
+  const segment =
+    fromOriginal.replace(/^\/(film|series)\//, "").split("/")[0] ?? ""
+  if (segment && !/^\d+$/.test(segment)) return fromOriginal
 
-  return null
+  return mediaPathFromSlug(input.kind, String(input.id))
 }
 
 export function useMediaCardHref(input: UseMediaCardHrefInput): string | null {
@@ -92,7 +98,8 @@ export function useMediaCardHref(input: UseMediaCardHrefInput): string | null {
     if (known) {
       persistResolvedSlug(input, known)
       setHref(known)
-      return
+      // Pretty slug already known — done.
+      if (!mediaHrefUsesNumericId(known, input.id)) return
     }
 
     if (!input.id) {
@@ -108,7 +115,8 @@ export function useMediaCardHref(input: UseMediaCardHrefInput): string | null {
         setHref(mediaPathFromSlug(input.kind, payload.slug))
         return
       }
-      setHref(null)
+      // Keep numeric id link if we already set one.
+      if (!known) setHref(mediaPathFromSlug(input.kind, String(input.id)))
     })
 
     return () => {

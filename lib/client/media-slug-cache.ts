@@ -4,7 +4,7 @@ export type CachedMediaSlug = {
   original_name?: string | null
 }
 
-const STORAGE_KEY = "clakete.media_slugs.v1"
+const STORAGE_KEY = "clakete.media_slugs.v2"
 
 type CacheEntry = CachedMediaSlug & { cachedAt: number }
 
