@@ -6,7 +6,7 @@
     </td>
     <td align="right" valign="middle">
       <a href="https://clakete.xyz">clakete.xyz</a><br />
-      ㅤㅤ         ㅤ    ㅤㅤNext.js · Supabase · TMDB
+      ㅤㅤ         ㅤ    ㅤNext.js · Supabase · TMDB
     </td>
   </tr>
 </table>
