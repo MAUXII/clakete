@@ -18,7 +18,7 @@
 </p>
 
 <p align="center">
-  <img src="./public/brand/sections/filmes.png" alt="Filmes" width="100%" />
+  <img src="./public/brand/sections/filmes-v2.png" alt="Filmes" width="100%" />
 </p>
 <p align="center">
   <img src="./public/brand/sections/series.png" alt="Séries" width="100%" />
