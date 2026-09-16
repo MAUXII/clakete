@@ -16,12 +16,13 @@ import { getProviderWatchHref } from "@/lib/provider-links";
 import { justWatchLocaleForRegion } from "@/lib/justwatch";
 import { useT } from "@/components/providers/i18n-provider";
 import { useSubscription } from "@/hooks/use-subscription";
-import { useClaketeWatch } from "@/hooks/use-clakete-watch";
-import { ClaketeWatchDialog } from "@/components/movies/clakete-watch-dialog";
 import {
+  CLAKETE_WATCH_ENABLED,
+  useClaketeWatch,
+  ClaketeWatchDialog,
   ClaketeSeasonWatchDialog,
   type ClaketeSeasonEpisode,
-} from "@/components/movies/clakete-season-watch-dialog";
+} from "@clakete/watch";
 import { ClaketeLogo } from "@/components/ui/clakete-logo";
 import { FilmNearbyCinemasSheet } from "@/components/cinemas/film-nearby-cinemas";
 import { useDesignMode } from "@/hooks/use-design-mode";
@@ -92,7 +93,9 @@ export default function WatchProviders({
     Array.isArray(episodes);
 
   // Filme: sempre (Shining). Série: só na página de temporada (com eps).
+  // Sem pacote privado (@clakete/watch), CLAKETE_WATCH_ENABLED=false (stub).
   const canUseClakete =
+    CLAKETE_WATCH_ENABLED &&
     !subscriptionLoading &&
     isShining &&
     (mediaType === "movie" || isSeasonWatch);

@@ -27,3 +27,5 @@ Open [http://localhost:3000](http://localhost:3000).
 ## Deploy
 
 Deploy on [Vercel](https://vercel.com).
+
+Playback Clakete (privado): defina `CLAKETE_WATCH_CLONE_TOKEN` (PAT com `repo`) para o build clonar `MAUXII/clakete-watch` em `private/clakete-watch`. Sem o token, o app usa stub público (sem assistir no Clakete).

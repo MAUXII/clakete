@@ -35,6 +35,9 @@ debug.log
 docs/sql/
 supabase/migrations/
 
+# Pacote privado de playback (clonado no deploy / local)
+/private/
+
 # debug
 npm-debug.log*
 yarn-debug.log*
