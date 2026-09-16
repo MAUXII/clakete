@@ -1,75 +1,43 @@
-<p align="center">
-  <img src="./public/brand/readme-banner.svg" alt="Clakete" width="100%" />
-</p>
-
-<h1 align="center">Clakete</h1>
-
-<p align="center">
-  Rede social de filmes e séries.<br />
-  Descubra, registre e compartilhe o que você assiste.
-</p>
-
-<p align="center">
-  <a href="https://clakete.xyz">clakete.xyz</a>
-  ·
-  Next.js · Supabase · TMDB
-</p>
+<table width="100%">
+  <tr>
+    <td align="left" valign="middle">
+      Rede social de filmes e séries<br />
+      Descubra, registre e compartilhe o que você assiste.
+    </td>
+    <td align="right" valign="middle">
+      <a href="https://clakete.xyz">clakete.xyz</a><br />
+      Next.js · Supabase · TMDB
+    </td>
+  </tr>
+</table>
 
 <br />
+
+<p align="center">
+  <img src="./public/brand/hero-title.png" alt="Clakete :3" width="100%" />
+</p>
 
 <p align="center">
   <img src="./public/brand/sections/filmes.png" alt="Filmes" width="100%" />
 </p>
-
-Catálogo com busca, descoberta, avaliações e páginas de título. O acervo fica no centro da experiência.
-
-<br />
-
 <p align="center">
   <img src="./public/brand/sections/series.png" alt="Séries" width="100%" />
 </p>
-
-Temporadas, episódios e o mesmo fluxo de registro que nos filmes.
-
-<br />
-
 <p align="center">
   <img src="./public/brand/sections/diario.png" alt="Diário" width="100%" />
 </p>
-
-Marque o que assistiu, escreva reviews e acompanhe o histórico no perfil.
-
-<br />
-
 <p align="center">
   <img src="./public/brand/sections/listas.png" alt="Listas" width="100%" />
 </p>
-
-Monte coleções, reordene e compartilhe com a rede.
-
-<br />
-
 <p align="center">
   <img src="./public/brand/sections/games.png" alt="Games" width="100%" />
 </p>
-
-Mini-games de cinema, tipo Connect the Stars. Uma pausa no meio do catálogo.
-
-<br />
-
 <p align="center">
   <img src="./public/brand/sections/cinemas.png" alt="Cinemas" width="100%" />
 </p>
-
-Sessões perto de você. Escolhe o filme e vê onde passa.
-
-<br />
-
 <p align="center">
   <img src="./public/brand/sections/perfil.png" alt="Perfil" width="100%" />
 </p>
-
-Seu espaço na rede: favoritos, atividade, listas e quem te segue.
 
 ---
 
