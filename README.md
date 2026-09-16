@@ -2,11 +2,11 @@
   <tr>
     <td align="left" valign="middle">
       Rede social de filmes e séries<br />
-      Descubra, registre e compartilhe o que você assiste.ㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ
+      Descubra, registre e compartilhe o que você assiste.ㅤㅤ   ㅤㅤㅤㅤㅤㅤㅤ
     </td>
     <td align="right" valign="middle">
       <a href="https://clakete.xyz">clakete.xyz</a><br />
-      ㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤㅤ ­Next.js · Supabase · TMDB
+      ㅤㅤ         ㅤ    ㅤㅤNext.js · Supabase · TMDB
     </td>
   </tr>
 </table>
