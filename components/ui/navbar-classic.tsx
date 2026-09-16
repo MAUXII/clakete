@@ -10,6 +10,7 @@ import {
   isMoviesNavActive,
   isNavHrefActive,
   isSeriesNavActive,
+  isGamesNavActive,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu"
 import {
@@ -19,6 +20,8 @@ import {
   Star,
   CalendarClock,
   Menu,
+  Gamepad2,
+  MapPin,
 } from "lucide-react"
 import { BiHomeAlt } from "react-icons/bi"
 import Link from "next/link"
@@ -322,6 +325,30 @@ export function NavbarClassic() {
               </div>
             </NavigationMenuContent>
           </NavigationMenuItem>
+
+          <NavigationMenuItem>
+            <Link href="/games" legacyBehavior passHref>
+              <NavigationMenuLink
+                href="/games"
+                className={navigationMenuTriggerStyle()}
+              >
+                <Gamepad2 className="h-4 w-4" />
+                {t("nav.games")}
+              </NavigationMenuLink>
+            </Link>
+          </NavigationMenuItem>
+
+          <NavigationMenuItem>
+            <Link href="/cinemas" legacyBehavior passHref>
+              <NavigationMenuLink
+                href="/cinemas"
+                className={navigationMenuTriggerStyle()}
+              >
+                <MapPin className="h-4 w-4" />
+                {t("nav.cinemas")}
+              </NavigationMenuLink>
+            </Link>
+          </NavigationMenuItem>
         </NavigationMenuList>
       </NavigationMenu>
 
@@ -391,6 +418,28 @@ export function NavbarClassic() {
                       )}
                     >
                       {t("nav.lists")}
+                    </Link>
+                  </SheetClose>
+                  <SheetClose asChild>
+                    <Link
+                      href="/games"
+                      className={cn(
+                        "rounded-lg px-3 py-2 text-sm font-medium",
+                        isGamesNavActive(pathname) ? navMegaLinkAccent : cn("text-foreground", navLinkHover),
+                      )}
+                    >
+                      {t("nav.games")}
+                    </Link>
+                  </SheetClose>
+                  <SheetClose asChild>
+                    <Link
+                      href="/cinemas"
+                      className={cn(
+                        "rounded-lg px-3 py-2 text-sm font-medium",
+                        isNavHrefActive(pathname, "/cinemas") ? navMegaLinkAccent : cn("text-foreground", navLinkHover),
+                      )}
+                    >
+                      {t("nav.cinemas")}
                     </Link>
                   </SheetClose>
                   <SheetClose asChild>

@@ -51,11 +51,7 @@ export function isNavHrefActive(pathname: string, href: string): boolean {
 }
 
 export function isMoviesNavActive(pathname: string): boolean {
-  return (
-    pathname.startsWith("/films") ||
-    pathname.startsWith("/film/") ||
-    pathname.startsWith("/cinemas")
-  )
+  return pathname.startsWith("/films") || pathname.startsWith("/film/")
 }
 
 export function isSeriesNavActive(pathname: string): boolean {

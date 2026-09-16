@@ -21,10 +21,12 @@ import {
 import { useT } from "@/components/providers/i18n-provider"
 import { cn } from "@/lib/utils"
 import {
+  isGamesNavActive,
   isMoviesNavActive,
   isNavHrefActive,
   isSeriesNavActive,
 } from "@/components/ui/navigation-menu"
+import { Gamepad2, MapPin } from "lucide-react"
 
 const ICON_STROKE = 1.5
 
@@ -114,6 +116,18 @@ export function NavbarGlass() {
       label: t("nav.series"),
       icon: LuTv,
       active: isSeriesNavActive(pathname),
+    },
+    {
+      href: "/games",
+      label: t("nav.games"),
+      icon: Gamepad2,
+      active: isGamesNavActive(pathname),
+    },
+    {
+      href: "/cinemas",
+      label: t("nav.cinemas"),
+      icon: MapPin,
+      active: isActive(pathname, "/cinemas"),
     },
   ] as const
 

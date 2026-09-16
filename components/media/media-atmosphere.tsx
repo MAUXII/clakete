@@ -1,28 +1,11 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
 import { cn } from "@/lib/utils"
+import { useAtmosphereWashSource } from "@/hooks/use-atmosphere-wash-source"
 
 const FADE =
   "linear-gradient(180deg, #000 0%, #000 22%, rgba(0,0,0,0.55) 48%, transparent 82%)"
-
-const PLACEHOLDER_TINTS = [
-  "rgb(48, 22, 18)",
-  "rgb(16, 32, 44)",
-  "rgb(16, 38, 28)",
-  "rgb(34, 18, 46)",
-  "rgb(40, 30, 14)",
-  "rgb(22, 22, 40)",
-] as const
-
-function seedIndex(seed?: string) {
-  if (!seed) return 0
-  let hash = 0
-  for (let i = 0; i < seed.length; i += 1) {
-    hash = (hash + seed.charCodeAt(i) * (i + 1)) % 6
-  }
-  return hash
-}
 
 /**
  * Leitour-style blurred atmosphere wash behind media pages (films, series).
@@ -41,61 +24,7 @@ export function MediaAtmosphere({
   soft?: boolean
   contained?: boolean
 }) {
-  const [tint, setTint] = useState<string>(
-    () => PLACEHOLDER_TINTS[seedIndex(seed)] ?? "rgb(14, 16, 20)",
-  )
-
-  useEffect(() => {
-    if (!coverUrl) {
-      setTint(PLACEHOLDER_TINTS[seedIndex(seed)] ?? "rgb(14, 16, 20)")
-      return
-    }
-
-    let cancelled = false
-    const img = new Image()
-    img.crossOrigin = "anonymous"
-    img.onload = () => {
-      try {
-        const canvas = document.createElement("canvas")
-        const size = 32
-        canvas.width = size
-        canvas.height = size
-        const ctx = canvas.getContext("2d")
-        if (!ctx) return
-        ctx.drawImage(img, 0, 0, size, size)
-        const data = ctx.getImageData(0, 0, size, size).data
-        let r = 0
-        let g = 0
-        let b = 0
-        let n = 0
-        for (let i = 0; i < data.length; i += 4) {
-          const a = data[i + 3] ?? 0
-          if (a < 200) continue
-          r += data[i] ?? 0
-          g += data[i + 1] ?? 0
-          b += data[i + 2] ?? 0
-          n += 1
-        }
-        if (!cancelled && n > 0) {
-          setTint(
-            `rgb(${Math.round((r / n) * 0.45)}, ${Math.round((g / n) * 0.45)}, ${Math.round((b / n) * 0.45)})`,
-          )
-        }
-      } catch {
-        /* fallback to placeholder */
-      }
-    }
-
-    // Use our internal proxy for TMDB images so CORS never fails
-    const sampleSrc = coverUrl.includes("image.tmdb.org")
-      ? `/api/proxy-image?url=${encodeURIComponent(coverUrl)}`
-      : coverUrl
-
-    img.src = sampleSrc
-    return () => {
-      cancelled = true
-    }
-  }, [coverUrl, seed])
+  const { tint, washSrc } = useAtmosphereWashSource(coverUrl, seed)
 
   useEffect(() => {
     if (contained) return
@@ -120,10 +49,10 @@ export function MediaAtmosphere({
       )}
       style={{ background: tint }}
     >
-      {coverUrl ? (
+      {washSrc ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          src={coverUrl}
+          src={washSrc}
           alt=""
           className={cn(wash, soft ? "opacity-25" : "opacity-70")}
           style={{ maskImage: FADE, WebkitMaskImage: FADE }}

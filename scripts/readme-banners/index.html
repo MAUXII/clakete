@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <title>Clakete README banners</title>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&display=swap"
+    />
+    <style>
+      @font-face {
+        font-family: "Virgil";
+        src: url("https://excalidraw.com/Virgil.woff2") format("woff2");
+        font-display: block;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        background: #111;
+        font-family: Virgil, Caveat, "Segoe Print", cursive;
+        padding: 24px;
+      }
+
+      .banner {
+        width: 1280px;
+        height: 320px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 24px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .label {
+        font-size: 96px;
+        letter-spacing: 0.02em;
+        line-height: 1;
+        user-select: none;
+        transform: rotate(-1.2deg);
+        background: none;
+      }
+
+      .filmes {
+        background: #ff0048;
+        color: #fff;
+      }
+
+      .series {
+        background: #1a0810;
+        color: #ff8fb0;
+      }
+
+      .diario {
+        background: #9b1238;
+        color: #fff7f9;
+      }
+
+      .listas {
+        background: #ff4d7a;
+        color: #2a0812;
+      }
+
+      .games {
+        background: #3d0018;
+        color: #ffb3c9;
+      }
+
+      .cinemas {
+        background: #c4003a;
+        color: #fff;
+      }
+
+      .perfil {
+        background: #2a0812;
+        color: #ff0048;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="banner filmes" data-name="filmes"><span class="label">Filmes</span></div>
+    <div class="banner series" data-name="series"><span class="label">Séries</span></div>
+    <div class="banner diario" data-name="diario"><span class="label">Diário</span></div>
+    <div class="banner listas" data-name="listas"><span class="label">Listas</span></div>
+    <div class="banner games" data-name="games"><span class="label">Games</span></div>
+    <div class="banner cinemas" data-name="cinemas"><span class="label">Cinemas</span></div>
+    <div class="banner perfil" data-name="perfil"><span class="label">Perfil</span></div>
+  </body>
+</html>
