@@ -23,15 +23,17 @@
 # misc
 .DS_Store
 *.pem
+debug.log
 
 *.txt
 *.md
 !docs/**/*.md
 !README.md
-*.sql
-!supabase/migrations/*.sql
-!docs/sql/*.sql
 
+# SQL / migrations internas — não publicar no GitHub
+*.sql
+docs/sql/
+supabase/migrations/
 
 # debug
 npm-debug.log*
