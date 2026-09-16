@@ -40,7 +40,7 @@ export function ConnectWinDialog({
 
   const share = async () => {
     const chain = path.map((n) => n.name).join(" → ")
-    const text = `Connect the Stars no Clakete\n${originName} → ${targetName}\n${steps} ${steps === 1 ? "passo" : "passos"}\n${chain}\nhttps://clakete.vercel.app/games/connect-the-stars`
+    const text = `Connect the Stars no Clakete\n${originName} → ${targetName}\n${steps} ${steps === 1 ? "passo" : "passos"}\n${chain}\nhttps://clakete.xyz/games/connect-the-stars`
     try {
       if (navigator.share) {
         await navigator.share({ text, title: "Connect the Stars" })

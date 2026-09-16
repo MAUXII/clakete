@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://clakete.com">clakete.com</a>
+  <a href="https://clakete.xyz">clakete.xyz</a>
   ·
   Next.js · Supabase · TMDB
 </p>
