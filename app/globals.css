@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+@property --ck-nav-w {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 820px;
+}
+
 /* Shared-post locate highlight (WhatsApp-style flash) */
 @keyframes feed-post-locate {
   0%,
@@ -221,6 +227,10 @@ html[data-hide-chrome] [data-clakete-chrome] {
 }
 
 /* Scrollbar fina, quadrada, sem setas — página + `.custom-scrollbar` */
+html {
+  transition: --ck-nav-w 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
 html,
 body,
 .custom-scrollbar {
@@ -470,6 +480,14 @@ input:-webkit-autofill:active {
 @layer base {
   :root {
     --clakete-promo-h: 0px;
+    --ck-nav-h: 52px;
+    --ck-nav-w: 820px;
+    --ck-nav-pad-x: 16px;
+    --ck-content-pad-x: 16px;
+    /* Leitour `.lt-shell` parity for Glass profile */
+    --ck-glass-max-width: 820px;
+    --ck-glass-max-width-wide: 1060px;
+    --ck-glass-content-pad-x: 16px;
     --background: 0 0% 100%;
     --foreground: 240 10% 3.9%;
     --card: 0 0% 100%;
@@ -552,3 +570,230 @@ input:-webkit-autofill:active {
     @apply bg-background text-foreground;
   }
 }
+
+/* —— Top nav (Leitour-style layout) —— */
+html[data-ck-design="glass"],
+html[data-ck-design="glass"] body {
+  background-color: #151618 !important;
+}
+
+[data-ck-atmosphere="tint"] .ck-nav-gradient {
+  opacity: 0 !important;
+}
+
+.ck-glass-shell {
+  width: 100%;
+  max-width: var(--ck-glass-max-width, 820px);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: var(--ck-content-pad-x, var(--ck-glass-content-pad-x, 16px));
+  padding-right: var(--ck-content-pad-x, var(--ck-glass-content-pad-x, 16px));
+  box-sizing: border-box;
+}
+
+.ck-glass-shell-wide {
+  width: 100%;
+  max-width: var(--ck-glass-max-width-wide, 1060px);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: var(--ck-content-pad-x, var(--ck-glass-content-pad-x, 16px));
+  padding-right: var(--ck-content-pad-x, var(--ck-glass-content-pad-x, 16px));
+  box-sizing: border-box;
+}
+
+@media (min-width: 1092px) {
+  .ck-glass-shell-wide {
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
+
+/* —— Grelha de Catálogo Glass (estilo Leitour: 4 colunas no desktop) —— */
+.ck-glass-shell .ck-catalog-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 1.5rem 0.875rem !important;
+}
+
+@media (min-width: 640px) {
+  .ck-glass-shell .ck-catalog-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 1.75rem 1rem !important;
+  }
+}
+
+@media (min-width: 768px) {
+  .ck-glass-shell .ck-catalog-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 2rem 1.125rem !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  .ck-glass-shell .ck-catalog-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 2rem 1.125rem !important;
+  }
+}
+
+.ck-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  height: var(--ck-nav-h, 52px);
+  padding: 0 var(--ck-nav-pad-x);
+  box-sizing: border-box;
+}
+
+.ck-center-and-right {
+  --side-width: max(0px, calc((100vw - var(--ck-nav-w)) / 2));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-width: 0;
+  width: calc(var(--ck-nav-w) + var(--side-width) - var(--ck-nav-pad-x));
+  max-width: calc(100% - 0.5rem);
+}
+
+.ck-nav-links {
+  display: none;
+  align-items: center;
+  gap: 1.25rem;
+  padding-left: var(--ck-content-pad-x);
+}
+
+@media (min-width: 768px) {
+  .ck-nav-links {
+    display: flex;
+  }
+}
+
+.ck-nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  line-height: 1;
+  color: hsl(var(--foreground) / 0.5);
+  transition: color 0.15s ease;
+}
+
+.ck-nav-link:hover {
+  color: hsl(var(--foreground) / 0.85);
+}
+
+.ck-nav-link[data-active="true"] {
+  color: hsl(var(--foreground));
+}
+
+/* —— Diálogos em modo Glass (estilo Leitour) —— */
+html[data-ck-design="glass"] [data-ck-dialog-overlay] {
+  background-color: rgba(0, 0, 0, 0.65) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+}
+
+html[data-ck-design="glass"] [data-ck-dialog-content]:not(.bg-transparent):not([data-ck-custom-dialog]) {
+  background-color: rgba(22, 23, 25, 0.96) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 28px 64px -16px rgba(0, 0, 0, 0.9) !important;
+  backdrop-filter: blur(28px) !important;
+  -webkit-backdrop-filter: blur(28px) !important;
+  color: #ffffff !important;
+}
+
+html[data-ck-design="glass"] [data-ck-dialog-content] [data-ck-dialog-close] {
+  background-color: rgba(255, 255, 255, 0.06);
+  border-radius: 9999px;
+  color: rgba(255, 255, 255, 0.7);
+  padding: 6px;
+  transition: all 0.15s ease;
+  top: 1rem;
+  right: 1rem;
+}
+
+html[data-ck-design="glass"] [data-ck-dialog-content] [data-ck-dialog-close]:hover {
+  background-color: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+}
+
+html[data-ck-design="glass"] [data-ck-dialog-content] [data-ck-dialog-title] {
+  color: #ffffff !important;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+html[data-ck-design="glass"] [data-ck-dialog-content] input:not([type="checkbox"]):not([type="radio"]),
+html[data-ck-design="glass"] [data-ck-dialog-content] textarea {
+  background-color: rgba(255, 255, 255, 0.04) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+  border-radius: 12px !important;
+}
+
+html[data-ck-design="glass"] [data-ck-dialog-content] input:not([type="checkbox"]):not([type="radio"]):focus,
+html[data-ck-design="glass"] [data-ck-dialog-content] textarea:focus {
+  border-color: rgba(255, 255, 255, 0.25) !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* —— Command / Busca Global em modo Glass —— */
+html[data-ck-design="glass"] [cmdk-root] {
+  background-color: transparent !important;
+  color: #ffffff !important;
+}
+
+html[data-ck-design="glass"] [cmdk-input-wrapper] {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+html[data-ck-design="glass"] [cmdk-input] {
+  color: #ffffff !important;
+}
+
+/* Busca Glass: input/lista em LiquidGlass, sem caixa opaca do dialog */
+html[data-ck-design="glass"] [data-ck-search-glass] {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+html[data-ck-design="glass"] [data-ck-search-glass] [cmdk-input-wrapper] {
+  border-bottom: none !important;
+  background: transparent !important;
+}
+
+html[data-ck-design="glass"] [data-ck-search-glass] input:not([type="checkbox"]):not([type="radio"]),
+html[data-ck-design="glass"] [data-ck-search-glass] [cmdk-input] {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+html[data-ck-design="glass"] [cmdk-item] {
+  border-radius: 10px !important;
+  color: rgba(255, 255, 255, 0.85) !important;
+  transition: all 0.15s ease;
+}
+
+html[data-ck-design="glass"] [cmdk-item][data-selected="true"],
+html[data-ck-design="glass"] [cmdk-item]:hover {
+  background-color: rgba(255, 255, 255, 0.07) !important;
+  color: #ffffff !important;
+}
+
+html[data-ck-design="glass"] [cmdk-group-heading] {
+  color: rgba(255, 255, 255, 0.45) !important;
+  font-size: 11px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+}
+
+

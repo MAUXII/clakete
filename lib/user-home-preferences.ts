@@ -1,5 +1,5 @@
 import type { Json } from "@/lib/supabase/database.types"
-import { isProfileThemeId, type ProfileThemeId } from "@/lib/plans"
+import { hasShiningAccess, isProfileThemeId, type PlanFields, type ProfileThemeId } from "@/lib/plans"
 import {
   DEFAULT_TMDB_LANGUAGE,
   DEFAULT_WATCH_REGION,
@@ -9,11 +9,29 @@ import {
   type WatchRegionId,
 } from "@/lib/locale-prefs"
 import { DEFAULT_BRAND_HEX, normalizeHex } from "@/lib/brand-accent"
+import {
+  DEFAULT_ATMOSPHERE_MODE,
+  DEFAULT_ATMOSPHERE_SOURCE,
+  DEFAULT_GLASS_BANNER_LAYOUT,
+  isAtmosphereMode,
+  isAtmosphereSource,
+  isGlassBannerLayout,
+  type AtmosphereMode,
+  type AtmosphereSource,
+  type GlassBannerLayout,
+} from "@/lib/atmosphere"
 
 export type ColorModePreference = "light" | "dark" | "system"
 
 export function isColorModePreference(v: unknown): v is ColorModePreference {
   return v === "light" || v === "dark" || v === "system"
+}
+
+/** App chrome / profile shell visual system. */
+export type DesignMode = "classic" | "glass"
+
+export function isDesignMode(v: unknown): v is DesignMode {
+  return v === "classic" || v === "glass"
 }
 
 /**
@@ -38,6 +56,33 @@ export interface UserHomePreferences {
   accent_color?: string
   /** App light/dark preference (next-themes). */
   color_mode?: ColorModePreference
+  /** Classic (legacy) vs Glass (Leitour-inspired) chrome. */
+  design_mode?: DesignMode
+  /**
+   * Shining: show profile banner strip.
+   * Default true when omitted (opt-out).
+   */
+  show_profile_banner?: boolean
+  /**
+   * Shining: show REDRUM badge on profile/feed.
+   * Default true when omitted (opt-out).
+   */
+  show_redrum_badge?: boolean
+  /**
+   * Viewer: Glass hub atmosphere intensity (all profiles you view).
+   * Default vivid when omitted.
+   */
+  atmosphere_mode?: AtmosphereMode
+  /**
+   * Viewer: seed image for atmosphere — banner or avatar.
+   * Default banner when omitted.
+   */
+  atmosphere_source?: AtmosphereSource
+  /**
+   * Viewer: Glass profile banner layout — contained (current) or full-bleed.
+   * Default contained when omitted.
+   */
+  glass_banner_layout?: GlassBannerLayout
 }
 
 export const defaultUserHomePreferences: UserHomePreferences = {
@@ -50,6 +95,12 @@ export const defaultUserHomePreferences: UserHomePreferences = {
   tmdb_language: DEFAULT_TMDB_LANGUAGE,
   accent_color: DEFAULT_BRAND_HEX,
   color_mode: "dark",
+  design_mode: "classic",
+  show_profile_banner: true,
+  show_redrum_badge: true,
+  atmosphere_mode: DEFAULT_ATMOSPHERE_MODE,
+  atmosphere_source: DEFAULT_ATMOSPHERE_SOURCE,
+  glass_banner_layout: DEFAULT_GLASS_BANNER_LAYOUT,
 }
 
 export function parseUserHomePreferences(raw: Json | null | undefined): UserHomePreferences {
@@ -87,6 +138,30 @@ export function parseUserHomePreferences(raw: Json | null | undefined): UserHome
     base.color_mode = o.color_mode
   }
 
+  if (isDesignMode(o.design_mode)) {
+    base.design_mode = o.design_mode
+  }
+
+  if (typeof o.show_profile_banner === "boolean") {
+    base.show_profile_banner = o.show_profile_banner
+  }
+
+  if (typeof o.show_redrum_badge === "boolean") {
+    base.show_redrum_badge = o.show_redrum_badge
+  }
+
+  if (isAtmosphereMode(o.atmosphere_mode)) {
+    base.atmosphere_mode = o.atmosphere_mode
+  }
+
+  if (isAtmosphereSource(o.atmosphere_source)) {
+    base.atmosphere_source = o.atmosphere_source
+  }
+
+  if (isGlassBannerLayout(o.glass_banner_layout)) {
+    base.glass_banner_layout = o.glass_banner_layout
+  }
+
   return base
 }
 
@@ -102,12 +177,23 @@ export function serializeUserHomePreferences(prefs: UserHomePreferences): Json {
     tmdb_language: prefs.tmdb_language ?? DEFAULT_TMDB_LANGUAGE,
     accent_color: accent,
     color_mode: prefs.color_mode ?? "dark",
+    design_mode: prefs.design_mode ?? "classic",
+    atmosphere_mode: prefs.atmosphere_mode ?? DEFAULT_ATMOSPHERE_MODE,
+    atmosphere_source: prefs.atmosphere_source ?? DEFAULT_ATMOSPHERE_SOURCE,
+    glass_banner_layout: prefs.glass_banner_layout ?? DEFAULT_GLASS_BANNER_LAYOUT,
   }
   if (prefs.favorite_genre_ids?.length) {
     out.favorite_genre_ids = prefs.favorite_genre_ids
   }
   if (prefs.profile_theme && prefs.profile_theme !== "default") {
     out.profile_theme = prefs.profile_theme
+  }
+  // Opt-out: omit when true (default on); persist false when user disables.
+  if (prefs.show_profile_banner === false) {
+    out.show_profile_banner = false
+  }
+  if (prefs.show_redrum_badge === false) {
+    out.show_redrum_badge = false
   }
   return out as Json
 }
@@ -193,4 +279,13 @@ export function setHomeBackdropInsidePreferences(
     return o as Json
   }
   return o as Json
+}
+
+/** REDRUM badge: Shining access + owner did not opt out (`show_redrum_badge !== false`). */
+export function shouldShowRedrumBadge(
+  planFields: PlanFields,
+  homePreferences?: Json | null,
+): boolean {
+  if (!hasShiningAccess(planFields)) return false
+  return parseUserHomePreferences(homePreferences).show_redrum_badge !== false
 }

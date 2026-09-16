@@ -36,6 +36,8 @@ type CommandDialogProps = DialogProps & {
    * (e.g. "the iron giant" vs "O Gigante de Ferro").
    */
   shouldFilter?: boolean
+  /** Busca Glass: painel transparente + tokens CSS dedicados. */
+  glassSearch?: boolean
 }
 
 const CommandDialog = ({
@@ -44,12 +46,14 @@ const CommandDialog = ({
   commandClassName,
   hideClose = true,
   shouldFilter = false,
+  glassSearch = false,
   ...props
 }: CommandDialogProps) => {
   return (
     <Dialog {...props}>
       <DialogContent
         hideClose={hideClose}
+        data-ck-search-glass={glassSearch ? "" : undefined}
         className={cn(
           "overflow-hidden gap-0 p-0 sm:rounded-xl",
           contentClassName,
@@ -71,9 +75,14 @@ const CommandDialog = ({
 
 const CommandInput = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive.Input>,
-  React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input>
->(({ className, ...props }, ref) => (
-  <div className="flex items-center border-b px-3" cmdk-input-wrapper="">
+  React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input> & {
+    wrapperClassName?: string
+  }
+>(({ className, wrapperClassName, ...props }, ref) => (
+  <div
+    className={cn("flex items-center border-b px-3", wrapperClassName)}
+    cmdk-input-wrapper=""
+  >
     <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
     <CommandPrimitive.Input
       ref={ref}
