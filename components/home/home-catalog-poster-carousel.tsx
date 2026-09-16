@@ -12,15 +12,25 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { filmHref } from "@/lib/media-href"
 import { cn } from "@/lib/utils"
 import type { Movie } from "@/types/movie"
+import { useDesignMode } from "@/hooks/use-design-mode"
 
 const itemBasis = "basis-[42%] pl-2 sm:basis-[38%] lg:basis-[72%]"
+const glassPoster =
+  "rounded-[12px] bg-white/[0.04] ring-1 ring-white/10 shadow-[0_14px_32px_-14px_rgba(0,0,0,0.9)]"
+const classicPoster = "rounded-lg border border-border bg-muted shadow-sm"
 
 function PosterSkeletonItems({ count = 3 }: { count?: number }) {
+  const isGlass = useDesignMode() === "glass"
   return (
     <>
       {Array.from({ length: count }).map((_, i) => (
         <CarouselItem key={i} className={itemBasis}>
-          <Skeleton className="aspect-[2/3] w-full rounded-lg border border-border" />
+          <Skeleton
+            className={cn(
+              "aspect-[2/3] w-full",
+              isGlass ? glassPoster : "rounded-lg border border-border",
+            )}
+          />
         </CarouselItem>
       ))}
     </>
@@ -41,6 +51,8 @@ export function HomeCatalogPosterCarousel({
 }) {
   const [api, setApi] = useState<CarouselApi>()
   const [paused, setPaused] = useState(false)
+  const isGlass = useDesignMode() === "glass"
+  const posterShell = isGlass ? glassPoster : classicPoster
 
   useEffect(() => {
     if (!api || paused || loading || movies.length < 2) return
@@ -85,7 +97,7 @@ export function HomeCatalogPosterCarousel({
                   })}
                   className="group block"
                 >
-                  <div className="relative aspect-[2/3] overflow-hidden rounded-lg border border-border bg-muted shadow-sm">
+                  <div className={cn("relative aspect-[2/3] overflow-hidden", posterShell)}>
                     <CatalogPosterImage
                       src={
                         movie.poster_path

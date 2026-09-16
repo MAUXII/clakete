@@ -5,27 +5,36 @@ import { useRouter } from "next/navigation"
 import { useDebounce } from "@/hooks/use-debounce"
 import { useMediaSearch } from "@/hooks/use-media-search"
 import { useUserSearch } from "@/hooks/use-user-search"
+import { useDesignMode } from "@/hooks/use-design-mode"
 import { CommandDialog } from "@/components/ui/command"
 import { Search } from "lucide-react"
 import { Button } from "../ui/button"
 import { MediaSearchCommandContent } from "./media-search-command-content"
 import { useT } from "@/components/providers/i18n-provider"
 import { filmHref, seriesHref } from "@/lib/media-href"
+import { cn } from "@/lib/utils"
 
 export function SearchCommand({
   variant = "default",
 }: {
-  variant?: "default" | "rail"
+  variant?: "default" | "rail" | "nav"
 }) {
   const { t } = useT()
   const router = useRouter()
+  const designMode = useDesignMode()
+  const isGlass = designMode === "glass"
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState("")
-  const debouncedQuery = useDebounce(query, 300)
-  const { filmResults, seriesResults, loading } = useMediaSearch(debouncedQuery, open)
+  const debouncedQuery = useDebounce(query, isGlass ? 480 : 300)
+  const querySettled = query.trim() === debouncedQuery.trim()
+  const searchEnabled = open && (!isGlass || debouncedQuery.trim().length > 0)
+  const { filmResults, seriesResults, loading } = useMediaSearch(
+    debouncedQuery,
+    searchEnabled,
+  )
   const { results: peopleResults, loading: peopleLoading } = useUserSearch(
     debouncedQuery,
-    open,
+    searchEnabled,
   )
 
   useEffect(() => {
@@ -39,11 +48,27 @@ export function SearchCommand({
     return () => document.removeEventListener("keydown", down)
   }, [])
 
+  const handleOpenChange = (next: boolean) => {
+    setOpen(next)
+    if (!next) setQuery("")
+  }
+
   const dialog = (
-    <CommandDialog open={open} onOpenChange={setOpen}>
+    <CommandDialog
+      open={open}
+      onOpenChange={handleOpenChange}
+      glassSearch={isGlass}
+      contentClassName={cn(
+        isGlass &&
+          "!top-[18vh] !translate-y-0 border-0 bg-transparent p-0 shadow-none sm:max-w-xl sm:rounded-none data-[state=open]:!slide-in-from-top-3 data-[state=closed]:!slide-out-to-top-2 data-[state=closed]:!slide-out-to-left-1/2 data-[state=open]:!slide-in-from-left-1/2",
+      )}
+      commandClassName={cn(isGlass && "bg-transparent text-white")}
+    >
       <MediaSearchCommandContent
+        appearance={isGlass ? "glass" : "default"}
         query={query}
         onQueryChange={setQuery}
+        querySettled={querySettled}
         filmResults={filmResults}
         seriesResults={seriesResults}
         loading={loading}
@@ -59,7 +84,7 @@ export function SearchCommand({
               release_date: movie.release_date,
             }),
           )
-          setOpen(false)
+          handleOpenChange(false)
         }}
         onSelectSeries={(series) => {
           router.push(
@@ -70,11 +95,11 @@ export function SearchCommand({
               first_air_date: series.first_air_date,
             }),
           )
-          setOpen(false)
+          handleOpenChange(false)
         }}
         onSelectPerson={(person) => {
           router.push(`/${person.username}`)
-          setOpen(false)
+          handleOpenChange(false)
         }}
       />
     </CommandDialog>
@@ -90,6 +115,22 @@ export function SearchCommand({
         >
           <Search className="size-5 shrink-0" strokeWidth={1.75} />
           <span>{t("common.search")}</span>
+        </button>
+        {dialog}
+      </>
+    )
+  }
+
+  if (variant === "nav") {
+    return (
+      <>
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          aria-label={t("common.search")}
+          className="inline-flex rounded-md p-1.5 text-foreground/45 transition hover:bg-muted/50 hover:text-foreground"
+        >
+          <Search className="h-4 w-4" strokeWidth={1.5} />
         </button>
         {dialog}
       </>

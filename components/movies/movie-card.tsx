@@ -14,6 +14,7 @@ import { LogWatchDialog } from '@/components/movies/log-watch-dialog'
 import { ConfirmUnwatchDialog } from '@/components/movies/confirm-unwatch-dialog'
 import { PosterActionsMenu } from '@/components/movies/poster-actions-menu'
 import { useT } from '@/components/providers/i18n-provider'
+import { useDesignMode } from '@/hooks/use-design-mode'
 
 interface MovieCardProps {
   movie?:{
@@ -24,6 +25,7 @@ interface MovieCardProps {
     backdrop_path?: string | null;
     vote_average?: number;
     release_date?: string | null;
+    director?: string | null;
   }
   externalid?: number
  
@@ -32,9 +34,10 @@ interface MovieCardProps {
   variant?: 'default' | 'nav-fill'
   /** Extra buttons rendered under eye/heart on poster hover (e.g. edit menu). */
   extraActions?: ReactNode
+  hideCaption?: boolean
 }
 
-export function MovieCard({ movie, externalid, href: hrefOverride, variant = 'default', extraActions }: MovieCardProps) {
+export function MovieCard({ movie, externalid, href: hrefOverride, variant = 'default', extraActions, hideCaption = false }: MovieCardProps) {
   const { t } = useT()
   const filmId = externalid || movie?.id || 0
   const href = useMediaCardHref({
@@ -106,15 +109,19 @@ export function MovieCard({ movie, externalid, href: hrefOverride, variant = 'de
 
   const isNavFill = variant === 'nav-fill'
   const year = movie?.release_date?.slice(0, 4) ?? null
+  const designMode = useDesignMode()
+  const isGlass = designMode === 'glass'
 
   const renderCard = () => {
     const cardInner = (
       <div
         className={cn(
-          'relative w-full overflow-hidden border-[1px] border-black/15 shadow-black/5 dark:border-white/15 dark:shadow-white/5 shadow-sm',
+          'relative w-full overflow-hidden',
           isNavFill
             ? 'h-full flex-1 rounded-xl aspect-auto bg-muted'
-            : 'h-full rounded-[5px] aspect-[2/3]',
+            : isGlass
+              ? 'h-full rounded-[12px] aspect-[2/3] bg-white/[0.04] ring-1 ring-white/10 shadow-[0_14px_32px_-14px_rgba(0,0,0,0.9)] transition-[transform,filter] duration-300 ease-out group-hover:scale-[1.02] group-hover:ring-white/25 group-hover:shadow-[0_20px_40px_-16px_rgba(0,0,0,0.95)]'
+              : 'h-full rounded-[5px] aspect-[2/3] border-[1px] border-black/15 shadow-black/5 dark:border-white/15 dark:shadow-white/5 shadow-sm',
         )}
       >
         <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
@@ -133,22 +140,33 @@ export function MovieCard({ movie, externalid, href: hrefOverride, variant = 'de
           </div>
         )}
         
-        {movie?.vote_average ? (
+        {!isGlass && movie?.vote_average ? (
           <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
             <Badge variant="secondary" className="font-medium text-brand rounded-sm">
               {movie.vote_average.toFixed(1)} ★
             </Badge>
           </div>
         ) : null}
-        <div className="absolute flex-col top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        <div className="absolute flex-col top-2 right-2 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
           <button
             type="button"
             onClick={handleWatch}
-            className={`p-2 rounded-md border transition-colors ${
-              localWatched 
-                ? "bg-[#280F16] text-brand border-brand/20 hover:bg-[#280F16]" 
-                : "bg-secondary text-secondary-foreground border-transparent hover:bg-[#280F16] hover:text-brand hover:border-brand/20"
-            }`}
+            className={cn(
+              "p-2 transition-all",
+              isGlass
+                ? cn(
+                    "rounded-full ring-1 shadow-sm backdrop-blur-md",
+                    localWatched
+                      ? "bg-black/85 text-brand ring-brand/40"
+                      : "bg-black/65 text-white/90 ring-white/15 hover:bg-black/90 hover:scale-105 active:scale-95"
+                  )
+                : cn(
+                    "rounded-md border",
+                    localWatched
+                      ? "bg-[#280F16] text-brand border-brand/20 hover:bg-[#280F16]"
+                      : "bg-secondary text-secondary-foreground border-transparent hover:bg-[#280F16] hover:text-brand hover:border-brand/20"
+                  )
+            )}
             title={localWatched ? t("film.unmarkWatched") : t("film.markWatched")}
           >
             {localWatched ? <IoEye className="w-4 h-4" /> : <IoEyeOutline className="w-4 h-4" />}
@@ -156,11 +174,22 @@ export function MovieCard({ movie, externalid, href: hrefOverride, variant = 'de
           <button
             type="button"
             onClick={handleLike}
-            className={`p-2 rounded-md border transition-colors ${
-              localLiked 
-                ? "bg-[#280F16] text-brand border-brand/20 hover:bg-[#280F16]" 
-                : "bg-secondary text-secondary-foreground border-transparent hover:bg-[#280F16] hover:text-brand hover:border-brand/20"
-            }`}
+            className={cn(
+              "p-2 transition-all",
+              isGlass
+                ? cn(
+                    "rounded-full ring-1 shadow-sm backdrop-blur-md",
+                    localLiked
+                      ? "bg-black/85 text-brand ring-brand/40"
+                      : "bg-black/65 text-white/90 ring-white/15 hover:bg-black/90 hover:scale-105 active:scale-95"
+                  )
+                : cn(
+                    "rounded-md border",
+                    localLiked
+                      ? "bg-[#280F16] text-brand border-brand/20 hover:bg-[#280F16]"
+                      : "bg-secondary text-secondary-foreground border-transparent hover:bg-[#280F16] hover:text-brand hover:border-brand/20"
+                  )
+            )}
             title={localLiked ? t("film.liked") : t("film.like")}
           >
             {localLiked ? <IoHeart className="w-4 h-4" /> : <IoHeartOutline className="w-4 h-4" />}
@@ -185,8 +214,8 @@ export function MovieCard({ movie, externalid, href: hrefOverride, variant = 'de
       return (
         <div
           className={cn(
-            'group flex flex-col gap-2 transition-transform duration-300',
-            isNavFill && 'h-full w-full',
+            'group flex flex-col transition-transform duration-300',
+            isNavFill ? 'h-full w-full' : 'gap-1',
           )}
         >
           {cardInner}
@@ -198,8 +227,8 @@ export function MovieCard({ movie, externalid, href: hrefOverride, variant = 'de
       <Link
         href={href}
         className={cn(
-          'group flex flex-col gap-2 transition-transform duration-300',
-          isNavFill && 'h-full w-full',
+          'group flex flex-col transition-transform duration-300',
+          isNavFill ? 'h-full w-full' : 'gap-1',
         )}
       >
         {cardInner}

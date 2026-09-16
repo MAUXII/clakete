@@ -3,11 +3,14 @@
 import * as React from "react"
 import type { ReactNode } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { MdOutlineKeyboardDoubleArrowUp } from "react-icons/md"
 import { cn } from "@/lib/utils"
-import { pageContainerClass } from "@/lib/page-container"
+import { pageContainerClass, glassProfileContainerClass } from "@/lib/page-container"
 import { useT } from "@/components/providers/i18n-provider"
+import { useDesignMode } from "@/hooks/use-design-mode"
+import { MagneticTabs } from "@/components/ruixen/magnetic-tabs"
+import { LiquidGlass } from "@/components/ui/glasscn/liquid-glass"
 import {
   SlidingIndicator,
   useSlidingIndicator,
@@ -42,6 +45,8 @@ function CatalogPillNav({
   ariaLabel: string
 }) {
   const pathname = usePathname()
+  const router = useRouter()
+  const designMode = useDesignMode()
   const listRef = React.useRef<HTMLElement>(null)
   const itemRefs = React.useRef<(HTMLAnchorElement | null)[]>([])
   const activeHref =
@@ -53,6 +58,24 @@ function CatalogPillNav({
   }, [items, activeHref])
 
   const indicator = useSlidingIndicator(activeHref, listRef, getActiveElement)
+
+  if (designMode === "glass") {
+    return (
+      <nav aria-label={ariaLabel} className="mb-8 min-w-0 w-full">
+        <MagneticTabs
+          glass
+          className="mt-glass"
+          size="md"
+          value={activeHref}
+          onChange={(href) => router.push(href)}
+          items={items.map((it) => ({
+            value: it.href,
+            label: it.label,
+          }))}
+        />
+      </nav>
+    )
+  }
 
   return (
     <nav
@@ -131,6 +154,27 @@ export function ListsSubNav({
   onChange: (next: ListsFilter) => void
 }) {
   const { t } = useT()
+  const designMode = useDesignMode()
+
+  if (designMode === "glass") {
+    return (
+      <nav aria-label={t("nav.lists")} className="mb-8 min-w-0 w-full">
+        <MagneticTabs
+          glass
+          className="mt-glass"
+          size="md"
+          value={value}
+          onChange={(val) => onChange(val as ListsFilter)}
+          items={[
+            { value: "all", label: t("lists.all") },
+            ...(showYoursTab ? [{ value: "yours", label: t("lists.yours") }] : []),
+            { value: "public", label: t("lists.public") },
+          ]}
+        />
+      </nav>
+    )
+  }
+
   const pill = (key: ListsFilter, label: string) => (
     <button
       key={key}
@@ -166,6 +210,8 @@ export function FilmsCatalogShell({
   disableNavbarOffset?: boolean
 }) {
   const pathname = usePathname()
+  const designMode = useDesignMode()
+  const isGlass = designMode === "glass"
   const catalogNavbarOffset =
     !disableNavbarOffset && CATALOG_NAVBAR_OFFSET_ROUTES.has(pathname)
 
@@ -173,10 +219,10 @@ export function FilmsCatalogShell({
     <div className={cn("relative min-w-0 w-full", compact && "flex min-h-0 flex-1 flex-col")}>
       <div
         className={cn(
-          pageContainerClass,
+          isGlass ? glassProfileContainerClass : pageContainerClass,
           "relative",
           compact ? " flex min-h-0 flex-1 flex-col pb-4" : " pb-20",
-          catalogNavbarOffset && "mt-28",
+          catalogNavbarOffset && (isGlass ? "mt-[calc(var(--ck-nav-h,3.25rem)+1.5rem)]" : "mt-28"),
           className,
         )}
       >
@@ -201,15 +247,46 @@ export function FilmsCatalogHeader({
   description?: string
   actions?: ReactNode
 }) {
+  const designMode = useDesignMode()
+  const isGlass = designMode === "glass"
+
+  if (isGlass) {
+    return (
+      <header className="mb-8 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="text-[28px] font-semibold tracking-tight text-white">
+            {title}
+          </h1>
+          {description ? (
+            <p className="mt-1 text-sm text-white/40">
+              {description}
+            </p>
+          ) : null}
+        </div>
+        {actions ? (
+          <div className="flex shrink-0 flex-wrap items-center gap-2.5">
+            {actions}
+          </div>
+        ) : null}
+      </header>
+    )
+  }
+
   return (
-    <header className="mb-8 flex flex-col gap-6 border-b border-border pb-8 sm:flex-row sm:items-end sm:justify-between">
+    <header className="mb-8 flex flex-col gap-6 pb-8 border-b border-border sm:flex-row sm:items-end sm:justify-between">
       <div className="min-w-0 space-y-3">
         {eyebrow ? (
-          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">{eyebrow}</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+            {eyebrow}
+          </p>
         ) : null}
-        <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">{title}</h1>
+        <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+          {title}
+        </h1>
         {description ? (
-          <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">{description}</p>
+          <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
+            {description}
+          </p>
         ) : null}
       </div>
       {actions ? <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div> : null}
@@ -221,14 +298,33 @@ export const FilmsToolbarIconButton = React.forwardRef<
   HTMLButtonElement,
   React.ButtonHTMLAttributes<HTMLButtonElement>
 >(function FilmsToolbarIconButton({ className, children, ...props }, ref) {
+  const designMode = useDesignMode()
+  const isGlass = designMode === "glass"
+
+  if (isGlass) {
+    return (
+      <LiquidGlass className="!rounded-full">
+        <button
+          ref={ref}
+          type="button"
+          className={cn(
+            "inline-flex h-9 w-9 items-center justify-center text-white/80 transition hover:text-white active:scale-95",
+            className,
+          )}
+          {...props}
+        >
+          {children}
+        </button>
+      </LiquidGlass>
+    )
+  }
+
   return (
     <button
       ref={ref}
       type="button"
       className={cn(
-        "inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-border bg-muted/40 text-muted-foreground transition-colors",
-        "hover:border-brand/35 hover:bg-brand/10 hover:text-brand",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+        "inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-border bg-muted/40 text-muted-foreground transition-colors hover:border-brand/35 hover:bg-brand/10 hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
         className,
       )}
       {...props}
@@ -238,13 +334,65 @@ export const FilmsToolbarIconButton = React.forwardRef<
   )
 })
 
-/** Grelha alinhada à landing: cartões mais respirados, bordas suaves. */
+export const FilmsToolbarPillButton = React.forwardRef<
+  HTMLButtonElement,
+  React.ButtonHTMLAttributes<HTMLButtonElement>
+>(function FilmsToolbarPillButton({ className, children, ...props }, ref) {
+  const designMode = useDesignMode()
+  const isGlass = designMode === "glass"
+
+  if (isGlass) {
+    return (
+      <LiquidGlass className="!rounded-full">
+        <button
+          ref={ref}
+          type="button"
+          className={cn(
+            "inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white/85 transition hover:text-white active:scale-95",
+            className,
+          )}
+          {...props}
+        >
+          {children}
+        </button>
+      </LiquidGlass>
+    )
+  }
+
+  return (
+    <button
+      ref={ref}
+      type="button"
+      className={cn(
+        "inline-flex h-11 items-center gap-2 rounded-xl border border-border bg-muted/40 px-4 text-sm font-medium text-muted-foreground transition-colors hover:border-brand/35 hover:bg-brand/10 hover:text-brand",
+        className,
+      )}
+      {...props}
+    >
+      {children}
+    </button>
+  )
+})
+
+/** Grelha alinhada à landing: cartões mais respirados, bordas suaves. No modo glass dentro de ck-glass-shell, ck-catalog-grid usa 4 colunas. */
 export const filmsPosterGridClassName =
-  "grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5 md:grid-cols-4 lg:grid-cols-6 lg:gap-5"
+  "ck-catalog-grid grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5 md:grid-cols-4 lg:grid-cols-6 lg:gap-5"
 
 /** Mesmo “caixa” do poster em `MovieCard` (default): borda, raio e sombra. */
 export const filmsPosterSkeletonClassName =
   "relative aspect-[2/3] h-full w-full overflow-hidden rounded-[5px] border-[1px] border-black/15 bg-muted/50 shadow-sm shadow-black/5 dark:border-white/15 dark:bg-muted/30 dark:shadow-white/5"
+
+export function CatalogCardSkeleton() {
+  const designMode = useDesignMode()
+  if (designMode === "glass") {
+    return (
+      <div className="relative aspect-[2/3] w-full overflow-hidden rounded-[12px] bg-white/[0.04] ring-1 ring-white/10" />
+    )
+  }
+  return (
+    <div className={filmsPosterSkeletonClassName} />
+  )
+}
 
 export function FilmsScrollToTopFab({ visible, onClick }: { visible: boolean; onClick: () => void }) {
   if (!visible) return null

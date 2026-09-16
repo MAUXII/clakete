@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Textarea } from "@/components/ui/textarea"
 import { ShiningBadge } from "@/components/premium/shining-badge"
-import { hasShiningAccess } from "@/lib/plans"
+import { shouldShowRedrumBadge } from "@/lib/user-home-preferences"
 import { createNotification } from "@/lib/notifications"
 import {
   FeedEditDialog,
@@ -40,7 +40,9 @@ import {
   type FollowingFeedItem,
 } from "@/hooks/use-following-feed"
 import { avatarDisplaySrc } from "@/lib/next-remote-image"
+import { glassSurface } from "@/lib/glass-surface"
 import { cn } from "@/lib/utils"
+import { useDesignMode } from "@/hooks/use-design-mode"
 
 const COMMENT_MAX = 500
 
@@ -78,6 +80,7 @@ export function FeedWatchedPostCard({
 }) {
   const supabase = useSupabaseClient()
   const authUser = useUser()
+  const gs = glassSurface(useDesignMode() === "glass")
 
   const [liked, setLiked] = useState(item.likedByMe)
   const [likeCount, setLikeCount] = useState(item.likeCount)
@@ -432,15 +435,16 @@ export function FeedWatchedPostCard({
       data-feed-post={item.interactionId}
       data-feed-share={item.shareUid ?? undefined}
       className={cn(
-        "scroll-mt-24 border-b border-border/80 py-4 last:border-0",
+        "scroll-mt-24 border-b py-4 last:border-0",
+        gs.postBorder,
         highlighted && "feed-post-locate rounded-lg",
       )}
     >
       <div className="flex items-start gap-3">
         <Link href={profileHref} className="mt-0.5 shrink-0">
-          <Avatar className="size-10 border border-border">
+          <Avatar className={cn("size-10 border", gs.avatar)}>
             <AvatarImage src={avatarDisplaySrc(item.user.avatar_url) ?? undefined} alt="" />
-            <AvatarFallback className="bg-muted text-xs text-muted-foreground">
+            <AvatarFallback className={cn("text-xs", gs.avatarFb)}>
               {name[0]?.toUpperCase()}
             </AvatarFallback>
           </Avatar>
@@ -452,30 +456,36 @@ export function FeedWatchedPostCard({
               <header className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5 text-[13px] leading-snug">
                 <Link
                   href={profileHref}
-                  className="font-semibold text-foreground hover:text-brand"
+                  className={cn("font-semibold hover:text-brand", gs.fg)}
                 >
                   {name}
                 </Link>
-                {hasShiningAccess({
-                  plan: item.user.plan,
-                  plan_status: item.user.plan_status,
-                  plan_current_period_end: item.user.plan_current_period_end,
-                }) ? (
+                {shouldShowRedrumBadge(
+                  {
+                    plan: item.user.plan,
+                    plan_status: item.user.plan_status,
+                    plan_current_period_end: item.user.plan_current_period_end,
+                  },
+                  item.user.home_preferences,
+                ) ? (
                   <ShiningBadge size="sm" className="translate-y-[-1px]" />
                 ) : null}
-                <span className="text-muted-foreground">@{item.user.username}</span>
+                <span className={gs.muted}>@{item.user.username}</span>
                 {when ? (
                   <>
-                    <span className="text-muted-foreground">·</span>
-                    <span className="text-muted-foreground">{when}</span>
+                    <span className={gs.muted}>·</span>
+                    <span className={gs.muted}>{when}</span>
                   </>
                 ) : null}
               </header>
-              <p className="mt-0.5 text-[13px] text-muted-foreground">
+              <p className={cn("mt-0.5 text-[13px]", gs.muted)}>
                 {action}{" "}
                 <Link
                   href={href}
-                  className="font-medium text-foreground transition-colors hover:text-brand"
+                  className={cn(
+                    "font-medium transition-colors hover:text-brand",
+                    gs.fg,
+                  )}
                 >
                   {item.title}
                 </Link>
@@ -492,7 +502,7 @@ export function FeedWatchedPostCard({
                 <DropdownMenuTrigger asChild>
                   <button
                     type="button"
-                    className="rounded-full p-1.5 text-muted-foreground transition hover:bg-muted/50 hover:text-muted-foreground"
+                    className={cn("rounded-full p-1.5", gs.iconBtn)}
                     aria-label="Post options"
                     disabled={removing || editing}
                   >
@@ -523,7 +533,7 @@ export function FeedWatchedPostCard({
                 <DropdownMenuTrigger asChild>
                   <button
                     type="button"
-                    className="rounded-full p-1.5 text-muted-foreground transition hover:bg-muted/50 hover:text-muted-foreground"
+                    className={cn("rounded-full p-1.5", gs.iconBtn)}
                     aria-label="Post options"
                     disabled={hiding || reporting}
                   >
@@ -554,12 +564,17 @@ export function FeedWatchedPostCard({
       {media}
 
       {localTitle ? (
-        <p className="mt-3 text-[15px] font-semibold leading-snug text-foreground">
+        <p className={cn("mt-3 text-[15px] font-semibold leading-snug", gs.fg)}>
           {localTitle}
         </p>
       ) : null}
       {localCaption ? (
-        <p className="mt-1.5 whitespace-pre-wrap text-[14px] leading-relaxed text-muted-foreground">
+        <p
+          className={cn(
+            "mt-1.5 whitespace-pre-wrap text-[14px] leading-relaxed",
+            gs.body,
+          )}
+        >
           {localCaption}
         </p>
       ) : null}
@@ -571,9 +586,7 @@ export function FeedWatchedPostCard({
           disabled={liking}
           className={cn(
             "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs transition",
-            liked
-              ? "text-brand"
-              : "text-muted-foreground hover:bg-muted/50 hover:text-muted-foreground",
+            liked ? "text-brand" : gs.iconBtnIdle,
           )}
           aria-label="Like"
         >
@@ -585,9 +598,7 @@ export function FeedWatchedPostCard({
           onClick={openComments}
           className={cn(
             "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs transition",
-            commentsOpen
-              ? "text-foreground"
-              : "text-muted-foreground hover:bg-muted/50 hover:text-muted-foreground",
+            commentsOpen ? gs.fg : gs.iconBtnIdle,
           )}
           aria-label="Comment"
         >
@@ -615,7 +626,10 @@ export function FeedWatchedPostCard({
               toast.message("Could not copy link")
             }
           }}
-          className="ml-auto inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs text-muted-foreground transition hover:bg-muted/50 hover:text-muted-foreground"
+          className={cn(
+            "ml-auto inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs",
+            gs.iconBtn,
+          )}
           aria-label="Share"
         >
           <Share className="size-3.5" strokeWidth={2} />
@@ -623,14 +637,14 @@ export function FeedWatchedPostCard({
       </footer>
 
       {commentsOpen ? (
-        <div className="mt-3 space-y-3 rounded-xl border border-border/80 bg-muted/50 p-3">
+        <div className={cn("mt-3 space-y-3 rounded-xl border p-3", gs.panel)}>
           {commentsLoading ? (
-            <div className="flex items-center gap-2 py-2 text-xs text-muted-foreground">
+            <div className={cn("flex items-center gap-2 py-2 text-xs", gs.muted)}>
               <Loader2 className="size-3.5 animate-spin" />
               Loading comments…
             </div>
           ) : comments.length === 0 ? (
-            <p className="py-1 text-xs text-muted-foreground">No comments yet.</p>
+            <p className={cn("py-1 text-xs", gs.muted)}>No comments yet.</p>
           ) : (
             <ul className="max-h-64 space-y-3 overflow-y-auto pr-1">
               {comments.map((c) => {
@@ -640,12 +654,12 @@ export function FeedWatchedPostCard({
                 return (
                   <li key={c.id} className="flex gap-2.5">
                     <Link href={feedProfileHref(c.user.username)} className="shrink-0">
-                      <Avatar className="size-7 border border-border/80">
+                      <Avatar className={cn("size-7 border", gs.avatar)}>
                         <AvatarImage
                           src={avatarDisplaySrc(c.user.avatar_url) ?? undefined}
                           alt=""
                         />
-                        <AvatarFallback className="bg-muted text-[9px] text-muted-foreground">
+                        <AvatarFallback className={cn("text-[9px]", gs.avatarFb)}>
                           {cName[0]?.toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
@@ -654,24 +668,32 @@ export function FeedWatchedPostCard({
                       <div className="flex items-baseline gap-1.5 text-[12px]">
                         <Link
                           href={feedProfileHref(c.user.username)}
-                          className="font-medium text-foreground hover:text-brand"
+                          className={cn("font-medium hover:text-brand", gs.fg)}
                         >
                           {cName}
                         </Link>
-                        <span className="text-muted-foreground">
+                        <span className={gs.muted}>
                           {formatFeedRelativeTime(c.createdAt)}
                         </span>
                         {canDelete ? (
                           <button
                             type="button"
                             onClick={() => void deleteComment(c.id)}
-                            className="ml-auto text-[11px] text-muted-foreground hover:text-red-400"
+                            className={cn(
+                              "ml-auto text-[11px] hover:text-red-400",
+                              gs.muted,
+                            )}
                           >
                             Delete
                           </button>
                         ) : null}
                       </div>
-                      <p className="mt-0.5 whitespace-pre-wrap text-[13px] leading-relaxed text-muted-foreground">
+                      <p
+                        className={cn(
+                          "mt-0.5 whitespace-pre-wrap text-[13px] leading-relaxed",
+                          gs.body,
+                        )}
+                      >
                         {c.body}
                       </p>
                     </div>
@@ -681,7 +703,7 @@ export function FeedWatchedPostCard({
             </ul>
           )}
 
-          <div className="space-y-2 border-t border-border/80 pt-3">
+          <div className={cn("space-y-2 border-t pt-3", gs.postBorder)}>
             <Textarea
               value={commentDraft}
               maxLength={COMMENT_MAX}
@@ -697,7 +719,7 @@ export function FeedWatchedPostCard({
               }}
             />
             <div className="flex items-center justify-between gap-2">
-              <span className="text-[11px] text-muted-foreground">
+              <span className={cn("text-[11px]", gs.muted)}>
                 {commentDraft.length}/{COMMENT_MAX} · Ctrl+Enter to post
               </span>
               <Button

@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/carousel"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
+import { useDesignMode } from "@/hooks/use-design-mode"
 
 type DiscoverMovie = {
   id: number
@@ -30,6 +31,7 @@ export function HomeForYouRail({
   const { localeQs, loading: localeLoading } = useLocalePrefs()
   const [movies, setMovies] = useState<DiscoverMovie[]>([])
   const [loading, setLoading] = useState(true)
+  const isGlass = useDesignMode() === "glass"
 
   useEffect(() => {
     if (localeLoading || !genreIds.length) {
@@ -94,7 +96,14 @@ export function HomeForYouRail({
                   })}
                   className="block"
                 >
-                  <div className="aspect-[2/3] w-full overflow-hidden rounded-md border border-border bg-muted">
+                  <div
+                    className={cn(
+                      "aspect-[2/3] w-full overflow-hidden",
+                      isGlass
+                        ? "rounded-[12px] bg-white/[0.04] ring-1 ring-white/10"
+                        : "rounded-md border border-border bg-muted",
+                    )}
+                  >
                     <img
                       src={
                         movie.poster_path

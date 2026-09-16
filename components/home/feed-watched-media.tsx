@@ -6,15 +6,30 @@ import Image from "next/image"
 import { animate, motion, useMotionValue } from "framer-motion"
 import { ChevronLeft, ChevronRight, X } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { glassSurface } from "@/lib/glass-surface"
+import { useDesignMode } from "@/hooks/use-design-mode"
 
-export const feedMediaFrameClass =
-  "group/media relative mt-2 block max-w-full overflow-hidden rounded-2xl border border-border bg-card"
+export function feedMediaFrames(isGlass: boolean) {
+  const base = glassSurface(isGlass).mediaFrame
+  return {
+    base,
+    full: cn(base, "w-full bg-black"),
+    fit: cn(base, "w-fit"),
+  }
+}
+
+/** @deprecated Prefer feedMediaFrames(isGlass) — classic fallback. */
+export const feedMediaFrameClass = glassSurface(false).mediaFrame
 
 /** Full-width frame (backdrops, collage, list media). */
 export const feedMediaFrameFullClass = cn(feedMediaFrameClass, "w-full bg-black")
 
 /** Poster frame shrinks to media aspect (no letterbox side bars). */
 export const feedMediaFrameFitClass = cn(feedMediaFrameClass, "w-fit")
+
+function useFeedMediaFrames() {
+  return feedMediaFrames(useDesignMode() === "glass")
+}
 
 function tmdbSrc(filePath: string, kind: "poster" | "backdrop") {
   const size = kind === "poster" ? "w780" : "w1280"
@@ -299,14 +314,19 @@ function FullBleedMedia({
 }) {
   const [expanded, setExpanded] = useState(false)
   const isPoster = imageKind === "poster"
-  const frame = isPoster ? feedMediaFrameFitClass : feedMediaFrameFullClass
+  const isGlass = useDesignMode() === "glass"
+  const frames = feedMediaFrames(isGlass)
+  const frame = isPoster ? frames.fit : frames.full
 
   if (!imagePath) {
     return (
       <div className={frame}>
         <div
           className={cn(
-            "flex items-center justify-center bg-muted text-sm text-muted-foreground",
+            "flex items-center justify-center text-sm",
+            isGlass
+              ? "bg-white/[0.04] text-white/40"
+              : "bg-muted text-muted-foreground",
             isPoster
               ? "aspect-[2/3] h-[min(28rem,52vh)]"
               : "aspect-[16/9] w-full max-h-[min(22rem,45vh)]",
@@ -390,7 +410,8 @@ export function WatchedMediaCarousel({
   const safeIndex = Math.min(index, Math.max(0, images.length - 1))
   const current = images[safeIndex]
   const isPoster = current?.kind === "poster"
-  const frame = isPoster ? feedMediaFrameFitClass : feedMediaFrameFullClass
+  const frames = useFeedMediaFrames()
+  const frame = isPoster ? frames.fit : frames.full
 
   const goPrev = useCallback(() => {
     setIndex((i) => (i - 1 + images.length) % images.length)
@@ -419,7 +440,7 @@ export function WatchedMediaCarousel({
       <>
         <button
           type="button"
-          className={cn(feedMediaFrameFullClass, "cursor-zoom-in text-left")}
+          className={cn(frames.full, "cursor-zoom-in text-left")}
           onClick={() => setExpanded(true)}
           aria-label={`Expand ${filmTitle}`}
         >

@@ -13,6 +13,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton"
 import { useT } from "@/components/providers/i18n-provider"
 import { cn } from "@/lib/utils"
+import { useDesignMode } from "@/hooks/use-design-mode"
 
 type FriendWatch = {
   id: number
@@ -29,6 +30,7 @@ export function HomeFriendsWatchedRail({ className }: { className?: string }) {
   const { t } = useT()
   const supabase = useSupabaseClient()
   const user = useUser()
+  const isGlass = useDesignMode() === "glass"
   const [items, setItems] = useState<FriendWatch[]>([])
   const [loading, setLoading] = useState(Boolean(user?.id))
 
@@ -136,7 +138,13 @@ export function HomeFriendsWatchedRail({ className }: { className?: string }) {
 
   if (!loading && items.length === 0) {
     return (
-      <p className={cn("text-sm text-muted-foreground", className)}>
+      <p
+        className={cn(
+          "text-sm",
+          isGlass ? "text-white/45" : "text-muted-foreground",
+          className,
+        )}
+      >
         {t("home.friendsWatchedEmpty")}
       </p>
     )
@@ -182,7 +190,14 @@ export function HomeFriendsWatchedRail({ className }: { className?: string }) {
                     className="group block"
                     title={`@${item.username}`}
                   >
-                    <div className="aspect-[2/3] w-full overflow-hidden rounded-md border border-border bg-muted">
+                    <div
+                      className={cn(
+                        "aspect-[2/3] w-full overflow-hidden",
+                        isGlass
+                          ? "rounded-[12px] bg-white/[0.04] ring-1 ring-white/10"
+                          : "rounded-md border border-border bg-muted",
+                      )}
+                    >
                       <img
                         src={
                           item.posterPath
@@ -193,7 +208,12 @@ export function HomeFriendsWatchedRail({ className }: { className?: string }) {
                         className="size-full object-cover transition group-hover:opacity-90"
                       />
                     </div>
-                    <p className="mt-1 truncate text-[10px] text-muted-foreground">
+                    <p
+                      className={cn(
+                        "mt-1 truncate text-[10px]",
+                        isGlass ? "text-white/45" : "text-muted-foreground",
+                      )}
+                    >
                       @{item.username}
                     </p>
                   </Link>

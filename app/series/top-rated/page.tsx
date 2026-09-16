@@ -23,6 +23,7 @@ interface TvShow {
   overview: string | null
   vote_average?: number
   genres?: { id: number; name: string }[]
+  director?: string | null
 }
 
 interface SeriesResponse {

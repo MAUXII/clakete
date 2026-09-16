@@ -10,6 +10,8 @@ import { useT } from "@/components/providers/i18n-provider"
 import { avatarDisplaySrc } from "@/lib/next-remote-image"
 import { createNotification } from "@/lib/notifications"
 import { cn } from "@/lib/utils"
+import { useDesignMode } from "@/hooks/use-design-mode"
+import { glassSurface } from "@/lib/glass-surface"
 
 type SuggestedUser = {
   id: string
@@ -22,6 +24,7 @@ export function HomeFeedWhoToFollow({ limit = 4 }: { limit?: number }) {
   const { t } = useT()
   const supabase = useSupabaseClient()
   const authUser = useUser()
+  const gs = glassSurface(useDesignMode() === "glass")
   const [people, setPeople] = useState<SuggestedUser[]>([])
   const [loading, setLoading] = useState(true)
   const [followingIds, setFollowingIds] = useState<Set<string>>(new Set())
@@ -119,18 +122,18 @@ export function HomeFeedWhoToFollow({ limit = 4 }: { limit?: number }) {
   if (!authUser) return null
 
   return (
-    <section className="rounded-2xl border border-border bg-muted/40 p-4">
-      <h2 className="text-[15px] font-bold tracking-tight text-foreground">
+    <section className={cn("p-4", gs.railCard)}>
+      <h2 className={cn("text-[15px] font-bold tracking-tight", gs.fg)}>
         {t("home.whoToFollow")}
       </h2>
 
       {loading ? (
-        <div className="flex items-center gap-2 py-6 text-xs text-muted-foreground">
+        <div className={cn("flex items-center gap-2 py-6 text-xs", gs.muted)}>
           <Loader2 className="size-3.5 animate-spin" />
           {t("common.loading")}
         </div>
       ) : people.length === 0 ? (
-        <p className="mt-3 text-[13px] text-muted-foreground">
+        <p className={cn("mt-3 text-[13px]", gs.muted)}>
           {t("home.whoToFollowEmpty")}
         </p>
       ) : (
@@ -144,12 +147,12 @@ export function HomeFeedWhoToFollow({ limit = 4 }: { limit?: number }) {
                   href={`/${person.username}`}
                   className="shrink-0"
                 >
-                  <Avatar className="size-10 border border-border">
+                  <Avatar className={cn("size-10 border", gs.avatar)}>
                     <AvatarImage
                       src={avatarDisplaySrc(person.avatar_url) ?? undefined}
                       alt=""
                     />
-                    <AvatarFallback className="bg-muted text-xs text-muted-foreground">
+                    <AvatarFallback className={cn("text-xs", gs.avatarFb)}>
                       {name[0]?.toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
@@ -157,11 +160,14 @@ export function HomeFeedWhoToFollow({ limit = 4 }: { limit?: number }) {
                 <div className="min-w-0 flex-1">
                   <Link
                     href={`/${person.username}`}
-                    className="block truncate text-[13px] font-semibold text-foreground hover:underline"
+                    className={cn(
+                      "block truncate text-[13px] font-semibold hover:underline",
+                      gs.fg,
+                    )}
                   >
                     {name}
                   </Link>
-                  <p className="truncate text-[12px] text-muted-foreground">
+                  <p className={cn("truncate text-[12px]", gs.muted)}>
                     @{person.username}
                   </p>
                 </div>
@@ -170,7 +176,8 @@ export function HomeFeedWhoToFollow({ limit = 4 }: { limit?: number }) {
                   disabled={busy}
                   onClick={() => void follow(person)}
                   className={cn(
-                    "shrink-0 rounded-full bg-foreground px-3 py-1 text-[12px] font-semibold text-background transition hover:opacity-90 disabled:opacity-60",
+                    "shrink-0 rounded-full px-3 py-1 text-[12px] font-semibold transition disabled:opacity-60",
+                    gs.followCta,
                   )}
                 >
                   {busy ? (

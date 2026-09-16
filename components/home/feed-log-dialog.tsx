@@ -20,6 +20,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
+import { useDesignMode } from "@/hooks/use-design-mode"
 import {
   formatRewatchLabel,
   formatWatchedDate,
@@ -94,6 +95,9 @@ export function FeedLogDialog({
     visibility,
   })
 
+  const designMode = useDesignMode()
+  const isGlass = designMode === "glass"
+
   const handlePrimary = async () => {
     if (shareToFeed) {
       onNextToCustomize(draft())
@@ -110,10 +114,10 @@ export function FeedLogDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className={cn("sm:max-w-md", isGlass && "border-white/10 bg-[#161719]/96 text-white sm:rounded-[20px] backdrop-blur-2xl shadow-[0_28px_64px_-16px_rgba(0,0,0,0.9)]")}>
         <DialogHeader>
-          <DialogTitle>{isWatched ? "Log again" : "Log watch"}</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className={cn(isGlass && "text-white font-semibold")}>{isWatched ? "Log again" : "Log watch"}</DialogTitle>
+          <DialogDescription className={cn(isGlass && "text-white/50")}>
             {title
               ? `When did you watch ${title}?`
               : "Pick the date you watched this title."}
@@ -122,7 +126,7 @@ export function FeedLogDialog({
 
         <div className="space-y-4 py-1">
           {isWatched && (previousLabel || rewatchLabel) ? (
-            <p className="text-sm text-muted-foreground">
+            <p className={cn("text-sm", isGlass ? "text-white/40" : "text-muted-foreground")}>
               {previousLabel ? `Last logged ${previousLabel}` : null}
               {previousLabel && rewatchLabel ? " · " : null}
               {rewatchLabel}
@@ -130,7 +134,7 @@ export function FeedLogDialog({
           ) : null}
 
           <div className="space-y-2">
-            <Label>Watch date</Label>
+            <Label className={cn(isGlass && "text-white/60")}>Watch date</Label>
             <Popover open={calendarOpen} onOpenChange={setCalendarOpen} modal>
               <PopoverTrigger asChild>
                 <Button
@@ -139,14 +143,15 @@ export function FeedLogDialog({
                   disabled={busy}
                   className={cn(
                     "w-full justify-start text-left font-normal",
-                    !date && "text-muted-foreground",
+                    !date && (isGlass ? "text-white/40" : "text-muted-foreground"),
+                    isGlass && "rounded-xl border-white/10 bg-white/[0.04] text-white hover:bg-white/[0.08] hover:text-white"
                   )}
                 >
-                  <CalendarIcon className="mr-2 h-4 w-4 opacity-70" />
+                  <CalendarIcon className={cn("mr-2 h-4 w-4", isGlass ? "text-white/50" : "opacity-70")} />
                   {dateLabel}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
+              <PopoverContent className={cn("w-auto p-0", isGlass && "border-white/10 bg-[#161719] text-white")} align="start">
                 <Calendar
                   mode="single"
                   captionLayout="dropdown"
@@ -172,11 +177,11 @@ export function FeedLogDialog({
                 onCheckedChange={(v) => setIsRewatch(v === true)}
                 disabled={busy}
               />
-              <span>This is a rewatch</span>
+              <span className={cn(isGlass && "text-white/80")}>This is a rewatch</span>
             </label>
           ) : null}
 
-          <div className="space-y-3 rounded-xl border border-border/80 bg-muted/20 p-3">
+          <div className={cn("space-y-3 rounded-xl border p-3", isGlass ? "border-white/10 bg-white/[0.03]" : "border-border/80 bg-muted/20")}>
             <label className="flex cursor-pointer items-start gap-3 text-sm">
               <Checkbox
                 checked={shareToFeed}
@@ -185,8 +190,8 @@ export function FeedLogDialog({
                 className="mt-0.5"
               />
               <span>
-                <span className="font-medium text-foreground">Share to feed</span>
-                <span className="mt-0.5 block text-xs text-muted-foreground">
+                <span className={cn("font-medium", isGlass ? "text-white" : "text-foreground")}>Share to feed</span>
+                <span className={cn("mt-0.5 block text-xs", isGlass ? "text-white/40" : "text-muted-foreground")}>
                   Post this log for people who follow you. You&apos;ll pick the photo next.
                 </span>
               </span>
@@ -202,12 +207,12 @@ export function FeedLogDialog({
                     "flex flex-col items-start gap-1 rounded-lg border px-3 py-2.5 text-left transition",
                     visibility === "friends"
                       ? "border-brand/40 bg-brand/10"
-                      : "border-border/80 hover:border-border",
+                      : isGlass ? "border-white/10 hover:border-white/20" : "border-border/80 hover:border-border",
                   )}
                 >
                   <Users className="size-4 text-brand" />
-                  <span className="text-xs font-medium">Friends</span>
-                  <span className="text-[10px] text-muted-foreground">
+                  <span className={cn("text-xs font-medium", isGlass ? "text-white" : "text-foreground")}>Friends</span>
+                  <span className={cn("text-[10px]", isGlass ? "text-white/40" : "text-muted-foreground")}>
                     Mutual follows only
                   </span>
                 </button>
@@ -219,12 +224,12 @@ export function FeedLogDialog({
                     "flex flex-col items-start gap-1 rounded-lg border px-3 py-2.5 text-left transition",
                     visibility === "public"
                       ? "border-brand/40 bg-brand/10"
-                      : "border-border/80 hover:border-border",
+                      : isGlass ? "border-white/10 hover:border-white/20" : "border-border/80 hover:border-border",
                   )}
                 >
                   <Globe2 className="size-4 text-brand" />
-                  <span className="text-xs font-medium">Public</span>
-                  <span className="text-[10px] text-muted-foreground">Anyone on Clakete</span>
+                  <span className={cn("text-xs font-medium", isGlass ? "text-white" : "text-foreground")}>Public</span>
+                  <span className={cn("text-[10px]", isGlass ? "text-white/40" : "text-muted-foreground")}>Anyone on Clakete</span>
                 </button>
               </div>
             ) : null}
@@ -237,12 +242,13 @@ export function FeedLogDialog({
             variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={busy}
+            className={cn(isGlass && "rounded-xl border-white/12 bg-white/[0.04] text-white/70 hover:bg-white/[0.08] hover:text-white")}
           >
             Cancel
           </Button>
           <Button
             type="button"
-            className="bg-brand text-white hover:bg-brand-hover"
+            className={cn(isGlass ? "rounded-xl bg-white px-5 font-semibold text-black hover:bg-white/90" : "bg-brand text-white hover:bg-brand-hover")}
             onClick={() => void handlePrimary()}
             disabled={busy || !date}
           >

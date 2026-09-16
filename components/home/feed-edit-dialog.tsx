@@ -27,6 +27,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Textarea } from "@/components/ui/textarea"
 import type { FeedImageChoice } from "@/components/home/feed-customize-dialog"
 import { cn } from "@/lib/utils"
+import { useDesignMode } from "@/hooks/use-design-mode"
 
 export type FeedEditPayload = {
   images: FeedImageChoice[]
@@ -310,14 +311,22 @@ export function FeedEditDialog({
     }
   }
 
+  const designMode = useDesignMode()
+  const isGlass = designMode === "glass"
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[92vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-5xl">
-        <DialogHeader className="shrink-0 border-b border-border px-5 py-4">
-          <DialogTitle>Edit post</DialogTitle>
-          <DialogDescription>
+      <DialogContent className={cn(
+        "flex max-h-[92vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-5xl",
+        isGlass
+          ? "border-white/10 bg-[#161719]/96 text-white backdrop-blur-2xl shadow-[0_28px_64px_-16px_rgba(0,0,0,0.9)] sm:rounded-[24px]"
+          : ""
+      )}>
+        <DialogHeader className={cn("shrink-0 border-b px-5 py-4", isGlass ? "border-white/10" : "border-border")}>
+          <DialogTitle className={cn(isGlass && "text-white font-semibold")}>Edit post</DialogTitle>
+          <DialogDescription className={cn(isGlass && "text-white/50")}>
             Update photos and details for{" "}
-            <span className="text-foreground">{filmTitle}</span>.
+            <span className={cn(isGlass ? "text-white font-medium" : "text-foreground")}>{filmTitle}</span>.
           </DialogDescription>
         </DialogHeader>
 
@@ -540,18 +549,19 @@ export function FeedEditDialog({
           </div>
         </div>
 
-        <DialogFooter className="shrink-0 gap-2 border-t border-border px-5 py-3 sm:justify-end">
+        <DialogFooter className={cn("shrink-0 gap-2 border-t px-5 py-3 sm:justify-end", isGlass ? "border-white/10" : "border-border")}>
           <Button
             type="button"
             variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={busy}
+            className={cn(isGlass && "rounded-xl border-white/12 bg-white/[0.04] text-white/80 hover:bg-white/[0.08] hover:text-white")}
           >
             Cancel
           </Button>
           <Button
             type="button"
-            className="bg-brand text-white hover:bg-brand-hover"
+            className={cn(isGlass ? "rounded-xl bg-white px-5 font-semibold text-black hover:bg-white/90" : "bg-brand text-white hover:bg-brand-hover")}
             disabled={busy || selected.length === 0}
             onClick={() => void handleSave()}
           >

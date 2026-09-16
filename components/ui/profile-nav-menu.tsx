@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useCallback, useRef, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -30,11 +30,18 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import {
+  GlassMenu,
+  GlassMenuItem,
+  GlassMenuSep,
+  GlassMenuSub,
+} from "@/components/ui/glass-menu"
 import { NotificationsDialog } from "@/components/notifications/notifications-menu"
 import { useNotifications } from "@/hooks/use-notifications"
 import { useProfile } from "@/components/providers/profile-provider"
 import { useAppearance } from "@/components/providers/appearance-provider"
 import { useT } from "@/components/providers/i18n-provider"
+import { useDesignMode } from "@/hooks/use-design-mode"
 import { profileAvatarPresentation } from "@/lib/profile-media"
 import {
   avatarDisplaySrc,
@@ -63,16 +70,27 @@ const menuItemClass = cn(
 )
 
 const iconClass = "size-4 shrink-0"
+const glassIconClass = "size-4 shrink-0 opacity-70"
 
-export function ProfileNavMenu() {
+const MENU_WIDTH = 220
+
+export function ProfileNavMenu({
+  compact = false,
+}: {
+  compact?: boolean
+}) {
   const { t } = useT()
   const router = useRouter()
+  const isGlass = useDesignMode() === "glass"
   const user = useUser()
   const supabase = useSupabaseClient()
   const { profile, loading, refreshProfile } = useProfile()
   const { colorModePreference, setColorMode } = useAppearance()
   const { unreadCount } = useNotifications()
   const [notificationsOpen, setNotificationsOpen] = useState(false)
+  const [glassOpen, setGlassOpen] = useState(false)
+  const [glassPos, setGlassPos] = useState({ x: 0, y: 0 })
+  const triggerRef = useRef<HTMLButtonElement>(null)
 
   const navAvatar = profile
     ? profileAvatarPresentation({
@@ -124,17 +142,229 @@ export function ProfileNavMenu() {
     router.refresh()
   }
 
+  const closeGlass = useCallback(() => setGlassOpen(false), [])
+
+  const openGlassMenu = () => {
+    const r = triggerRef.current?.getBoundingClientRect()
+    if (!r) return
+    setGlassPos({
+      x: Math.max(8, r.right - MENU_WIDTH),
+      y: r.bottom + 8,
+    })
+    setGlassOpen(true)
+  }
+
+  const go = (href: string) => {
+    closeGlass()
+    router.push(href)
+  }
+
+  const avatarButton = (opts?: { onClick?: () => void; ref?: typeof triggerRef }) => (
+    <button
+      ref={opts?.ref}
+      type="button"
+      onClick={opts?.onClick}
+      className={cn(
+        "flex shrink-0 items-center justify-center overflow-hidden outline-none",
+        "focus-visible:ring-2 focus-visible:ring-brand/50",
+        compact
+          ? isGlass
+            ? "size-6 rounded-full bg-white/10 text-white transition hover:bg-white/15"
+            : "size-6 rounded-full bg-muted/60 text-foreground transition hover:bg-muted"
+          : cn(
+              "size-11 rounded-xl sm:size-12",
+              isGlass
+                ? "border border-white/10 bg-white/[0.06] text-white ring-1 ring-inset ring-white/10 transition hover:bg-white/10"
+                : cn(
+                    "border border-border bg-muted/50 text-foreground",
+                    "ring-1 ring-inset ring-border/60",
+                    "transition hover:border-brand/25 hover:bg-brand/10 hover:text-brand-muted dark:hover:bg-brand/14 dark:hover:text-brand-light",
+                  ),
+              "focus:outline-none focus-visible:outline-none",
+            ),
+      )}
+    >
+      {!loading && (
+        <>
+          {navAvatar?.src && profile ? (
+            <Image
+              src={avatarDisplaySrc(navAvatar.src) ?? navAvatar.src}
+              alt={profile.username}
+              width={compact ? 24 : 48}
+              height={compact ? 24 : 48}
+              unoptimized={remoteImageSrcLooksLikeGif(
+                avatarDisplaySrc(navAvatar.src) ?? navAvatar.src,
+              )}
+              className="h-full w-full object-cover"
+              style={
+                navAvatar.objectPosition
+                  ? { objectPosition: navAvatar.objectPosition }
+                  : undefined
+              }
+            />
+          ) : (
+            <FiUser className={compact ? "size-3.5" : undefined} />
+          )}
+        </>
+      )}
+    </button>
+  )
+
+  if (isGlass) {
+    return (
+      <>
+        {avatarButton({ ref: triggerRef, onClick: openGlassMenu })}
+
+        <GlassMenu
+          open={glassOpen}
+          x={glassPos.x}
+          y={glassPos.y}
+          onClose={closeGlass}
+          width={MENU_WIDTH}
+        >
+          {profile ? (
+            <>
+              <GlassMenuItem onClick={() => go(`/${profile.username}`)}>
+                <UserRound className={glassIconClass} aria-hidden />
+                {t("common.profile")}
+              </GlassMenuItem>
+              <GlassMenuItem onClick={() => go(`/${profile.username}/watched`)}>
+                <Clapperboard className={glassIconClass} aria-hidden />
+                {t("nav.watched")}
+              </GlassMenuItem>
+              <GlassMenuItem onClick={() => go(`/${profile.username}/watchlist`)}>
+                <Eye className={glassIconClass} aria-hidden />
+                {t("nav.watchlist")}
+              </GlassMenuItem>
+              <GlassMenuItem onClick={() => go("/lists")}>
+                <List className={glassIconClass} aria-hidden />
+                {t("nav.lists")}
+              </GlassMenuItem>
+
+              <GlassMenuSep />
+
+              <GlassMenuItem
+                onClick={() => {
+                  closeGlass()
+                  setNotificationsOpen(true)
+                }}
+              >
+                <span className="relative">
+                  <Bell className={glassIconClass} aria-hidden />
+                  {unreadCount > 0 ? (
+                    <span
+                      className="absolute -right-0.5 -top-0.5 size-1.5 rounded-full bg-brand"
+                      aria-hidden
+                    />
+                  ) : null}
+                </span>
+                {t("notifications.title")}
+              </GlassMenuItem>
+
+              <GlassMenuSub
+                label={
+                  <>
+                    <Sun className={cn(glassIconClass, "dark:hidden")} aria-hidden />
+                    <Moon className={cn(glassIconClass, "hidden dark:block")} aria-hidden />
+                    {t("prefs.colorMode")}
+                  </>
+                }
+                width={168}
+              >
+                {(
+                  [
+                    { value: "light", label: t("prefs.modeLight"), Icon: Sun },
+                    { value: "dark", label: t("prefs.modeDark"), Icon: Moon },
+                    { value: "system", label: t("prefs.modeSystem"), Icon: Monitor },
+                  ] as const
+                ).map(({ value, label, Icon }) => (
+                  <GlassMenuItem
+                    key={value}
+                    onClick={() => handleTheme(value)}
+                    hint={
+                      currentTheme === value ? (
+                        <Check className="size-3.5 opacity-70" aria-hidden />
+                      ) : null
+                    }
+                  >
+                    <Icon className={glassIconClass} aria-hidden />
+                    {label}
+                  </GlassMenuItem>
+                ))}
+              </GlassMenuSub>
+
+              <GlassMenuSub
+                label={
+                  <>
+                    <Globe className={glassIconClass} aria-hidden />
+                    {t("prefs.contentLanguage")}
+                  </>
+                }
+                width={200}
+              >
+                {TMDB_LANGUAGE_OPTIONS.map((opt) => (
+                  <GlassMenuItem
+                    key={opt.id}
+                    onClick={() => handleLanguage(opt.id)}
+                    hint={
+                      currentLanguage === opt.id ? (
+                        <Check className="size-3.5 opacity-70" aria-hidden />
+                      ) : null
+                    }
+                  >
+                    {opt.label}
+                  </GlassMenuItem>
+                ))}
+              </GlassMenuSub>
+
+              <GlassMenuSep />
+
+              <GlassMenuItem
+                danger
+                onClick={() => {
+                  closeGlass()
+                  void handleSignOut()
+                }}
+              >
+                <LogOut className={glassIconClass} aria-hidden />
+                {t("common.signOut")}
+              </GlassMenuItem>
+            </>
+          ) : (
+            <GlassMenuItem onClick={() => go("/sign-in")}>
+              <RiLoginBoxLine className={glassIconClass} />
+              {t("common.signIn")}
+            </GlassMenuItem>
+          )}
+        </GlassMenu>
+
+        {profile ? (
+          <NotificationsDialog
+            open={notificationsOpen}
+            onOpenChange={setNotificationsOpen}
+          />
+        ) : null}
+      </>
+    )
+  }
+
   return (
     <>
       <DropdownMenu>
         <DropdownMenuTrigger
           className={cn(
-            "flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-xl sm:size-12",
-            "border border-border bg-muted/50 text-foreground",
-            "ring-1 ring-inset ring-border/60",
-            "transition hover:border-brand/25 hover:bg-brand/10 hover:text-brand-muted dark:hover:bg-brand/14 dark:hover:text-brand-light",
-            "outline-none focus:outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50",
-            "data-[state=open]:border-border data-[state=open]:ring-1 data-[state=open]:ring-inset data-[state=open]:ring-border",
+            "flex shrink-0 items-center justify-center overflow-hidden outline-none",
+            "focus-visible:ring-2 focus-visible:ring-brand/50",
+            compact
+              ? "size-6 rounded-full bg-muted/60 text-foreground transition hover:bg-muted"
+              : cn(
+                  "size-11 rounded-xl sm:size-12",
+                  "border border-border bg-muted/50 text-foreground",
+                  "ring-1 ring-inset ring-border/60",
+                  "transition hover:border-brand/25 hover:bg-brand/10 hover:text-brand-muted dark:hover:bg-brand/14 dark:hover:text-brand-light",
+                  "focus:outline-none focus-visible:outline-none",
+                  "data-[state=open]:border-border data-[state=open]:ring-1 data-[state=open]:ring-inset data-[state=open]:ring-border",
+                ),
           )}
         >
           {!loading && (
@@ -143,8 +373,8 @@ export function ProfileNavMenu() {
                 <Image
                   src={avatarDisplaySrc(navAvatar.src) ?? navAvatar.src}
                   alt={profile.username}
-                  width={48}
-                  height={48}
+                  width={compact ? 24 : 48}
+                  height={compact ? 24 : 48}
                   unoptimized={remoteImageSrcLooksLikeGif(
                     avatarDisplaySrc(navAvatar.src) ?? navAvatar.src,
                   )}
@@ -156,7 +386,7 @@ export function ProfileNavMenu() {
                   }
                 />
               ) : (
-                <FiUser />
+                <FiUser className={compact ? "size-3.5" : undefined} />
               )}
             </>
           )}

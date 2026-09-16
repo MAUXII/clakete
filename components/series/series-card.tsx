@@ -13,6 +13,7 @@ import { LogWatchDialog } from "@/components/movies/log-watch-dialog"
 import { ConfirmUnwatchDialog } from "@/components/movies/confirm-unwatch-dialog"
 import { PosterActionsMenu } from "@/components/movies/poster-actions-menu"
 import { useT } from "@/components/providers/i18n-provider"
+import { useDesignMode } from "@/hooks/use-design-mode"
 
 interface SeriesCardProps {
   series?: {
@@ -23,11 +24,13 @@ interface SeriesCardProps {
     backdrop_path?: string | null
     vote_average?: number
     first_air_date?: string | null
+    director?: string | null
   }
   externalid?: number
   href?: string | null
   variant?: "default" | "nav-fill"
   extraActions?: ReactNode
+  hideCaption?: boolean
 }
 
 export function SeriesCard({
@@ -36,6 +39,7 @@ export function SeriesCard({
   href: hrefOverride,
   variant = "default",
   extraActions,
+  hideCaption = false,
 }: SeriesCardProps) {
   const { t } = useT()
   const seriesId = externalid ?? show?.id ?? 0
@@ -108,15 +112,19 @@ export function SeriesCard({
 
   const isNavFill = variant === "nav-fill"
   const year = show?.first_air_date?.slice(0, 4) ?? null
+  const designMode = useDesignMode()
+  const isGlass = designMode === "glass"
 
   const renderCard = () => {
     const cardInner = (
       <div
         className={cn(
-          "relative w-full overflow-hidden border-[1px] border-black/15 shadow-black/5 shadow-sm dark:border-white/15 dark:shadow-white/5",
+          "relative w-full overflow-hidden",
           isNavFill
             ? "aspect-auto h-full flex-1 rounded-xl bg-muted"
-            : "aspect-[2/3] h-full rounded-[5px]",
+            : isGlass
+              ? "aspect-[2/3] h-full rounded-[12px] bg-white/[0.04] ring-1 ring-white/10 shadow-[0_14px_32px_-14px_rgba(0,0,0,0.9)] transition-[transform,filter] duration-300 ease-out group-hover:scale-[1.02] group-hover:ring-white/25 group-hover:shadow-[0_20px_40px_-16px_rgba(0,0,0,0.95)]"
+              : "aspect-[2/3] h-full rounded-[5px] border-[1px] border-black/15 shadow-black/5 shadow-sm dark:border-white/15 dark:shadow-white/5",
         )}
       >
         <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
@@ -135,7 +143,7 @@ export function SeriesCard({
           </div>
         )}
 
-        {show?.vote_average ? (
+        {!isGlass && show?.vote_average ? (
           <div className="absolute bottom-2 right-2 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
             <Badge variant="secondary" className="rounded-sm font-medium text-brand">
               {show.vote_average.toFixed(1)} ★
@@ -143,15 +151,26 @@ export function SeriesCard({
           </div>
         ) : null}
 
-        <div className="absolute right-2 top-2 flex flex-col gap-2 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+        <div className="absolute right-2 top-2 flex flex-col gap-1.5 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
           <button
             type="button"
             onClick={handleWatch}
-            className={`rounded-md border p-2 transition-colors ${
-              localWatched
-                ? "border-brand/20 bg-[#280F16] text-brand hover:bg-[#280F16]"
-                : "border-transparent bg-secondary text-secondary-foreground hover:border-brand/20 hover:bg-[#280F16] hover:text-brand"
-            }`}
+            className={cn(
+              "p-2 transition-all",
+              isGlass
+                ? cn(
+                    "rounded-full ring-1 shadow-sm backdrop-blur-md",
+                    localWatched
+                      ? "bg-black/85 text-brand ring-brand/40"
+                      : "bg-black/65 text-white/90 ring-white/15 hover:bg-black/90 hover:scale-105 active:scale-95"
+                  )
+                : cn(
+                    "rounded-md border",
+                    localWatched
+                      ? "border-brand/20 bg-[#280F16] text-brand hover:bg-[#280F16]"
+                      : "border-transparent bg-secondary text-secondary-foreground hover:border-brand/20 hover:bg-[#280F16] hover:text-brand"
+                  )
+            )}
             title={localWatched ? t("film.unmarkWatched") : t("film.markWatched")}
           >
             {localWatched ? <IoEye className="h-4 w-4" /> : <IoEyeOutline className="h-4 w-4" />}
@@ -159,11 +178,22 @@ export function SeriesCard({
           <button
             type="button"
             onClick={handleLike}
-            className={`rounded-md border p-2 transition-colors ${
-              localLiked
-                ? "border-brand/20 bg-[#280F16] text-brand hover:bg-[#280F16]"
-                : "border-transparent bg-secondary text-secondary-foreground hover:border-brand/20 hover:bg-[#280F16] hover:text-brand"
-            }`}
+            className={cn(
+              "p-2 transition-all",
+              isGlass
+                ? cn(
+                    "rounded-full ring-1 shadow-sm backdrop-blur-md",
+                    localLiked
+                      ? "bg-black/85 text-brand ring-brand/40"
+                      : "bg-black/65 text-white/90 ring-white/15 hover:bg-black/90 hover:scale-105 active:scale-95"
+                  )
+                : cn(
+                    "rounded-md border",
+                    localLiked
+                      ? "border-brand/20 bg-[#280F16] text-brand hover:bg-[#280F16]"
+                      : "border-transparent bg-secondary text-secondary-foreground hover:border-brand/20 hover:bg-[#280F16] hover:text-brand"
+                  )
+            )}
             title={localLiked ? t("film.liked") : t("film.like")}
           >
             {localLiked ? <IoHeart className="h-4 w-4" /> : <IoHeartOutline className="h-4 w-4" />}
@@ -188,8 +218,8 @@ export function SeriesCard({
       return (
         <div
           className={cn(
-            "group flex flex-col gap-2 transition-transform duration-300",
-            isNavFill && "h-full w-full",
+            "group flex flex-col transition-transform duration-300",
+            isNavFill ? "h-full w-full" : "gap-1",
           )}
         >
           {cardInner}
@@ -201,8 +231,8 @@ export function SeriesCard({
       <Link
         href={href}
         className={cn(
-          "group flex flex-col gap-2 transition-transform duration-300",
-          isNavFill && "h-full w-full",
+          "group flex flex-col transition-transform duration-300",
+          isNavFill ? "h-full w-full" : "gap-1",
         )}
       >
         {cardInner}

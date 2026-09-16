@@ -4,11 +4,15 @@ import Link from "next/link"
 import { useT } from "@/components/providers/i18n-provider"
 import { hasShiningAccess } from "@/lib/plans"
 import { useProfile } from "@/components/providers/profile-provider"
+import { useDesignMode } from "@/hooks/use-design-mode"
+import { glassSurface } from "@/lib/glass-surface"
+import { cn } from "@/lib/utils"
 
 /** Compact Shining upsell for the home feed right rail (X-style Premium card). */
 export function HomeFeedPremiumCard() {
   const { t } = useT()
   const { profile } = useProfile()
+  const gs = glassSurface(useDesignMode() === "glass")
 
   if (
     hasShiningAccess({
@@ -21,11 +25,11 @@ export function HomeFeedPremiumCard() {
   }
 
   return (
-    <section className="rounded-2xl border border-border bg-muted/40 p-4">
-      <h2 className="text-[15px] font-bold tracking-tight text-foreground">
+    <section className={cn("p-4", gs.railCard)}>
+      <h2 className={cn("text-[15px] font-bold tracking-tight", gs.fg)}>
         {t("home.premiumCardTitle")}
       </h2>
-      <p className="mt-1.5 text-[13px] leading-snug text-muted-foreground">
+      <p className={cn("mt-1.5 text-[13px] leading-snug", gs.body)}>
         {t("home.premiumCardBody")}
       </p>
       <Link

@@ -15,6 +15,7 @@ export type FollowingFeedUser = {
   plan?: string | null
   plan_status?: string | null
   plan_current_period_end?: string | null
+  home_preferences?: import("@/lib/supabase/database.types").Json | null
 }
 
 export type FollowingStoryPerson = FollowingFeedUser & {
@@ -293,6 +294,7 @@ function toUserMap(
     plan?: string | null
     plan_status?: string | null
     plan_current_period_end?: string | null
+    home_preferences?: import("@/lib/supabase/database.types").Json | null
   }[],
 ) {
   return new Map(rows.map((u) => [u.id, u]))
@@ -409,7 +411,7 @@ export function useFollowingFeed(limit = 20) {
           .limit(FEED_FETCH_LIMIT),
         supabase
           .from("users")
-          .select("id, username, display_name, avatar_url, plan, plan_status, plan_current_period_end")
+          .select("id, username, display_name, avatar_url, plan, plan_status, plan_current_period_end, home_preferences")
           .in("id", feedAuthorIds),
       ])
 
@@ -567,12 +569,13 @@ export function useFollowingFeed(limit = 20) {
         plan?: string | null
         plan_status?: string | null
         plan_current_period_end?: string | null
+        home_preferences?: import("@/lib/supabase/database.types").Json | null
       }[] = []
 
       if (missingIds.length > 0) {
         const { data } = await supabase
           .from("users")
-          .select("id, username, display_name, avatar_url, plan, plan_status, plan_current_period_end")
+          .select("id, username, display_name, avatar_url, plan, plan_status, plan_current_period_end, home_preferences")
           .in("id", missingIds)
         extraUsers = data ?? []
       }
@@ -629,6 +632,7 @@ export function useFollowingFeed(limit = 20) {
           plan: u.plan,
           plan_status: u.plan_status,
           plan_current_period_end: u.plan_current_period_end,
+          home_preferences: u.home_preferences ?? null,
         }
         const meta = {
           likeCount: likeCountById.get(interactionId) ?? 0,
@@ -665,6 +669,7 @@ export function useFollowingFeed(limit = 20) {
             plan: u.plan,
             plan_status: u.plan_status,
             plan_current_period_end: u.plan_current_period_end,
+            home_preferences: u.home_preferences ?? null,
           },
           {
             filmsCount: countByListId.get(row.id) ?? 0,

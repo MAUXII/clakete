@@ -19,6 +19,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { avatarDisplaySrc } from "@/lib/next-remote-image"
 import { cn } from "@/lib/utils"
+import { useDesignMode } from "@/hooks/use-design-mode"
 
 export type FeedImageKind = "poster" | "backdrop"
 
@@ -318,15 +319,22 @@ export function FeedCustomizeDialog({
 
   const busy = loading || posting || fetching
   const previewName = selfName?.trim() || selfUsername || "You"
+  const designMode = useDesignMode()
+  const isGlass = designMode === "glass"
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[92vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-5xl">
-        <DialogHeader className="shrink-0 border-b border-border px-5 py-4">
-          <DialogTitle>Customize post</DialogTitle>
-          <DialogDescription>
+      <DialogContent className={cn(
+        "flex max-h-[92vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-5xl",
+        isGlass
+          ? "border-white/10 bg-[#161719]/96 text-white backdrop-blur-2xl shadow-[0_28px_64px_-16px_rgba(0,0,0,0.9)] sm:rounded-[24px]"
+          : ""
+      )}>
+        <DialogHeader className={cn("shrink-0 border-b px-5 py-4", isGlass ? "border-white/10" : "border-border")}>
+          <DialogTitle className={cn(isGlass && "text-white font-semibold")}>Customize post</DialogTitle>
+          <DialogDescription className={cn(isGlass && "text-white/50")}>
             Build your post for{" "}
-            <span className="text-foreground">{filmTitle}</span>
+            <span className={cn(isGlass ? "text-white font-medium" : "text-foreground")}>{filmTitle}</span>
             {" · "}
             {visibility === "public" ? "Public" : "Friends"}
           </DialogDescription>
@@ -536,8 +544,14 @@ export function FeedCustomizeDialog({
           </div>
         </div>
 
-        <DialogFooter className="shrink-0 gap-2 border-t border-border px-5 py-3 sm:justify-between">
-          <Button type="button" variant="ghost" onClick={onBack} disabled={busy}>
+        <DialogFooter className={cn("shrink-0 gap-2 border-t px-5 py-3 sm:justify-between", isGlass ? "border-white/10" : "border-border")}>
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={onBack}
+            disabled={busy}
+            className={cn(isGlass && "rounded-xl text-white/70 hover:bg-white/[0.08] hover:text-white")}
+          >
             Back
           </Button>
           <div className="flex gap-2">
@@ -546,12 +560,13 @@ export function FeedCustomizeDialog({
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={busy}
+              className={cn(isGlass && "rounded-xl border-white/12 bg-white/[0.04] text-white/80 hover:bg-white/[0.08] hover:text-white")}
             >
               Cancel
             </Button>
             <Button
               type="button"
-              className="bg-brand text-white hover:bg-brand-hover"
+              className={cn(isGlass ? "rounded-xl bg-white px-5 font-semibold text-black hover:bg-white/90" : "bg-brand text-white hover:bg-brand-hover")}
               disabled={busy || selected.length === 0}
               onClick={() => void handlePost()}
             >

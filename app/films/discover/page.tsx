@@ -16,13 +16,16 @@ import {
   FilmsScrollToTopFab,
   FilmsSubNav,
   FilmsToolbarIconButton,
+  FilmsToolbarPillButton,
   filmsPosterGridClassName,
   filmsPosterSkeletonClassName,
+  CatalogCardSkeleton,
 } from "@/components/films/films-catalog-shell";
 import { cn } from "@/lib/utils";
 import { filmHref } from "@/lib/media-href";
 import { useLocalePrefs } from "@/hooks/use-locale-prefs";
 import { useT } from "@/components/providers/i18n-provider";
+import { useDesignMode } from "@/hooks/use-design-mode";
 
 interface Movie {
   id: number;
@@ -34,6 +37,7 @@ interface Movie {
   overview: string | null;
   vote_average?: number;
   genres?: { id: number; name: string }[];
+  director?: string | null;
 }
 
 interface MoviesResponse {
@@ -55,6 +59,8 @@ function FilmsDiscoverContent() {
   const { genres, loading: genresLoading } = useGenres();
   const { withLocale, localeQs, loading: localeLoading, tmdbLanguage, watchRegion } = useLocalePrefs();
   const { t } = useT();
+  const designMode = useDesignMode();
+  const isGlass = designMode === "glass";
   const genre = searchParams.get("genres") || "";
   const voteAverageLte = Number(searchParams.get("vote_average.lte") || 10);
   const sortBy = searchParams.get("sort_by") || "popularity.desc";
@@ -172,7 +178,6 @@ function FilmsDiscoverContent() {
           router.push(
             filmHref({
               id: randomMovie.id,
-              title: randomMovie.title,
               original_title: randomMovie.original_title,
               release_date: randomMovie.release_date,
             }),
@@ -189,38 +194,46 @@ function FilmsDiscoverContent() {
     <FilmsCatalogShell>
       <FilmsCatalogHeader
         eyebrow={t("catalog.catalogEyebrow")}
-        title={t("catalog.discoverTitle")}
-        description={t("catalog.discoverDescription")}
+        title={isGlass ? "Descobrir filmes" : t("catalog.discoverTitle")}
+        description={isGlass ? "Navegue por gênero, limite por nota e ordene — os filtros valem para o índice discover do TMDB." : t("catalog.discoverDescription")}
         actions={
           <>
             <FilmsToolbarIconButton onClick={handleFeelingLucky} aria-label={t("catalog.feelingLucky")}>
-              <PiClover className="h-5 w-5" />
+              <PiClover className="h-4 w-4" />
             </FilmsToolbarIconButton>
             <Sheet open={open} onOpenChange={setOpen}>
               <SheetTrigger asChild>
-                <FilmsToolbarIconButton aria-label={t("catalog.filters")}>
-                  <IoOptions className="h-5 w-5" />
-                </FilmsToolbarIconButton>
+                <FilmsToolbarPillButton aria-label={t("catalog.filters")}>
+                  <IoOptions className="h-4 w-4" />
+                  <span>{t("catalog.filters")}</span>
+                </FilmsToolbarPillButton>
               </SheetTrigger>
               <SheetContent
                 side="right"
-                className="w-full max-w-sm border-l border-border bg-card text-foreground"
+                className={cn(
+                  "w-full max-w-sm border-l text-foreground",
+                  isGlass
+                    ? "border-white/10 bg-[#161719]/96 text-white backdrop-blur-2xl"
+                    : "border-border bg-card",
+                )}
               >
                 <SheetHeader>
-                  <SheetTitle className="text-left text-lg text-foreground">{t("catalog.filters")}</SheetTitle>
+                  <SheetTitle className={cn("text-left text-lg", isGlass ? "text-white font-semibold" : "text-foreground")}>
+                    {t("catalog.filters")}
+                  </SheetTitle>
                 </SheetHeader>
                 <div className="mt-6 flex flex-col gap-5">
                 <div>
-                  <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  <label className={cn("mb-2 block text-xs font-medium uppercase tracking-wide", isGlass ? "text-white/40" : "text-muted-foreground")}>
                     {t("catalog.genre")}
                   </label>
                   <Select value={localGenre} onValueChange={setLocalGenre} disabled={genresLoading}>
-                    <SelectTrigger className="border-border bg-white/[0.04]">
+                    <SelectTrigger className={cn(isGlass ? "border-white/10 bg-white/[0.04] text-white" : "border-border bg-white/[0.04]")}>
                       <SelectValue placeholder={genresLoading ? t("catalog.loadingGenres") : t("catalog.allGenres")} />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className={cn(isGlass && "border-white/10 bg-[#161719] text-white")}>
                       {genres.length === 0 && !genresLoading && (
-                        <div className="px-3 py-2 text-muted-foreground text-sm">{t("catalog.noGenres")}</div>
+                        <div className={cn("px-3 py-2 text-sm", isGlass ? "text-white/40" : "text-muted-foreground")}>{t("catalog.noGenres")}</div>
                       )}
                       {genres.map(g => (
                         <SelectItem key={g.id} value={g.id.toString()}>{g.name}</SelectItem>
@@ -229,7 +242,7 @@ function FilmsDiscoverContent() {
                   </Select>
                 </div>
                 <div>
-                  <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  <label className={cn("mb-2 block text-xs font-medium uppercase tracking-wide", isGlass ? "text-white/40" : "text-muted-foreground")}>
                     {t("catalog.maxRating")}
                   </label>
                   <div className="flex items-center gap-2">
@@ -241,18 +254,18 @@ function FilmsDiscoverContent() {
                       onValueChange={v => setLocalVoteAverageLte(v[0])}
                       className="w-full"
                     />
-                    <span className="text-sm font-medium w-10 text-right">{localVoteAverageLte}</span>
+                    <span className={cn("w-10 text-right text-sm font-medium", isGlass && "text-white")}>{localVoteAverageLte}</span>
                   </div>
                 </div>
                 <div>
-                  <label className="mb-2 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  <label className={cn("mb-2 block text-xs font-medium uppercase tracking-wide", isGlass ? "text-white/40" : "text-muted-foreground")}>
                     {t("catalog.sortBy")}
                   </label>
                   <Select value={localSortBy} onValueChange={setLocalSortBy}>
-                    <SelectTrigger className="border-border bg-white/[0.04]">
+                    <SelectTrigger className={cn(isGlass ? "border-white/10 bg-white/[0.04] text-white" : "border-border bg-white/[0.04]")}>
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className={cn(isGlass && "border-white/10 bg-[#161719] text-white")}>
                       <SelectItem value="popularity.desc">{t("catalog.sortMostPopular")}</SelectItem>
                       <SelectItem value="popularity.asc">{t("catalog.sortLeastPopular")}</SelectItem>
                       <SelectItem value="release_date.desc">{t("catalog.sortMostRecent")}</SelectItem>
@@ -263,7 +276,12 @@ function FilmsDiscoverContent() {
                   </Select>
                 </div>
                 <button
-                  className="mt-2 rounded-xl bg-brand py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-hover"
+                  className={cn(
+                    "mt-2 rounded-xl py-3 text-sm font-semibold transition-colors",
+                    isGlass
+                      ? "bg-white text-black hover:bg-white/90"
+                      : "bg-brand text-white hover:bg-brand-hover",
+                  )}
                   onClick={handleSaveFilters}
                   type="button"
                 >
@@ -278,8 +296,8 @@ function FilmsDiscoverContent() {
       <FilmsSubNav />
       {loading ? (
         <div className={cn(filmsPosterGridClassName)}>
-          {[...Array(18)].map((_, i) => (
-            <Skeleton key={i} className={filmsPosterSkeletonClassName} />
+          {[...Array(12)].map((_, i) => (
+            <CatalogCardSkeleton key={i} />
           ))}
         </div>
       ) : (
@@ -289,8 +307,8 @@ function FilmsDiscoverContent() {
               <MovieCard key={movie.id} movie={movie} />
             ))}
             {loadingMore &&
-              [...Array(12)].map((_, i) => (
-                <Skeleton key={`loading-${i}`} className={filmsPosterSkeletonClassName} />
+              [...Array(8)].map((_, i) => (
+                <CatalogCardSkeleton key={`loading-${i}`} />
               ))}
           </div>
           <FilmsScrollToTopFab visible={showScrollTop} onClick={scrollToTop} />

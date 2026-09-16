@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import axios from 'axios'
 import { DEFAULT_TMDB_LANGUAGE, resolveTmdbLanguage } from '@/lib/locale-prefs'
+import { enrichSeriesWithCreators } from '@/lib/tmdb-director'
 
 const TMDB_API_KEY = process.env.NEXT_TMDB_API_KEY
 const TMDB_BASE_URL = process.env.NEXT_PUBLIC_TMDB_BASE_URL
@@ -28,7 +29,8 @@ export async function GET(request: Request) {
         `${TMDB_BASE_URL}/trending/tv/${timeWindow}`,
         { params },
       )
-      return NextResponse.json(response.data)
+      const enriched = await enrichSeriesWithCreators(response.data.results || [])
+      return NextResponse.json({ ...response.data, results: enriched })
     }
 
     const endpoint = type
@@ -46,7 +48,8 @@ export async function GET(request: Request) {
       params,
     })
 
-    return NextResponse.json(response.data)
+    const enriched = await enrichSeriesWithCreators(response.data.results || [])
+    return NextResponse.json({ ...response.data, results: enriched })
   } catch (error) {
     console.error('Erro ao buscar séries:', error)
     return NextResponse.json(

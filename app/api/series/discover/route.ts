@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import axios from 'axios'
 import { resolveTmdbLanguage, resolveWatchRegion } from '@/lib/locale-prefs'
+import { enrichSeriesWithCreators } from '@/lib/tmdb-director'
 
 const TMDB_API_KEY = process.env.NEXT_TMDB_API_KEY
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3'
@@ -62,7 +63,8 @@ export async function GET(req: NextRequest) {
     const response = await axios.get(`${TMDB_BASE_URL}/discover/tv`, {
       params,
     })
-    return NextResponse.json(response.data)
+    const enriched = await enrichSeriesWithCreators(response.data.results || [])
+    return NextResponse.json({ ...response.data, results: enriched })
   } catch (error) {
     console.error('Erro ao buscar séries (discover):', error)
     return NextResponse.json(

@@ -35,10 +35,14 @@ import type { Movie } from "@/lib/tmdb/client"
 import { toLocalDateString } from "@/lib/watched-date"
 import { Button } from "@/components/ui/button"
 import { useT } from "@/components/providers/i18n-provider"
+import { useDesignMode } from "@/hooks/use-design-mode"
+import { glassSurface } from "@/lib/glass-surface"
+import { cn } from "@/lib/utils"
 
 function FeedRowSkeleton() {
+  const gs = glassSurface(useDesignMode() === "glass")
   return (
-    <li className="border-b border-border/80 py-4">
+    <li className={cn("border-b py-4", gs.postBorder)}>
       <div className="flex items-start gap-3">
         <Skeleton className="size-10 shrink-0 rounded-full" />
         <div className="min-w-0 flex-1 space-y-2">
@@ -76,23 +80,27 @@ function Composer({
   username?: string
 }) {
   const { t } = useT()
+  const gs = glassSurface(useDesignMode() === "glass")
   const initial = (username?.[0] || "?").toUpperCase()
 
   return (
-    <div className="-mx-3 border-b border-border/70 sm:-mx-4">
+    <div className={cn("-mx-3 border-b sm:-mx-4", gs.composerBorder)}>
       <button
         type="button"
         onClick={onClick}
-        className="group flex w-full items-center gap-3 px-3 py-3 text-left transition hover:bg-muted/20 sm:px-4"
+        className={cn(
+          "group flex w-full items-center gap-3 px-3 py-3 text-left transition sm:px-4",
+          gs.composerHover,
+        )}
       >
-        <Avatar className="size-10 shrink-0 border border-border">
+        <Avatar className={cn("size-10 shrink-0 border", gs.avatar)}>
           <AvatarImage src={avatarDisplaySrc(avatarUrl) ?? undefined} alt="" />
-          <AvatarFallback className="bg-muted text-sm text-muted-foreground">
+          <AvatarFallback className={cn("text-sm", gs.avatarFb)}>
             {initial}
           </AvatarFallback>
         </Avatar>
 
-        <p className="min-w-0 flex-1 text-[15px] leading-snug text-muted-foreground/70">
+        <p className={cn("min-w-0 flex-1 text-[15px] leading-snug", gs.mutedSoft)}>
           {t("home.composerPlaceholder")}
         </p>
 
@@ -130,6 +138,7 @@ export function SocialFeed({
   const { t } = useT()
   const supabase = useSupabaseClient()
   const authUser = useUser()
+  const gs = glassSurface(useDesignMode() === "glass")
   const router = useRouter()
   const searchParams = useSearchParams()
   const locateShareUid = searchParams.get("p")?.trim() || null
@@ -417,11 +426,11 @@ export function SocialFeed({
   const emptyNode = useMemo(() => {
     if (followingCount === 0) {
       return (
-        <div className="rounded-xl border border-dashed border-border bg-background/70 px-4 py-8 text-center">
-          <p className="text-sm font-medium text-foreground">
+        <div className={cn("px-4 py-8 text-center", gs.empty)}>
+          <p className={cn("text-sm font-medium", gs.fg)}>
             {t("home.feedEmptyNoFollowsTitle")}
           </p>
-          <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-muted-foreground">
+          <p className={cn("mx-auto mt-2 max-w-sm text-sm leading-relaxed", gs.body)}>
             {t("home.feedEmptyNoFollowsBody")}
           </p>
           <Button asChild variant="outline" size="sm" className="mt-5">
@@ -431,11 +440,11 @@ export function SocialFeed({
       )
     }
     return (
-      <div className="rounded-xl border border-dashed border-border bg-background/70 px-4 py-8 text-center">
-        <p className="text-sm font-medium text-foreground">
+      <div className={cn("px-4 py-8 text-center", gs.empty)}>
+        <p className={cn("text-sm font-medium", gs.fg)}>
           {t("home.feedEmptyQuietTitle")}
         </p>
-        <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-muted-foreground">
+        <p className={cn("mx-auto mt-2 max-w-sm text-sm leading-relaxed", gs.body)}>
           {t("home.feedEmptyQuietBody")}
         </p>
         <Button
@@ -449,7 +458,7 @@ export function SocialFeed({
         </Button>
       </div>
     )
-  }, [followingCount, openComposer, t])
+  }, [followingCount, gs, openComposer, t])
 
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
 
@@ -494,8 +503,8 @@ export function SocialFeed({
           ))}
         </ul>
       ) : error ? (
-        <div className="rounded-xl border border-border/80 bg-muted/40 px-4 py-6 text-center">
-          <p className="text-sm text-muted-foreground">{t("home.feedLoadError")}</p>
+        <div className={cn("rounded-xl border px-4 py-6 text-center", gs.panel)}>
+          <p className={cn("text-sm", gs.muted)}>{t("home.feedLoadError")}</p>
           <button
             type="button"
             onClick={() => void refresh()}
@@ -549,13 +558,16 @@ export function SocialFeed({
           {hasMore ? (
             <div
               ref={loadMoreRef}
-              className="flex min-h-10 items-center justify-center py-4 text-xs text-muted-foreground"
+              className={cn(
+                "flex min-h-10 items-center justify-center py-4 text-xs",
+                gs.mutedSoft,
+              )}
               aria-busy={loadingMore}
             >
               {loadingMore ? t("home.feedLoadMore") : null}
             </div>
           ) : (
-            <p className="py-3 text-center text-[11px] text-muted-foreground">
+            <p className={cn("py-3 text-center text-[11px]", gs.mutedSoft)}>
               {t("home.feedCaughtUp")}
             </p>
           )}

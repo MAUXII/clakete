@@ -13,7 +13,9 @@ import {
   Zap,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { pageContainerClass } from '@/lib/page-container'
+import { glassSurface } from '@/lib/glass-surface'
+import { pageContainerClass, glassProfileContainerClass } from '@/lib/page-container'
+import { useDesignMode } from '@/hooks/use-design-mode'
 import { UserRecentReviews } from "@/components/profile/recent-reviews";
 import { SocialFeed, SocialFeedSkeleton } from "@/components/home/social-feed";
 import { HomeForYouRail } from "@/components/home/home-for-you-rail";
@@ -71,6 +73,7 @@ function LoggedHomeSectionHeader({
   dense?: boolean
   stack?: boolean
 }) {
+  const gs = glassSurface(useDesignMode() === 'glass')
   return (
     <header
       className={cn(
@@ -81,21 +84,27 @@ function LoggedHomeSectionHeader({
     >
       <div className="min-w-0 space-y-1">
         {eyebrow ? (
-          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+          <p className={cn(
+            "text-[10px] font-semibold uppercase tracking-[0.22em]",
+            gs.mutedSoft,
+          )}>
             {eyebrow}
           </p>
         ) : null}
         <h2
           id={titleId}
           className={cn(
-            "font-semibold tracking-tight text-foreground",
+            "font-semibold tracking-tight",
+            gs.fg,
             dense ? "truncate text-[15px] leading-snug" : "text-lg sm:text-xl",
           )}
         >
           {title}
         </h2>
         {description && !dense ? (
-          <p className="max-w-xl text-sm leading-relaxed text-muted-foreground">{description}</p>
+          <p className={cn("max-w-xl text-sm leading-relaxed", gs.body)}>
+            {description}
+          </p>
         ) : null}
       </div>
       {action ? (
@@ -105,8 +114,14 @@ function LoggedHomeSectionHeader({
   )
 }
 
-const loggedHomeSecondaryLink =
-  'text-sm font-medium text-muted-foreground transition-colors hover:text-foreground'
+function loggedHomeSecondaryLinkClass(isGlass: boolean) {
+  return cn(
+    "text-sm font-medium transition-colors",
+    isGlass
+      ? "text-white/55 hover:text-white"
+      : "text-muted-foreground hover:text-foreground",
+  )
+}
 
 /** Shorter letterbox for logged-in home — less giant, more product. */
 const HOME_LETTERBOX_HEIGHT = 'clamp(220px, min(32vh, 360px), 400px)' as const
@@ -116,6 +131,8 @@ const homeWelcomeHintStorageKey = (username: string) =>
 
 export default function HomePage() {
   const { t } = useT()
+  const designMode = useDesignMode()
+  const isGlass = designMode === 'glass'
   const [welcomeHintHidden, setWelcomeHintHidden] = useState(false)
   const [featuredMovies, setFeaturedMovies] = useState<Movie[]>([])
   const [upcomingMovies, setUpcomingMovies] = useState<Movie[]>([])
@@ -628,7 +645,11 @@ export default function HomePage() {
     },
   ] as const
 
-  const sectionShell = 'border-b border-border/60 py-8 last:border-b-0'
+  const sectionShell = cn(
+    "border-b py-8 last:border-b-0",
+    isGlass ? "border-white/[0.08]" : "border-border/60",
+  )
+  const secondaryLink = loggedHomeSecondaryLinkClass(isGlass)
   const showLowerBlock = homePrefs.show_recent_reviews || homePrefs.show_upcoming
 
   const allMainSectionsOff =
@@ -655,7 +676,7 @@ export default function HomePage() {
             action={
               <Link
                 href="/cinemas"
-                className={cn(loggedHomeSecondaryLink, "whitespace-nowrap text-xs")}
+                className={cn(secondaryLink, "whitespace-nowrap text-xs")}
               >
                 {t("home.seeAll")}
               </Link>
@@ -676,7 +697,7 @@ export default function HomePage() {
             action={
               <Link
                 href="/films/upcoming"
-                className={cn(loggedHomeSecondaryLink, "whitespace-nowrap text-xs")}
+                className={cn(secondaryLink, "whitespace-nowrap text-xs")}
               >
                 {t("home.seeAll")}
               </Link>
@@ -724,21 +745,21 @@ export default function HomePage() {
   if (feedLayout) {
     /** Clear fixed navbar, then keep a small gap so sticky rails don't kiss the chrome. */
     const stickyTopClass =
-      'lg:sticky lg:top-[calc(3.75rem+var(--clakete-promo-h,0px)+0.75rem)] lg:max-h-[calc(100vh-3.75rem-var(--clakete-promo-h,0px)-0.75rem)] lg:overflow-y-auto'
+      'lg:sticky lg:top-[calc(var(--ck-nav-h,3.25rem)+var(--clakete-promo-h,0px)+0.75rem)] lg:max-h-[calc(100vh-var(--ck-nav-h,3.25rem)-var(--clakete-promo-h,0px)-0.75rem)] lg:overflow-y-auto'
     const stickyHeaderTop =
-      'top-[calc(3.75rem+var(--clakete-promo-h,0px)+0.75rem)]'
+      'top-[calc(var(--ck-nav-h,3.25rem)+var(--clakete-promo-h,0px)+0.75rem)]'
 
     return (
       <div className="w-full overflow-x-clip pb-16">
         <div
           className={cn(
-            pageContainerClass,
-            'mt-[calc(3.75rem+var(--clakete-promo-h,0px))]',
+            isGlass ? glassProfileContainerClass : pageContainerClass,
+            'mt-[calc(var(--ck-nav-h,3.25rem)+var(--clakete-promo-h,0px))]',
           )}
         >
           <div
             className={cn(
-              'grid w-full items-stretch lg:min-h-[calc(100vh-3.75rem-var(--clakete-promo-h,0px))]',
+              'grid w-full items-stretch lg:min-h-[calc(100vh-var(--ck-nav-h,3.25rem)-var(--clakete-promo-h,0px))]',
               showLeftCatalog
                 ? 'lg:grid-cols-[minmax(140px,0.55fr)_minmax(0,2fr)_minmax(200px,0.7fr)]'
                 : 'lg:grid-cols-[minmax(0,2fr)_minmax(200px,0.7fr)]',
@@ -756,16 +777,25 @@ export default function HomePage() {
               </aside>
             ) : null}
 
-            <main className="min-w-0 w-full lg:border-x lg:border-border/70">
+            <main className={cn(
+              "min-w-0 w-full",
+              isGlass ? "lg:border-x lg:border-white/[0.08]" : "lg:border-x lg:border-border/70"
+            )}>
               <header
                 className={cn(
-                  'sticky z-20 border-b border-border/70 bg-background/80 px-3 py-3 backdrop-blur-xl supports-[backdrop-filter]:bg-background/70 sm:px-4',
+                  'sticky z-20 px-3 py-3 backdrop-blur-xl sm:px-4',
+                  isGlass
+                    ? 'border-b border-white/[0.08] bg-background/55 supports-[backdrop-filter]:bg-background/45'
+                    : 'border-b border-border/70 bg-background/80 supports-[backdrop-filter]:bg-background/70',
                   stickyHeaderTop,
                 )}
               >
                 <h1
                   id="home-following-feed"
-                  className="text-[17px] font-bold tracking-tight text-foreground"
+                  className={cn(
+                    "text-[17px] font-bold tracking-tight",
+                    isGlass ? "text-white" : "text-foreground"
+                  )}
                 >
                   {t('home.activity')}
                 </h1>
@@ -837,7 +867,7 @@ export default function HomePage() {
 
       <div
         className={cn(
-          pageContainerClass,
+          isGlass ? glassProfileContainerClass : pageContainerClass,
           hasFilmHero ? 'relative z-10 -mt-[3.5rem] sm:-mt-[4rem]' : 'mt-[calc(5rem+var(--clakete-promo-h,0px))] pt-6',
         )}
       >
@@ -845,20 +875,33 @@ export default function HomePage() {
         <header className="pb-6">
           <div className="pointer-events-auto flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
             <div className="min-w-0 space-y-1.5">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+              <p
+                className={cn(
+                  "text-[10px] font-semibold uppercase tracking-[0.22em]",
+                  isGlass ? "text-white/40" : "text-muted-foreground",
+                )}
+              >
                 Home
               </p>
-              <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+              <h1
+                className={cn(
+                  "text-2xl font-semibold tracking-tight sm:text-3xl",
+                  isGlass ? "text-white" : "text-foreground",
+                )}
+              >
                 Hey, {userProfile.username}
               </h1>
               {showWelcomeHint ? (
-                <p className="text-xs text-muted-foreground">
+                <p className={cn("text-xs", isGlass ? "text-white/45" : "text-muted-foreground")}>
                   {allMainSectionsOff ? (
                     <>Every home block is hidden. </>
                   ) : null}
                   <Link
                     href={profileHref}
-                    className="underline underline-offset-2 hover:text-foreground"
+                    className={cn(
+                      "underline underline-offset-2",
+                      isGlass ? "hover:text-white" : "hover:text-foreground",
+                    )}
                   >
                     Preferences
                   </Link>
@@ -868,7 +911,12 @@ export default function HomePage() {
                       ·{' '}
                       <button
                         type="button"
-                        className="inline cursor-pointer border-none bg-transparent p-0 font-inherit text-[length:inherit] text-muted-foreground underline underline-offset-2 hover:text-foreground"
+                        className={cn(
+                          "inline cursor-pointer border-none bg-transparent p-0 font-inherit text-[length:inherit] underline underline-offset-2",
+                          isGlass
+                            ? "text-white/45 hover:text-white"
+                            : "text-muted-foreground hover:text-foreground",
+                        )}
                         onClick={() => {
                           if (!userProfile?.username) return
                           try {
@@ -895,7 +943,12 @@ export default function HomePage() {
                 <Link
                   key={href + label}
                   href={href}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background/80 px-3 py-1.5 text-xs font-medium text-foreground backdrop-blur-sm transition hover:bg-muted"
+                  className={cn(
+                    "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium backdrop-blur-sm transition",
+                    isGlass
+                      ? "bg-white/[0.04] text-white/85 ring-1 ring-white/10 hover:bg-white/[0.08]"
+                      : "border border-border bg-background/80 text-foreground hover:bg-muted",
+                  )}
                 >
                   <Icon className="size-3.5 opacity-70" aria-hidden />
                   {label}
@@ -935,7 +988,7 @@ export default function HomePage() {
                 titleId="home-for-you"
                 description={t("home.forYouHint")}
                 action={
-                  <Link href="/films/discover" className={loggedHomeSecondaryLink}>
+                  <Link href="/films/discover" className={secondaryLink}>
                     {t("home.catalogLink")}
                   </Link>
                 }
