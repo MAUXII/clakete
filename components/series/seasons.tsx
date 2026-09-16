@@ -28,6 +28,9 @@ export default function SeasonsList({
   seriesFirstAirDate?: string | null
   seasons: Season[]
 }) {
+  const designMode = useDesignMode()
+  const isGlass = designMode === "glass"
+
   if (!seasons || seasons.length === 0) {
     return <div className="text-muted-foreground">Nenhuma temporada encontrada.</div>;
   }
@@ -47,9 +50,6 @@ export default function SeasonsList({
     original_name: seriesOriginalName,
     first_air_date: seriesFirstAirDate,
   })
-
-  const designMode = useDesignMode()
-  const isGlass = designMode === "glass"
 
   if (isGlass) {
     return (

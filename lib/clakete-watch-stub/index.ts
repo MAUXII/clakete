@@ -47,7 +47,7 @@ export function ClaketeSeasonWatchDialog(_props: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   seriesId: number;
-  seriesTitle: string;
+  seriesName?: string;
   seasonNumber: number;
   episodes: ClaketeSeasonEpisode[];
   onEpisodePlay?: (episode: ClaketeSeasonEpisode) => void;

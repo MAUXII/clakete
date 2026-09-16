@@ -15,10 +15,13 @@ const watchServer = hasWatch
 
 const nextConfig: NextConfig = {
   serverExternalPackages: ["playwright"],
-  turbopack: {
-    resolveAlias: {
-      "@clakete/watch": watchClient,
-      "@clakete/watch/server": watchServer,
+  // Dev (Turbopack): Next 15.1 uses experimental.turbo
+  experimental: {
+    turbo: {
+      resolveAlias: {
+        "@clakete/watch": watchClient,
+        "@clakete/watch/server": watchServer,
+      },
     },
   },
   webpack: (config) => {
