@@ -12,6 +12,7 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { rectSortingStrategy, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { useLists } from "@/hooks/use-lists";
+import { useDesignMode } from "@/hooks/use-design-mode";
 import { CommandDialog } from "@/components/ui/command";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useMediaSearch, type SeriesSearchResult } from "@/hooks/use-media-search";
@@ -20,6 +21,16 @@ import type { Movie } from "@/lib/tmdb/client";
 import { ImageEditDialog } from "@/components/profile/avatar-edit-dialog";
 import { MovieCard } from "@/components/movies/movie-card";
 import { SeriesCard } from "@/components/series/series-card";
+import { ListDetailGlass } from "@/components/lists/list-detail-glass";
+import {
+  LIST_REORDER_POSTER_GRID,
+  LIST_REORDER_POSTER_LIST,
+  ListReorderDragPreview,
+  REORDER_SHELL_DURATION_S,
+  REORDER_SHELL_EASE,
+  REORDER_SHELL_MS,
+  measureListReorderDragBox,
+} from "@/components/lists/list-reorder-bits";
 import { IoTrashOutline } from "react-icons/io5";
 import { userProfilePath } from "@/lib/list-href";
 import { filmHref, seriesHref } from "@/lib/media-href";
@@ -35,88 +46,6 @@ import { Sortable, SortableContent, SortableItem, SortableOverlay } from "@/comp
 /** Igual ao hero em `app/film/[id]/page.tsx` — altura responsiva + full-bleed + fades. */
 const LIST_LETTERBOX_HEIGHT = "clamp(400px, min(60vh, 680px), 780px)";
 
-const REORDER_SHELL_DURATION_S = 0.55;
-const REORDER_SHELL_EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
-/** Margem após a animação do padding antes de desmontar o modo reorder. */
-const REORDER_SHELL_MS = Math.ceil(REORDER_SHELL_DURATION_S * 1000) + 90;
-
-function normalizeDragBox(
-  r: { width: number; height: number } | null | undefined,
-): { w: number; h: number } | null {
-  if (!r) return null;
-  const w = Math.round(r.width);
-  const h = Math.round(r.height);
-  if (w < 8 || h < 8) return null;
-  return { w, h };
-}
-
-/** Same TMDB size as the reorder row — avoids a second fetch + flash when the drag overlay mounts. */
-const LIST_REORDER_POSTER_GRID = "w500" as const;
-const LIST_REORDER_POSTER_LIST = "w185" as const;
-
-/** Rect do dnd-kit no start pode vir vazio; usa DOM + rAF como em layouts responsivos. */
-function measureListReorderDragBox(e: DragStartEvent): { w: number; h: number } | null {
-  const cur = e.active.rect.current;
-  const fromKit =
-    normalizeDragBox(cur.initial) ?? normalizeDragBox(cur.translated);
-  if (fromKit) return fromKit;
-
-  const act = e.activatorEvent;
-  if (act && "target" in act) {
-    const t = act.target;
-    if (t instanceof Element) {
-      const li = t.closest("li");
-      if (li) return normalizeDragBox(li.getBoundingClientRect());
-    }
-  }
-  return null;
-}
-
-/** Tamanho congelado no drag start — evita encolher no drop quando o rect do kit anima/zera. */
-function ListReorderDragPreview({
-  film,
-  box,
-  posterProfile,
-  variant,
-}: {
-  film: ListItem;
-  box: { w: number; h: number } | null;
-  posterProfile: typeof LIST_REORDER_POSTER_GRID | typeof LIST_REORDER_POSTER_LIST;
-  variant: "grid" | "list";
-}) {
-  const w = box?.w ?? 0;
-  const h = box?.h ?? 0;
-  const hasSize = w > 4 && h > 4;
-  const src = film.poster_path?.trim()
-    ? `https://image.tmdb.org/t/p/${posterProfile}${film.poster_path}`
-    : null;
-  return (
-    <div
-      style={hasSize ? { width: w, height: h } : undefined}
-      className={cn(
-        variant === "grid" &&
-          "overflow-hidden rounded-md border border-black/15 dark:border-white/15",
-        variant === "list" && "overflow-hidden rounded",
-        !hasSize && variant === "grid" && "aspect-[2/3] w-[5.5rem]",
-        !hasSize && variant === "list" && "h-14 w-10",
-      )}
-    >
-      {src ? (
-        <img
-          src={src}
-          alt=""
-          draggable={false}
-          className="h-full w-full object-cover"
-        />
-      ) : (
-        <div className="flex h-full items-center justify-center bg-muted text-xs text-muted-foreground">
-          …
-        </div>
-      )}
-    </div>
-  );
-}
-
 export default function UserListDetailPage() {
   const params = useParams();
   const profileUsername = String(params.username || "").toLowerCase();
@@ -124,6 +53,7 @@ export default function UserListDetailPage() {
   const supabase = useSupabaseClient<Database>();
   const router = useRouter();
   const currentUser = useUser();
+  const designMode = useDesignMode();
   const { addItemToList, removeItemFromList, updateList, fetchListLikesMeta, toggleListLike, reorderListItems } = useLists();
 
   const [list, setList] = useState<List | null>(null);
@@ -581,6 +511,99 @@ export default function UserListDetailPage() {
   const bannerPres = listBannerPresentation(list);
   const listBackdropUrl = bannerPres.src;
 
+  const listDialogs = (
+    <>
+      <CommandDialog open={showSearchDialog} onOpenChange={setShowSearchDialog}>
+        <MediaSearchCommandContent
+          query={query}
+          onQueryChange={setQuery}
+          filmResults={filmResults}
+          seriesResults={seriesResults}
+          loading={searchLoading}
+          inputPlaceholder="Search"
+          commandInputClassName="h-12 text-sm font-medium placeholder:text-muted-foreground"
+          commandListClassName="custom-scrollbar max-h-[600px] h-full overflow-y-auto"
+          onSelectFilm={(movie) => {
+            void handleFilmSelect(movie);
+          }}
+          onSelectSeries={(series) => {
+            void handleSeriesSelect(series);
+          }}
+          filmRowMode="pick"
+          seriesRowMode="pick"
+        />
+      </CommandDialog>
+
+      {canEdit && list ? (
+        <EditListDialog
+          list={list}
+          open={editListDialogOpen}
+          onOpenChange={setEditListDialogOpen}
+          onListUpdated={() => void refreshListAfterEdit()}
+        />
+      ) : null}
+
+      {showBannerEdit && listId ? (
+        <ImageEditDialog
+          isOpen={showBannerEdit}
+          onClose={() => setShowBannerEdit(false)}
+          onSave={() => {}}
+          type="list"
+          listId={listId}
+          customListBannerSave={async (meta) => {
+            const ok = await updateList(listId, { backdrop_path: null, banner_meta: meta });
+            if (ok) {
+              setList((prev) =>
+                prev ? { ...prev, backdrop_path: undefined, banner_meta: meta } : null,
+              );
+            }
+          }}
+          onSelect={() => {}}
+        />
+      ) : null}
+    </>
+  );
+
+  if (designMode === "glass") {
+    return (
+      <>
+        <ListDetailGlass
+          list={list}
+          listId={listId}
+          films={films}
+          setFilms={setFilms}
+          canEdit={canEdit}
+          currentUserId={currentUser?.id ?? null}
+          likeCount={likeCount}
+          userLiked={userLiked}
+          likePending={likePending}
+          watchedInList={watchedInList}
+          totalListItems={totalListItems}
+          progressPercent={progressPercent}
+          listTags={listTags}
+          viewMode={viewMode}
+          setViewMode={setViewMode}
+          reorderMode={reorderMode}
+          reorderLeaving={reorderLeaving}
+          reorderSaving={reorderSaving}
+          reorderShellExpanded={reorderShellExpanded}
+          reorderShellBorder={reorderShellBorder}
+          listReorderDragBox={listReorderDragBox}
+          onReorderDragStart={handleListReorderDragStart}
+          onEnterReorder={enterReorder}
+          onCancelReorder={cancelReorder}
+          onConfirmReorder={() => void confirmReorder()}
+          onRemoveFilm={(film) => void handleRemoveFilm(film)}
+          onOpenSearch={() => setShowSearchDialog(true)}
+          onOpenEditList={() => setEditListDialogOpen(true)}
+          onOpenBannerEdit={() => setShowBannerEdit(true)}
+          onToggleLike={() => void handleToggleListLike()}
+        />
+        {listDialogs}
+      </>
+    );
+  }
+
   return (
     <div className="min-h-screen w-full overflow-x-clip bg-background">
       <FilmsCatalogShell>
@@ -817,7 +840,7 @@ export default function UserListDetailPage() {
                             "m-0 w-full list-none p-0",
                             viewMode === "list"
                               ? "flex flex-col gap-2"
-                              : "grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5",
+                              : "ck-catalog-grid grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5",
                           )}
                         >
                           {films.map((film, idx) =>
@@ -899,7 +922,7 @@ export default function UserListDetailPage() {
                 ) : (
                   <div className="w-full">
                     {viewMode === "grid" ? (
-                  <div className="grid w-full grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5">
+                  <div className="ck-catalog-grid grid w-full grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5">
                     {films.map((film) => (
                       <div
                         key={`${film.tmdb_id}-${film.media_type ?? "movie"}-${film.position}`}
@@ -1149,54 +1172,7 @@ export default function UserListDetailPage() {
         </aside>
       </header>
 
-      <CommandDialog open={showSearchDialog} onOpenChange={setShowSearchDialog}>
-        <MediaSearchCommandContent
-          query={query}
-          onQueryChange={setQuery}
-          filmResults={filmResults}
-          seriesResults={seriesResults}
-          loading={searchLoading}
-          inputPlaceholder="Search"
-          commandInputClassName="h-12 text-sm font-medium placeholder:text-muted-foreground"
-          commandListClassName="custom-scrollbar max-h-[600px] h-full overflow-y-auto"
-          onSelectFilm={(movie) => {
-            void handleFilmSelect(movie);
-          }}
-          onSelectSeries={(series) => {
-            void handleSeriesSelect(series);
-          }}
-          filmRowMode="pick"
-          seriesRowMode="pick"
-        />
-      </CommandDialog>
-
-      {canEdit && list ? (
-        <EditListDialog
-          list={list}
-          open={editListDialogOpen}
-          onOpenChange={setEditListDialogOpen}
-          onListUpdated={() => void refreshListAfterEdit()}
-        />
-      ) : null}
-
-      {showBannerEdit && listId ? (
-        <ImageEditDialog
-          isOpen={showBannerEdit}
-          onClose={() => setShowBannerEdit(false)}
-          onSave={() => {}}
-          type="list"
-          listId={listId}
-          customListBannerSave={async (meta) => {
-            const ok = await updateList(listId, { backdrop_path: null, banner_meta: meta });
-            if (ok) {
-              setList((prev) =>
-                prev ? { ...prev, backdrop_path: undefined, banner_meta: meta } : null,
-              );
-            }
-          }}
-          onSelect={() => {}}
-        />
-      ) : null}
+      {listDialogs}
       </FilmsCatalogShell>
     </div>
   );

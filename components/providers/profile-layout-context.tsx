@@ -20,6 +20,8 @@ export interface ProfileLayoutUser {
 interface ProfileLayoutContextType {
   userData: ProfileLayoutUser
   isOwnProfile: boolean
+  /** Viewer chrome: classic keeps section titles; glass hides them (tabs already label the page). */
+  profileChrome?: "classic" | "glass"
 }
 
 const ProfileLayoutContext = createContext<ProfileLayoutContextType | null>(null)
@@ -40,4 +42,10 @@ export function useProfileLayoutData() {
     throw new Error("useProfileLayoutData deve ser usado dentro de ProfileLayoutProvider")
   }
   return context
+}
+
+/** Safe outside provider (defaults to classic). */
+export function useProfileChrome(): "classic" | "glass" {
+  const context = useContext(ProfileLayoutContext)
+  return context?.profileChrome ?? "classic"
 }

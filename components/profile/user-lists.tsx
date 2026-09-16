@@ -22,6 +22,8 @@ import {
 import { ListPosterStack } from "@/components/lists/list-poster-stack"
 import { cn } from "@/lib/utils"
 import { useT } from "@/components/providers/i18n-provider"
+import { ProfileSectionHeader } from "@/components/profile/profile-section-header"
+import { useDesignMode } from "@/hooks/use-design-mode"
 
 /** Mesmos 5 slots vazios que um `UserListCard` compact usa para dimensionar o stack. */
 const EMPTY_COMPACT_STACK: (string | null)[] = [null, null, null, null, null]
@@ -39,12 +41,15 @@ interface UserListsProps {
   compactCards?: boolean
 }
 
-function listsGridClassName(singleColumn: boolean, gridColumns: 2 | 3) {
+function listsGridClassName(singleColumn: boolean, gridColumns: 2 | 3, isGlass: boolean) {
   if (singleColumn) {
     return "mx-auto grid w-full max-w-6xl grid-cols-1 items-stretch gap-6"
   }
-  if (gridColumns === 2) {
-    return "mx-auto grid w-full max-w-6xl grid-cols-1 items-stretch gap-6 sm:grid-cols-2 sm:gap-8"
+  if (isGlass || gridColumns === 2) {
+    return cn(
+      "mx-auto grid w-full max-w-6xl grid-cols-1 items-stretch sm:grid-cols-2",
+      isGlass ? "gap-5 sm:gap-6" : "gap-6 sm:gap-8",
+    )
   }
   return "mx-auto grid w-full max-w-6xl grid-cols-1 items-stretch gap-6 sm:grid-cols-2 sm:gap-8 lg:grid-cols-3 lg:gap-8"
 }
@@ -73,12 +78,15 @@ export function UserLists({
 }: UserListsProps) {
   const { t } = useT()
   const router = useRouter()
+  const isGlass = useDesignMode() === "glass"
   const loggedInUser = useUser()
   const { lists, loading, error, fetchUserLists, deleteList } = useLists()
   const [editingList, setEditingList] = useState<List | null>(null)
 
   const targetUserId = userId || (loggedInUser?.id || "")
   const canEdit = loggedInUser?.id === targetUserId
+  const effectiveGridColumns: 2 | 3 = isGlass ? 2 : gridColumns
+  const gridClass = listsGridClassName(singleColumn, effectiveGridColumns, isGlass)
 
   useEffect(() => {
     if (targetUserId) {
@@ -111,21 +119,26 @@ export function UserLists({
             <div className="mt-1 mb-4 h-px w-full bg-border" />
           </div>
         )}
-        <div className={listsGridClassName(singleColumn, gridColumns)}>
-          {Array.from({ length: alwaysShowThree ? gridCols : Math.min(gridColumns * 2, 6) }).map(
+        <div className={gridClass}>
+          {Array.from({ length: alwaysShowThree ? (isGlass ? 2 : gridCols) : Math.min(effectiveGridColumns * 2, 6) }).map(
             (_, i) => (
               <div
                 key={i}
                 className={cn(
-                  "animate-pulse overflow-hidden rounded-2xl border border-border bg-card",
-                  compactCards ? "rounded-xl" : null,
-                  compactCards ? listCardCompactMinHeightClassName : listCardMinHeightClassName,
+                  "animate-pulse overflow-hidden",
+                  isGlass
+                    ? "rounded-[18px] bg-white/[0.035] ring-1 ring-white/[0.08]"
+                    : cn(
+                        "rounded-2xl border border-border bg-card",
+                        compactCards ? "rounded-xl" : null,
+                        compactCards ? listCardCompactMinHeightClassName : listCardMinHeightClassName,
+                      ),
                 )}
               >
                 <div className="flex h-full flex-col gap-3 p-4">
-                  <div className="aspect-[16/9] w-full rounded-lg bg-muted" />
-                  <div className="h-4 w-3/4 rounded bg-muted" />
-                  <div className="h-3 w-1/2 rounded bg-muted" />
+                  <div className={cn("aspect-[16/9] w-full rounded-lg", isGlass ? "bg-white/[0.06]" : "bg-muted")} />
+                  <div className={cn("h-4 w-3/4 rounded", isGlass ? "bg-white/[0.08]" : "bg-muted")} />
+                  <div className={cn("h-3 w-1/2 rounded", isGlass ? "bg-white/[0.05]" : "bg-muted")} />
                 </div>
               </div>
             ),
@@ -146,29 +159,31 @@ export function UserLists({
   const displayLists = lists.slice(0, limit)
 
   if (alwaysShowThree) {
-    const cappedLists = displayLists.slice(0, gridCols)
+    const cappedLists = displayLists.slice(0, isGlass ? Math.min(gridCols, 2) : gridCols)
 
     return (
       <div className="">
         {!hideSectionHeading && (
-          <div className="flex flex-col">
-            <h2 className="text-start text-sm font-medium uppercase text-muted-foreground/80">Your lists</h2>
-            <div className="mt-1 mb-4 h-px w-full bg-border" />
-          </div>
+          <ProfileSectionHeader
+            title={t("profile.lists")}
+            glassMode={alwaysShowThree || onLandingPage ? "soft" : "hide"}
+          />
         )}
 
         {cappedLists.length === 0 && !canEdit ? (
           <p className="text-sm text-muted-foreground">{t("profile.listsEmpty")}</p>
         ) : (
-          <div className={listsGridClassName(singleColumn, gridColumns)}>
+          <div className={gridClass}>
             {cappedLists.map((list) => (
               <div
                 key={list.id}
                 className={cn(
                   "group relative flex h-full min-h-0 flex-col",
-                  compactCards
-                    ? "overflow-visible rounded-xl"
-                    : "overflow-hidden rounded-2xl border border-border bg-card",
+                  isGlass
+                    ? "overflow-visible"
+                    : compactCards
+                      ? "overflow-visible rounded-xl"
+                      : "overflow-hidden rounded-2xl border border-border bg-card",
                 )}
               >
                 {canEdit && (
@@ -213,7 +228,7 @@ export function UserLists({
                     "group relative flex w-full min-w-0 flex-col items-center rounded-xl pb-2 pt-1 text-left outline-none transition-colors",
                     "focus-visible:ring-2 focus-visible:ring-brand/45 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                     listCardCompactMinHeightClassName,
-                    createListTileGridClass(cappedLists.length, gridColumns),
+                    createListTileGridClass(cappedLists.length, effectiveGridColumns),
                   )}
                 >
                   <div className="relative z-[2] flex w-full flex-col items-center gap-1.5">
@@ -224,11 +239,20 @@ export function UserLists({
                         </div>
                         <div
                           className={cn(
-                            "absolute inset-0 flex flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-muted-foreground/30 bg-transparent",
-                            "transition-colors group-hover:border-brand/50 group-hover:bg-brand/10",
+                            "absolute inset-0 flex flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed bg-transparent",
+                            isGlass
+                              ? "border-white/20 group-hover:border-white/40 group-hover:bg-white/[0.04]"
+                              : "border-muted-foreground/30 group-hover:border-brand/50 group-hover:bg-brand/10",
                           )}
                         >
-                          <Plus className="h-5 w-5 shrink-0 text-muted-foreground opacity-80 transition-colors group-hover:text-brand" />
+                          <Plus
+                            className={cn(
+                              "h-5 w-5 shrink-0 opacity-80 transition-colors",
+                              isGlass
+                                ? "text-white/50 group-hover:text-white/80"
+                                : "text-muted-foreground group-hover:text-brand",
+                            )}
+                          />
                         </div>
                       </div>
                     </div>
@@ -244,9 +268,11 @@ export function UserLists({
                   size="sm"
                   className={cn(
                     listCardMinHeightClassName,
-                    "flex h-full min-h-0 w-full min-w-0 flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-muted-foreground/30 bg-transparent px-4 py-6 text-sm font-medium text-muted-foreground shadow-none transition-colors",
-                    "hover:border-brand/50 hover:bg-brand/10 hover:text-brand",
-                    createListTileGridClass(cappedLists.length, gridColumns),
+                    "flex h-full min-h-0 w-full min-w-0 flex-col items-center justify-center gap-2 border-2 border-dashed bg-transparent px-4 py-6 text-sm font-medium shadow-none transition-colors",
+                    isGlass
+                      ? "rounded-[18px] border-white/20 text-white/50 hover:border-white/40 hover:bg-white/[0.04] hover:text-white/80"
+                      : "rounded-2xl border-muted-foreground/30 text-muted-foreground hover:border-brand/50 hover:bg-brand/10 hover:text-brand",
+                    createListTileGridClass(cappedLists.length, effectiveGridColumns),
                   )}
                   onClick={() => router.push("/list/new")}
                 >
@@ -279,10 +305,11 @@ export function UserLists({
   return (
     <div className="">
       {!hideSectionHeading && (
-        <>
-          <div className="mb-1 flex items-end justify-between">
-            <h2 className="text-sm font-medium uppercase text-muted-foreground/80">Lists</h2>
-            {canEdit && (
+        <ProfileSectionHeader
+          title={t("profileTabs.lists")}
+          glassMode={alwaysShowThree || onLandingPage ? "soft" : "hide"}
+          trailing={
+            canEdit ? (
               <Button
                 variant="outline"
                 size="sm"
@@ -291,10 +318,9 @@ export function UserLists({
               >
                 <Plus className="h-4 w-4" />
               </Button>
-            )}
-          </div>
-          <div className="mb-4 h-px w-full bg-border" />
-        </>
+            ) : null
+          }
+        />
       )}
 
       {displayLists.length === 0 ? (
@@ -307,15 +333,17 @@ export function UserLists({
           )}
         </div>
       ) : (
-        <div className={listsGridClassName(singleColumn, gridColumns)}>
+        <div className={gridClass}>
           {displayLists.map((list) => (
             <div
               key={list.id}
               className={cn(
                 "group relative flex h-full min-h-0 flex-col",
-                compactCards
-                  ? "overflow-visible rounded-xl"
-                  : "overflow-hidden rounded-2xl border border-border bg-card",
+                isGlass
+                  ? "overflow-visible"
+                  : compactCards
+                    ? "overflow-visible rounded-xl"
+                    : "overflow-hidden rounded-2xl border border-border bg-card",
               )}
             >
               {canEdit && (

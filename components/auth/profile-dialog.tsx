@@ -26,6 +26,8 @@ import { toast } from 'sonner'
 import { useProfile } from '@/components/providers/profile-provider'
 import { usernameSchema } from '@/lib/onboarding'
 import { z } from 'zod'
+import { useDesignMode } from '@/hooks/use-design-mode'
+import { cn } from '@/lib/utils'
 
 const profileFormSchema = z.object({
   username: usernameSchema,
@@ -88,12 +90,15 @@ export function ProfileDialog({ isOpen, onClose }: ProfileDialogProps) {
     }
   }
 
+  const designMode = useDesignMode()
+  const isGlass = designMode === "glass"
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent>
+      <DialogContent className={cn("sm:max-w-md", isGlass && "border-white/10 bg-[#161719]/96 text-white sm:rounded-[24px] backdrop-blur-2xl shadow-[0_28px_64px_-16px_rgba(0,0,0,0.9)]")}>
         <DialogHeader>
-          <DialogTitle>Choose your username</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className={cn(isGlass && "text-white font-semibold")}>Choose your username</DialogTitle>
+          <DialogDescription className={cn(isGlass && "text-white/50")}>
             Pick a unique handle for your public profile on Clakete.
           </DialogDescription>
         </DialogHeader>
@@ -104,16 +109,20 @@ export function ProfileDialog({ isOpen, onClose }: ProfileDialogProps) {
               name="username"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Username</FormLabel>
+                  <FormLabel className={cn(isGlass && "text-white/70")}>Username</FormLabel>
                   <FormControl>
-                    <Input placeholder="your_username" autoComplete="off" {...field} />
+                    <Input placeholder="your_username" autoComplete="off" {...field} className={cn(isGlass && "border-white/10 bg-white/[0.04] text-white placeholder:text-white/25")} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button
+              type="submit"
+              className={cn("w-full", isGlass ? "rounded-xl bg-white font-semibold text-black hover:bg-white/90" : "")}
+              disabled={loading}
+            >
               {loading ? 'Saving…' : 'Continue'}
             </Button>
           </form>

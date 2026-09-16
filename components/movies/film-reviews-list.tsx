@@ -7,6 +7,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { avatarDisplaySrc } from "@/lib/next-remote-image";
 import Link from "next/link";
 import { ReviewLikeButton } from "@/hooks/use-review-like";
+import { useDesignMode } from "@/hooks/use-design-mode";
+import { cn } from "@/lib/utils";
 
 interface Review {
   id: number;
@@ -31,6 +33,7 @@ export function FilmReviewsList({ filmId, mediaType = "movie" }: FilmReviewsList
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const supabase = useSupabaseClient();
+  const isGlass = useDesignMode() === "glass";
 
   useEffect(() => {
     async function fetchReviews() {
@@ -93,51 +96,108 @@ export function FilmReviewsList({ filmId, mediaType = "movie" }: FilmReviewsList
   }, [filmId, mediaType, supabase]);
 
   if (loading) {
-    return <div className="animate-pulse space-y-4">
-      {[1, 2].map((i) => (
-        <div key={i} className="flex gap-4">
-          <div className="h-10 w-10 rounded-full bg-muted" />
-          <div className="flex-1 space-y-2">
-            <div className="h-4 w-full bg-muted rounded" />
+    return (
+      <div className="animate-pulse space-y-4">
+        {[1, 2].map((i) => (
+          <div key={i} className="flex gap-4">
+            <div
+              className={cn(
+                "h-10 w-10 rounded-full",
+                isGlass ? "bg-white/[0.06]" : "bg-muted",
+              )}
+            />
+            <div className="flex-1 space-y-2">
+              <div
+                className={cn(
+                  "h-4 w-full rounded",
+                  isGlass ? "bg-white/[0.06]" : "bg-muted",
+                )}
+              />
+            </div>
           </div>
-        </div>
-      ))}
-    </div>;
+        ))}
+      </div>
+    );
   }
 
   if (reviews.length === 0) {
     return (
-      <div className="text-center py-8 text-muted-foreground">
+      <div
+        className={cn(
+          "py-8 text-center",
+          isGlass ? "text-white/40" : "text-muted-foreground",
+        )}
+      >
         No reviews yet. Be the first to review this film!
       </div>
     );
   }
 
   return (
-    <div className="">
+    <div>
       {reviews.map((review) => (
         <div key={review.id} className="group mt-4">
           <div className="flex flex-col">
-            <div className="flex items-center justify-between"> 
-            <div className="flex items-center gap-2">
-              <Link href={`/${review.userData?.username}`}>
-            <Avatar className="h-11 w-11 rounded-md border dark:border-white/20 border-black/20 aspect-square">
-              <AvatarImage src={avatarDisplaySrc(review.userData?.avatar_url) || undefined} alt={review.userData?.display_name || review.userData?.username || ''} />
-              <AvatarFallback className="rounded-md text-2xl font-semibold w-full flex">{(review.userData?.display_name?.[0] || review.userData?.username?.[0] || 'U').toUpperCase()}</AvatarFallback>
-            </Avatar>
-            </Link>
-            <div className="h-[10px] w-[1px] bg-muted-foreground/30"></div> 
-            <p className="text-sm">Review by <Link href={`/${review.userData?.username}`} className="text-muted-foreground hover:text-[#e94e7a]">@{review.userData?.username}</Link></p>
-                  </div>
-            <div className="flex items-center">
-                  
-                  <RatingStars value={review.rating} starClassName="h-4 w-4" />
-                </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Link href={`/${review.userData?.username}`}>
+                  <Avatar
+                    className={cn(
+                      "aspect-square h-11 w-11 rounded-md border",
+                      isGlass
+                        ? "border-white/20"
+                        : "border-black/20 dark:border-white/20",
+                    )}
+                  >
+                    <AvatarImage
+                      src={avatarDisplaySrc(review.userData?.avatar_url) || undefined}
+                      alt={
+                        review.userData?.display_name ||
+                        review.userData?.username ||
+                        ""
+                      }
+                    />
+                    <AvatarFallback className="flex w-full rounded-md text-2xl font-semibold">
+                      {(
+                        review.userData?.display_name?.[0] ||
+                        review.userData?.username?.[0] ||
+                        "U"
+                      ).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                </Link>
+                <div
+                  className={cn(
+                    "h-[10px] w-px",
+                    isGlass ? "bg-white/20" : "bg-muted-foreground/30",
+                  )}
+                />
+                <p className={cn("text-sm", isGlass && "text-white/80")}>
+                  Review by{" "}
+                  <Link
+                    href={`/${review.userData?.username}`}
+                    className={cn(
+                      isGlass
+                        ? "text-white/45 hover:text-[#e94e7a]"
+                        : "text-muted-foreground hover:text-[#e94e7a]",
+                    )}
+                  >
+                    @{review.userData?.username}
+                  </Link>
+                </p>
+              </div>
+              <div className="flex items-center">
+                <RatingStars value={review.rating} starClassName="h-4 w-4" />
+              </div>
             </div>
             <div className="flex-1 space-y-2">
               <div className="space-y-2">
-                
-                <p className="text-muted-foreground text-sm leading-relaxed whitespace-pre-wrap mt-2">
+                <p
+                  className={cn(
+                    "mt-2 whitespace-pre-wrap text-sm leading-relaxed",
+                    isGlass ? "text-white/55" : "text-muted-foreground",
+                  )}
+                >
                   {review.review}
                 </p>
                 <div className="pt-1">
@@ -146,11 +206,14 @@ export function FilmReviewsList({ filmId, mediaType = "movie" }: FilmReviewsList
               </div>
             </div>
           </div>
-          <div className="h-[0.3px]  mt-4 bg-muted-foreground/10"/>
+          <div
+            className={cn(
+              "mt-4 h-px",
+              isGlass ? "bg-white/10" : "bg-muted-foreground/10",
+            )}
+          />
         </div>
-       
       ))}
-    
     </div>
   );
 }

@@ -9,7 +9,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { avatarDisplaySrc } from "@/lib/next-remote-image"
+import { ProfileSectionHeader } from "@/components/profile/profile-section-header"
 import { cn } from "@/lib/utils"
+import { useDesignMode } from "@/hooks/use-design-mode"
 import { useT } from "@/components/providers/i18n-provider"
 
 export type FollowListUser = {
@@ -29,6 +31,7 @@ export function UserFollowersList({
   username: string
 }) {
   const { t } = useT()
+  const isGlass = useDesignMode() === "glass"
   const supabase = useSupabaseClient()
   const authUser = useUser()
   const [users, setUsers] = useState<FollowListUser[]>([])
@@ -157,38 +160,63 @@ export function UserFollowersList({
     }
   }
 
+  const searchInput = (
+    <div className="relative w-full max-w-xs">
+      <Search
+        className={cn(
+          "pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2",
+          isGlass ? "text-white/40" : "text-muted-foreground",
+        )}
+      />
+      <Input
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder="Search…"
+        className={cn(
+          "h-8 pl-8 text-xs",
+          isGlass
+            ? "border-white/10 bg-white/[0.04] text-white placeholder:text-white/40"
+            : "border-border bg-transparent",
+        )}
+      />
+    </div>
+  )
+
   return (
     <div className="mt-4">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h2 className="text-sm font-medium uppercase tracking-wide text-muted-foreground/50">
-            {title}
-          </h2>
-          <p className="mt-1 text-xs text-muted-foreground">
-            @{username} · {users.length}{" "}
-            {users.length === 1 ? "person" : "people"}
-          </p>
-        </div>
-        <div className="relative w-full max-w-xs">
-          <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search…"
-            className="h-8 border-border bg-transparent pl-8 text-xs"
-          />
-        </div>
+      <ProfileSectionHeader title={title} glassMode="hide" />
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <p
+          className={cn(
+            "text-xs",
+            isGlass ? "text-white/40" : "text-muted-foreground",
+          )}
+        >
+          @{username} · {users.length}{" "}
+          {users.length === 1 ? "person" : "people"}
+        </p>
+        {searchInput}
       </div>
-      <div className="mb-4 mt-2 h-[0.3px] w-full bg-muted-foreground/10" />
 
       {loading ? (
         <ul className="space-y-2">
           {Array.from({ length: 8 }).map((_, i) => (
-            <Skeleton key={i} className="h-14 w-full rounded-md bg-white/[0.04]" />
+            <Skeleton
+              key={i}
+              className={cn(
+                "h-14 w-full rounded-md",
+                isGlass ? "bg-white/[0.04]" : "bg-muted",
+              )}
+            />
           ))}
         </ul>
       ) : filtered.length === 0 ? (
-        <p className="py-8 text-sm text-muted-foreground">
+        <p
+          className={cn(
+            "py-8 text-sm",
+            isGlass ? "text-white/40" : "text-muted-foreground",
+          )}
+        >
           {users.length === 0
             ? mode === "followers"
               ? t("profile.noFollowers")
@@ -203,10 +231,18 @@ export function UserFollowersList({
             return (
               <li
                 key={u.id}
-                className="flex items-center gap-3 rounded-lg px-2 py-2.5 transition hover:bg-muted/40"
+                className={cn(
+                  "flex items-center gap-3 rounded-lg px-2 py-2.5 transition",
+                  isGlass ? "hover:bg-white/[0.08]" : "hover:bg-muted/40",
+                )}
               >
                 <Link href={`/${u.username}`} className="flex min-w-0 flex-1 items-center gap-3">
-                  <Avatar className="size-10 rounded-md border border-border">
+                  <Avatar
+                    className={cn(
+                      "size-10 rounded-md border",
+                      isGlass ? "border-white/10" : "border-border",
+                    )}
+                  >
                     <AvatarImage
                       src={avatarDisplaySrc(u.avatar_url) ?? undefined}
                       alt=""
@@ -216,10 +252,22 @@ export function UserFollowersList({
                     </AvatarFallback>
                   </Avatar>
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-foreground">
+                    <p
+                      className={cn(
+                        "truncate text-sm font-medium",
+                        isGlass ? "text-white" : "text-foreground",
+                      )}
+                    >
                       {u.display_name || u.username}
                     </p>
-                    <p className="truncate text-xs text-muted-foreground">@{u.username}</p>
+                    <p
+                      className={cn(
+                        "truncate text-xs",
+                        isGlass ? "text-white/40" : "text-muted-foreground",
+                      )}
+                    >
+                      @{u.username}
+                    </p>
                   </div>
                 </Link>
 
@@ -231,7 +279,9 @@ export function UserFollowersList({
                     className={cn(
                       "h-8 shrink-0 rounded-md border px-3 text-xs font-medium transition",
                       isFollowing
-                        ? "border-border text-muted-foreground hover:border-red-500/40 hover:text-red-400"
+                        ? isGlass
+                          ? "border-white/10 text-white/55 hover:border-red-500/40 hover:text-red-400"
+                          : "border-border text-muted-foreground hover:border-red-500/40 hover:text-red-400"
                         : "border-brand/20 bg-brand/10 text-brand hover:bg-brand/20",
                     )}
                   >

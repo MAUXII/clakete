@@ -7,6 +7,7 @@ import { toast } from "sonner"
 import { MovieCard } from "../movies/movie-card"
 import { SeriesCard } from "../series/series-card"
 import { Skeleton } from "../ui/skeleton"
+import { ProfileSectionHeader } from "@/components/profile/profile-section-header"
 import { useT } from "@/components/providers/i18n-provider"
 
 interface WatchedItem {
@@ -85,8 +86,10 @@ export function UserRecentActivity({ userId, showAllWatched }: RecentActivityPro
   if (loading) {
     return (
       <div className="mt-4">
-        <h2 className="text-sm font-medium uppercase text-muted-foreground/50">{pageTitle}</h2>
-        <div className="mb-4 mt-1 h-[0.3px] w-full bg-muted-foreground/10" />
+        <ProfileSectionHeader
+          title={pageTitle}
+          glassMode={showAllWatched ? "hide" : "soft"}
+        />
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-4">
           {[...Array(12)].map((_, i) => (
             <Skeleton
@@ -102,8 +105,10 @@ export function UserRecentActivity({ userId, showAllWatched }: RecentActivityPro
   if (watchedItems.length === 0) {
     return (
       <div className="mt-4">
-        <h2 className="text-sm font-medium uppercase text-muted-foreground/50">{pageTitle}</h2>
-        <div className="mb-4 mt-1 h-[0.3px] w-full bg-muted-foreground/10" />
+        <ProfileSectionHeader
+          title={pageTitle}
+          glassMode={showAllWatched ? "hide" : "soft"}
+        />
         <div className="flex w-full items-start justify-between overflow-clip text-muted-foreground">
           <p className="w-full text-start">
             {showAllWatched ? t("profile.nothingWatched") : t("profile.noActivity")}
@@ -116,8 +121,10 @@ export function UserRecentActivity({ userId, showAllWatched }: RecentActivityPro
 
   return (
     <div className="mt-4">
-      <h2 className="text-sm font-medium uppercase text-muted-foreground/50">{pageTitle}</h2>
-      <div className="mb-4 mt-1 h-[0.3px] w-full bg-muted-foreground/10" />
+      <ProfileSectionHeader
+        title={pageTitle}
+        glassMode={showAllWatched ? "hide" : "soft"}
+      />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-4">
         {visibleItems.map((item) => {

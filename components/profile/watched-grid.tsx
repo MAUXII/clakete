@@ -8,7 +8,10 @@ import { toast } from "sonner"
 import { MovieCard } from "@/components/movies/movie-card"
 import { SeriesCard } from "@/components/series/series-card"
 import { Skeleton } from "@/components/ui/skeleton"
+import { ProfileSectionHeader } from "@/components/profile/profile-section-header"
 import { useT } from "@/components/providers/i18n-provider"
+import { cn } from "@/lib/utils"
+import { useDesignMode } from "@/hooks/use-design-mode"
 
 type WatchedItem = {
   id: number
@@ -23,13 +26,13 @@ type WatchedItem = {
 
 export function WatchedGrid({
   userId,
-  isOwnProfile,
 }: {
   userId: string
   username: string
   isOwnProfile: boolean
 }) {
   const { t } = useT()
+  const isGlass = useDesignMode() === "glass"
   const supabase = useSupabaseClient()
   const [items, setItems] = useState<WatchedItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -70,10 +73,7 @@ export function WatchedGrid({
   if (loading) {
     return (
       <div className="mt-4">
-        <h2 className="text-sm font-medium uppercase text-muted-foreground/50">
-          {t("watch.watchedTitle")}
-        </h2>
-        <div className="mb-4 mt-1 h-[0.3px] w-full bg-muted-foreground/10" />
+        <ProfileSectionHeader title={t("watch.watchedTitle")} />
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4">
           {[...Array(12)].map((_, i) => (
             <Skeleton
@@ -89,11 +89,13 @@ export function WatchedGrid({
   if (items.length === 0) {
     return (
       <div className="mt-4">
-        <h2 className="text-sm font-medium uppercase text-muted-foreground/50">
-          {t("watch.watchedTitle")}
-        </h2>
-        <div className="mb-4 mt-1 h-[0.3px] w-full bg-muted-foreground/10" />
-        <div className="flex w-full items-start justify-between overflow-clip text-muted-foreground">
+        <ProfileSectionHeader title={t("watch.watchedTitle")} />
+        <div
+          className={cn(
+            "flex w-full items-start justify-between overflow-clip",
+            isGlass ? "text-white/40" : "text-muted-foreground",
+          )}
+        >
           <p className="w-full text-start">{t("watch.watchedEmpty")}</p>
           <RiveComponent width={400} className="invisible flex h-20 w-[222px] pl-9" />
         </div>
@@ -103,15 +105,10 @@ export function WatchedGrid({
 
   return (
     <div className="mt-4">
-      <div className="flex items-baseline justify-between gap-2">
-        <h2 className="text-sm font-medium uppercase text-muted-foreground/50">
-          {t("watch.watchedTitle")}
-        </h2>
-        <span className="text-xs text-muted-foreground/60">
-          {items.length} {items.length === 1 ? "title" : "titles"}
-        </span>
-      </div>
-      <div className="mb-4 mt-1 h-[0.3px] w-full bg-muted-foreground/10" />
+      <ProfileSectionHeader
+        title={t("watch.watchedTitle")}
+        countLabel={`${items.length} ${items.length === 1 ? "title" : "titles"}`}
+      />
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4">
         {items.map((item) => {
           const key = `${item.tmdb_id}-${item.media_type ?? "movie"}`

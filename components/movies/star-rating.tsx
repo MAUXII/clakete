@@ -9,10 +9,12 @@ function Star({
   fill,
   starClassName,
   emptyClassName,
+  filledClassName = "text-brand",
 }: {
   fill: number;
   starClassName: string;
   emptyClassName: string;
+  filledClassName?: string;
 }) {
   const clamped = Math.max(0, Math.min(1, fill));
   return (
@@ -23,7 +25,7 @@ function Star({
           className="absolute inset-0 overflow-hidden"
           style={{ width: `${clamped * 100}%` }}
         >
-          <FaStar className={cn(starClassName, "text-brand")} />
+          <FaStar className={cn(starClassName, filledClassName)} />
         </span>
       ) : null}
     </span>
@@ -56,12 +58,14 @@ export function RatingStars({
   );
 }
 
-interface StarRatingProps {
-  filmId: number;
-  initialRating?: number;
+export interface StarRatingProps {
+  filmId?: number;
+  initialRating?: number | null;
   onRate?: (rating: number) => void;
   readonly?: boolean;
-  size?: "sm" | "md";
+  size?: "sm" | "md" | "lg";
+  emptyClassName?: string;
+  filledClassName?: string;
 }
 
 export function StarRating({
@@ -69,16 +73,18 @@ export function StarRating({
   onRate,
   readonly = false,
   size = "md",
-}: Omit<StarRatingProps, "filmId">) {
-  const [rating, setRating] = useState(initialRating);
+  emptyClassName = "text-muted-foreground",
+  filledClassName = "text-brand",
+}: StarRatingProps) {
+  const [rating, setRating] = useState(initialRating ?? 0);
   const [hoverRating, setHoverRating] = useState(0);
 
   useEffect(() => {
-    setRating(initialRating);
+    setRating(initialRating ?? 0);
   }, [initialRating]);
 
   const display = hoverRating || rating;
-  const iconSize = size === "sm" ? "h-4 w-4" : "h-5 w-5";
+  const iconSize = size === "sm" ? "h-4 w-4" : size === "lg" ? "h-6 w-6" : "h-5 w-5";
 
   const handleRate = (value: number) => {
     if (readonly) return;
@@ -97,7 +103,8 @@ export function StarRating({
               <Star
                 fill={display - (star - 1)}
                 starClassName={iconSize}
-                emptyClassName="text-muted-foreground"
+                emptyClassName={emptyClassName}
+                filledClassName={filledClassName}
               />
             </span>
             {!readonly ? (

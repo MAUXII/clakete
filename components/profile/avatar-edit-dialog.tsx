@@ -28,6 +28,7 @@ import { setHomeBackdropInsidePreferences } from "@/lib/user-home-preferences";
 import { cn } from "@/lib/utils";
 import { useSubscription } from "@/hooks/use-subscription";
 import { useT } from "@/components/providers/i18n-provider";
+import { useDesignMode } from "@/hooks/use-design-mode";
 import { ShiningBadge } from "@/components/premium/shining-badge";
 import { toast } from "sonner";
 
@@ -88,6 +89,8 @@ export function ImageEditDialog({ onClose, onSelect, isOpen, onSave, type, custo
 
   const [showSearchCommand, setShowSearchCommand] = useState(true);
   const [showCropper, setShowCropper] = useState(false);
+  const designMode = useDesignMode();
+  const isGlass = designMode === "glass";
   const [query, setQuery] = useState("")
   const [movies, setMovies] = useState<Movie[]>([])
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null)
@@ -764,18 +767,18 @@ export function ImageEditDialog({ onClose, onSelect, isOpen, onSave, type, custo
       </CommandDialog>
 
       <Dialog open={isOpen && !showSearchCommand && !showCropper} onOpenChange={onClose}>
-        <DialogContent className="dialog-content w-[96vw] max-w-6xl">
-          <DialogHeader className="dialog-header h-fit">
+        <DialogContent className={cn("dialog-content w-[96vw] max-w-6xl", isGlass && "border-white/10 bg-[#161719]/96 text-white sm:rounded-[24px] backdrop-blur-2xl shadow-[0_28px_64px_-16px_rgba(0,0,0,0.9)]")}>
+          <DialogHeader className={cn("dialog-header h-fit", isGlass && "border-white/10")}>
             <DialogTitle className="flex items-center gap-2 text-sm">
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={handleBackToSearch}
-                className="h-8 w-8 "
+                className={cn("h-8 w-8", isGlass && "text-white/70 hover:text-white hover:bg-white/[0.08]")}
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
-              {selectedMovie?.title}
+              <span className={cn(isGlass && "text-white font-semibold")}>{selectedMovie?.title}</span>
             </DialogTitle>
           </DialogHeader>
           <div className="dialog-content-scroll custom-scrollbar">
@@ -835,9 +838,9 @@ export function ImageEditDialog({ onClose, onSelect, isOpen, onSave, type, custo
       </Dialog>
 
       <Dialog open={isOpen && showCropper} onOpenChange={onClose}>
-        <DialogContent className="w-[82vw] max-w-[38rem] overflow-hidden p-0">
-          <DialogHeader className="border-b border-border/50 px-4 py-2.5">
-            <DialogTitle>{t("profile.editImage")}</DialogTitle>
+        <DialogContent className={cn("w-[82vw] max-w-[38rem] overflow-hidden p-0", isGlass && "border-white/10 bg-[#161719]/96 text-white sm:rounded-[24px] backdrop-blur-2xl shadow-[0_28px_64px_-16px_rgba(0,0,0,0.9)]")}>
+          <DialogHeader className={cn("border-b px-4 py-2.5", isGlass ? "border-white/10" : "border-border/50")}>
+            <DialogTitle className={cn(isGlass && "text-white font-semibold")}>{t("profile.editImage")}</DialogTitle>
           </DialogHeader>
           {showCropper && selectedImage && isCustomGif ? (
             <div className="flex items-center justify-center bg-black px-2 py-4">

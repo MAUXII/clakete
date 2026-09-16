@@ -1,22 +1,17 @@
 'use client'
-import { EditProfileDialog } from "@/components/profile/edit-profile-dialog"
-import { ProfileSocialLinks } from "@/components/profile/profile-social-links"
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { ImageEditDialog } from "@/components/profile/avatar-edit-dialog"
-import { MdEdit } from "react-icons/md"
 import { notFound, usePathname } from 'next/navigation'
 import { use } from 'react'
 import { useSupabaseClient, useUser } from '@supabase/auth-helpers-react'
 import { useProfile } from "@/components/providers/profile-provider"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { ProfileTabBar, useProfileTabs } from "@/components/profile/profile-tab-bar"
+import { useProfileTabs, type ProfileTabId } from "@/components/profile/profile-tab-bar"
+import { ProfileShellClassic } from "@/components/profile/profile-shell-classic"
+import { ProfileShellGlass } from "@/components/profile/profile-shell-glass"
 import { toast } from "sonner"
 import Link from "next/link"
 import { Skeleton } from "@/components/ui/skeleton"
-import {
-  ProfileLayoutProvider,
-  type ProfileLayoutUser,
-} from "@/components/providers/profile-layout-context"
+import { type ProfileLayoutUser } from "@/components/providers/profile-layout-context"
 import { parseTmdbStoredImageMeta } from "@/lib/tmdb-stored-image"
 import {
   invalidatePublicProfileCache,
@@ -24,14 +19,11 @@ import {
   writePublicProfileCache,
 } from "@/lib/profile-public-cache"
 import { profileBannerPresentation, profileAvatarPresentation } from "@/lib/profile-media"
-import { avatarDisplaySrc } from "@/lib/next-remote-image"
 import type { Json } from "@/lib/supabase/database.types"
 import { cn } from "@/lib/utils"
 import { pageContainerClass } from "@/lib/page-container"
 import { hasShiningAccess } from "@/lib/plans"
 import { parseUserHomePreferences } from "@/lib/user-home-preferences"
-import { ShiningBadge } from "@/components/premium/shining-badge"
-import { ProfileMoreMenu } from "@/components/profile/profile-more-menu"
 import { useT } from "@/components/providers/i18n-provider"
 import { fetchBlockedUserIds } from "@/lib/user-blocks"
 import { createNotification } from "@/lib/notifications"
@@ -64,10 +56,6 @@ interface ProfileLayoutProps {
   }>
 }
 
-/**
- * Nav (~4.5rem sm+) + folga. Compensa o -mt do avatar (lg:-mt-24) pra coluna
- * sticky não ficar atrás da navbar.
- */
 const PROFILE_SIDEBAR_STICKY_CLASS =
   "lg:sticky lg:top-[calc(env(safe-area-inset-top,0px)_+_4.5rem_+_var(--clakete-promo-h,0px)_+_1rem_+_6rem)] lg:z-20"
 
@@ -95,7 +83,7 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
     useEffect(() => {
       usernameRef.current = username
     }, [username])
-    const getTabFromPath = () => {
+    const getTabFromPath = (): ProfileTabId => {
       if (pathname.endsWith('/watched') || pathname.endsWith('/films')) return 'watched';
       if (pathname.endsWith('/diary') || pathname.endsWith('/activity')) return 'diary';
       if (pathname.endsWith('/lists')) return 'lists';
@@ -329,7 +317,13 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
         }
         
         invalidatePublicProfileCache(userData.username)
-        await fetchProfile(userData.username.toLowerCase())
+        const nextUsername = String(
+          updates.username ?? userData.username,
+        ).toLowerCase()
+        if (nextUsername !== userData.username.toLowerCase()) {
+          invalidatePublicProfileCache(nextUsername)
+        }
+        await fetchProfile(nextUsername)
         await refreshProfile()
       } catch (error) {
         console.error('Erro completo:', error)
@@ -611,309 +605,65 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
     plan_status: userData.plan_status,
     plan_current_period_end: userData.plan_current_period_end,
   })
-  const profileTheme = parseUserHomePreferences(userData.home_preferences).profile_theme
+  const ownerPrefs = parseUserHomePreferences(userData.home_preferences)
+  const profileTheme = ownerPrefs.profile_theme
+  const showBanner =
+    isShiningProfile &&
+    ownerPrefs.show_profile_banner !== false &&
+    Boolean(bannerDisplay.src)
+  const showRedrumBadge =
+    isShiningProfile && ownerPrefs.show_redrum_badge !== false
+  const viewerDesignMode =
+    parseUserHomePreferences(sessionProfile?.home_preferences ?? null)
+      .design_mode ?? "classic"
+  const useGlassShell = Boolean(currentUser) && viewerDesignMode === "glass"
   const activeTheme =
     isShiningProfile && profileTheme && profileTheme !== "default" ? profileTheme : null
   const themeClass = activeTheme ? `profile--theme-${activeTheme}` : null
-  const themed = Boolean(themeClass)
+
+  const shellProps = {
+    username,
+    userData,
+    isOwnProfile,
+    isShiningProfile,
+    showBanner,
+    showRedrumBadge,
+    bannerDisplay,
+    avatarDisplay,
+    activeTab,
+    stats,
+    sessionStripeCustomerId: sessionProfile?.stripe_customer_id,
+    onToggleFollow: toggleFollow,
+    onBlocked: () =>
+      setStats((prev) => ({
+        ...prev,
+        isFollowing: false,
+        followersCount: prev.isFollowing
+          ? Math.max(0, prev.followersCount - 1)
+          : prev.followersCount,
+      })),
+    onOpenAvatarEdit: () => setShowAvatarEdit(true),
+    onOpenBannerEdit: () => {
+      if (isShiningProfile) setShowBannerEdit(true)
+    },
+    onUpdateProfile: updateProfile,
+    onHomeBackdropUpdated: () =>
+      fetchProfile(usernameRef.current.toLowerCase()),
+  }
 
   return (
-    <section className={cn("relative z-10 mt-[calc(3.75rem+var(--clakete-promo-h,0px))] w-full", themeClass)}>
-        {/* Banner */}
-        <div 
-        className={cn(
-          "group relative h-44 w-full min-w-0 overflow-hidden rounded-none border-0 bg-cover bg-center ring-1 ring-border sm:h-56 md:h-72 lg:h-96 xl:h-[567px]",
-          themed && "profile-theme-media-banner",
-        )}
-        style={{ 
-          backgroundImage: `url(${bannerDisplay.src})`,
-          backgroundPosition: bannerDisplay.backgroundPosition,
-        }}
-        onClick={() => isOwnProfile && setShowBannerEdit(true)}
-      >
-        {isOwnProfile && (
-          <button 
-            onClick={() => setShowBannerEdit(true)}
-            className="absolute inset-0 z-10 flex h-full w-full cursor-pointer items-center justify-center rounded-none bg-black/50 opacity-0 backdrop-blur-[1.2px] transition-opacity group-hover:opacity-100 "
-          >
-            <span className="text-white">{t("profile.editBanner")}</span>
-          </button>
-        )}
-        <div className="absolute inset-0 rounded-none bg-gradient-to-t from-black/50 to-transparent z" />
-      </div>
+    <>
+      {useGlassShell ? (
+        <ProfileShellGlass {...shellProps}>{children}</ProfileShellGlass>
+      ) : (
+        <ProfileShellClassic {...shellProps} themeClass={themeClass}>
+          {children}
+        </ProfileShellClassic>
+      )}
 
-      <div className={pageContainerClass}>
-      {/* Profile info */}
-      <div className="w-full">
-        <div className="relative z-10">
-          <div className="flex flex-wrap gap-6 lg:flex-nowrap lg:items-stretch">
-          <div className="flex flex-col w-full gap-6">
-            {/* Avatar */}
-            <div className={cn(PROFILE_SIDEBAR_STICKY_CLASS, "flex flex-col gap-6 self-start")}>
-            <div
-              className={cn(
-                "relative -mt-12 aspect-square size-24 overflow-clip rounded-2xl shadow-sm ring-2 ring-white group dark:ring-[#090909] sm:-mt-16 sm:size-32 md:-mt-20 md:size-36 lg:-mt-24 lg:size-40",
-                themed && "profile-theme-media-avatar",
-              )}
-            >
-            <Avatar className="w-full h-full rounded-md shadow-none ">
-              <AvatarImage
-                src={avatarDisplaySrc(avatarDisplay.src, { allowGifPlayback: true }) || undefined}
-                alt={userData.display_name || userData.username || ''}
-                className="object-cover"
-                style={
-                  avatarDisplay.objectPosition
-                    ? { objectPosition: avatarDisplay.objectPosition }
-                    : undefined
-                }
-              />
-              <AvatarFallback className="rounded-md text-2xl font-semibold w-full flex">{(userData.display_name?.[0] || userData.username?.[0] || 'U').toUpperCase()}</AvatarFallback>
-            </Avatar>
-        {isOwnProfile && (
-                <button 
-                  onClick={() => setShowAvatarEdit(true)}
-                  className="absolute inset-0 rounded-2xl backdrop-blur-[1.2px] flex items-center justify-center bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  <span className="text-white"><MdEdit className='h-6 w-auto' /></span>
-                </button>
-              )}
-            </div>
-
-            {/* Info */}
-            <div className="flex-1 flex-col flex w-full max-w-[370px]">
-              <h1
-                className={cn(
-                  "text-3xl font-bold",
-                  themed ? "profile-theme-name" : "dark:text-white",
-                )}
-              >
-                {userData.display_name || userData.username}
-              </h1>
-              <h2
-                className={cn(
-                  "-mt-1 inline-flex items-center gap-1.5 text-lg",
-                  themed ? "profile-theme-muted" : "text-muted-foreground",
-                )}
-              >
-                <span>@{userData.username}</span>
-                {isShiningProfile ? <ShiningBadge /> : null}
-              </h2>
-
-              <div className="mt-2 flex w-full flex-col gap-3">
-                <div className="flex items-center gap-4">
-                  <div className="flex flex-col">
-                    <span
-                      className={cn(
-                        "text-xl font-semibold",
-                        themed ? "profile-theme-stat" : "dark:text-white text-black",
-                      )}
-                    >
-                      {stats.filmsCount}
-                    </span>
-                    <span
-                      className={cn(
-                        "text-sm",
-                        themed ? "profile-theme-muted" : "text-muted-foreground",
-                      )}
-                    >
-                      {t("profile.films")}
-                    </span>
-                  </div>
-
-                  <div
-                    className={cn(
-                      "h-[61%] w-px shrink-0",
-                      themed ? "profile-theme-divider" : "bg-muted-foreground/40",
-                    )}
-                  />
-
-                  <div className="flex flex-col">
-                    <span
-                      className={cn(
-                        "text-xl font-semibold",
-                        themed ? "profile-theme-stat" : "dark:text-white text-black",
-                      )}
-                    >
-                      {stats.seriesCount}
-                    </span>
-                    <span
-                      className={cn(
-                        "text-sm",
-                        themed ? "profile-theme-muted" : "text-muted-foreground",
-                      )}
-                    >
-                      {t("profile.series")}
-                    </span>
-                  </div>
-
-                  <div
-                    className={cn(
-                      "h-[61%] w-px shrink-0",
-                      themed ? "profile-theme-divider" : "bg-muted-foreground/40",
-                    )}
-                  />
-
-                  <Link
-                    href={`/${userData.username}/followers`}
-                    className="flex flex-col transition hover:opacity-80"
-                  >
-                    <span
-                      className={cn(
-                        "text-xl font-semibold",
-                        themed ? "profile-theme-stat" : "dark:text-white text-black",
-                      )}
-                    >
-                      {stats.followersCount}
-                    </span>
-                    <span
-                      className={cn(
-                        "text-sm",
-                        themed ? "profile-theme-muted" : "text-muted-foreground",
-                      )}
-                    >
-                      {t("profile.followers")}
-                    </span>
-                  </Link>
-
-                  <div
-                    className={cn(
-                      "h-[61%] w-px shrink-0",
-                      themed ? "profile-theme-divider" : "bg-muted-foreground/40",
-                    )}
-                  />
-
-                  <Link
-                    href={`/${userData.username}/following`}
-                    className="flex flex-col transition hover:opacity-80"
-                  >
-                    <span
-                      className={cn(
-                        "text-xl font-semibold",
-                        themed ? "profile-theme-stat" : "dark:text-white text-black",
-                      )}
-                    >
-                      {stats.followingCount}
-                    </span>
-                    <span
-                      className={cn(
-                        "text-sm",
-                        themed ? "profile-theme-muted" : "text-muted-foreground",
-                      )}
-                    >
-                      {t("profile.following")}
-                    </span>
-                  </Link>
-
-                  {isOwnProfile ? (
-                    <div className="ml-auto shrink-0">
-                      <EditProfileDialog
-                        username={userData.username}
-                        displayName={userData.display_name}
-                        bio={userData.bio}
-                        avatarUrl={userData.avatar_url ?? undefined}
-                        instagramUrl={userData.instagram_url ?? null}
-                        twitterUrl={userData.twitter_url ?? null}
-                        spotifyUrl={userData.spotify_url ?? null}
-                        discordUrl={userData.discord_url ?? null}
-                        youtubeUrl={userData.youtube_url ?? null}
-                        githubUrl={userData.github_url ?? null}
-                        soundcloudUrl={userData.soundcloud_url ?? null}
-                        pinterestUrl={userData.pinterest_url ?? null}
-                        telegramUrl={userData.telegram_url ?? null}
-                        ethereumUrl={userData.ethereum_url ?? null}
-                        homePreferences={userData.home_preferences ?? null}
-                        planFields={{
-                          plan: userData.plan,
-                          plan_status: userData.plan_status,
-                          plan_current_period_end: userData.plan_current_period_end,
-                        }}
-                        stripeCustomerId={sessionProfile?.stripe_customer_id}
-                        onHomeBackdropUpdated={() =>
-                          fetchProfile(usernameRef.current.toLowerCase())
-                        }
-                        onUpdate={updateProfile}
-                      />
-                    </div>
-                  ) : null}
-                </div>
-
-                {!isOwnProfile ? (
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={toggleFollow}
-                      className={cn(
-                        "flex h-9 min-w-0 flex-1 items-center justify-center rounded-md border px-4 text-sm font-medium transition-colors",
-                        themed
-                          ? "profile-theme-follow"
-                          : stats.isFollowing
-                            ? "border-border bg-transparent text-muted-foreground hover:bg-muted/40 hover:text-foreground"
-                            : "border-brand/20 bg-brand/10 text-brand hover:bg-brand/15",
-                      )}
-                    >
-                      {stats.isFollowing ? t("profile.following") : t("profile.follow")}
-                    </button>
-                    <ProfileMoreMenu
-                      profileUserId={userData.id}
-                      username={userData.username}
-                      onBlocked={() =>
-                        setStats((prev) => ({
-                          ...prev,
-                          isFollowing: false,
-                          followersCount: prev.isFollowing
-                            ? Math.max(0, prev.followersCount - 1)
-                            : prev.followersCount,
-                        }))
-                      }
-                    />
-                  </div>
-                ) : null}
-              </div>
-              <ProfileSocialLinks
-                className="mt-4"
-                social={{
-                  instagram_url: userData.instagram_url,
-                  twitter_url: userData.twitter_url,
-                  spotify_url: userData.spotify_url,
-                  discord_url: userData.discord_url,
-                  youtube_url: userData.youtube_url,
-                  github_url: userData.github_url,
-                  soundcloud_url: userData.soundcloud_url,
-                  pinterest_url: userData.pinterest_url,
-                  telegram_url: userData.telegram_url,
-                  ethereum_url: userData.ethereum_url,
-                }}
-                homePreferences={userData.home_preferences}
-              />
-              {userData.bio && (
-                <p
-                  className={cn(
-                    "mt-4",
-                    themed ? "profile-theme-muted" : "text-muted-foreground",
-                  )}
-                >
-                  {userData.bio}
-                </p>
-        )}
-      </div>
-          </div>
-          </div>
-          <div className="w-full">
-          <ProfileTabBar username={username} activeTab={activeTab}>
-            <ProfileLayoutProvider value={{ userData, isOwnProfile }}>
-              {children}
-            </ProfileLayoutProvider>
-          </ProfileTabBar>
-          </div>
-        </div>
-        </div>
-      </div>
-      </div>
-
-      {/* Modais de edição */}
-        <ImageEditDialog
+      <ImageEditDialog
         isOpen={showAvatarEdit}
-          onClose={() => setShowAvatarEdit(false)}
+        onClose={() => setShowAvatarEdit(false)}
         onSave={async (image: string) => {
           if (image) {
             await updateProfile({ avatar_url: image, avatar_meta: null })
@@ -922,24 +672,26 @@ export default function ProfileLayout({ children, params }: ProfileLayoutProps) 
           }
           setShowAvatarEdit(false)
         }}
-          onSelect={() => {}}
+        onSelect={() => {}}
         type="avatar"
-        />
+      />
 
+      {isShiningProfile ? (
         <ImageEditDialog
-        isOpen={showBannerEdit}
+          isOpen={showBannerEdit}
           onClose={() => setShowBannerEdit(false)}
-        onSave={async (image: string) => {
-          if (image) {
-            await updateProfile({ banner_url: image, banner_meta: null })
-          } else {
-            await fetchProfile(usernameRef.current.toLowerCase())
-          }
-          setShowBannerEdit(false)
-        }}
+          onSave={async (image: string) => {
+            if (image) {
+              await updateProfile({ banner_url: image, banner_meta: null })
+            } else {
+              await fetchProfile(usernameRef.current.toLowerCase())
+            }
+            setShowBannerEdit(false)
+          }}
           onSelect={() => {}}
-        type="banner"
+          type="banner"
         />
-    </section>
-  ) 
+      ) : null}
+    </>
+  )
 }

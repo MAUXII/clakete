@@ -11,6 +11,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { useT } from "@/components/providers/i18n-provider"
+import { useDesignMode } from "@/hooks/use-design-mode"
+import { cn } from "@/lib/utils"
 
 interface ConfirmUnwatchDialogProps {
   open: boolean
@@ -28,6 +30,8 @@ export function ConfirmUnwatchDialog({
   onConfirm,
 }: ConfirmUnwatchDialogProps) {
   const { t } = useT()
+  const designMode = useDesignMode()
+  const isGlass = designMode === "glass"
   const [busy, setBusy] = useState(false)
 
   const handleConfirm = async () => {
@@ -44,10 +48,10 @@ export function ConfirmUnwatchDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className={cn("sm:max-w-md", isGlass && "border-white/10 sm:rounded-[20px]")}>
         <DialogHeader>
           <DialogTitle>{t("watch.unwatchConfirmTitle")}</DialogTitle>
-          <DialogDescription>
+          <DialogDescription className={cn(isGlass && "text-white/50")}>
             {title
               ? t("watch.unwatchConfirmBody", { title })
               : t("watch.unwatchConfirmBodyGeneric")}
@@ -59,6 +63,7 @@ export function ConfirmUnwatchDialog({
             variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={disabled}
+            className={cn(isGlass && "rounded-xl border-white/12 bg-white/[0.04] text-white/80 hover:bg-white/[0.08] hover:text-white")}
           >
             {t("common.cancel")}
           </Button>
@@ -67,6 +72,7 @@ export function ConfirmUnwatchDialog({
             variant="destructive"
             onClick={() => void handleConfirm()}
             disabled={disabled}
+            className={cn(isGlass && "rounded-xl")}
           >
             {disabled ? t("common.loading") : t("watch.unwatchConfirmAction")}
           </Button>

@@ -12,6 +12,8 @@ import { ConnectNodeCard } from "@/components/games/connect-node-card"
 import type { ConnectNode } from "@/lib/games/connect-the-stars"
 import { useT } from "@/components/providers/i18n-provider"
 import { toast } from "sonner"
+import { useDesignMode } from "@/hooks/use-design-mode"
+import { cn } from "@/lib/utils"
 
 type Props = {
   open: boolean
@@ -33,6 +35,8 @@ export function ConnectWinDialog({
   onPlayAgain,
 }: Props) {
   const { t } = useT()
+  const designMode = useDesignMode()
+  const isGlass = designMode === "glass"
 
   const share = async () => {
     const chain = path.map((n) => n.name).join(" → ")
@@ -51,12 +55,12 @@ export function ConnectWinDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className={cn("sm:max-w-lg", isGlass && "border-white/10 bg-[#161719]/96 text-white sm:rounded-[24px] backdrop-blur-2xl shadow-[0_28px_64px_-16px_rgba(0,0,0,0.9)]")}>
         <DialogHeader>
-          <DialogTitle>{t("games.winTitle")}</DialogTitle>
+          <DialogTitle className={cn(isGlass && "text-white font-semibold")}>{t("games.winTitle")}</DialogTitle>
         </DialogHeader>
 
-        <p className="text-sm text-muted-foreground">
+        <p className={cn("text-sm", isGlass ? "text-white/60" : "text-muted-foreground")}>
           {t("games.winBody", {
             steps: String(steps),
             from: originName,
@@ -64,7 +68,7 @@ export function ConnectWinDialog({
           })}
         </p>
 
-        <div className="mt-2 flex max-h-48 flex-wrap justify-center gap-3 overflow-y-auto rounded-xl border border-border bg-muted/30 p-3">
+        <div className={cn("mt-2 flex max-h-48 flex-wrap justify-center gap-3 overflow-y-auto rounded-xl border p-3", isGlass ? "border-white/10 bg-white/[0.03]" : "border-border bg-muted/30")}>
           {path.map((node) => (
             <ConnectNodeCard
               key={`${node.kind}-${node.id}`}
@@ -76,12 +80,17 @@ export function ConnectWinDialog({
         </div>
 
         <DialogFooter className="gap-2 sm:gap-0">
-          <Button type="button" variant="outline" onClick={() => void share()}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => void share()}
+            className={cn(isGlass && "rounded-xl border-white/12 bg-white/[0.04] text-white/80 hover:bg-white/[0.08] hover:text-white")}
+          >
             {t("games.share")}
           </Button>
           <Button
             type="button"
-            className="bg-brand text-white hover:bg-brand-hover"
+            className={cn(isGlass ? "rounded-xl bg-white px-5 font-semibold text-black hover:bg-white/90" : "bg-brand text-white hover:bg-brand-hover")}
             onClick={onPlayAgain}
           >
             {t("games.playAgain")}

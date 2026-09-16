@@ -6,7 +6,10 @@ import { MovieCard } from "../movies/movie-card"
 import { SeriesCard } from "../series/series-card"
 import { toast } from "sonner"
 import { Skeleton } from "../ui/skeleton"
+import { ProfileSectionHeader } from "@/components/profile/profile-section-header"
 import { useT } from "@/components/providers/i18n-provider"
+import { cn } from "@/lib/utils"
+import { useDesignMode } from "@/hooks/use-design-mode"
 
 interface FilmInteraction {
   id: number
@@ -21,6 +24,7 @@ interface UserWatchlistProps {
 
 export function UserWatchlist({ userId }: UserWatchlistProps) {
   const { t } = useT()
+  const isGlass = useDesignMode() === "glass"
   const [watchlistFilms, setWatchlistFilms] = useState<FilmInteraction[]>([])
   const [loading, setLoading] = useState(true)
   const supabase = useSupabaseClient()
@@ -67,8 +71,7 @@ export function UserWatchlist({ userId }: UserWatchlistProps) {
   if (loading) {
     return (
       <div className="mt-4">
-        <h2 className="text-sm font-medium uppercase text-muted-foreground/50">{t("profile.watchlist")}</h2>
-        <div className="mb-4 mt-1 h-[0.3px] w-full bg-muted-foreground/10" />
+        <ProfileSectionHeader title={t("profile.watchlist")} />
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4">
           {[...Array(12)].map((_, i) => (
             <Skeleton
@@ -84,17 +87,17 @@ export function UserWatchlist({ userId }: UserWatchlistProps) {
   if (watchlistFilms.length === 0) {
     return (
       <div className="mt-4">
-        <h2 className="font-medium text-muted-foreground/50 text-sm uppercase">{t("profile.watchlist")}</h2>
-        <div className="bg-muted-foreground/10 w-full h-[0.3px] mt-1 mb-4"></div>
-        <p className="text-muted-foreground">{t("profile.watchlistEmpty")}</p>
+        <ProfileSectionHeader title={t("profile.watchlist")} />
+        <p className={cn(isGlass ? "text-white/40" : "text-muted-foreground")}>
+          {t("profile.watchlistEmpty")}
+        </p>
       </div>
     )
   }
 
   return (
     <div className="mt-4">
-      <h2 className="font-medium text-muted-foreground/50 text-sm uppercase">{t("profile.watchlist")}</h2>
-      <div className="bg-muted-foreground/10 w-full h-[0.3px] mt-1 mb-4"></div>
+      <ProfileSectionHeader title={t("profile.watchlist")} />
       <div className="grid grid-cols-4 gap-4">
         {watchlistFilms.map((film) => (
           <MovieCard

@@ -15,28 +15,53 @@ import {
   ListsSubNav,
   type ListsFilter,
 } from "@/components/films/films-catalog-shell"
+import { useDesignMode } from "@/hooks/use-design-mode"
 import Link from "next/link"
 
 function ListsSectionHeading({
   eyebrow,
   title,
   description,
+  isGlass,
 }: {
   eyebrow: string
   title: string
   description: string
+  isGlass?: boolean
 }) {
   return (
     <div className="mb-6 space-y-2">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">{eyebrow}</p>
-      <h2 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">{title}</h2>
-      <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">{description}</p>
+      <p
+        className={cn(
+          "text-[11px] font-semibold uppercase tracking-[0.22em]",
+          isGlass ? "text-white/40" : "text-muted-foreground",
+        )}
+      >
+        {eyebrow}
+      </p>
+      <h2
+        className={cn(
+          "text-xl font-semibold tracking-tight sm:text-2xl",
+          isGlass ? "text-white" : "text-foreground",
+        )}
+      >
+        {title}
+      </h2>
+      <p
+        className={cn(
+          "max-w-2xl text-sm leading-relaxed",
+          isGlass ? "text-white/45" : "text-muted-foreground",
+        )}
+      >
+        {description}
+      </p>
     </div>
   )
 }
 
 export default function ListsPage() {
   const currentUser = useUser()
+  const isGlass = useDesignMode() === "glass"
   const [listsFilter, setListsFilter] = useState<ListsFilter>("all")
   const [showScrollTop, setShowScrollTop] = useState(false)
   const { lists: publicLists, loading: publicLoading, error: publicError, fetchPublicLists } = useLists()
@@ -62,6 +87,10 @@ export default function ListsPage() {
     return () => window.removeEventListener("scroll", onScroll)
   }, [])
 
+  const gridClass = isGlass
+    ? "grid w-full grid-cols-1 items-stretch gap-5 sm:grid-cols-2 sm:gap-6"
+    : "grid w-full grid-cols-1 items-stretch gap-6 sm:grid-cols-2 sm:gap-8 lg:grid-cols-3 lg:gap-8"
+
   return (
     <FilmsCatalogShell>
       <FilmsCatalogHeader
@@ -78,11 +107,9 @@ export default function ListsPage() {
 
       <div className="flex flex-col gap-16 pb-4">
         {currentUser && listsFilter !== "public" && (
-          <section
-            id="your-lists"
-            className="scroll-mt-28  "
-          >
+          <section id="your-lists" className="scroll-mt-28">
             <ListsSectionHeading
+              isGlass={isGlass}
               eyebrow="Profile"
               title="Your lists"
               description="Up to three featured here; everything else stays on your profile."
@@ -91,8 +118,8 @@ export default function ListsPage() {
               userId={currentUser.id}
               limit={3}
               alwaysShowThree
-              gridCols={3}
-              gridColumns={3}
+              gridCols={isGlass ? 2 : 3}
+              gridColumns={isGlass ? 2 : 3}
               compactCards={false}
               hideSectionHeading
             />
@@ -100,94 +127,105 @@ export default function ListsPage() {
         )}
 
         {listsFilter !== "yours" && (
-        <section id="public-lists" className="scroll-mt-28">
-          <ListsSectionHeading
-            eyebrow="Community"
-            title="Public lists"
-            description="Recently updated lists from people on Clakete."
-          />
+          <section id="public-lists" className="scroll-mt-28">
+            <ListsSectionHeading
+              isGlass={isGlass}
+              eyebrow="Community"
+              title="Public lists"
+              description="Recently updated lists from people on Clakete."
+            />
 
-          {publicLoading ? (
-            <div className="grid w-full grid-cols-1 items-stretch gap-6 sm:grid-cols-2 sm:gap-8 lg:grid-cols-3 lg:gap-8">
-              {Array.from({ length: 9 }).map((_, i) => (
-                <div
-                  key={i}
-                  className={cn(
-                    "flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-border bg-muted/30",
-                    listCardMinHeightClassName,
-                  )}
-                >
-                  <div className="relative h-[8.75rem] shrink-0 sm:h-[10.25rem] lg:h-[11.25rem]">
-                    <div className="absolute inset-0 overflow-hidden rounded-t-2xl">
-                      <Skeleton className="absolute inset-0 h-full w-full rounded-none bg-muted/60" />
+            {publicLoading ? (
+              <div className={gridClass}>
+                {Array.from({ length: isGlass ? 6 : 9 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className={cn(
+                      "flex h-full min-h-0 flex-col overflow-hidden",
+                      isGlass
+                        ? "rounded-[18px] bg-white/[0.035] ring-1 ring-white/[0.08]"
+                        : cn(
+                            "rounded-2xl border border-border bg-muted/30",
+                            listCardMinHeightClassName,
+                          ),
+                    )}
+                  >
+                    <div className="relative h-[7.5rem] shrink-0 sm:h-[8.5rem]">
+                      <Skeleton
+                        className={cn(
+                          "absolute inset-0 h-full w-full rounded-none",
+                          isGlass ? "bg-white/[0.06]" : "bg-muted/60",
+                        )}
+                      />
                     </div>
-                    <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 px-3 sm:px-4">
-                      <div className="absolute bottom-0 left-1/2 flex w-max -translate-x-1/2 translate-y-[26%] items-end justify-center sm:translate-y-[24%] lg:translate-y-[22%]">
-                        {Array.from({ length: 5 }).map((__, j) => {
-                          const lift = Math.round(Math.abs(j - 2) ** 2 * 0.65)
-                          return (
-                            <Skeleton
-                              key={j}
-                              className={cn(
-                                "aspect-[2/3] w-[3.95rem] shrink-0 rounded-xl bg-muted sm:w-[4.55rem] lg:w-[5.25rem]",
-                                j > 0 && "-ml-[1.18rem] sm:-ml-[1.38rem] lg:-ml-[1.58rem]",
-                              )}
-                              style={{ zIndex: j + 1, transform: `translateY(-${lift}px)` }}
-                            />
-                          )
-                        })}
-                      </div>
+                    <div className="flex flex-1 flex-col gap-2 px-4 pb-4 pt-12">
+                      <Skeleton className={cn("h-5 w-4/5", isGlass ? "bg-white/[0.08]" : "bg-muted")} />
+                      <Skeleton className={cn("h-3.5 w-full", isGlass ? "bg-white/[0.05]" : "bg-muted/60")} />
+                      <Skeleton className={cn("mt-auto h-8 w-32", isGlass ? "bg-white/[0.06]" : "bg-muted/60")} />
                     </div>
                   </div>
-                  <div className="flex min-h-0 flex-1 flex-col space-y-3 px-5 pb-5 pt-[4rem] sm:pt-[4.25rem] lg:pt-[4.85rem]">
-                    <div className="space-y-2">
-                      <Skeleton className="h-6 w-4/5 bg-muted" />
-                      <Skeleton className="h-3.5 w-full bg-muted/60" />
-                      <Skeleton className="h-3.5 w-[90%] bg-muted/60" />
-                    </div>
-                    <div className="mt-auto flex gap-2 border-t border-border pt-3">
-                      <Skeleton className="h-8 w-8 shrink-0 rounded-full bg-muted" />
-                      <div className="flex-1 space-y-1.5 pt-0.5">
-                        <Skeleton className="h-2.5 w-16 bg-muted/60" />
-                        <Skeleton className="h-4 w-24 bg-muted" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : publicError ? (
-            <div className="rounded-xl border border-border bg-muted/40 py-12 text-center">
-              <p className="text-sm text-muted-foreground">Could not load lists: {publicError}</p>
-            </div>
-          ) : publicLists.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-border bg-muted/30 py-14 text-center">
-              <p className="text-sm text-muted-foreground">No public lists yet.</p>
-              {currentUser ? (
-                <p className="mt-2 text-xs text-muted-foreground">
-                  Create a list and set it to public to show up here.
+                ))}
+              </div>
+            ) : publicError ? (
+              <div
+                className={cn(
+                  "py-12 text-center",
+                  isGlass
+                    ? "rounded-[18px] bg-white/[0.03] ring-1 ring-white/[0.08]"
+                    : "rounded-xl border border-border bg-muted/40",
+                )}
+              >
+                <p className={cn("text-sm", isGlass ? "text-white/45" : "text-muted-foreground")}>
+                  Could not load lists: {publicError}
                 </p>
-              ) : (
-                <p className="mt-3 text-sm text-muted-foreground">
-                  <Link href="/sign-in" className="text-brand underline-offset-4 hover:underline">
-                    Sign in
-                  </Link>{" "}
-                  to create yours.
+              </div>
+            ) : publicLists.length === 0 ? (
+              <div
+                className={cn(
+                  "py-14 text-center",
+                  isGlass
+                    ? "rounded-[18px] border border-dashed border-white/15 bg-white/[0.02]"
+                    : "rounded-xl border border-dashed border-border bg-muted/30",
+                )}
+              >
+                <p className={cn("text-sm", isGlass ? "text-white/45" : "text-muted-foreground")}>
+                  No public lists yet.
                 </p>
-              )}
-            </div>
-          ) : (
-            <div className="grid w-full grid-cols-1 items-stretch gap-6 sm:grid-cols-2 sm:gap-8 lg:grid-cols-3 lg:gap-8">
-              {publicLists.map((list) => (
-                <ListCard
-                  key={list.id}
-                  list={list}
-                  className="h-full min-h-0 border border-border bg-muted/30 shadow-none hover:border-border hover:shadow-none"
-                />
-              ))}
-            </div>
-          )}
-        </section>
+                {currentUser ? (
+                  <p className={cn("mt-2 text-xs", isGlass ? "text-white/35" : "text-muted-foreground")}>
+                    Create a list and set it to public to show up here.
+                  </p>
+                ) : (
+                  <p className={cn("mt-3 text-sm", isGlass ? "text-white/45" : "text-muted-foreground")}>
+                    <Link
+                      href="/sign-in"
+                      className={cn(
+                        "underline-offset-4 hover:underline",
+                        isGlass ? "text-white" : "text-brand",
+                      )}
+                    >
+                      Sign in
+                    </Link>{" "}
+                    to create yours.
+                  </p>
+                )}
+              </div>
+            ) : (
+              <div className={gridClass}>
+                {publicLists.map((list) => (
+                  <ListCard
+                    key={list.id}
+                    list={list}
+                    className={
+                      isGlass
+                        ? "h-full min-h-0"
+                        : "h-full min-h-0 border border-border bg-muted/30 shadow-none hover:border-border hover:shadow-none"
+                    }
+                  />
+                ))}
+              </div>
+            )}
+          </section>
         )}
       </div>
 

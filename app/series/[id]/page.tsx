@@ -1,121 +1,44 @@
 "use client";
 
-import { useEffect, useState, use, type ReactNode, type CSSProperties } from "react";
+import { useEffect, useState, use, type CSSProperties } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { FilmActions } from "@/components/movies/film-actions";
-import { LogWatchDialog } from "@/components/movies/log-watch-dialog";
-import { ConfirmUnwatchDialog } from "@/components/movies/confirm-unwatch-dialog";
-import { ShareCardDialog } from "@/components/movies/share-card-dialog";
-import { StarRating } from "@/components/movies/star-rating";
-import { FilmReviewsList } from "@/components/movies/film-reviews-list";
 import { useFilmInteractions } from "@/hooks/use-film-interactions";
-import { formatRewatchLabel, formatWatchedDate } from "@/lib/watched-date";
-import { MediaDetailTabs } from "@/components/ui/media-detail-tabs";
-import WatchProviders from "@/components/movies/watchproviders";
-import Trailer, { type Video } from "@/components/movies/trailer";
-import { FilmExternalRatings } from "@/components/movies/film-external-ratings";
-import { FaPlay } from "react-icons/fa6";
-import SimilarSeriesList from "@/components/series/similar";
-import RecommendedSeriesList from "@/components/series/recommendations";
-import SeasonsList from "@/components/series/seasons";
-import CreditsList from "@/components/series/credits";
-import ImagesList from "@/components/movies/imagesList";
 import { FilmsCatalogShell } from "@/components/films/films-catalog-shell";
-import type { Movie } from "@/app/film/[id]/page";
 import { cn } from "@/lib/utils";
-import { motion } from "framer-motion";
 import { useLocalePrefs } from "@/hooks/use-locale-prefs";
-import type { TmdbRegionProviders } from "@/lib/locale-prefs";
 import { useT } from "@/components/providers/i18n-provider";
-import { prefetchDiaryArt } from "@/lib/client/diary-dialog-art";
-import { toast } from "sonner";
-import { parseMediaParam, seriesHref } from "@/lib/media-href";
+import { parseMediaParam } from "@/lib/media-href";
+import { useDesignMode } from "@/hooks/use-design-mode";
+import { glassWideContainerClass } from "@/lib/page-container";
+import { SeriesDetailClassic } from "@/components/series/series-detail-classic";
+import { SeriesDetailGlass } from "@/components/series/series-detail-glass";
+import type { SeriesDetail, SeriesDetailViewProps } from "@/components/series/series-detail-types";
 
-interface SeriesDetail {
-  id: number;
-  title: string;
-  name: string;
-  original_name?: string | null;
-  poster_path: string;
-  backdrop_path: string;
-  release_date: string;
-  first_air_date: string;
-  tagline: string | null;
-  overview: string;
-  runtime: number;
-  number_of_seasons: number;
-  seasons: Array<{
-    id: number;
-    name: string;
-    poster_path: string | null;
-    season_number: number;
-    episode_count: number;
-    air_date: string | null;
-    overview?: string;
-  }>;
-  images: {
-    backdrops: Array<{ file_path: string }>;
-    posters: Array<{ file_path: string }>;
-  };
-  director: string;
-  similar: { results: Array<{ name: string; poster_path: string; id: number; vote_average?: number }> };
-  recommendations: { results: Array<{ name: string; poster_path: string; id: number; vote_average?: number }> };
-  cast: { character: string; name: string; profile_path: string; id: number }[];
-  crew: { department: string; name: string; profile_path: string; id: number; job: string }[];
-  vote_average: number;
-  genres: { id: number; name: string }[];
-  videos: { results: Video[] } | null;
-  watchProviders: {
-    results: Record<string, TmdbRegionProviders>;
-  };
-}
-
-function formatRuntime(minutes: number) {
-  if (!minutes || minutes < 1) return null;
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  if (h <= 0) return `${m} min`;
-  if (m === 0) return `${h} h`;
-  return `${h} h ${m} min`;
-}
-
-function SectionLabel({ children }: { children: ReactNode }) {
-  return (
-    <div className="flex items-center gap-4">
-      <h2 className="shrink-0 text-[10px] font-medium uppercase tracking-[0.24em] text-muted-foreground">{children}</h2>
-      <div className="h-px min-w-0 flex-1 bg-muted" aria-hidden />
-    </div>
-  );
-}
+export type { SeriesDetail };
 
 const SERIES_LETTERBOX_HEIGHT = "clamp(400px, min(60vh, 680px), 780px)";
 const SERIES_POSTER_ALIGN_MARGIN = `max(-5rem, calc(min(92vw, 304px) * 0.75 + 8rem - ${SERIES_LETTERBOX_HEIGHT}))`;
-/** Nav (~4.5rem) + column gap (gap-10 / gap-12). Poster sticky top — keep in sync with lg:gap-10 xl:gap-12. */
-const SERIES_POSTER_STICKY_TOP =
-  "lg:sticky lg:top-[calc(env(safe-area-inset-top,0px)_+_4.5rem_+_var(--clakete-promo-h,0px)_+_1.5rem)] xl:top-[calc(env(safe-area-inset-top,0px)_+_4.5rem_+_var(--clakete-promo-h,0px)_+_1.5rem)]";
 
 export default function SeriesDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: rawParam } = use(params);
   const parsed = parseMediaParam(rawParam);
   const router = useRouter();
   const { t } = useT();
+  const designMode = useDesignMode();
+
   const [seriesId, setSeriesId] = useState<number | null>(
     parsed?.kind === "id" ? parsed.id : null,
   );
   const [resolveFailed, setResolveFailed] = useState(false);
   const [series, setSeries] = useState<SeriesDetail | null>(null);
   const [loading, setLoading] = useState(true);
-  const [trailerOpen, setTrailerOpen] = useState(false);
-  const [posterTrailerHover, setPosterTrailerHover] = useState(false);
-  const [trailerBtnFocused, setTrailerBtnFocused] = useState(false);
-  const [logWatchOpen, setLogWatchOpen] = useState(false);
-  const [unwatchOpen, setUnwatchOpen] = useState(false);
-  const [shareOpen, setShareOpen] = useState(false);
+
   const { tmdbLanguage, loading: localeLoading } = useLocalePrefs();
   const displayTitle = series?.title || series?.name || "";
+
   const {
     rating,
     review,
@@ -160,23 +83,23 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ id: str
     setResolveFailed(false);
     void fetch(`/api/series/resolve?slug=${encodeURIComponent(parsed.slug)}`)
       .then(async (res) => {
-        if (!res.ok) throw new Error("not found")
-        const data = (await res.json()) as { id?: number; slug?: string }
-        if (cancelled) return
+        if (!res.ok) throw new Error("not found");
+        const data = (await res.json()) as { id?: number; slug?: string };
+        if (cancelled) return;
         if (data.id) {
-          setSeriesId(data.id)
+          setSeriesId(data.id);
           if (data.slug && data.slug !== parsed.slug) {
-            router.replace(`/series/${data.slug}`)
+            router.replace(`/series/${data.slug}`);
           }
-        } else setResolveFailed(true)
+        } else setResolveFailed(true);
       })
       .catch(() => {
-        if (!cancelled) setResolveFailed(true)
-      })
+        if (!cancelled) setResolveFailed(true);
+      });
 
     return () => {
-      cancelled = true
-    }
+      cancelled = true;
+    };
   }, [rawParam]);
 
   useEffect(() => {
@@ -207,24 +130,17 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ id: str
 
   useEffect(() => {
     if (!series?.id) return;
-    const canonical = seriesHref({
-      id: series.id,
-      original_name: series.original_name,
-      name: series.name || series.title,
-      first_air_date: series.first_air_date || series.release_date,
-    });
-    const probe = canonical.replace(/^\/series\//, "");
     let cancelled = false;
-    void fetch(`/api/series/resolve?slug=${encodeURIComponent(probe)}`)
+    void fetch(`/api/series/${series.id}/slug`)
       .then(async (res) => {
         if (!res.ok || cancelled) return;
-        const data = (await res.json()) as { id?: number; slug?: string };
-        if (!data.slug || data.id !== series.id) return;
+        const data = (await res.json()) as { slug?: string };
+        if (!data.slug) return;
         const next = `/series/${data.slug}`;
         if (`/series/${rawParam}` !== next) router.replace(next);
       })
       .catch(() => {
-        if (`/series/${rawParam}` !== canonical) router.replace(canonical);
+        /* keep current URL */
       });
     return () => {
       cancelled = true;
@@ -240,6 +156,38 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ id: str
   }
 
   if (loading || seriesId == null) {
+    if (designMode === "glass") {
+      return (
+        <div
+          className={cn(
+            "relative z-[1] min-h-screen bg-transparent",
+            glassWideContainerClass,
+            "mt-[calc(var(--ck-nav-h,3.25rem)+var(--clakete-promo-h,0px))] pb-24 pt-6 md:pt-10",
+          )}
+        >
+          <div className="grid w-full gap-8 md:grid-cols-[minmax(0,280px)_minmax(0,1fr)] lg:grid-cols-[minmax(0,300px)_minmax(0,1fr)] md:items-start md:gap-14 lg:gap-16">
+            <aside className="relative mx-auto w-[min(100%,280px)] md:mx-0 md:w-full">
+              <Skeleton className="aspect-[2/3] w-full rounded-[14px]" />
+              <div className="mt-4 space-y-3">
+                <Skeleton className="h-12 w-full rounded-[12px]" />
+                <Skeleton className="h-11 w-full rounded-[12px]" />
+              </div>
+            </aside>
+            <div className="space-y-4 md:pt-1">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-10 w-[70%]" />
+              <Skeleton className="h-4 w-48" />
+              <div className="space-y-2 pt-4">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-3/4" />
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="min-h-screen w-full overflow-x-clip bg-background">
         <FilmsCatalogShell>
@@ -362,393 +310,31 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ id: str
     );
   }
 
-  const backdropUrl = series.backdrop_path
-    ? `https://image.tmdb.org/t/p/original${series.backdrop_path}`
-    : null;
-  const posterUrl = series.poster_path
-    ? `https://image.tmdb.org/t/p/w500${series.poster_path}`
-    : "/placeholder.png";
-  const year = series.first_air_date?.split("-")[0] || series.release_date?.split("-")[0];
-  const seasonsLabel =
-    series.number_of_seasons > 0 ? `${series.number_of_seasons} season${series.number_of_seasons === 1 ? "" : "s"}` : null;
-  const runtimeLabel = formatRuntime(series.runtime);
-  const metaLine = [year, seasonsLabel, runtimeLabel].filter(Boolean).join(" · ");
-  const youtubeTrailer = series.videos?.results?.find(
-    (v) => v.type === "Trailer" && v.site === "YouTube",
-  );
-  const trailerPosterUiActive = posterTrailerHover || trailerBtnFocused;
-  const movieCompat = series as unknown as Movie;
+  const viewProps: SeriesDetailViewProps = {
+    series,
+    isWatched,
+    isLiked,
+    isInWatchlist,
+    rating,
+    review,
+    watchedDate,
+    rewatchCount,
+    hasDiaryLogs,
+    loading,
+    interactionsLoading,
+    updating,
+    setRating,
+    toggleWatched,
+    toggleLiked,
+    toggleWatchlist,
+    logWatch,
+    unwatch,
+    removeFromDiary,
+  };
 
-  return (
-    <div className="min-h-screen w-full overflow-x-clip bg-background">
-      <FilmsCatalogShell>
-        <div
-          className="pointer-events-none mt-[calc(3.75rem+var(--clakete-promo-h,0px))] relative left-1/2 z-0 w-screen max-w-[100vw] -translate-x-1/2 overflow-hidden bg-background"
-          style={{ height: SERIES_LETTERBOX_HEIGHT }}
-          aria-hidden
-        >
-          {backdropUrl ? (
-            <img
-              src={backdropUrl}
-              alt=""
-              className="absolute inset-0 h-full w-full object-cover object-[center_22%]"
-            />
-          ) : (
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_35%,rgba(255,255,255,0.06),transparent_55%)]" />
-          )}
-          <div
-            className="absolute inset-0 bg-[linear-gradient(to_bottom,hsl(var(--background)/0.18)_0%,transparent_38%)]"
-            aria-hidden
-          />
-          <div
-            className="absolute inset-0 bg-gradient-to-r from-black/25 via-transparent to-black/10"
-            aria-hidden
-          />
-          <div
-            className="absolute inset-0 bg-[linear-gradient(to_top,hsl(var(--background))_0%,hsl(var(--background))_0%,hsl(var(--background)/0.55)_32%,transparent_62%)]"
-            aria-hidden
-          />
-          <img
-            src="/noise.avif"
-            alt=""
-            className="pointer-events-none absolute inset-0 z-[4] h-full w-full object-cover opacity-[0.02]"
-            aria-hidden
-          />
-        </div>
+  if (designMode === "glass") {
+    return <SeriesDetailGlass {...viewProps} />;
+  }
 
-        <div className="relative z-10 flex flex-col gap-12 pt-2 lg:flex-row lg:items-start lg:gap-10 xl:gap-12">
-          <aside
-            className={cn(
-              "z-20 w-full shrink-0 self-start -mt-20 sm:-mt-24 lg:mx-0 lg:max-w-[304px] lg:[margin-top:calc(var(--poster-mt)_-_9rem)]",
-              SERIES_POSTER_STICKY_TOP,
-            )}
-            style={{ "--poster-mt": SERIES_POSTER_ALIGN_MARGIN } as CSSProperties}
-          >
-            <div className="flex flex-col gap-3">
-              <Link
-                href="/series/discover"
-                className="pointer-events-auto inline-flex w-fit items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground md:hidden"
-              >
-                <ArrowLeft className="h-4 w-4 shrink-0" aria-hidden />
-                {t("film.backToCatalog")}
-              </Link>
-              {/* Mobile: poster left + title/meta right. Desktop: poster only. */}
-              <div className="flex items-end gap-4 lg:block">
-                <div className="w-[44%] max-w-[210px] shrink-0 lg:w-full lg:max-w-none">
-              <div className="overflow-hidden rounded-2xl border border-border bg-card">
-                <div
-                  className="relative aspect-[2/3] w-full overflow-hidden bg-card"
-                  onMouseEnter={() => {
-                    if (youtubeTrailer) setPosterTrailerHover(true);
-                  }}
-                  onMouseLeave={() => setPosterTrailerHover(false)}
-                >
-                  <img
-                    src={posterUrl}
-                    alt={displayTitle}
-                    className="absolute inset-0 block h-full w-full object-cover"
-                  />
-                  {youtubeTrailer ? (
-                    <motion.button
-                      type="button"
-                      aria-label="Watch trailer"
-                      initial={false}
-                      animate={{
-                        opacity: trailerPosterUiActive ? 1 : 0,
-                      }}
-                      transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-                      style={{ pointerEvents: trailerPosterUiActive ? "auto" : "none" }}
-                      className={cn(
-                        "absolute inset-0 z-10 flex cursor-pointer items-center justify-center bg-black/10",
-                        "outline-none focus-visible:ring-2 focus-visible:ring-brand/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-                      )}
-                      onClick={() => setTrailerOpen(true)}
-                      onFocus={() => setTrailerBtnFocused(true)}
-                      onBlur={() => setTrailerBtnFocused(false)}
-                    >
-                      <motion.span
-                        className={cn(
-                          "pointer-events-none inline-flex origin-center items-center gap-3 rounded-full border border-border",
-                          "bg-muted/50 px-1.5 py-1.5 pl-2 shadow-[0_12px_40px_-12px_rgba(0,0,0,0.5)] backdrop-blur-xl ring-1 ring-border",
-                        )}
-                        initial={false}
-                        animate={
-                          trailerPosterUiActive ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0 }
-                        }
-                        transition={{
-                          duration: 0.4,
-                          opacity: { duration: 0.4 },
-                          scale: { type: "spring", visualDuration: 0.4, bounce: 0.5 },
-                        }}
-                        whileTap={{ scale: 0.94 }}
-                      >
-                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.15)]">
-                          <FaPlay className="ml-0.5 h-3.5 w-3.5" aria-hidden />
-                        </span>
-                        <span className="pr-4 text-sm font-medium tracking-tight text-foreground">
-                          {t("film.trailer")}
-                        </span>
-                      </motion.span>
-                    </motion.button>
-                  ) : null}
-                </div>
-                <Trailer trailerOpen={trailerOpen} setTrailerOpen={setTrailerOpen} movie={movieCompat} />
-                <div className="hidden border-t border-border lg:block">
-                  <WatchProviders movie={movieCompat} hideHeading omitTrailerButton mediaType="tv" />
-                </div>
-              </div>
-                </div>
-                {/* Mobile-only meta beside the poster */}
-                <div className="min-w-0 flex-1 space-y-2 pb-1 lg:hidden">
-                  <h1 className="text-balance text-2xl font-semibold tracking-tight text-foreground">
-                    {displayTitle}
-                  </h1>
-                  {series.tagline ? (
-                    <p className="text-pretty text-xs leading-snug text-muted-foreground">{series.tagline}</p>
-                  ) : null}
-                  {series.director ? (
-                    <p className="text-xs text-muted-foreground">
-                      <span className="text-foreground">{t("film.createdBy")}</span> {series.director}
-                    </p>
-                  ) : null}
-                  {metaLine ? (
-                    <p className="text-xs tabular-nums text-muted-foreground">{metaLine}</p>
-                  ) : null}
-                </div>
-              </div>
-            </div>
-          </aside>
-
-          <div className="mt-6 flex min-w-0 flex-1 flex-col gap-12 sm:mt-8 lg:mt-8 lg:max-w-none">
-            <div className="hidden flex-col gap-8 lg:flex lg:flex-row lg:items-start lg:justify-between lg:gap-12 xl:gap-16">
-              <header className="min-w-0 max-w-xl space-y-4">
-                <h1 className="text-balance text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-                  {displayTitle}
-                </h1>
-                {series.tagline ? (
-                  <p className="text-pretty text-sm leading-snug text-muted-foreground sm:text-[0.9375rem]">{series.tagline}</p>
-                ) : null}
-                {series.director ? (
-                  <p className="text-sm text-muted-foreground">
-                    <span className="text-foreground">{t("film.createdBy")}</span> {series.director}
-                  </p>
-                ) : null}
-              </header>
-
-              {metaLine ? (
-                <div className="flex w-full shrink-0 flex-col items-start gap-2 border-t border-border pt-6 sm:w-auto lg:items-end lg:border-t-0 lg:pt-1">
-                  <p className="text-sm tabular-nums text-muted-foreground lg:text-right">
-                    {metaLine}
-                  </p>
-                </div>
-              ) : null}
-            </div>
-
-            {(series.overview || (series.genres && series.genres.length > 0)) ? (
-              <div className="-mt-2 flex flex-col gap-4">
-                {series.overview ? (
-                  <div>
-                    <SectionLabel>{t("film.overview")}</SectionLabel>
-                    <p className="mt-4 max-w-3xl text-pretty text-sm leading-relaxed text-muted-foreground sm:text-[0.9375rem] lg:max-w-4xl">
-                      {series.overview}
-                    </p>
-                  </div>
-                ) : null}
-                {series.genres && series.genres.length > 0 ? (
-                  <div className="flex flex-wrap gap-2">
-                    {series.genres.map((genre) => (
-                      <Link
-                        key={genre.id}
-                        href={`/series/discover?genres=${genre.id}`}
-                        className="rounded-full bg-brand/10 px-3 py-1 text-xs font-medium text-brand-muted ring-1 ring-brand-muted/35 transition-colors hover:bg-brand/18 hover:ring-brand/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                      >
-                        {genre.name}
-                      </Link>
-                    ))}
-                  </div>
-                ) : null}
-              </div>
-            ) : null}
-
-            <FilmExternalRatings tmdbId={series.id} mediaType="show" />
-
-            <section aria-label="Your rating and actions">
-              <div className="flex flex-col gap-8">
-                <div className="flex w-full flex-wrap items-center justify-between gap-x-4 gap-y-3">
-                  <StarRating
-                    initialRating={rating}
-                    onRate={setRating}
-                    readonly={loading || interactionsLoading || updating}
-                  />
-                  <FilmActions
-                    filmId={series.id}
-                    isWatched={isWatched}
-                    isLiked={isLiked}
-                    isInWatchlist={isInWatchlist}
-                    onWatchClick={async () => {
-                      const result = await toggleWatched();
-                      if (result === "needs-unwatch-confirm") {
-                        setUnwatchOpen(true);
-                        return;
-                      }
-                      toast.success(t("watch.markedWatched"));
-                    }}
-                    onLogDiaryClick={() => {
-                      void prefetchDiaryArt("tv", series.id, series.poster_path);
-                      setLogWatchOpen(true);
-                    }}
-                    onLikeClick={toggleLiked}
-                    onWatchlistClick={toggleWatchlist}
-                    onShareClick={() => setShareOpen(true)}
-                    loading={loading || interactionsLoading}
-                    updating={updating}
-                  />
-                </div>
-                {isWatched && (watchedDate || rewatchCount > 0) ? (
-                  <p className="-mt-4 text-sm text-muted-foreground">
-                    {formatWatchedDate(watchedDate)
-                      ? t("film.watchedOn", { date: formatWatchedDate(watchedDate)! })
-                      : t("film.watched")}
-                    {formatRewatchLabel(rewatchCount)
-                      ? ` · ${formatRewatchLabel(rewatchCount)}`
-                      : null}
-                  </p>
-                ) : null}
-                {review?.trim() ? (
-                  <div className="rounded-md border border-border bg-muted/50 p-4">
-                    <p className="whitespace-pre-wrap text-sm text-muted-foreground">
-                      {review}
-                    </p>
-                  </div>
-                ) : null}
-              </div>
-            </section>
-
-            <LogWatchDialog
-              open={logWatchOpen}
-              onOpenChange={setLogWatchOpen}
-              title={displayTitle}
-              year={(series.release_date || series.first_air_date)?.slice(0, 4) ?? null}
-              posterPath={series.poster_path}
-              backdropPath={series.backdrop_path}
-              tmdbId={series.id}
-              mediaType="tv"
-              isWatched={isWatched}
-              isLiked={isLiked}
-              watchedDate={watchedDate}
-              rewatchCount={rewatchCount}
-              hasDiaryLogs={hasDiaryLogs}
-              initialRating={rating}
-              initialReview={review}
-              loading={updating}
-              onLog={async (payload) => {
-                await logWatch(payload);
-                toast.success(
-                  payload.shareToFeed
-                    ? t("watch.sharedToFeed")
-                    : isWatched && payload.isRewatch
-                      ? t("watch.rewatchSaved")
-                      : t("watch.savedToDiary"),
-                );
-              }}
-              onRemoveFromDiary={hasDiaryLogs ? removeFromDiary : undefined}
-            />
-
-            <ConfirmUnwatchDialog
-              open={unwatchOpen}
-              onOpenChange={setUnwatchOpen}
-              title={displayTitle}
-              loading={updating}
-              onConfirm={async () => {
-                await unwatch();
-                toast.success(t("watch.unmarkedWatched"));
-              }}
-            />
-
-            <ShareCardDialog
-              open={shareOpen}
-              onOpenChange={setShareOpen}
-              fileBase={`clakete-${(series.original_name || displayTitle).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "series"}`}
-              data={{
-                title: series.original_name || displayTitle,
-                year: (series.first_air_date || series.release_date)
-                  ? (series.first_air_date || series.release_date).slice(0, 4)
-                  : null,
-                posterUrl: series.poster_path
-                  ? `https://image.tmdb.org/t/p/w500${series.poster_path}`
-                  : null,
-                backdropUrl: series.backdrop_path
-                  ? `https://image.tmdb.org/t/p/w1280${series.backdrop_path}`
-                  : null,
-                rating,
-                watchedLabel: formatWatchedDate(watchedDate),
-                director: series.director || null,
-                caption: t("share.caption"),
-                handle: t("share.handle"),
-              }}
-            />
-
-            <MediaDetailTabs
-              columns={5}
-              defaultValue="credits"
-              tabs={[
-                {
-                  value: "credits",
-                  label: t("film.credits"),
-                  content: (
-                    <CreditsList
-                      cast={series.cast || []}
-                      crew={series.crew || []}
-                    />
-                  ),
-                },
-                {
-                  value: "seasons",
-                  label: t("film.seasons"),
-                  content: (
-                    <SeasonsList
-                      seriesId={series.id}
-                      seriesName={series.name || series.title}
-                      seriesOriginalName={series.original_name}
-                      seriesFirstAirDate={
-                        series.first_air_date || series.release_date
-                      }
-                      seasons={series.seasons || []}
-                    />
-                  ),
-                },
-                {
-                  value: "similar",
-                  label: t("film.similar"),
-                  content: <SimilarSeriesList series={series} />,
-                },
-                {
-                  value: "recommended",
-                  label: t("film.recommended"),
-                  content: <RecommendedSeriesList series={series} />,
-                },
-                {
-                  value: "images",
-                  label: t("film.images"),
-                  content: <ImagesList movie={series as never} />,
-                },
-              ]}
-            />
-
-            {/* Mobile-only watch providers, just before reviews */}
-            <div className="overflow-hidden rounded-2xl border border-border bg-muted/40 lg:hidden">
-              <WatchProviders movie={movieCompat} hideHeading omitTrailerButton mediaType="tv" />
-            </div>
-
-            <div>
-              <SectionLabel>{t("film.recentReviews")}</SectionLabel>
-              <div className="mt-6">
-                <FilmReviewsList filmId={series.id} mediaType="tv" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </FilmsCatalogShell>
-    </div>
-  );
+  return <SeriesDetailClassic {...viewProps} />;
 }

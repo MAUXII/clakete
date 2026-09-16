@@ -6,10 +6,12 @@ import { SiLetterboxd, SiMetacritic } from "react-icons/si";
 import { cn } from "@/lib/utils";
 import type { FilmExternalRating, MdbListRatingSourceId } from "@/lib/mdblist";
 import { useT } from "@/components/providers/i18n-provider";
+import { useDesignMode } from "@/hooks/use-design-mode";
 import {
   Carousel,
   CarouselContent,
   CarouselItem,
+  type CarouselApi,
 } from "@/components/ui/carousel";
 
 type FilmExternalRatingsProps = {
@@ -84,23 +86,31 @@ function RtIcon({ src, className }: { src: string; className?: string }) {
 function ScoreText({
   display,
   size = "lg",
+  isGlass = false,
 }: {
   display: string;
   size?: "lg" | "md";
+  isGlass?: boolean;
 }) {
   const { main, suffix } = splitDisplay(display);
   return (
     <span className="inline-flex items-baseline gap-0.5 leading-none tabular-nums">
       <span
         className={cn(
-          "font-semibold tracking-tight text-foreground",
+          "font-semibold tracking-tight",
+          isGlass ? "text-white" : "text-foreground",
           size === "lg" ? "text-2xl" : "text-xl"
         )}
       >
         {main}
       </span>
       {suffix ? (
-        <span className="text-[11px] font-medium text-muted-foreground">
+        <span
+          className={cn(
+            "text-[11px] font-medium",
+            isGlass ? "text-white/45" : "text-muted-foreground",
+          )}
+        >
           {suffix}
         </span>
       ) : null}
@@ -176,32 +186,120 @@ function BrandIcon({
 }
 
 const cardShell =
-  "flex h-full flex-col items-center justify-center gap-2.5 rounded-xl border border-border/70 bg-card/60 px-3 py-4 text-center select-none";
+  "flex h-full flex-col items-center justify-center gap-2.5 rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur-md px-3 py-4 text-center select-none shadow-[0_8px_24px_-8px_rgba(0,0,0,0.35)]";
 
 function RatingsCarousel({ children }: { children: ReactNode }) {
+  const [api, setApi] = useState<CarouselApi>();
+  const [canScrollPrev, setCanScrollPrev] = useState(false);
+  const [canScrollNext, setCanScrollNext] = useState(false);
+
+  useEffect(() => {
+    if (!api) return;
+
+    const update = () => {
+      const progress = api.scrollProgress();
+      setCanScrollPrev(api.canScrollPrev() && progress > 0.02);
+      setCanScrollNext(api.canScrollNext() && progress < 0.98);
+    };
+
+    update();
+    api.on("select", update);
+    api.on("reInit", update);
+    api.on("scroll", update);
+
+    return () => {
+      api.off("select", update);
+      api.off("reInit", update);
+      api.off("scroll", update);
+    };
+  }, [api]);
+
+  const maskStyle = useMemo<React.CSSProperties>(() => {
+    if (canScrollPrev && canScrollNext) {
+      return {
+        maskImage:
+          "linear-gradient(to right, transparent 0%, black 32px, black calc(100% - 48px), transparent 100%)",
+        WebkitMaskImage:
+          "linear-gradient(to right, transparent 0%, black 32px, black calc(100% - 48px), transparent 100%)",
+      };
+    }
+    if (canScrollNext) {
+      return {
+        maskImage:
+          "linear-gradient(to right, black 0%, black calc(100% - 48px), transparent 100%)",
+        WebkitMaskImage:
+          "linear-gradient(to right, black 0%, black calc(100% - 48px), transparent 100%)",
+      };
+    }
+    if (canScrollPrev) {
+      return {
+        maskImage:
+          "linear-gradient(to right, transparent 0%, black 32px, black 100%)",
+        WebkitMaskImage:
+          "linear-gradient(to right, transparent 0%, black 32px, black 100%)",
+      };
+    }
+    return {};
+  }, [canScrollPrev, canScrollNext]);
+
   return (
-    <Carousel
-      opts={{
-        align: "start",
-        dragFree: true,
-        containScroll: "trimSnaps",
-      }}
-      className="w-full cursor-grab select-none active:cursor-grabbing"
-    >
-      {/* ml/pl zerados: o Carousel padrão usa -ml-4/pl-4 e isso corta o 1º card */}
-      <CarouselContent className="!ml-0 gap-2.5">
-        {children}
-      </CarouselContent>
-    </Carousel>
+    <div className="relative w-full">
+      <Carousel
+        setApi={setApi}
+        opts={{
+          align: "start",
+          dragFree: true,
+          containScroll: "trimSnaps",
+        }}
+        className="w-full cursor-grab select-none active:cursor-grabbing"
+        style={maskStyle}
+      >
+        {/* ml/pl zerados: o Carousel padrão usa -ml-4/pl-4 e isso corta o 1º card */}
+        <CarouselContent className="!ml-0 gap-2.5">
+          {children}
+        </CarouselContent>
+      </Carousel>
+
+      {/* Blur/fade sutil na borda direita indicando que há mais conteúdo */}
+      <div
+        aria-hidden
+        className={cn(
+          "pointer-events-none absolute right-0 top-0 bottom-0 z-10 w-14 transition-opacity duration-300",
+          "backdrop-blur-[2.5px] [mask-image:linear-gradient(to_left,black_15%,transparent)] [-webkit-mask-image:linear-gradient(to_left,black_15%,transparent)]",
+          canScrollNext ? "opacity-100" : "opacity-0"
+        )}
+      />
+
+      {/* Blur/fade sutil na borda esquerda quando scrollado */}
+      <div
+        aria-hidden
+        className={cn(
+          "pointer-events-none absolute left-0 top-0 bottom-0 z-10 w-10 transition-opacity duration-300",
+          "backdrop-blur-[2.5px] [mask-image:linear-gradient(to_right,black_15%,transparent)] [-webkit-mask-image:linear-gradient(to_right,black_15%,transparent)]",
+          canScrollPrev ? "opacity-100" : "opacity-0"
+        )}
+      />
+    </div>
   );
 }
 
-function SingleCard({ rating }: { rating: FilmExternalRating }) {
+function SingleCard({
+  rating,
+  isGlass,
+}: {
+  rating: FilmExternalRating;
+  isGlass: boolean;
+}) {
   const inner = (
     <>
       <BrandIcon id={rating.id} value={rating.value} />
-      <ScoreText display={rating.display} />
-      <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+      <ScoreText display={rating.display} isGlass={isGlass} />
+      <p
+        className={cn(
+          "text-[10px] font-medium uppercase tracking-[0.14em]",
+          isGlass ? "text-white/45" : "text-muted-foreground",
+        )}
+      >
         {rating.label}
       </p>
     </>
@@ -213,7 +311,12 @@ function SingleCard({ rating }: { rating: FilmExternalRating }) {
         href={rating.href}
         target="_blank"
         rel="noopener noreferrer"
-        className={cn(cardShell, "transition-colors hover:bg-muted/40")}
+        className={cn(
+          cardShell,
+          isGlass
+            ? "transition-colors hover:border-white/20 hover:bg-white/[0.10]"
+            : "transition-colors hover:bg-muted/40",
+        )}
       >
         {inner}
       </a>
@@ -227,16 +330,23 @@ function SingleCard({ rating }: { rating: FilmExternalRating }) {
 function RottenTomatoesCard({
   critics,
   audience,
+  isGlass,
 }: {
   critics: FilmExternalRating | null;
   audience: FilmExternalRating | null;
+  isGlass: boolean;
 }) {
   const { t } = useT();
   const href = critics?.href || audience?.href || null;
 
   const body = (
     <>
-      <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+      <p
+        className={cn(
+          "text-[10px] font-medium uppercase tracking-[0.14em]",
+          isGlass ? "text-white/45" : "text-muted-foreground",
+        )}
+      >
         Rotten Tomatoes
       </p>
       <div className="mt-1 flex w-full items-stretch justify-center gap-0">
@@ -254,20 +364,36 @@ function RottenTomatoesCard({
                 </span>
               ) : null}
             </span>
-            <ScoreText display={critics.display} size="md" />
-            <span className="text-[9px] font-medium uppercase tracking-[0.12em] text-muted-foreground/80">
+            <ScoreText display={critics.display} size="md" isGlass={isGlass} />
+            <span
+              className={cn(
+                "text-[9px] font-medium uppercase tracking-[0.12em]",
+                isGlass ? "text-white/40" : "text-muted-foreground/80",
+              )}
+            >
               {t("catalog.rtCritics")}
             </span>
           </div>
         ) : null}
         {critics && audience ? (
-          <div className="w-px self-stretch bg-border/70" aria-hidden />
+          <div
+            className={cn(
+              "w-px self-stretch",
+              isGlass ? "bg-white/15" : "bg-border/70",
+            )}
+            aria-hidden
+          />
         ) : null}
         {audience ? (
           <div className="flex flex-1 flex-col items-center gap-1.5 px-2">
             <BrandIcon id="popcorn" value={audience.value} />
-            <ScoreText display={audience.display} size="md" />
-            <span className="text-[9px] font-medium uppercase tracking-[0.12em] text-muted-foreground/80">
+            <ScoreText display={audience.display} size="md" isGlass={isGlass} />
+            <span
+              className={cn(
+                "text-[9px] font-medium uppercase tracking-[0.12em]",
+                isGlass ? "text-white/40" : "text-muted-foreground/80",
+              )}
+            >
               {t("catalog.rtAudience")}
             </span>
           </div>
@@ -282,7 +408,13 @@ function RottenTomatoesCard({
         href={href}
         target="_blank"
         rel="noopener noreferrer"
-        className={cn(cardShell, "gap-1 transition-colors hover:bg-muted/40")}
+        className={cn(
+          cardShell,
+          "gap-1",
+          isGlass
+            ? "transition-colors hover:border-white/20 hover:bg-white/[0.10]"
+            : "transition-colors hover:bg-muted/40",
+        )}
       >
         {body}
       </a>
@@ -318,6 +450,7 @@ export function FilmExternalRatings({
   mediaType = "movie",
 }: FilmExternalRatingsProps) {
   const { t } = useT();
+  const isGlass = useDesignMode() === "glass";
   const [ratings, setRatings] = useState<FilmExternalRating[] | null>(null);
   const [failed, setFailed] = useState(false);
 
@@ -365,10 +498,22 @@ export function FilmExternalRatings({
 
   const heading = (
     <div className="flex items-center gap-4">
-      <h2 className="shrink-0 text-[10px] font-medium uppercase tracking-[0.24em] text-muted-foreground">
+      <h2
+        className={cn(
+          "shrink-0 text-[10px] font-medium uppercase tracking-[0.24em]",
+          isGlass ? "text-white/45" : "text-muted-foreground",
+        )}
+      >
         {t("catalog.externalRatings")}
       </h2>
-      <div className="h-px min-w-0 flex-1 bg-muted" aria-hidden />
+      {/* Glass: soft white line so it sits on Hub Atmosphere instead of solid muted/black */}
+      <div
+        className={cn(
+          "h-px min-w-0 flex-1",
+          isGlass ? "bg-white/15" : "bg-muted",
+        )}
+        aria-hidden
+      />
     </div>
   );
 
@@ -378,16 +523,36 @@ export function FilmExternalRatings({
         {heading}
         <RatingsCarousel>
           <CarouselItem className="min-w-fit basis-auto !pl-0">
-            <div className="h-[7.5rem] w-[8.5rem] animate-pulse rounded-xl bg-muted/40" />
+            <div
+              className={cn(
+                "h-[7.5rem] w-[8.5rem] animate-pulse rounded-xl",
+                isGlass ? "bg-white/[0.06]" : "bg-muted/40",
+              )}
+            />
           </CarouselItem>
           <CarouselItem className="min-w-fit basis-auto !pl-0">
-            <div className="h-[7.5rem] w-[17rem] animate-pulse rounded-xl bg-muted/40" />
+            <div
+              className={cn(
+                "h-[7.5rem] w-[17rem] animate-pulse rounded-xl",
+                isGlass ? "bg-white/[0.06]" : "bg-muted/40",
+              )}
+            />
           </CarouselItem>
           <CarouselItem className="min-w-fit basis-auto !pl-0">
-            <div className="h-[7.5rem] w-[8.5rem] animate-pulse rounded-xl bg-muted/40" />
+            <div
+              className={cn(
+                "h-[7.5rem] w-[8.5rem] animate-pulse rounded-xl",
+                isGlass ? "bg-white/[0.06]" : "bg-muted/40",
+              )}
+            />
           </CarouselItem>
           <CarouselItem className="min-w-fit basis-auto !pl-0">
-            <div className="h-[7.5rem] w-[8.5rem] animate-pulse rounded-xl bg-muted/40" />
+            <div
+              className={cn(
+                "h-[7.5rem] w-[8.5rem] animate-pulse rounded-xl",
+                isGlass ? "bg-white/[0.06]" : "bg-muted/40",
+              )}
+            />
           </CarouselItem>
         </RatingsCarousel>
       </section>
@@ -407,6 +572,7 @@ export function FilmExternalRatings({
                 <RottenTomatoesCard
                   critics={item.critics}
                   audience={item.audience}
+                  isGlass={isGlass}
                 />
               </div>
             </CarouselItem>
@@ -416,7 +582,7 @@ export function FilmExternalRatings({
               className="min-w-fit basis-auto !pl-0"
             >
               <div className="h-full w-[8.5rem]">
-                <SingleCard rating={item.rating} />
+                <SingleCard rating={item.rating} isGlass={isGlass} />
               </div>
             </CarouselItem>
           )

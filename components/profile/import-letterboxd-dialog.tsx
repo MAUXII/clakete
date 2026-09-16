@@ -21,6 +21,8 @@ import {
 } from "@/lib/letterboxd-import"
 import { toLocalDateString } from "@/lib/watched-date"
 import { useT } from "@/components/providers/i18n-provider"
+import { useDesignMode } from "@/hooks/use-design-mode"
+import { cn } from "@/lib/utils"
 
 type MatchResult = {
   tmdbId: number
@@ -264,20 +266,28 @@ export function ImportLetterboxdDialog({
       ? Math.round((progress.done / progress.total) * 100)
       : 0
 
+  const designMode = useDesignMode()
+  const isGlass = designMode === "glass"
+
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className={cn("sm:max-w-lg", isGlass && "border-white/10 bg-[#161719]/96 text-white sm:rounded-[24px] backdrop-blur-2xl shadow-[0_28px_64px_-16px_rgba(0,0,0,0.9)]")}>
         <DialogHeader>
-          <DialogTitle>{t("profile.importFromLetterboxd")}</DialogTitle>
-          <DialogDescription>{t("profile.importLetterboxdDesc")}</DialogDescription>
+          <DialogTitle className={cn(isGlass && "text-white font-semibold")}>{t("profile.importFromLetterboxd")}</DialogTitle>
+          <DialogDescription className={cn(isGlass && "text-white/50")}>{t("profile.importLetterboxdDesc")}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-1">
           {phase === "pick" ? (
-            <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-muted/40 px-4 py-10 text-center transition hover:border-brand/40 hover:bg-brand/5">
-              <FileUp className="size-6 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">{t("profile.chooseLetterboxdCsv")}</span>
-              <span className="text-xs text-muted-foreground">{t("profile.diaryCsvRecommended")}</span>
+            <label className={cn(
+              "flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed px-4 py-10 text-center transition",
+              isGlass
+                ? "border-white/15 bg-white/[0.03] hover:border-white/30 hover:bg-white/[0.06] text-white/70"
+                : "border-border bg-muted/40 hover:border-brand/40 hover:bg-brand/5"
+            )}>
+              <FileUp className={cn("size-6", isGlass ? "text-white/50" : "text-muted-foreground")} />
+              <span className={cn("text-sm", isGlass ? "text-white/80" : "text-muted-foreground")}>{t("profile.chooseLetterboxdCsv")}</span>
+              <span className={cn("text-xs", isGlass ? "text-white/40" : "text-muted-foreground")}>{t("profile.diaryCsvRecommended")}</span>
               <input
                 ref={fileRef}
                 type="file"
@@ -292,8 +302,8 @@ export function ImportLetterboxdDialog({
           ) : null}
 
           {phase === "matching" || phase === "importing" ? (
-            <div className="space-y-2 rounded-lg border border-border bg-muted/50 p-4">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className={cn("space-y-2 rounded-xl border p-4", isGlass ? "border-white/10 bg-white/[0.03]" : "border-border bg-muted/50")}>
+              <div className={cn("flex items-center gap-2 text-sm", isGlass ? "text-white/70" : "text-muted-foreground")}>
                 <Loader2 className="size-4 animate-spin text-brand" />
                 {phase === "matching"
                   ? t("profile.matchingTmdb", { done: progress.done, total: progress.total })
@@ -306,16 +316,16 @@ export function ImportLetterboxdDialog({
                 />
               </div>
               {fileName ? (
-                <p className="truncate text-xs text-muted-foreground">{fileName}</p>
+                <p className={cn("truncate text-xs", isGlass ? "text-white/40" : "text-muted-foreground")}>{fileName}</p>
               ) : null}
             </div>
           ) : null}
 
           {phase === "ready" ? (
             <div className="space-y-3">
-              <div className="rounded-lg border border-border bg-muted/50 p-3 text-sm">
-                <p className="text-foreground">
-                  <span className="font-medium text-foreground">{matchedCount}</span>{" "}
+              <div className={cn("rounded-xl border p-3 text-sm", isGlass ? "border-white/10 bg-white/[0.03]" : "border-border bg-muted/50")}>
+                <p className={cn(isGlass ? "text-white" : "text-foreground")}>
+                  <span className="font-medium">{matchedCount}</span>{" "}
                   {t("profile.matched")}
                   {unmatchedCount > 0 ? (
                     <>
@@ -325,13 +335,13 @@ export function ImportLetterboxdDialog({
                     </>
                   ) : null}
                 </p>
-                <p className="mt-1 text-xs text-muted-foreground">
+                <p className={cn("mt-1 text-xs", isGlass ? "text-white/40" : "text-muted-foreground")}>
                   {t("profile.importKeepHint")}
                 </p>
               </div>
 
               {unmatchedCount > 0 && unmatchedCount <= 12 ? (
-                <ul className="max-h-32 space-y-1 overflow-y-auto text-xs text-muted-foreground">
+                <ul className={cn("max-h-32 space-y-1 overflow-y-auto text-xs", isGlass ? "text-white/40" : "text-muted-foreground")}>
                   {resolved
                     .filter((e) => !e.match)
                     .map((e) => (
@@ -346,7 +356,7 @@ export function ImportLetterboxdDialog({
           ) : null}
 
           {phase === "done" ? (
-            <div className="rounded-lg border border-border bg-muted/50 p-4 text-sm text-muted-foreground">
+            <div className={cn("rounded-xl border p-4 text-sm", isGlass ? "border-white/10 bg-white/[0.03] text-white/80" : "border-border bg-muted/50 text-muted-foreground")}>
               <p>
                 {t("profile.importedCount", {
                   count: stats.imported,
@@ -366,12 +376,17 @@ export function ImportLetterboxdDialog({
         <DialogFooter className="gap-2 sm:justify-between">
           {phase === "ready" ? (
             <>
-              <Button type="button" variant="outline" onClick={reset}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={reset}
+                className={cn(isGlass && "rounded-xl border-white/12 bg-white/[0.04] text-white/80 hover:bg-white/[0.08] hover:text-white")}
+              >
                 {t("profile.chooseLetterboxdCsv")}
               </Button>
               <Button
                 type="button"
-                className="bg-brand text-white hover:bg-brand-hover"
+                className={cn(isGlass ? "rounded-xl bg-white px-5 font-semibold text-black hover:bg-white/90" : "bg-brand text-white hover:bg-brand-hover")}
                 onClick={() => void runImport()}
                 disabled={matchedCount === 0}
               >
@@ -382,7 +397,7 @@ export function ImportLetterboxdDialog({
           ) : phase === "done" ? (
             <Button
               type="button"
-              className="bg-brand text-white hover:bg-brand-hover"
+              className={cn(isGlass ? "rounded-xl bg-white px-5 font-semibold text-black hover:bg-white/90" : "bg-brand text-white hover:bg-brand-hover")}
               onClick={() => handleClose(false)}
             >
               {t("common.close")}
@@ -392,11 +407,12 @@ export function ImportLetterboxdDialog({
               type="button"
               variant="outline"
               onClick={() => handleClose(false)}
+              className={cn(isGlass && "rounded-xl border-white/12 bg-white/[0.04] text-white/80 hover:bg-white/[0.08] hover:text-white")}
             >
               {t("common.cancel")}
             </Button>
           ) : (
-            <p className="text-xs text-muted-foreground">{t("common.loading")}</p>
+            <p className={cn("text-xs", isGlass ? "text-white/40" : "text-muted-foreground")}>{t("common.loading")}</p>
           )}
         </DialogFooter>
       </DialogContent>

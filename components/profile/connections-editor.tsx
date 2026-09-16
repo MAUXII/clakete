@@ -23,6 +23,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
+import { useDesignMode } from "@/hooks/use-design-mode"
 import { X } from "lucide-react"
 import {
   buildSocialUrl,
@@ -49,6 +50,8 @@ export function ConnectionsEditor({
   onDisplayChange,
 }: ConnectionsEditorProps) {
   const { t } = useT()
+  const designMode = useDesignMode()
+  const isGlass = designMode === "glass"
   const [activePlatform, setActivePlatform] = useState<SocialPlatform | null>(null)
   const [handleDraft, setHandleDraft] = useState("")
 
@@ -202,11 +205,11 @@ export function ConnectionsEditor({
       ) : null}
 
       <Dialog open={activePlatform !== null} onOpenChange={(open) => !open && closeDialog()}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className={cn("sm:max-w-md", isGlass && "border-white/10 bg-[#161719]/96 text-white sm:rounded-[24px] backdrop-blur-2xl shadow-[0_28px_64px_-16px_rgba(0,0,0,0.9)]")}>
           {activePlatform ? (
             <>
               <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
+                <DialogTitle className={cn("flex items-center gap-2", isGlass && "text-white")}>
                   <span
                     className="flex size-8 items-center justify-center rounded-lg"
                     style={{ backgroundColor: activePlatform.color }}
@@ -218,18 +221,18 @@ export function ConnectionsEditor({
                   </span>
                   {activePlatform.name}
                 </DialogTitle>
-                <DialogDescription>
+                <DialogDescription className={cn(isGlass && "text-white/50")}>
                   Only your handle goes in the field — the URL prefix stays fixed.
                 </DialogDescription>
               </DialogHeader>
 
               <div className="space-y-2 py-2">
-                <label htmlFor="social-handle" className="text-xs font-medium text-muted-foreground">
+                <label htmlFor="social-handle" className={cn("text-xs font-medium", isGlass ? "text-white/70" : "text-muted-foreground")}>
                   Profile link
                 </label>
-                <InputGroup className="bg-background/80">
+                <InputGroup className={cn(isGlass ? "border-white/10 bg-white/[0.04]" : "bg-background/80")}>
                   <InputGroupAddon align="inline-start" className="max-w-[58%] shrink-0 sm:max-w-[65%]">
-                    <span className="truncate font-mono text-[11px] text-muted-foreground sm:text-xs">
+                    <span className={cn("truncate font-mono text-[11px] sm:text-xs", isGlass ? "text-white/40" : "text-muted-foreground")}>
                       {activePlatform.prelink}
                     </span>
                   </InputGroupAddon>
@@ -238,7 +241,7 @@ export function ConnectionsEditor({
                     value={handleDraft}
                     onChange={(e) => setHandleDraft(e.target.value)}
                     placeholder="username"
-                    className="font-medium px-1 text-[11px]"
+                    className={cn("font-medium px-1 text-[11px]", isGlass && "text-white")}
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
                         e.preventDefault()
@@ -251,12 +254,17 @@ export function ConnectionsEditor({
               </div>
 
               <DialogFooter className="gap-2 sm:gap-0">
-                <Button type="button" variant="outline" onClick={clearConnection}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={clearConnection}
+                  className={cn(isGlass && "rounded-xl border-white/12 bg-white/[0.04] text-white/80 hover:bg-white/[0.08] hover:text-white")}
+                >
                   Clear
                 </Button>
                 <Button
                   type="button"
-                  className="bg-brand text-white hover:bg-brand-hover"
+                  className={cn(isGlass ? "rounded-xl bg-white px-5 font-semibold text-black hover:bg-white/90" : "bg-brand text-white hover:bg-brand-hover")}
                   onClick={saveHandle}
                 >
                   Save

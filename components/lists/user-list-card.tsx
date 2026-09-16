@@ -13,8 +13,10 @@ import {
   listCardBodyBlockClass,
 } from "@/components/lists/list-card-shell";
 import { ListPosterStack } from "@/components/lists/list-poster-stack";
+import { ListCardGlass } from "@/components/lists/list-card-glass";
 import { listPublicHref, userProfilePath } from "@/lib/list-href";
 import { listBannerPresentation } from "@/lib/list-banner";
+import { useDesignMode } from "@/hooks/use-design-mode";
 import { cn } from "@/lib/utils";
 
 interface UserListCardProps {
@@ -30,6 +32,11 @@ function normalizedSlots(list: List): (string | null)[] {
 }
 
 export function UserListCard({ list, compact = false }: UserListCardProps) {
+  const isGlass = useDesignMode() === "glass";
+  if (isGlass) {
+    return <ListCardGlass list={list} compact={compact} showCreator={false} />;
+  }
+
   const displayName = list.userData?.display_name || list.userData?.username || "User";
   const banner = listBannerPresentation(list);
   const bannerSrc = banner.src;
@@ -54,7 +61,7 @@ export function UserListCard({ list, compact = false }: UserListCardProps) {
           <div className="w-full min-w-0 pt-0.5">
             <ListPosterStack posters={normalizedSlots(list)} compact />
           </div>
-          <h3 className="line-clamp-2 w-full px-1 text-sm font-normal leading-snug tracking-tight text-foreground/90 sm:text-[0.95rem]">
+          <h3 className="line-clamp-2 w-full px-1 text-center text-sm font-normal leading-snug tracking-tight text-foreground/90 sm:text-[0.95rem]">
             {list.title}
           </h3>
         </div>

@@ -17,6 +17,7 @@ import {
 import { toast } from "sonner"
 import { MovieCard } from "@/components/movies/movie-card"
 import { SeriesCard } from "@/components/series/series-card"
+import { ProfileSectionHeader } from "@/components/profile/profile-section-header"
 import {
   EditWatchLogDialog,
   type EditWatchLogPayload,
@@ -44,6 +45,7 @@ import { userWatchLogPathFromSlug } from "@/lib/user-media-href"
 import { canonicalMediaCacheKey } from "@/lib/client/canonical-media-slug"
 import { useCanonicalMediaSlugs } from "@/hooks/use-canonical-media-slugs"
 import { cn } from "@/lib/utils"
+import { useDesignMode } from "@/hooks/use-design-mode"
 import {
   formatRewatchLabel,
   formatWatchedDate,
@@ -97,6 +99,7 @@ export function WatchedDiary({
   isOwnProfile: boolean
 }) {
   const { t } = useT()
+  const isGlass = useDesignMode() === "glass"
   const supabase = useSupabaseClient()
   const router = useRouter()
   const monthOptions = [
@@ -370,7 +373,12 @@ export function WatchedDiary({
           e.stopPropagation()
           openEdit(item)
         }}
-        className="rounded-md border border-transparent bg-secondary p-2 text-secondary-foreground transition-colors hover:border-brand/20 hover:bg-[#280F16] hover:text-brand"
+        className={cn(
+          "rounded-md border p-2 transition-colors",
+          isGlass
+            ? "border-white/10 bg-white/[0.04] text-white/70 hover:border-white/20 hover:bg-white/[0.08] hover:text-white"
+            : "border-transparent bg-secondary text-secondary-foreground hover:border-brand/20 hover:bg-[#280F16] hover:text-brand",
+        )}
         aria-label={t("profile.editWatchLog")}
         title={t("profile.editWatchLog")}
       >
@@ -380,15 +388,24 @@ export function WatchedDiary({
 
   const toolbar = (
     <div className="mb-4 flex flex-nowrap items-center gap-1.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-      <div className="flex shrink-0 items-center rounded-md border border-border p-0.5">
+      <div
+        className={cn(
+          "flex shrink-0 items-center rounded-md border p-0.5",
+          isGlass ? "border-white/10" : "border-border",
+        )}
+      >
         <button
           type="button"
           onClick={() => setView("grid")}
           className={cn(
             "inline-flex items-center gap-1 rounded-[5px] px-2 py-1.5 text-xs transition",
             view === "grid"
-              ? "bg-muted text-foreground"
-              : "text-muted-foreground hover:text-muted-foreground",
+              ? isGlass
+                ? "bg-white/[0.08] text-white"
+                : "bg-muted text-foreground"
+              : isGlass
+                ? "text-white/40 hover:text-white/55"
+                : "text-muted-foreground hover:text-muted-foreground",
           )}
           aria-pressed={view === "grid"}
           title="Grid"
@@ -402,8 +419,12 @@ export function WatchedDiary({
           className={cn(
             "inline-flex items-center gap-1 rounded-[5px] px-2 py-1.5 text-xs transition",
             view === "calendar"
-              ? "bg-muted text-foreground"
-              : "text-muted-foreground hover:text-muted-foreground",
+              ? isGlass
+                ? "bg-white/[0.08] text-white"
+                : "bg-muted text-foreground"
+              : isGlass
+                ? "text-white/40 hover:text-white/55"
+                : "text-muted-foreground hover:text-muted-foreground",
           )}
           aria-pressed={view === "calendar"}
           title="Calendar"
@@ -414,7 +435,14 @@ export function WatchedDiary({
       </div>
 
       <Select value={yearFilter} onValueChange={setYear}>
-        <SelectTrigger className="h-8 w-[92px] shrink-0 border-border bg-transparent text-xs">
+        <SelectTrigger
+          className={cn(
+            "h-8 w-[92px] shrink-0 text-xs",
+            isGlass
+              ? "border-white/10 bg-white/[0.04] text-white"
+              : "border-border bg-transparent",
+          )}
+        >
           <SelectValue placeholder="Year" />
         </SelectTrigger>
         <SelectContent>
@@ -432,7 +460,14 @@ export function WatchedDiary({
         onValueChange={(v) => setMonthFilter(v)}
         disabled={yearFilter === "all"}
       >
-        <SelectTrigger className="h-8 w-[108px] shrink-0 border-border bg-transparent text-xs disabled:opacity-40">
+        <SelectTrigger
+          className={cn(
+            "h-8 w-[108px] shrink-0 text-xs disabled:opacity-40",
+            isGlass
+              ? "border-white/10 bg-white/[0.04] text-white"
+              : "border-border bg-transparent",
+          )}
+        >
           <SelectValue placeholder="Month" />
         </SelectTrigger>
         <SelectContent>
@@ -453,7 +488,9 @@ export function WatchedDiary({
           "inline-flex h-8 shrink-0 items-center gap-1 rounded-md border px-2 text-xs transition",
           likedOnly
             ? "border-brand/30 bg-brand/10 text-brand"
-            : "border-border text-muted-foreground hover:border-border hover:text-foreground",
+            : isGlass
+              ? "border-white/10 text-white/40 hover:border-white/10 hover:text-white/55"
+              : "border-border text-muted-foreground hover:border-border hover:text-foreground",
         )}
       >
         <Heart className={cn("size-3.5", likedOnly && "fill-current")} />
@@ -466,7 +503,12 @@ export function WatchedDiary({
             type="button"
             onClick={() => setImportOpen(true)}
             title={t("profile.import")}
-            className="inline-flex h-8 items-center gap-1 rounded-md border border-border px-2 text-xs text-muted-foreground transition hover:border-border hover:text-foreground"
+            className={cn(
+              "inline-flex h-8 items-center gap-1 rounded-md border px-2 text-xs transition",
+              isGlass
+                ? "border-white/10 text-white/40 hover:border-white/10 hover:bg-white/[0.08] hover:text-white/55"
+                : "border-border text-muted-foreground hover:border-border hover:text-foreground",
+            )}
           >
             <Upload className="size-3.5" />
             <span className="hidden md:inline">{t("profile.import")}</span>
@@ -475,7 +517,12 @@ export function WatchedDiary({
             type="button"
             onClick={handleExport}
             title={t("profile.exportCsv")}
-            className="inline-flex h-8 items-center gap-1 rounded-md border border-border px-2 text-xs text-muted-foreground transition hover:border-border hover:text-foreground"
+            className={cn(
+              "inline-flex h-8 items-center gap-1 rounded-md border px-2 text-xs transition",
+              isGlass
+                ? "border-white/10 text-white/40 hover:border-white/10 hover:bg-white/[0.08] hover:text-white/55"
+                : "border-border text-muted-foreground hover:border-border hover:text-foreground",
+            )}
           >
             <Download className="size-3.5" />
             <span className="hidden md:inline">{t("profile.export")}</span>
@@ -488,16 +535,18 @@ export function WatchedDiary({
   if (loading) {
     return (
       <div className="mt-4">
-        <h2 className="text-sm font-medium uppercase text-muted-foreground/50">
-          {t("watch.diaryTitle")}
-        </h2>
-        <div className="mb-4 mt-1 h-[0.3px] w-full bg-muted-foreground/10" />
+        <ProfileSectionHeader title={t("watch.diaryTitle")} glassMode="hide" />
         {toolbar}
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4">
           {[...Array(12)].map((_, i) => (
             <Skeleton
               key={i}
-              className="relative aspect-[2/3] h-full w-full overflow-hidden rounded-[5px] border border-black/15 shadow-sm shadow-black/5 dark:border-white/15 dark:shadow-white/5"
+              className={cn(
+                "relative aspect-[2/3] h-full w-full overflow-hidden rounded-[5px] border shadow-sm",
+                isGlass
+                  ? "border-white/10 bg-white/[0.04] shadow-black/5"
+                  : "border-black/15 shadow-black/5 dark:border-white/15 dark:shadow-white/5",
+              )}
             />
           ))}
         </div>
@@ -508,18 +557,25 @@ export function WatchedDiary({
   if (items.length === 0) {
     return (
       <div className="mt-4">
-        <h2 className="text-sm font-medium uppercase text-muted-foreground/50">
-          {t("watch.diaryTitle")}
-        </h2>
-        <div className="mb-4 mt-1 h-[0.3px] w-full bg-muted-foreground/10" />
-        <div className="flex w-full items-start justify-between overflow-clip text-muted-foreground">
+        <ProfileSectionHeader title={t("watch.diaryTitle")} glassMode="hide" />
+        <div
+          className={cn(
+            "flex w-full items-start justify-between overflow-clip",
+            isGlass ? "text-white/40" : "text-muted-foreground",
+          )}
+        >
           <div className="space-y-3">
             <p className="w-full text-start">{t("watch.diaryEmpty")}</p>
             {isOwnProfile ? (
               <button
                 type="button"
                 onClick={() => setImportOpen(true)}
-                className="inline-flex h-8 items-center gap-1.5 rounded-md border border-border px-2.5 text-xs text-muted-foreground transition hover:border-brand/40 hover:text-foreground"
+                className={cn(
+                  "inline-flex h-8 items-center gap-1.5 rounded-md border px-2.5 text-xs transition",
+                  isGlass
+                    ? "border-white/10 text-white/55 hover:border-white/20 hover:bg-white/[0.08] hover:text-white"
+                    : "border-border text-muted-foreground hover:border-brand/40 hover:text-foreground",
+                )}
               >
                 <Upload className="size-3.5" />
                 {t("profile.importFromLetterboxd")}
@@ -544,17 +600,11 @@ export function WatchedDiary({
 
   return (
     <div className="mt-4">
-      <div className="flex items-baseline justify-between gap-2">
-        <h2 className="text-sm font-medium uppercase text-muted-foreground/50">
-          {t("watch.diaryTitle")}
-        </h2>
-        <span className="text-xs text-muted-foreground/60">
-          {filtered.length}
-          {filtered.length !== items.length ? ` of ${items.length}` : ""}{" "}
-          {filtered.length === 1 ? "title" : "titles"}
-        </span>
-      </div>
-      <div className="mb-4 mt-1 h-[0.3px] w-full bg-muted-foreground/10" />
+      <ProfileSectionHeader
+        title={t("watch.diaryTitle")}
+        glassMode="hide"
+        countLabel={`${filtered.length}${filtered.length !== items.length ? ` of ${items.length}` : ""} ${filtered.length === 1 ? "title" : "titles"}`}
+      />
 
       {toolbar}
 
@@ -584,14 +634,31 @@ export function WatchedDiary({
           />
 
           {daySheet ? (
-            <div className="rounded-lg border border-border bg-muted/60 p-3">
+            <div
+              className={cn(
+                "rounded-lg border p-3",
+                isGlass
+                  ? "border-white/10 bg-white/[0.04]"
+                  : "border-border bg-muted/60",
+              )}
+            >
               <div className="mb-2 flex items-center justify-between gap-2">
-                <p className="text-sm font-medium text-foreground">
+                <p
+                  className={cn(
+                    "text-sm font-medium",
+                    isGlass ? "text-white" : "text-foreground",
+                  )}
+                >
                   {formatWatchedDate(daySheet.date)}
                 </p>
                 <button
                   type="button"
-                  className="text-xs text-muted-foreground hover:text-muted-foreground"
+                  className={cn(
+                    "text-xs",
+                    isGlass
+                      ? "text-white/40 hover:text-white/55"
+                      : "text-muted-foreground hover:text-muted-foreground",
+                  )}
                   onClick={() => setDaySheet(null)}
                 >
                   Close
@@ -606,7 +673,12 @@ export function WatchedDiary({
                   return (
                     <li
                       key={dayItem.id}
-                      className="flex items-center gap-3 rounded-md border border-border bg-black/20 p-2"
+                      className={cn(
+                        "flex items-center gap-3 rounded-md border p-2",
+                        isGlass
+                          ? "border-white/10 bg-white/[0.04]"
+                          : "border-border bg-black/20",
+                      )}
                     >
                       {href ? (
                         <Link href={href} className="relative size-12 shrink-0 overflow-hidden rounded">
@@ -619,7 +691,14 @@ export function WatchedDiary({
                               sizes="48px"
                             />
                           ) : (
-                            <div className="flex size-full items-center justify-center bg-muted text-xs text-muted-foreground">
+                            <div
+                              className={cn(
+                                "flex size-full items-center justify-center text-xs",
+                                isGlass
+                                  ? "bg-white/[0.04] text-white/40"
+                                  : "bg-muted text-muted-foreground",
+                              )}
+                            >
                               ?
                             </div>
                           )}
@@ -635,7 +714,14 @@ export function WatchedDiary({
                               sizes="48px"
                             />
                           ) : (
-                            <div className="flex size-full items-center justify-center bg-muted text-xs text-muted-foreground">
+                            <div
+                              className={cn(
+                                "flex size-full items-center justify-center text-xs",
+                                isGlass
+                                  ? "bg-white/[0.04] text-white/40"
+                                  : "bg-muted text-muted-foreground",
+                              )}
+                            >
                               ?
                             </div>
                           )}
@@ -645,24 +731,44 @@ export function WatchedDiary({
                         {href ? (
                           <Link
                             href={href}
-                            className="block truncate text-sm font-medium text-foreground hover:text-brand"
+                            className={cn(
+                              "block truncate text-sm font-medium hover:text-brand",
+                              isGlass ? "text-white" : "text-foreground",
+                            )}
                           >
                             {dayItem.movie_title || "Untitled"}
                           </Link>
                         ) : (
-                          <p className="block truncate text-sm font-medium text-foreground">
+                          <p
+                            className={cn(
+                              "block truncate text-sm font-medium",
+                              isGlass ? "text-white" : "text-foreground",
+                            )}
+                          >
                             {dayItem.movie_title || "Untitled"}
                           </p>
                         )}
                         {rewatch ? (
-                          <p className="text-xs text-muted-foreground">{rewatch}</p>
+                          <p
+                            className={cn(
+                              "text-xs",
+                              isGlass ? "text-white/40" : "text-muted-foreground",
+                            )}
+                          >
+                            {rewatch}
+                          </p>
                         ) : null}
                       </div>
                       {isOwnProfile && full ? (
                         <button
                           type="button"
                           onClick={() => openEdit(full)}
-                          className="rounded-full p-2 text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                          className={cn(
+                            "rounded-full p-2 transition",
+                            isGlass
+                              ? "text-white/40 hover:bg-white/[0.08] hover:text-white"
+                              : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                          )}
                           aria-label={t("profile.editWatchLog")}
                         >
                           <Pencil className="size-3.5" />
@@ -676,7 +782,12 @@ export function WatchedDiary({
           ) : null}
         </div>
       ) : filtered.length === 0 ? (
-        <p className="py-8 text-sm text-muted-foreground">
+        <p
+          className={cn(
+            "py-8 text-sm",
+            isGlass ? "text-white/40" : "text-muted-foreground",
+          )}
+        >
           {t("profile.noTitlesPeriod")}
         </p>
       ) : (

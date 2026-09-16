@@ -27,6 +27,7 @@ import { Skeleton } from "../ui/skeleton"
 import { horizontalListSortingStrategy } from "@dnd-kit/sortable"
 import { seriesHref } from "@/lib/media-href"
 import { useT } from "@/components/providers/i18n-provider"
+import { ProfileSectionHeader } from "@/components/profile/profile-section-header"
 
 interface Film {
   id: number
@@ -254,8 +255,7 @@ export function UserFavoriteFilms({ userId, isEditable = false, onFilmAdded }: F
   if (loading) {
     return (
       <div className="mt-0">
-        <h2 className="text-sm font-medium uppercase text-muted-foreground/50">{t("profile.favoriteFilms")}</h2>
-        <div className="mt-1 mb-4 h-[0.3px] w-full bg-muted-foreground/10" />
+        <ProfileSectionHeader title={t("profile.favoriteFilms")} glassMode="soft" />
         <div className="grid grid-cols-4 gap-3 sm:gap-4">
           {[...Array(4)].map((_, i) => (
             <Skeleton
@@ -273,8 +273,7 @@ export function UserFavoriteFilms({ userId, isEditable = false, onFilmAdded }: F
   if (!canEdit) {
     return (
       <>
-        <h2 className="text-sm font-medium uppercase text-muted-foreground/50">{t("profile.favoriteFilms")}</h2>
-        <div className="mt-1 mb-4 h-[0.3px] w-full bg-muted-foreground/10" />
+        <ProfileSectionHeader title={t("profile.favoriteFilms")} glassMode="soft" />
 
         <div className="grid grid-cols-4 gap-4">
           {favoriteFilms.map((film) => (
@@ -418,8 +417,7 @@ export function UserFavoriteFilms({ userId, isEditable = false, onFilmAdded }: F
 
   return (
     <>
-      <h2 className="text-sm font-medium uppercase text-muted-foreground/50">{t("profile.favoriteFilms")}</h2>
-      <div className="mt-1 mb-4 h-[0.3px] w-full bg-muted-foreground/10" />
+      <ProfileSectionHeader title={t("profile.favoriteFilms")} glassMode="soft" />
 
       <Sortable
         value={sortableItems}

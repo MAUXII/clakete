@@ -4,6 +4,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useDesignMode } from "@/hooks/use-design-mode"
 import {
   daysInMonth,
   firstWeekdayOfMonth,
@@ -48,6 +49,7 @@ export function WatchedCalendar({
   onMonthChange: (year: number, monthIndex: number) => void
   onSelectDay?: (date: string, dayItems: CalendarWatchItem[]) => void
 }) {
+  const isGlass = useDesignMode() === "glass"
   const today = toLocalDateString()
   const totalDays = daysInMonth(year, monthIndex)
   const startPad = firstWeekdayOfMonth(year, monthIndex)
@@ -84,25 +86,45 @@ export function WatchedCalendar({
         <button
           type="button"
           onClick={goPrev}
-          className="rounded-full p-2 text-muted-foreground transition hover:bg-muted hover:text-foreground"
+          className={cn(
+            "rounded-full p-2 transition",
+            isGlass
+              ? "text-white/40 hover:bg-white/[0.08] hover:text-white"
+              : "text-muted-foreground hover:bg-muted hover:text-foreground",
+          )}
           aria-label="Previous month"
         >
           <ChevronLeft className="size-4" />
         </button>
-        <h3 className="text-sm font-medium text-foreground">
+        <h3
+          className={cn(
+            "text-sm font-medium",
+            isGlass ? "text-white" : "text-foreground",
+          )}
+        >
           {monthLabel(year, monthIndex)}
         </h3>
         <button
           type="button"
           onClick={goNext}
-          className="rounded-full p-2 text-muted-foreground transition hover:bg-muted hover:text-foreground"
+          className={cn(
+            "rounded-full p-2 transition",
+            isGlass
+              ? "text-white/40 hover:bg-white/[0.08] hover:text-white"
+              : "text-muted-foreground hover:bg-muted hover:text-foreground",
+          )}
           aria-label="Next month"
         >
           <ChevronRight className="size-4" />
         </button>
       </div>
 
-      <div className="grid grid-cols-7 gap-1 text-center text-[10px] uppercase tracking-wide text-muted-foreground">
+      <div
+        className={cn(
+          "grid grid-cols-7 gap-1 text-center text-[10px] uppercase tracking-wide",
+          isGlass ? "text-white/40" : "text-muted-foreground",
+        )}
+      >
         {WEEKDAYS.map((d) => (
           <div key={d} className="py-1">
             {d}
@@ -125,12 +147,20 @@ export function WatchedCalendar({
           const inner = (
             <div
               className={cn(
-                "relative aspect-square overflow-hidden rounded-md border border-border bg-muted/80",
+                "relative aspect-square overflow-hidden rounded-md border",
+                isGlass
+                  ? "border-white/10 bg-white/[0.04]"
+                  : "border-border bg-muted/80",
                 isToday && "ring-1 ring-brand/50",
                 dayItems.length === 0 && "opacity-40",
               )}
             >
-              <span className="absolute left-1 top-0.5 z-10 text-[10px] font-medium text-muted-foreground drop-shadow">
+              <span
+                className={cn(
+                  "absolute left-1 top-0.5 z-10 text-[10px] font-medium drop-shadow",
+                  isGlass ? "text-white/55" : "text-muted-foreground",
+                )}
+              >
                 {cell.day}
               </span>
               {primary?.poster_path ? (

@@ -4,6 +4,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import ReactMasonryCss from 'react-masonry-css'
 import Image from 'next/image';
 import { Dialog, DialogContent } from '../ui/dialog';
+import { useDesignMode } from '@/hooks/use-design-mode';
+import { cn } from '@/lib/utils';
 
 interface ImageData {
   url: string;
@@ -15,6 +17,8 @@ export default function ImagesList({ movie }: { movie: Movie }) {
   const [images, setImages] = useState<ImageData[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const designMode = useDesignMode();
+  const isGlass = designMode === "glass";
 
   useEffect(() => {
     if (movie) {
@@ -126,7 +130,7 @@ export default function ImagesList({ movie }: { movie: Movie }) {
 
       {selectedImage && (
          <Dialog open={true} onOpenChange={() => setSelectedImage(null)}>
-         <DialogContent className="p-0 overflow-clip">
+         <DialogContent className={cn("p-0 overflow-clip", isGlass && "border-white/10 bg-black/90 sm:rounded-[24px] shadow-[0_28px_64px_-16px_rgba(0,0,0,0.9)]")}>
          {selectedImage ? (
              <div className="w-full">
                <Image

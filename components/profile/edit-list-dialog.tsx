@@ -20,6 +20,7 @@ import { useSubscription } from "@/hooks/use-subscription"
 import { List, UpdateListData } from "@/types/list"
 import { FREE_PRIVATE_LIST_LIMIT } from "@/lib/plans"
 import { cn } from "@/lib/utils"
+import { useDesignMode } from "@/hooks/use-design-mode"
 
 interface EditListDialogProps {
   list: List
@@ -31,6 +32,8 @@ interface EditListDialogProps {
 export function EditListDialog({ list, open, onOpenChange, onListUpdated }: EditListDialogProps) {
   const { updateList } = useLists()
   const { isShining } = useSubscription()
+  const designMode = useDesignMode()
+  const isGlass = designMode === "glass"
   const [title, setTitle] = useState(list.title)
   const [bio, setBio] = useState(list.bio || "")
   const [isPublic, setIsPublic] = useState(list.is_public)
@@ -86,17 +89,17 @@ export function EditListDialog({ list, open, onOpenChange, onListUpdated }: Edit
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className={cn("sm:max-w-[425px]", isGlass && "border-white/10 bg-[#161719]/96 text-white sm:rounded-[20px] backdrop-blur-2xl shadow-[0_28px_64px_-16px_rgba(0,0,0,0.9)]")}>
         <DialogHeader>
-          <DialogTitle>Editar Lista</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className={cn(isGlass && "text-white font-semibold")}>Editar Lista</DialogTitle>
+          <DialogDescription className={cn(isGlass && "text-white/50")}>
             Edite as informações da sua lista de filmes.
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="title">Título *</Label>
+            <Label htmlFor="title" className={cn(isGlass && "text-white/70")}>Título *</Label>
             <Input
               id="title"
               value={title}
@@ -104,11 +107,12 @@ export function EditListDialog({ list, open, onOpenChange, onListUpdated }: Edit
               placeholder="Ex: Meus Filmes Favoritos de 2024"
               maxLength={100}
               required
+              className={cn(isGlass && "rounded-xl border-white/10 bg-white/[0.04] text-white")}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="bio">Descrição (opcional)</Label>
+            <Label htmlFor="bio" className={cn(isGlass && "text-white/70")}>Descrição (opcional)</Label>
             <Textarea
               id="bio"
               value={bio}
@@ -116,13 +120,14 @@ export function EditListDialog({ list, open, onOpenChange, onListUpdated }: Edit
               placeholder="Descreva sua lista..."
               maxLength={500}
               rows={3}
+              className={cn(isGlass && "rounded-xl border-white/10 bg-white/[0.04] text-white resize-none")}
             />
           </div>
 
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label htmlFor="public">Lista Pública</Label>
-              <p className="text-sm text-muted-foreground">
+              <Label htmlFor="public" className={cn(isGlass && "text-white/80")}>Lista Pública</Label>
+              <p className={cn("text-sm", isGlass ? "text-white/40" : "text-muted-foreground")}>
                 Outros usuários podem ver listas públicas.
                 {!isPublic
                   ? isShining
@@ -141,11 +146,11 @@ export function EditListDialog({ list, open, onOpenChange, onListUpdated }: Edit
             />
           </div>
 
-          <div className="space-y-3 rounded-xl border border-border/80 bg-muted/20 p-3">
+          <div className={cn("space-y-3 rounded-xl border p-3", isGlass ? "border-white/10 bg-white/[0.03]" : "border-border/80 bg-muted/20")}>
             <div className="flex items-center justify-between gap-3">
               <div className="space-y-0.5">
-                <Label htmlFor="share-feed">Share to feed</Label>
-                <p className="text-sm text-muted-foreground">
+                <Label htmlFor="share-feed" className={cn(isGlass && "text-white/80")}>Share to feed</Label>
+                <p className={cn("text-sm", isGlass ? "text-white/40" : "text-muted-foreground")}>
                   Mostrar esta lista no feed dos seus follows
                 </p>
               </div>
@@ -165,11 +170,11 @@ export function EditListDialog({ list, open, onOpenChange, onListUpdated }: Edit
                     "flex flex-col items-start gap-1 rounded-lg border px-3 py-2.5 text-left transition",
                     feedVisibility === "friends"
                       ? "border-brand/40 bg-brand/10"
-                      : "border-border/80 hover:border-border",
+                      : isGlass ? "border-white/10 hover:border-white/20" : "border-border/80 hover:border-border",
                   )}
                 >
                   <Users className="size-4 text-brand" />
-                  <span className="text-xs font-medium">Friends</span>
+                  <span className={cn("text-xs font-medium", isGlass ? "text-white" : "text-foreground")}>Friends</span>
                 </button>
                 <button
                   type="button"
@@ -180,21 +185,30 @@ export function EditListDialog({ list, open, onOpenChange, onListUpdated }: Edit
                     !isPublic && "cursor-not-allowed opacity-40",
                     feedVisibility === "public"
                       ? "border-brand/40 bg-brand/10"
-                      : "border-border/80 hover:border-border",
+                      : isGlass ? "border-white/10 hover:border-white/20" : "border-border/80 hover:border-border",
                   )}
                 >
                   <Globe2 className="size-4 text-brand" />
-                  <span className="text-xs font-medium">Public</span>
+                  <span className={cn("text-xs font-medium", isGlass ? "text-white" : "text-foreground")}>Public</span>
                 </button>
               </div>
             ) : null}
           </div>
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          <DialogFooter className="gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              className={cn(isGlass && "rounded-xl border-white/12 bg-white/[0.04] text-white/70 hover:bg-white/[0.08] hover:text-white")}
+            >
               Cancelar
             </Button>
-            <Button type="submit" disabled={loading || !title.trim()}>
+            <Button
+              type="submit"
+              disabled={loading || !title.trim()}
+              className={cn(isGlass ? "rounded-xl bg-white px-5 font-semibold text-black hover:bg-white/90" : "bg-brand hover:bg-brand-hover")}
+            >
               {loading ? "Salvando..." : "Salvar Alterações"}
             </Button>
           </DialogFooter>

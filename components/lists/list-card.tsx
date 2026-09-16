@@ -13,8 +13,10 @@ import {
   listCardBodyBlockClass,
 } from "@/components/lists/list-card-shell";
 import { ListPosterStack } from "@/components/lists/list-poster-stack";
+import { ListCardGlass } from "@/components/lists/list-card-glass";
 import { listPublicHref, userProfilePath } from "@/lib/list-href";
 import { listBannerPresentation } from "@/lib/list-banner";
+import { useDesignMode } from "@/hooks/use-design-mode";
 import { cn } from "@/lib/utils";
 
 interface ListCardProps {
@@ -31,6 +33,11 @@ function normalizedSlots(list: List): (string | null)[] {
 }
 
 export function ListCard({ list, className, compact = false }: ListCardProps) {
+  const isGlass = useDesignMode() === "glass";
+  if (isGlass) {
+    return <ListCardGlass list={list} className={className} compact={compact} />;
+  }
+
   const displayName = list.userData?.display_name || list.userData?.username || "User";
   const banner = listBannerPresentation(list);
   const bannerSrc = banner.src;

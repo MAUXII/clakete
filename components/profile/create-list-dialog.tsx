@@ -27,6 +27,7 @@ import { useSubscription } from "@/hooks/use-subscription"
 import type { CreateListData, ListMediaType } from "@/types/list"
 import { FREE_PRIVATE_LIST_LIMIT } from "@/lib/plans"
 import { cn } from "@/lib/utils"
+import { useDesignMode } from "@/hooks/use-design-mode"
 
 const MIN_REQUIRED_TITLES = 5
 
@@ -213,13 +214,18 @@ export function CreateListDialog({ open, onOpenChange, onListCreated }: CreateLi
     onOpenChange(false)
   }
 
+  const designMode = useDesignMode()
+  const isGlass = designMode === "glass"
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className={cn(
           "flex w-full max-w-[min(96vw,50rem)] flex-col gap-0 overflow-hidden p-0",
           "max-h-[92dvh] sm:max-h-[min(84vh,700px)]",
-          "border-zinc-200 bg-background sm:rounded-2xl dark:border-zinc-800",
+          isGlass
+            ? "border-white/10 bg-[#161719]/96 text-white sm:rounded-[24px] backdrop-blur-2xl shadow-[0_28px_64px_-16px_rgba(0,0,0,0.9)]"
+            : "border-zinc-200 bg-background sm:rounded-2xl dark:border-zinc-800",
         )}
       >
         <DialogHeader className="sr-only">
@@ -521,18 +527,30 @@ export function CreateListDialog({ open, onOpenChange, onListCreated }: CreateLi
             ) : null}
           </div>
 
-          <DialogFooter className="flex shrink-0 flex-col gap-2 border-t border-border px-6 py-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="text-xs text-muted-foreground">
+          <DialogFooter className={cn("flex shrink-0 flex-col gap-2 border-t px-6 py-3 sm:flex-row sm:items-center sm:justify-between", isGlass ? "border-white/10" : "border-border")}>
+            <div className={cn("text-xs", isGlass ? "text-white/40" : "text-muted-foreground")}>
               {step === 1 ? "Dados básicos da lista." : null}
               {step === 2 ? "Tags são opcionais, mas ajudam na organização." : null}
               {step === 3 ? `Você precisa de no mínimo ${MIN_REQUIRED_TITLES} títulos.` : null}
             </div>
             <div className="flex flex-col gap-2 sm:flex-row">
-              <Button type="button" variant="outline" onClick={handleCancel} disabled={loading} className="rounded-xl">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleCancel}
+                disabled={loading}
+                className={cn("rounded-xl", isGlass && "border-white/12 bg-white/[0.04] text-white/70 hover:bg-white/[0.08] hover:text-white")}
+              >
                 Cancelar
               </Button>
               {step > 1 ? (
-                <Button type="button" variant="outline" onClick={handleBack} disabled={loading} className="rounded-xl">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleBack}
+                  disabled={loading}
+                  className={cn("rounded-xl", isGlass && "border-white/12 bg-white/[0.04] text-white/70 hover:bg-white/[0.08] hover:text-white")}
+                >
                   Voltar
                 </Button>
               ) : null}
@@ -541,7 +559,7 @@ export function CreateListDialog({ open, onOpenChange, onListCreated }: CreateLi
                   type="button"
                   onClick={handleNext}
                   disabled={loading || (step === 1 && !canGoNextFromStep1)}
-                  className="rounded-xl"
+                  className={cn("rounded-xl", isGlass && "border-white/12 bg-white/[0.04] text-white hover:bg-white/[0.08]")}
                   variant="outline"
                 >
                   Próximo
@@ -550,7 +568,7 @@ export function CreateListDialog({ open, onOpenChange, onListCreated }: CreateLi
                 <Button
                   type="submit"
                   disabled={!canSubmit}
-                  className="rounded-xl bg-brand text-white hover:bg-brand-hover"
+                  className={cn("rounded-xl", isGlass ? "bg-white text-black font-semibold hover:bg-white/90" : "bg-brand text-white hover:bg-brand-hover")}
                 >
                   {loading ? (
                     <>

@@ -28,6 +28,7 @@ import { cn } from "@/lib/utils"
 import { useT } from "@/components/providers/i18n-provider"
 import { TheaterTicket } from "@/components/uitripled/theater-ticket-shadcnui"
 import { RatingStars } from "@/components/movies/star-rating"
+import { useDesignMode } from "@/hooks/use-design-mode"
 
 export interface ShareCardData {
   title: string
@@ -476,23 +477,31 @@ export function ShareCardDialog({
     />
   )
 
+  const designMode = useDesignMode()
+  const isGlass = designMode === "glass"
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[92vh] w-[calc(100vw-1.5rem)] max-w-[calc(100vw-1.5rem)] flex-col gap-0 overflow-hidden rounded-2xl p-0 sm:max-w-xl">
-        <DialogHeader className="space-y-1 border-b border-border/60 px-5 py-4 text-left sm:px-6">
+      <DialogContent className={cn(
+        "flex max-h-[92vh] w-[calc(100vw-1.5rem)] max-w-[calc(100vw-1.5rem)] flex-col gap-0 overflow-hidden rounded-2xl p-0 sm:max-w-xl",
+        isGlass
+          ? "border-white/10 bg-[#161719]/96 text-white backdrop-blur-2xl shadow-[0_28px_64px_-16px_rgba(0,0,0,0.9)] sm:rounded-[24px]"
+          : "border-border/60 bg-card"
+      )}>
+        <DialogHeader className={cn("space-y-1 border-b px-5 py-4 text-left sm:px-6", isGlass ? "border-white/10" : "border-border/60")}>
           <DialogTitle className="flex items-center gap-2 text-base">
-            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-brand/12 text-brand-muted">
+            <span className={cn("flex h-7 w-7 items-center justify-center rounded-full", isGlass ? "bg-white/10 text-white" : "bg-brand/12 text-brand-muted")}>
               <Share2 className="h-3.5 w-3.5" />
             </span>
-            {t("share.title")}
+            <span className={cn(isGlass && "text-white font-semibold")}>{t("share.title")}</span>
           </DialogTitle>
-          <DialogDescription>{t("share.description")}</DialogDescription>
+          <DialogDescription className={cn(isGlass && "text-white/50")}>{t("share.description")}</DialogDescription>
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto px-5 py-4 sm:px-6">
           <div className="mb-4 flex items-center justify-center">
             <div
-              className="inline-flex items-center gap-1 rounded-full border border-border/70 bg-muted/40 p-1"
+              className={cn("inline-flex items-center gap-1 rounded-full border p-1", isGlass ? "border-white/10 bg-white/[0.04]" : "border-border/70 bg-muted/40")}
               role="group"
               aria-label={t("share.model")}
             >
@@ -506,8 +515,8 @@ export function ShareCardDialog({
                     className={cn(
                       "inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors",
                       active
-                        ? "bg-brand text-white shadow-sm"
-                        : "text-muted-foreground hover:text-foreground",
+                        ? isGlass ? "bg-white text-black shadow-sm font-semibold" : "bg-brand text-white shadow-sm"
+                        : isGlass ? "text-white/50 hover:text-white" : "text-muted-foreground hover:text-foreground",
                     )}
                     aria-pressed={active}
                   >
@@ -745,7 +754,7 @@ export function ShareCardDialog({
             </div>
           </div>
 
-          <p className="mt-3 text-center text-[11px] text-muted-foreground">
+          <p className={cn("mt-3 text-center text-[11px]", isGlass ? "text-white/40" : "text-muted-foreground")}>
             {model === "poster"
               ? t("share.hintPoster")
               : bgStyle === "transparent"
@@ -754,10 +763,10 @@ export function ShareCardDialog({
           </p>
         </div>
 
-        <div className="flex flex-col gap-2 border-t border-border/60 px-5 py-4 sm:flex-row sm:px-6">
+        <div className={cn("flex flex-col gap-2 border-t px-5 py-4 sm:flex-row sm:px-6", isGlass ? "border-white/10" : "border-border/60")}>
           <Button
             type="button"
-            className="flex-1 bg-brand text-white shadow-sm shadow-brand/20 hover:bg-brand-hover"
+            className={cn("flex-1", isGlass ? "rounded-xl bg-white text-black font-semibold hover:bg-white/90" : "bg-brand text-white shadow-sm shadow-brand/20 hover:bg-brand-hover")}
             onClick={() => void (canWebShare ? handleShare() : handleDownload())}
             disabled={busy}
           >
@@ -771,7 +780,7 @@ export function ShareCardDialog({
           <Button
             type="button"
             variant="outline"
-            className="flex-1"
+            className={cn("flex-1", isGlass && "rounded-xl border-white/12 bg-white/[0.04] text-white/80 hover:bg-white/[0.08] hover:text-white")}
             onClick={() => void handleDownload()}
             disabled={busy}
           >
@@ -781,7 +790,7 @@ export function ShareCardDialog({
           <Button
             type="button"
             variant="outline"
-            className="sm:w-auto"
+            className={cn("sm:w-auto", isGlass && "rounded-xl border-white/12 bg-white/[0.04] text-white/80 hover:bg-white/[0.08] hover:text-white")}
             onClick={() => void handleCopy()}
             disabled={busy}
             aria-label={t("share.copy")}

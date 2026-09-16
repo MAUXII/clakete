@@ -16,6 +16,7 @@ import {
   CLAKETE_PLAYER_FRAME,
   ClaketePlayerShell,
 } from "@/components/movies/clakete-player-shell";
+import { useDesignMode } from "@/hooks/use-design-mode";
 
 export type ClaketeSeasonEpisode = {
   id: number;
@@ -102,6 +103,8 @@ export function ClaketeSeasonWatchDialog({
   onEpisodePlay,
 }: ClaketeSeasonWatchDialogProps) {
   const { t } = useT();
+  const designMode = useDesignMode();
+  const isGlass = designMode === "glass";
   const [selected, setSelected] = useState<ClaketeSeasonEpisode | null>(null);
   const [playback, setPlayback] = useState<ClaketePlayback | null>(null);
   const [loading, setLoading] = useState(false);
@@ -150,25 +153,30 @@ export function ClaketeSeasonWatchDialog({
   if (picking) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="gap-0 overflow-hidden border-border bg-card p-0 text-foreground sm:max-w-md sm:rounded-2xl">
-          <DialogHeader className="space-y-1 border-b border-border px-5 py-4 text-left">
-            <p className="text-[10px] font-medium uppercase tracking-[0.22em] text-muted-foreground">
+        <DialogContent className={cn(
+          "gap-0 overflow-hidden p-0",
+          isGlass
+            ? "border-white/10 bg-[#161719]/96 text-white sm:rounded-[24px] backdrop-blur-2xl shadow-[0_28px_64px_-16px_rgba(0,0,0,0.9)] sm:max-w-md"
+            : "border-border bg-card text-foreground sm:max-w-md sm:rounded-2xl"
+        )}>
+          <DialogHeader className={cn("space-y-1 border-b px-5 py-4 text-left", isGlass ? "border-white/10" : "border-border")}>
+            <p className={cn("text-[10px] font-medium uppercase tracking-[0.22em]", isGlass ? "text-white/40" : "text-muted-foreground")}>
               {headerMeta}
             </p>
-            <DialogTitle className="text-lg font-semibold tracking-tight">
+            <DialogTitle className={cn("text-lg font-semibold tracking-tight", isGlass && "text-white")}>
               {headerTitle}
             </DialogTitle>
-            <DialogDescription className="text-xs text-muted-foreground">
+            <DialogDescription className={cn("text-xs", isGlass ? "text-white/50" : "text-muted-foreground")}>
               {t("series.pickEpisodeToWatch")}
             </DialogDescription>
           </DialogHeader>
           <div className="custom-scrollbar max-h-[min(58vh,440px)] overflow-y-auto">
             {episodes.length === 0 ? (
-              <p className="px-5 py-10 text-center text-sm text-muted-foreground">
+              <p className={cn("px-5 py-10 text-center text-sm", isGlass ? "text-white/40" : "text-muted-foreground")}>
                 {t("series.noEpisodes")}
               </p>
             ) : (
-              <ul className="divide-y divide-border/70 px-1 py-1">
+              <ul className={cn("divide-y px-1 py-1", isGlass ? "divide-white/[0.08]" : "divide-border/70")}>
                 {episodes.map((ep) => (
                   <li key={ep.id}>
                     <button
@@ -176,13 +184,21 @@ export function ClaketeSeasonWatchDialog({
                       onClick={() => void playEpisode(ep)}
                       className={cn(
                         "group flex w-full items-baseline gap-4 px-4 py-3.5 text-left transition-colors",
-                        "hover:bg-muted/50 focus-visible:bg-muted/50 focus-visible:outline-none",
+                        isGlass
+                          ? "hover:bg-white/[0.06] focus-visible:bg-white/[0.06] focus-visible:outline-none"
+                          : "hover:bg-muted/50 focus-visible:bg-muted/50 focus-visible:outline-none"
                       )}
                     >
-                      <span className="w-7 shrink-0 text-right text-xs tabular-nums text-muted-foreground/70 transition-colors group-hover:text-muted-foreground">
+                      <span className={cn(
+                        "w-7 shrink-0 text-right text-xs tabular-nums transition-colors",
+                        isGlass ? "text-white/40 group-hover:text-white/80" : "text-muted-foreground/70 group-hover:text-muted-foreground"
+                      )}>
                         {ep.episode_number}
                       </span>
-                      <span className="min-w-0 flex-1 truncate text-sm text-foreground/90 transition-colors group-hover:text-foreground">
+                      <span className={cn(
+                        "min-w-0 flex-1 truncate text-sm transition-colors",
+                        isGlass ? "text-white/90 group-hover:text-white" : "text-foreground/90 group-hover:text-foreground"
+                      )}>
                         {ep.name}
                       </span>
                     </button>

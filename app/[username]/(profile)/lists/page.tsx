@@ -1,6 +1,7 @@
 "use client"
 
 import { UserLists } from "@/components/profile/user-lists"
+import { ProfileSectionHeader } from "@/components/profile/profile-section-header"
 import { useProfileLayoutData } from "@/components/providers/profile-layout-context"
 import { useT } from "@/components/providers/i18n-provider"
 
@@ -9,9 +10,8 @@ export default function ListsPage() {
   const { userData, isOwnProfile } = useProfileLayoutData()
 
   return (
-    <div className="w-full mt-4">
-      <h2 className="font-medium text-muted-foreground/50 text-sm uppercase">{t("profile.lists")}</h2>
-      <div className="mt-1 mb-4 h-[0.3px] w-full bg-muted-foreground/10" />
+    <div className="mt-4 w-full">
+      <ProfileSectionHeader title={t("profile.lists")} glassMode="hide" />
       <UserLists
         userId={userData.id}
         onLandingPage={isOwnProfile}

@@ -24,6 +24,7 @@ import {
 } from "@/components/movies/clakete-season-watch-dialog";
 import { ClaketeLogo } from "@/components/ui/clakete-logo";
 import { FilmNearbyCinemasSheet } from "@/components/cinemas/film-nearby-cinemas";
+import { useDesignMode } from "@/hooks/use-design-mode";
 
 interface WatchProvider {
   logo_path: string;
@@ -82,6 +83,8 @@ export default function WatchProviders({
   const { t, locale } = useT();
   const { watchRegion } = useLocalePrefs();
   const { isShining, loading: subscriptionLoading } = useSubscription();
+  const designMode = useDesignMode();
+  const isGlass = designMode === "glass";
 
   const isSeasonWatch =
     mediaType === "tv" &&
@@ -369,24 +372,29 @@ export default function WatchProviders({
 
   const providersDialog = (
     <Dialog open={providersDialogOpen} onOpenChange={setProvidersDialogOpen}>
-      <DialogContent className="max-h-[82vh] overflow-hidden border-border bg-card p-0 text-foreground sm:max-w-lg">
-        <DialogHeader className="border-b border-border px-5 py-4">
-          <DialogTitle>{t("catalog.allProviders")}</DialogTitle>
-          <DialogDescription className="text-muted-foreground">
+      <DialogContent className={cn(
+        "max-h-[82vh] overflow-hidden p-0 sm:max-w-lg",
+        isGlass
+          ? "border-white/10 bg-[#161719]/96 text-white backdrop-blur-2xl shadow-[0_28px_64px_-16px_rgba(0,0,0,0.9)] sm:rounded-[24px]"
+          : "border-border bg-card text-foreground"
+      )}>
+        <DialogHeader className={cn("border-b px-5 py-4", isGlass ? "border-white/10" : "border-border")}>
+          <DialogTitle className={cn(isGlass && "text-white font-semibold")}>{t("catalog.allProviders")}</DialogTitle>
+          <DialogDescription className={cn(isGlass ? "text-white/50" : "text-muted-foreground")}>
             {t("catalog.opensOnService", { region: regionName })}
           </DialogDescription>
         </DialogHeader>
         <div className="max-h-[60vh] overflow-y-auto p-3">
-          <div className="flex flex-col divide-y divide-border overflow-hidden rounded-lg border border-border">
+          <div className={cn("flex flex-col divide-y overflow-hidden rounded-lg border", isGlass ? "divide-white/[0.08] border-white/10 bg-white/[0.02]" : "divide-border border-border")}>
             {allProviderRows.map((provider) => renderProviderRow(provider, "dialog"))}
           </div>
         </div>
-        <div className="border-t border-border px-5 py-3 text-center">
+        <div className={cn("border-t px-5 py-3 text-center", isGlass ? "border-white/10" : "border-border")}>
           <a
             href={justWatchHref}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-[11px] text-muted-foreground underline-offset-2 hover:text-muted-foreground hover:underline"
+            className={cn("text-[11px] underline-offset-2 hover:underline", isGlass ? "text-white/40 hover:text-white" : "text-muted-foreground hover:text-muted-foreground")}
           >
             {t("catalog.justWatchAttr")}
           </a>

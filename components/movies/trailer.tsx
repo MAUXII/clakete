@@ -1,5 +1,7 @@
 import { Movie } from "@/app/film/[id]/page"
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { useDesignMode } from "@/hooks/use-design-mode";
+import { cn } from "@/lib/utils";
 
 
 export interface Video {
@@ -16,11 +18,13 @@ export interface Video {
   }
 export default function Trailer({ movie, setTrailerOpen, trailerOpen }: { movie: Movie, setTrailerOpen: (open: boolean) => void, trailerOpen: boolean }){
     const trailer = movie.videos?.results?.find((video) => video.type === 'Trailer' && video.site === 'YouTube');
+    const designMode = useDesignMode();
+    const isGlass = designMode === "glass";
 
     return(
         <Dialog open={trailerOpen} onOpenChange={setTrailerOpen}>
         <DialogTitle className="flex items-center gap-2 text-sm" />
-        <DialogContent className="sm:max-w-[850px] p-0 overflow-clip">
+        <DialogContent className={cn("sm:max-w-[850px] p-0 overflow-clip", isGlass && "border-white/10 bg-black/90 sm:rounded-[24px] shadow-[0_28px_64px_-16px_rgba(0,0,0,0.9)]")}>
         {trailer ? (
             <div className="aspect-video w-full">
               <iframe

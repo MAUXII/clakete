@@ -111,6 +111,29 @@ export function HomePreferencesEditor({
         onColorModeChange={(mode: ColorModePreference) =>
           update({ ...prefs, color_mode: mode })
         }
+        designMode={prefs.design_mode ?? "classic"}
+        onDesignModeChange={(design_mode) => update({ ...prefs, design_mode })}
+        showProfileBanner={prefs.show_profile_banner !== false}
+        onShowProfileBannerChange={(show_profile_banner) =>
+          update({ ...prefs, show_profile_banner })
+        }
+        showRedrumBadge={prefs.show_redrum_badge !== false}
+        onShowRedrumBadgeChange={(show_redrum_badge) =>
+          update({ ...prefs, show_redrum_badge })
+        }
+        atmosphereMode={prefs.atmosphere_mode ?? "vivid"}
+        onAtmosphereModeChange={(atmosphere_mode) =>
+          update({ ...prefs, atmosphere_mode })
+        }
+        atmosphereSource={prefs.atmosphere_source ?? "banner"}
+        onAtmosphereSourceChange={(atmosphere_source) =>
+          update({ ...prefs, atmosphere_source })
+        }
+        glassBannerLayout={prefs.glass_banner_layout ?? "contained"}
+        onGlassBannerLayoutChange={(glass_banner_layout) =>
+          update({ ...prefs, glass_banner_layout })
+        }
+        isShining={isShining}
       />
 
       <div className="space-y-4">
