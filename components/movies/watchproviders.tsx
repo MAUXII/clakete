@@ -192,15 +192,14 @@ export default function WatchProviders({
   }
 
   const tmdbProviderRows = Array.from(tmdbProviders.values());
+  // Clakete only in "all providers" — never in the compact strip under the poster.
   const allProviderRows: ProviderRow[] = [
     ...(showClakete ? [CLAKETE_ROW] : []),
     ...(showCinemas ? [cinemasRow] : []),
     ...tmdbProviderRows,
   ];
-  // Compact strip: Clakete first so it never gets sliced out of the preview.
   const stripRows: ProviderRow[] = (() => {
     const rows: ProviderRow[] = [];
-    if (showClakete) rows.push(CLAKETE_ROW);
     if (showCinemas) rows.push(cinemasRow);
     for (const row of tmdbProviderRows) {
       if (rows.length >= 3) break;
@@ -227,8 +226,14 @@ export default function WatchProviders({
   const providerLogo = (provider: ProviderRow, size: "sm" | "md" = "sm") => {
     const box =
       size === "sm"
-        ? "relative h-9 w-9 shrink-0 overflow-hidden rounded-md border border-border bg-muted"
-        : "relative h-10 w-10 shrink-0 overflow-hidden rounded-md border border-border bg-muted";
+        ? cn(
+            "relative h-9 w-9 shrink-0 overflow-hidden rounded-md border bg-muted",
+            isGlass ? "border-white/10 bg-white/[0.06]" : "border-border",
+          )
+        : cn(
+            "relative h-10 w-10 shrink-0 overflow-hidden rounded-md border bg-muted",
+            isGlass ? "border-white/10 bg-white/[0.06]" : "border-border",
+          );
 
     if (isClaketeRow(provider)) {
       return (
@@ -240,8 +245,8 @@ export default function WatchProviders({
 
     if (isCinemasRow(provider)) {
       return (
-        <div className={cn(box, "flex items-center justify-center bg-muted")}>
-          <MapPin className="h-4 w-4 text-foreground/80" aria-hidden />
+        <div className={cn(box, "flex items-center justify-center", isGlass ? "bg-white/[0.06]" : "bg-muted")}>
+          <MapPin className={cn("h-4 w-4", isGlass ? "text-white/80" : "text-foreground/80")} aria-hidden />
         </div>
       );
     }

@@ -17,10 +17,13 @@ import { MovieCard } from "@/components/movies/movie-card"
 import ImagesList from "@/components/movies/imagesList"
 import WatchProviders from "@/components/movies/watchproviders"
 import Trailer from "@/components/movies/trailer"
+import { LiquidGlass } from "@/components/ui/glasscn/liquid-glass"
 import { formatRewatchLabel, formatWatchedDate } from "@/lib/watched-date"
 import { glassWideContainerClass } from "@/lib/page-container"
 import { prefetchDiaryArt } from "@/lib/client/diary-dialog-art"
 import { useT } from "@/components/providers/i18n-provider"
+import { useLocalePrefs } from "@/hooks/use-locale-prefs"
+import { watchRegionLabel } from "@/lib/locale-prefs"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 import type { FilmDetailViewProps } from "@/components/movies/film-detail-types"
@@ -47,6 +50,8 @@ export function FilmDetailGlass({
   removeFromDiary,
 }: FilmDetailViewProps) {
   const { t } = useT()
+  const { watchRegion } = useLocalePrefs()
+  const watchRegionName = watchRegionLabel(watchRegion)
   const [trailerOpen, setTrailerOpen] = useState(false)
   const [logWatchOpen, setLogWatchOpen] = useState(false)
   const [unwatchOpen, setUnwatchOpen] = useState(false)
@@ -123,10 +128,6 @@ export function FilmDetailGlass({
                 setLogWatchOpen(true)
               }}
             />
-
-            <div className="mt-3 overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.03] backdrop-blur-md">
-              <WatchProviders movie={movie} hideHeading omitTrailerButton />
-            </div>
           </aside>
 
           {/* Coluna Direita: Informações, Avaliação, Tabs e Reviews */}
@@ -232,10 +233,21 @@ export function FilmDetailGlass({
                     value: "providers",
                     label: t("catalog.whereToWatch") || "Onde assistir",
                     content: (
-                      <div className="pt-6 max-w-xl">
-                        <div className="overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4 backdrop-blur-md">
+                      <div className="pt-6 max-w-md">
+                        <LiquidGlass
+                          className="overflow-hidden rounded-[16px] text-white shadow-[0_20px_48px_-24px_rgba(0,0,0,0.85)]"
+                          blur={12}
+                        >
+                          <div className="border-b border-white/[0.08] px-4 py-3">
+                            <p className="text-[13px] font-medium tracking-tight text-white/90">
+                              {t("catalog.whereToWatch")}
+                            </p>
+                            <p className="mt-0.5 text-[11px] leading-relaxed text-white/40">
+                              {t("catalog.opensOnService", { region: watchRegionName })}
+                            </p>
+                          </div>
                           <WatchProviders movie={movie} hideHeading omitTrailerButton />
-                        </div>
+                        </LiquidGlass>
                       </div>
                     ),
                   },
