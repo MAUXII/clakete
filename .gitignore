@@ -37,6 +37,7 @@ supabase/migrations/
 
 # Pacote privado de playback (clonado no deploy / local)
 /private/
+/lib/watch-runtime/active/
 /lib/watch-runtime/.link/
 
 # debug

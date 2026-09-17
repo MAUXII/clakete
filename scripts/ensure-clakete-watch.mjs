@@ -7,10 +7,13 @@ const root = process.cwd()
 const dest = path.join(root, "private", "clakete-watch")
 const marker = path.join(dest, "package.json")
 const stub = path.join(root, "lib", "clakete-watch-stub")
-const linkDir = path.join(root, "lib", "watch-runtime", ".link")
+/** Must NOT be a dotfolder — Tailwind/fast-glob skips `.*` dirs, which purged player CSS. */
+const linkDir = path.join(root, "lib", "watch-runtime", "active")
+const legacyDotLink = path.join(root, "lib", "watch-runtime", ".link")
 
 function linkModule(fromPrivate) {
   fs.rmSync(linkDir, { recursive: true, force: true })
+  fs.rmSync(legacyDotLink, { recursive: true, force: true })
   fs.mkdirSync(linkDir, { recursive: true })
 
   if (fromPrivate) {

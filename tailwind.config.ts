@@ -8,6 +8,13 @@ export default {
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
     "./lib/**/*.{js,ts,jsx,tsx,mdx}",
   ],
+  safelist: [
+    // Player shell lives in optional linked sources; keep layout utilities always available.
+    "clakete-player-frame",
+    "w-[min(100vw-0.5rem,96rem)]",
+    "max-h-[min(88dvh,calc(100vw*9/16))]",
+    "aspect-video",
+  ],
   theme: {
   	extend: {
   		colors: {
