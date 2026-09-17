@@ -22,7 +22,7 @@ import {
   ClaketeWatchDialog,
   ClaketeSeasonWatchDialog,
   type ClaketeSeasonEpisode,
-} from "@clakete/watch";
+} from "@/lib/watch-runtime";
 import { ClaketeLogo } from "@/components/ui/clakete-logo";
 import { FilmNearbyCinemasSheet } from "@/components/cinemas/film-nearby-cinemas";
 import { useDesignMode } from "@/hooks/use-design-mode";

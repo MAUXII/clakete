@@ -1,1 +1,1 @@
-export { moviePlaybackGET as GET } from "@clakete/watch/server";
+export { moviePlaybackGET as GET } from "@/lib/watch-runtime/server";

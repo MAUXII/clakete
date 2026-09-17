@@ -1,1 +1,1 @@
-export { superflixGenresGET as GET } from "@clakete/watch/server";
+export { superflixGenresGET as GET } from "@/lib/watch-runtime/server";
