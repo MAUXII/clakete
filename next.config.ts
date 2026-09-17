@@ -2,33 +2,41 @@ import type { NextConfig } from "next";
 import fs from "node:fs";
 import path from "node:path";
 
-const watchRoot = path.join(__dirname, "private", "clakete-watch");
-const watchStub = path.join(__dirname, "lib", "clakete-watch-stub");
-const hasWatch = fs.existsSync(path.join(watchRoot, "package.json"));
+const root = process.cwd();
+const optionalRoot = path.join(root, "private", "clakete-watch");
+const optionalStub = path.join(root, "lib", "clakete-watch-stub");
 
-const watchClient = hasWatch
-  ? path.join(watchRoot, "src", "index.ts")
-  : path.join(watchStub, "index.ts");
-const watchServer = hasWatch
-  ? path.join(watchRoot, "src", "server.ts")
-  : path.join(watchStub, "server.ts");
+function resolveOptional() {
+  const live = fs.existsSync(path.join(optionalRoot, "package.json"));
+  return {
+    live,
+    client: live
+      ? path.join(optionalRoot, "src", "index.ts")
+      : path.join(optionalStub, "index.ts"),
+    server: live
+      ? path.join(optionalRoot, "src", "server.ts")
+      : path.join(optionalStub, "server.ts"),
+  };
+}
+
+const initial = resolveOptional();
 
 const nextConfig: NextConfig = {
   serverExternalPackages: ["playwright"],
-  // Dev (Turbopack): Next 15.1 uses experimental.turbo
   experimental: {
     turbo: {
       resolveAlias: {
-        "@clakete/watch": watchClient,
-        "@clakete/watch/server": watchServer,
+        "@clakete/watch": initial.client,
+        "@clakete/watch/server": initial.server,
       },
     },
   },
   webpack: (config) => {
+    const { client, server } = resolveOptional();
     config.resolve.alias = {
       ...config.resolve.alias,
-      "@clakete/watch": watchClient,
-      "@clakete/watch/server": watchServer,
+      "@clakete/watch": client,
+      "@clakete/watch/server": server,
     };
     return config;
   },

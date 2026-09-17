@@ -92,8 +92,7 @@ export default function WatchProviders({
     typeof seasonNumber === "number" &&
     Array.isArray(episodes);
 
-  // Filme: sempre (Shining). Série: só na página de temporada (com eps).
-  // Sem pacote privado (@clakete/watch), CLAKETE_WATCH_ENABLED=false (stub).
+  // Extra option when the optional module is present and the user has access.
   const canUseClakete =
     CLAKETE_WATCH_ENABLED &&
     !subscriptionLoading &&
@@ -110,18 +109,14 @@ export default function WatchProviders({
     []
   );
 
-  const { playback, available: claketeAvailable, loading: claketeLoading } =
-    useClaketeWatch(
-      movie.id,
-      canUseClakete,
-      isSeasonWatch
-        ? { mediaType: "tv", season: seasonNumber, episode: 1 }
-        : { mediaType: "movie" }
-    );
-  // Show in the compact provider list (not only inside "all providers" dialog).
-  // Keep visible while playback options load; hide only if confirmed unavailable.
-  const showClakete =
-    canUseClakete && (claketeLoading || claketeAvailable);
+  const { playback } = useClaketeWatch(
+    movie.id,
+    canUseClakete,
+    isSeasonWatch
+      ? { mediaType: "tv", season: seasonNumber, episode: 1 }
+      : { mediaType: "movie" }
+  );
+  const showClakete = canUseClakete;
   const showCinemas = canUseCinemas && cinemasAvailable;
   const cinemasRow: ProviderRow = {
     kind: "cinemas",
