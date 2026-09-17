@@ -149,7 +149,7 @@ export function SeasonDetailGlass({
           <div className="flex flex-col items-center gap-4 md:items-start">
             <div className="w-full max-w-[280px] self-center md:max-w-none md:self-auto lg:sticky lg:top-[calc(var(--ck-nav-h,3.25rem)+var(--clakete-promo-h,0px)+1.5rem)]">
               {/* Poster */}
-              <div className="relative aspect-[2/3] w-full overflow-hidden rounded-[14px] bg-white/[0.04] shadow-[0_28px_56px_-18px_rgba(0,0,0,0.9)] ring-1 ring-white/10">
+              <div className="relative aspect-[2/3] w-full overflow-hidden rounded-[14px] bg-white/[0.04] ring-1 ring-white/10">
                 {posterUrl ? (
                   <Image
                     src={posterUrl}
@@ -192,19 +192,17 @@ export function SeasonDetailGlass({
                   </span>
                 </button>
 
-                {/* Season Providers (Onde assistir) */}
-                {season.watchProviders ? (
-                  <LiquidGlass
-                    className="rounded-[14px] p-4 text-xs shadow-sm"
-                    blur={8}
-                  >
-                    <div className="mb-2 flex items-center gap-2 font-medium text-white/70">
-                      <Tv className="h-3.5 w-3.5 text-white/50" />
-                      <span>Onde assistir</span>
-                    </div>
-                    <SeasonWatchProviders seriesId={seriesId} season={season} />
-                  </LiquidGlass>
-                ) : null}
+                {/* Season Providers (Onde assistir) — sempre monta p/ Clakete Watch */}
+                <LiquidGlass
+                  className="rounded-[14px] p-4 text-xs shadow-sm"
+                  blur={8}
+                >
+                  <div className="mb-2 flex items-center gap-2 font-medium text-white/70">
+                    <Tv className="h-3.5 w-3.5 text-white/50" />
+                    <span>Onde assistir</span>
+                  </div>
+                  <SeasonWatchProviders seriesId={seriesId} season={season} />
+                </LiquidGlass>
 
                 {/* Back to series link */}
                 <Link
