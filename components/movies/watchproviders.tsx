@@ -258,6 +258,17 @@ export default function WatchProviders({
     );
   };
 
+  const tagMuted = isGlass ? "text-white/45" : "text-muted-foreground";
+  const rowTitle = isGlass
+    ? "text-white group-hover:text-white"
+    : "text-foreground group-hover:text-foreground";
+  const rowHover = isGlass ? "hover:bg-white/[0.06]" : "hover:bg-muted";
+  const rowBorder = isGlass ? "divide-white/[0.08]" : "divide-border";
+  const emptyText = isGlass ? "text-white/50" : "text-muted-foreground";
+  const allBtn = isGlass
+    ? "text-white/45 hover:bg-white/[0.06] hover:text-white border-white/[0.08]"
+    : "text-muted-foreground hover:bg-muted hover:text-foreground border-border";
+
   const providerTypeTags = (provider: ProviderRow, variant: "compact" | "dialog" = "compact") =>
     getProviderTypes(provider).map((type) => {
       const label =
@@ -270,14 +281,20 @@ export default function WatchProviders({
       return variant === "compact" ? (
         <span
           key={type}
-          className="text-[10px] font-medium uppercase tracking-[0.08em] text-muted-foreground"
+          className={cn(
+            "text-[10px] font-medium uppercase tracking-[0.08em]",
+            tagMuted,
+          )}
         >
           {label}
         </span>
       ) : (
         <span
           key={type}
-          className="rounded-md border border-border px-2 py-0.5 text-[11px] font-medium text-muted-foreground"
+          className={cn(
+            "rounded-md border px-2 py-0.5 text-[11px] font-medium",
+            isGlass ? "border-white/10 text-white/50" : "border-border text-muted-foreground",
+          )}
         >
           {label}
         </span>
@@ -294,7 +311,8 @@ export default function WatchProviders({
         <div className="min-w-0 flex-1 text-left">
           <p
             className={cn(
-              "truncate font-medium text-foreground transition-colors group-hover:text-foreground",
+              "truncate font-medium transition-colors",
+              rowTitle,
               variant === "card" ? "text-nowrap w-[10.5rem]" : "text-sm"
             )}
           >
@@ -320,9 +338,9 @@ export default function WatchProviders({
           onClick={() => setClaketeOpen(true)}
           className={cn(
             "group flex w-full items-center gap-3 text-left transition-colors",
-            variant === "strip" && "px-3 py-2.5 hover:bg-muted",
+            variant === "strip" && cn("px-3 py-2.5", rowHover),
             variant === "card" && "rounded-lg p-2 hover:bg-brand/10",
-            variant === "dialog" && "px-3 py-3 hover:bg-muted"
+            variant === "dialog" && cn("px-3 py-3", rowHover)
           )}
         >
           {inner}
@@ -338,9 +356,9 @@ export default function WatchProviders({
           onClick={() => setCinemasOpen(true)}
           className={cn(
             "group flex w-full items-center gap-3 text-left transition-colors",
-            variant === "strip" && "px-3 py-2.5 hover:bg-muted",
+            variant === "strip" && cn("px-3 py-2.5", rowHover),
             variant === "card" && "rounded-lg p-2 hover:bg-brand/10",
-            variant === "dialog" && "px-3 py-3 hover:bg-muted"
+            variant === "dialog" && cn("px-3 py-3", rowHover)
           )}
         >
           {inner}
@@ -350,10 +368,10 @@ export default function WatchProviders({
 
     const linkClass =
       variant === "strip"
-        ? "group flex w-full items-center gap-3 px-3 py-2.5 transition-colors hover:bg-muted"
+        ? cn("group flex w-full items-center gap-3 px-3 py-2.5 transition-colors", rowHover)
         : variant === "card"
           ? "flex w-full items-center gap-3 rounded-lg p-2 transition-colors hover:bg-brand/10 group"
-          : "group flex w-full items-center gap-3 px-3 py-3 transition-colors hover:bg-muted";
+          : cn("group flex w-full items-center gap-3 px-3 py-3 transition-colors", rowHover);
 
     return (
       <Link
@@ -444,7 +462,7 @@ export default function WatchProviders({
           {hasAnyProvider ? (
             <>
               {hasPreviewProviders ? (
-                <div className="divide-y divide-border">
+                <div className={cn("divide-y", rowBorder)}>
                   {stripRows.map((provider) => renderProviderRow(provider, "strip"))}
                 </div>
               ) : null}
@@ -454,9 +472,9 @@ export default function WatchProviders({
                   type="button"
                   onClick={() => setProvidersDialogOpen(true)}
                   className={cn(
-                    "w-full py-3 text-center text-[11px] font-medium tracking-wide text-muted-foreground transition-colors",
-                    hasPreviewProviders && "border-t border-border",
-                    "hover:bg-muted hover:text-foreground",
+                    "w-full py-3 text-center text-[11px] font-medium tracking-wide transition-colors",
+                    allBtn,
+                    hasPreviewProviders && "border-t",
                     "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-white/25",
                   )}
                 >
@@ -466,7 +484,7 @@ export default function WatchProviders({
             </>
           ) : (
             <div className="px-4 py-5 text-center">
-              <p className="text-sm leading-relaxed text-muted-foreground">
+              <p className={cn("text-sm leading-relaxed", emptyText)}>
                 {t("catalog.notStreamingIn", { region: regionName })}
               </p>
             </div>

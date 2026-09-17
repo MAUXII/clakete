@@ -123,6 +123,10 @@ export function FilmDetailGlass({
                 setLogWatchOpen(true)
               }}
             />
+
+            <div className="mt-3 overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.03] backdrop-blur-md">
+              <WatchProviders movie={movie} hideHeading omitTrailerButton />
+            </div>
           </aside>
 
           {/* Coluna Direita: Informações, Avaliação, Tabs e Reviews */}
