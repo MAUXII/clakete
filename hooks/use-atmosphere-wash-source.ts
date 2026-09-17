@@ -92,7 +92,7 @@ export function useAtmosphereWashSource(
   seed: string,
 ) {
   const fallbackTint = atmospherePlaceholderTint(seed)
-  const [tint, setTint] = useState(fallbackTint)
+  const [tint, setTint] = useState<string>(fallbackTint)
   const [washSrc, setWashSrc] = useState<string | null>(null)
 
   useEffect(() => {
