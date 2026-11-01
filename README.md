@@ -1,20 +1,13 @@
-<table width="100%">
-  <tr>
-    <td align="left" valign="middle">
-      Rede social de filmes e séries<br />
-      Descubra, registre e compartilhe o que você assiste.ㅤㅤ   ㅤㅤㅤㅤㅤㅤㅤ
-    </td>
-    <td align="right" valign="middle">
-      <a href="https://clakete.xyz">clakete.xyz</a><br />
-      ㅤㅤ         ㅤ    ㅤNext.js · Supabase · TMDB
-    </td>
-  </tr>
-</table>
+# Clakete
+
+Rede social de filmes e séries: diário, watchlist, listas, reviews e cinemas por cidade.
+
+[www.clakete.xyz](https://www.clakete.xyz) · Next.js · TypeScript · PostgreSQL (Supabase) · TMDB
 
 <br />
 
 <p align="center">
-  <img src="./public/brand/hero-title.png" alt="Clakete :3" width="100%" />
+  <img src="./public/brand/hero-title.png" alt="Clakete" width="100%" />
 </p>
 
 <p align="center">
